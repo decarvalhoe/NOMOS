@@ -1,0 +1,12 @@
+project:
+  id: demo
+  name: Demo
+  domain: internal
+  lifecycle: greenfield
+  risk_level: low
+  owners:
+    - name: Alice
+scope:
+  in_scope:
+    - pricing
+surfaces: []
