@@ -34,6 +34,8 @@ toolchain:
     - make test
   lint:
     - make lint
+  package_managers:
+    - npm
   ci_systems:
     - github-actions
 compliance:
