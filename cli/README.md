@@ -15,4 +15,5 @@ Etat actuel :
 - module Go initialise ;
 - point d'entree `main.go` ;
 - dispatch minimal `help`, `version`, `init`, `validate`, `diagnose` ;
-- tests unitaires ecrits pour le squelette du dispatcher.
+- `nomos init` initialise un repo vide avec les profils `minimal` et `regulated` ;
+- tests unitaires ecrits pour le dispatcher et l'initialisation.
