@@ -1,0 +1,28 @@
+units:
+  - unit_id: INS-HOME-WARRANTY-WATER-DAMAGE
+    unit_type: catalog_entry
+    name: "Dégât des eaux"
+    domain: insurance-home
+    criticality: high
+    source_refs:
+      - source_id: INS-CONTRACT-HOME-2026
+        locator: "p. 12, clause 3.1"
+        hash: sha256:example
+    business_rule: "La garantie couvre certains dégâts des eaux selon exclusions et franchise."
+    canonical_contract:
+      path: data/canonical/warranties.yaml
+      object_id: INS-HOME-WARRANTY-WATER-DAMAGE
+      status: planned
+    schema_refs: []
+    db_refs: []
+    vector_refs: []
+    core_refs: []
+    api_refs: []
+    ui_refs: []
+    test_refs: []
+    status: partial
+    gaps:
+      - "Contrat structuré à créer."
+      - "Golden case sinistre à valider."
+    decision_refs: []
+

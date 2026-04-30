@@ -1,0 +1,55 @@
+# Template de schéma logique pour docs/canonical/source-manifest.yaml.
+# À convertir en JSON Schema, Zod ou Pydantic selon la stack.
+
+sources:
+  - id: SOURCE-ID-STABLE
+    path: docs/source/example.pdf
+    type: pdf
+    domain: example-domain
+    priority: primary
+    status: active
+    hash: sha256:replace-with-real-hash
+    version: "2026-04-30"
+    owner: domain-owner@example.com
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_internal
+    redaction_policy: none
+    notes: "Pourquoi cette source existe et comment elle doit être utilisée."
+
+enums:
+  type:
+    - markdown
+    - pdf
+    - html
+    - php
+    - source_code
+    - csv
+    - database_export
+    - spreadsheet
+    - image
+    - audio
+    - decision
+    - api_export
+  priority:
+    - primary
+    - secondary
+    - legacy
+    - derived
+    - reference
+  status:
+    - active
+    - superseded
+    - duplicate
+    - out_of_scope
+    - needs_review
+    - blocked
+  confidentiality:
+    - public
+    - internal
+    - restricted
+    - secret
+

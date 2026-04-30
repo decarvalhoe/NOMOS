@@ -1,0 +1,65 @@
+# Template de schéma logique pour docs/canonical/<domain>-matrix.yaml.
+
+units:
+  - unit_id: DOMAIN-RULE-0001
+    unit_type: rule
+    name: "Nom de l'unité"
+    domain: example-domain
+    criticality: high
+    source_refs:
+      - source_id: SOURCE-ID-STABLE
+        locator: "section 1.2, p. 4"
+        hash: sha256:replace-with-real-hash
+    business_rule: "Résumé contrôlé de la règle, sans invention."
+    canonical_contract:
+      path: data/canonical/example.yaml
+      object_id: DOMAIN-RULE-0001
+      status: present
+    schema_refs:
+      - schemas/example-rule.schema.json
+    db_refs:
+      - table: example_rules
+        key: DOMAIN-RULE-0001
+    vector_refs:
+      - collection: canonical_chunks
+        filter: "unit_ids contains DOMAIN-RULE-0001"
+    core_refs:
+      - package: rules-core
+        symbol: evaluateExampleRule
+    api_refs:
+      - method: POST
+        path: /api/example/evaluate
+    ui_refs:
+      - app: product
+        path: /example
+    test_refs:
+      - tests/example-rule.test.ts
+      - tests/golden/DOMAIN-RULE-0001.yaml
+    status: covered
+    gaps: []
+    decision_refs: []
+
+enums:
+  unit_type:
+    - rule
+    - catalog_entry
+    - exception
+    - formula
+    - term
+    - workflow
+    - scenario
+    - legacy_behavior
+    - ambiguity
+    - decision
+  criticality:
+    - low
+    - medium
+    - high
+    - critical
+  status:
+    - covered
+    - partial
+    - missing
+    - not_applicable
+    - deprecated
+

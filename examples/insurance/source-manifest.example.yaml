@@ -1,0 +1,18 @@
+sources:
+  - id: INS-CONTRACT-HOME-2026
+    path: sources/contracts/home-2026.pdf
+    type: pdf
+    domain: insurance-home
+    priority: primary
+    status: active
+    hash: sha256:example
+    version: "2026"
+    owner: actuarial@example.com
+    license: internal
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_internal
+    notes: "Conditions générales habitation 2026."
+

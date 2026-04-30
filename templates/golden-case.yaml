@@ -1,0 +1,21 @@
+id: GOLDEN-DOMAIN-0001
+name: "Cas métier de référence"
+description: "Scénario validé par un expert métier."
+source_refs:
+  - source_id: SOURCE-ID-STABLE
+    locator: "section/page/ligne"
+unit_ids:
+  - DOMAIN-RULE-0001
+inputs:
+  example_input: value
+expected:
+  example_output: value
+  applied_units:
+    - DOMAIN-RULE-0001
+assertions:
+  - path: expected.example_output
+    operator: equals
+    value: value
+owner: domain-owner@example.com
+validated_at: "2026-04-30"
+

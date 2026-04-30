@@ -1,0 +1,17 @@
+risks:
+  - id: RISK-0001
+    title: "Donnée produit non sourcée"
+    category: canonical_integrity
+    severity: high
+    likelihood: medium
+    impact: "Une décision produit peut dériver du canon sans alerte."
+    detection:
+      - "canonical:check:strict"
+      - "grep sample/mock fixtures"
+    mitigation:
+      - "Supprimer les fixtures produit."
+      - "Connecter API/read-model."
+    owner: tech-owner@example.com
+    status: open
+    review_date: "2026-05-30"
+
