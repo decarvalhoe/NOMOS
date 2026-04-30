@@ -116,6 +116,33 @@ Il doit contenir :
 - top risques ;
 - décision go/no-go release.
 
+## Rapport Machine-Readable
+
+Chemin recommandé :
+
+```text
+nomos-report.json
+```
+
+Le format public est `specs/nomos-report.schema.json`.
+
+Le report JSON est l'interface stable entre le CLI, les gates CI, les SDK, les
+attestations et le control plane. Il doit contenir au minimum :
+
+- le contexte d'execution `run` ;
+- le projet et le manifest inspectes ;
+- un `summary` numerique ;
+- un `verdict` `pass`, `warn`, `fail` ou `blocked` ;
+- les resultats de checks ;
+- les findings avec severite, code erreur `NOMOS_*`, cible et remediation ;
+- l'evidence referencee par les findings ;
+- les waivers eventuels avec expiration.
+
+Un `fail` contient au moins un finding bloquant. Un `blocked` signifie que
+Nomos n'a pas pu terminer le jugement, par exemple a cause d'une entree
+manquante ou d'une erreur d'execution. Les exemples de payload vivent dans
+`specs/examples/nomos-report.*.json`.
+
 ## Politique De Dérogation
 
 Une dérogation peut exister, mais doit être explicite :
@@ -130,4 +157,3 @@ Une dérogation peut exister, mais doit être explicite :
 - validation humaine.
 
 Une dérogation sans expiration devient une nouvelle règle cachée. Elle doit donc être interdite.
-
