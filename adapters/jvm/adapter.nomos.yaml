@@ -1,0 +1,265 @@
+schema_version: "0.1.0"
+
+adapter:
+  id: jvm
+  name: "JVM / Spring"
+  version: "0.1.0"
+  status: experimental
+  owners:
+    - name: "Nomos Core Team"
+      role: "adapter-owner"
+  license: "Apache-2.0"
+  package:
+    type: maven
+    name: "io.nomos:adapter-jvm"
+    version: "0.1.0"
+
+compatibility:
+  nomos_core:
+    min_version: "0.1.0"
+    tested_versions:
+      - "0.1.0"
+  manifest_contract:
+    version: "0.1.0"
+  schemas:
+    nomos_project:
+      min_version: "0.1.0"
+    source_manifest:
+      min_version: "0.1.0"
+    canonical_matrix:
+      min_version: "0.1.0"
+    adapter_manifest:
+      min_version: "0.1.0"
+
+stack_support:
+  - language: java
+    runtime: jvm
+    frameworks:
+      - spring-boot
+      - spring-mvc
+      - spring-webflux
+    package_managers:
+      - maven
+      - gradle
+    file_globs:
+      - "pom.xml"
+      - "build.gradle"
+      - "build.gradle.kts"
+      - "src/**/*.java"
+    exclude_globs:
+      - "target/**"
+      - "build/**"
+      - ".gradle/**"
+      - ".mvn/wrapper/**"
+    surfaces:
+      - api
+      - data
+      - worker
+      - batch
+  - language: kotlin
+    runtime: jvm
+    frameworks:
+      - spring-boot
+      - spring-mvc
+      - spring-webflux
+    package_managers:
+      - maven
+      - gradle
+    file_globs:
+      - "pom.xml"
+      - "build.gradle.kts"
+      - "src/**/*.kt"
+    exclude_globs:
+      - "target/**"
+      - "build/**"
+      - ".gradle/**"
+    surfaces:
+      - api
+      - data
+      - worker
+      - batch
+
+capabilities:
+  contract_version: "0.1.0"
+  provides:
+    - id: language_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - data
+        - worker
+        - batch
+      languages:
+        - java
+        - kotlin
+      inputs:
+        - filesystem
+        - package_manifest
+      outputs:
+        - surface_inventory
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: high
+    - id: route_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+      languages:
+        - java
+        - kotlin
+      frameworks:
+        - spring-boot
+        - spring-mvc
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - surface_inventory
+        - capability_result
+      evidence:
+        - file_path
+        - line_range
+        - route
+        - symbol
+      confidence: medium
+    - id: service_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - worker
+        - batch
+      languages:
+        - java
+        - kotlin
+      frameworks:
+        - spring-boot
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - surface_inventory
+        - capability_result
+      evidence:
+        - file_path
+        - line_range
+        - symbol
+      confidence: medium
+    - id: data_model_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - data
+      languages:
+        - java
+        - kotlin
+      frameworks:
+        - spring-boot
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - surface_inventory
+        - capability_result
+      evidence:
+        - file_path
+        - line_range
+        - symbol
+      confidence: medium
+    - id: hardcoded_catalog_detection
+      category: validation
+      status: experimental
+      surfaces:
+        - api
+        - data
+        - worker
+      languages:
+        - java
+        - kotlin
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - forbidden_pattern_finding
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - line_range
+        - symbol
+      confidence: medium
+  requires:
+    - id: tree-sitter-java
+      type: grammar
+      optional: true
+      reason: "AST-backed detection improves confidence for annotations and hardcoded catalogues."
+
+commands:
+  - id: detect
+    argv:
+      - nomos-adapter-jvm
+      - detect
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterDetectionResult"
+    timeout_seconds: 120
+    required: true
+  - id: self-check
+    argv:
+      - nomos-adapter-jvm
+      - self-check
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterSelfCheckResult"
+    timeout_seconds: 60
+    required: true
+
+limitations:
+  - id: annotation-only-detection
+    severity: medium
+    description: "Detection relies on Spring annotations. Programmatic route registration without annotations is not detected."
+    mitigation: "Emit adapter_diagnostic evidence and require human review for non-annotated endpoints."
+  - id: multi-module-resolution
+    severity: low
+    description: "Multi-module Maven/Gradle projects may not resolve cross-module dependencies for surface detection."
+    mitigation: "Run adapter at each module root independently."
+
+test_contract:
+  fixtures:
+    - id: spring-rest-service
+      path: "adapters/jvm/fixtures/spring-rest-service"
+      purpose: "Detect REST controllers, services, JPA entities, repositories, DTOs, and hardcoded catalogues in a Spring Boot project."
+      expected_capabilities:
+        - language_detection
+        - route_detection
+        - service_detection
+        - data_model_detection
+        - hardcoded_catalog_detection
+  required_checks:
+    - manifest-validates
+    - capabilities-declared
+    - version-compatibility-declared
+    - commands-smoke-tested
+    - fixtures-pass
+    - limitations-declared
+  compatibility_matrix:
+    - nomos_core: "0.1.0"
+      adapter: "0.1.0"
+      status: supported
+
+metadata:
+  documentation: "adapters/adapter-contract.md"
+  notes: "JVM adapter targeting Spring Boot annotation-driven detection patterns."
