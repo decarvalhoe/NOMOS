@@ -15,4 +15,5 @@ Premiers artefacts poses :
 - `nomos-project.cue`
 - `source-manifest.cue`
 - `canonical-matrix.cue`
+- `verdicts.cue`
 - `examples/`

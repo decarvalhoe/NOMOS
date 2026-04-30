@@ -19,7 +19,7 @@ package nomos
 
 	scope: {
 		verdict?:        #ScopeVerdict
-		confidence?:     "low" | "medium" | "high"
+		confidence?:     #ConfidenceLevel
 		in_scope:        [...string]
 		out_of_scope?:   [...string]
 		assumptions?:    [...string]
