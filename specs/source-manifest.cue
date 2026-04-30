@@ -4,7 +4,7 @@ package nomos
 
 #SourceManifest: {
 	schema_version: string | *"0.1.0"
-	sources: [...#Source]
+	sources: [#Source, ...#Source]
 }
 
 #Source: {
@@ -19,14 +19,7 @@ package nomos
 	owner:           string
 	license:         string
 	confidentiality: #Confidentiality
-	allowed_uses: [...(
-		"structured_contract" |
-		"vector_index" |
-		"citation_internal" |
-		"citation_external" |
-		"golden_case" |
-		"human_review_only"
-	)]
+	allowed_uses: [#AllowedUse, ...#AllowedUse]
 	redaction_policy?: "none" | "partial" | "full"
 	notes?:            string
 }
@@ -50,3 +43,11 @@ package nomos
 #SourceStatus: "active" | "superseded" | "duplicate" | "out_of_scope" | "needs_review" | "blocked"
 
 #Confidentiality: "public" | "internal" | "restricted" | "secret"
+
+#AllowedUse:
+	"structured_contract" |
+	"vector_index" |
+	"citation_internal" |
+	"citation_external" |
+	"golden_case" |
+	"human_review_only"
