@@ -1,0 +1,46 @@
+schema_version: "0.1.0"
+project:
+  id: demo-greenfield
+  name: Demo Greenfield
+  description: Produit greenfield minimal pour validation Nomos.
+  repository: https://example.com/demo-greenfield
+  domain: internal-ops
+  lifecycle: greenfield
+  risk_level: medium
+  owners:
+    - name: Alice Example
+      role: product-owner
+      email: alice@example.com
+scope:
+  in_scope:
+    - pricing
+    - eligibility
+surfaces:
+  - name: public-api
+    type: api
+    path: backend/
+    stack: python
+    critical: true
+    entrypoints:
+      - POST /v1/evaluate
+  - name: operator-ui
+    type: ui
+    path: frontend/
+    stack: typescript
+toolchain:
+  build:
+    - make build
+  test:
+    - make test
+  lint:
+    - make lint
+  ci_systems:
+    - github-actions
+compliance:
+  regulated: false
+  data_sensitivity: internal
+evidence:
+  required_reports:
+    - nomos-report.json
+    - coverage-report.md
+  attestation_level: none
