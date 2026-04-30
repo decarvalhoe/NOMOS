@@ -1,0 +1,15 @@
+units:
+  - unit_id: UNIT-001
+    unit_type: rule
+    name: "Test rule"
+    domain: insurance
+    criticality: high
+    source_refs:
+      - source_id: SRC-001
+        locator: "p. 1, clause 1"
+    business_rule: "Some rule applies."
+    canonical_contract:
+      path: contracts/rule.yaml
+      object_id: UNIT-001
+      status: present
+    status: covered
