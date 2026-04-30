@@ -7,3 +7,4 @@ Exemples cibles :
 - projet minimal greenfield ;
 - projet brownfield avec blocants et scope partiel ;
 - projet regulated avec exigences d'evidence plus fortes.
+- cas limites de taxonomie des verdicts.

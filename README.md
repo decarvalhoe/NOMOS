@@ -73,6 +73,7 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/14-product-roadmap.md` : roadmap produit v0.1 -> v1.0 et architecture cible.
 - `docs/15-product-backlog.md` : backlog concret d'epics/issues, dépendances et DoD.
 - `docs/16-versioning-policy.md` : politique de versionning du coeur, des adapters et des schemas.
+- `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
 - `examples/` : exemples courts par domaine.
