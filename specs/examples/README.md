@@ -4,6 +4,6 @@ Ce dossier contient des exemples de manifests produit pour tester le meta-modele
 
 Exemples cibles :
 
-- projet minimal greenfield ;
-- projet brownfield avec blocants et scope partiel ;
-- projet regulated avec exigences d'evidence plus fortes.
+- `nomos-project.minimal.yaml` : projet minimal greenfield ;
+- `nomos-project.brownfield.yaml` : projet brownfield avec bloquants et scope partiel ;
+- `nomos-project.regulated.yaml` : projet regulated avec exigences d'evidence plus fortes.

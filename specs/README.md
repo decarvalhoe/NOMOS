@@ -13,6 +13,7 @@ Contenu cible :
 Premiers artefacts poses :
 
 - `nomos-project.cue`
+- `nomos-project.md`
 - `source-manifest.cue`
 - `canonical-matrix.cue`
 - `adapter-manifest.cue`

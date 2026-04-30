@@ -46,8 +46,13 @@ toolchain:
     - make build
   test:
     - make test
+  lint:
+    - make lint
   typecheck:
     - make typecheck
+  package_managers:
+    - go-modules
+    - npm
   ci_systems:
     - github-actions
 compliance:
