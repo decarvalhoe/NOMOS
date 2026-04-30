@@ -1,0 +1,13 @@
+sources:
+  - id: SRC-BAD-STATUS
+    path: docs/readme.txt
+    type: pdf
+    domain: insurance
+    priority: primary
+    status: archived
+    hash: "sha256:abcdef1234567890"
+    owner: team@example.com
+    license: internal
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract
