@@ -1,0 +1,321 @@
+schema_version: "0.1.0"
+
+adapter:
+  id: python
+  name: "Python"
+  version: "0.1.0"
+  status: experimental
+  owners:
+    - name: "Nomos Core Team"
+      role: "adapter-owner"
+  license: "Apache-2.0"
+  package:
+    type: pip
+    name: "nomos-adapter-python"
+    version: "0.1.0"
+
+compatibility:
+  nomos_core:
+    min_version: "0.1.0"
+    tested_versions:
+      - "0.1.0"
+  manifest_contract:
+    version: "0.1.0"
+  schemas:
+    nomos_project:
+      min_version: "0.1.0"
+    source_manifest:
+      min_version: "0.1.0"
+    canonical_matrix:
+      min_version: "0.1.0"
+    adapter_manifest:
+      min_version: "0.1.0"
+
+stack_support:
+  - language: python
+    runtime: cpython
+    frameworks:
+      - fastapi
+      - django
+      - flask
+    package_managers:
+      - pip
+      - poetry
+      - pipenv
+    file_globs:
+      - "pyproject.toml"
+      - "setup.py"
+      - "requirements*.txt"
+      - "**/*.py"
+      - "fixtures/**/*.json"
+      - "tests/conftest.py"
+    exclude_globs:
+      - ".venv/**"
+      - "venv/**"
+      - "__pycache__/**"
+      - "*.egg-info/**"
+      - ".tox/**"
+      - "dist/**"
+    surfaces:
+      - api
+      - worker
+      - data
+      - cli
+
+capabilities:
+  contract_version: "0.1.0"
+  provides:
+    - id: language_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - worker
+        - cli
+      languages:
+        - python
+      inputs:
+        - filesystem
+        - package_manifest
+      outputs:
+        - surface_inventory
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: high
+    - id: dependency_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - worker
+        - data
+      languages:
+        - python
+      inputs:
+        - package_manifest
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: high
+    - id: route_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+      languages:
+        - python
+      frameworks:
+        - fastapi
+        - django
+        - flask
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - surface_inventory
+        - capability_result
+      evidence:
+        - file_path
+        - line_range
+        - route
+        - ast_node
+      confidence: medium
+    - id: service_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - worker
+      languages:
+        - python
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+        - ast_node
+      confidence: medium
+    - id: serializer_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - data
+      languages:
+        - python
+      frameworks:
+        - fastapi
+        - django
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+        - ast_node
+      confidence: medium
+    - id: fixture_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - data
+      languages:
+        - python
+      inputs:
+        - filesystem
+        - source_file
+      outputs:
+        - capability_result
+      evidence:
+        - file_path
+      confidence: high
+    - id: mock_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - worker
+      languages:
+        - python
+      inputs:
+        - filesystem
+        - source_file
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+      confidence: high
+    - id: hardcoded_catalog_detection
+      category: validation
+      status: experimental
+      surfaces:
+        - api
+        - worker
+        - data
+      languages:
+        - python
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - forbidden_pattern_finding
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - line_range
+        - symbol
+        - ast_node
+      confidence: medium
+  requires:
+    - id: tree-sitter-python
+      type: grammar
+      optional: true
+      reason: "AST-backed detection improves confidence for routes, services, and hardcoded catalogues."
+
+commands:
+  - id: detect
+    argv:
+      - nomos-adapter-python
+      - detect
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterDetectionResult"
+    timeout_seconds: 120
+    required: true
+  - id: self-check
+    argv:
+      - nomos-adapter-python
+      - self-check
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterSelfCheckResult"
+    timeout_seconds: 60
+    required: true
+
+limitations:
+  - id: dynamic-route-dispatch
+    severity: medium
+    description: "Routes registered dynamically via loops or metaprogramming may be reported with lower confidence."
+    mitigation: "Emit adapter_diagnostic evidence and require human review before strict admission."
+  - id: catalogue-semantics
+    severity: medium
+    description: "Hardcoded catalogue detection identifies likely static business enumerations but cannot prove source authority."
+    mitigation: "Link findings to canonical matrix units before strict release."
+  - id: decorator-stacking
+    severity: low
+    description: "Deeply stacked decorators or class-based views with multiple inheritance may obscure route paths."
+    mitigation: "Fallback to file-path heuristics when AST confidence is below threshold."
+
+test_contract:
+  fixtures:
+    - id: python-fastapi-service
+      path: "adapters/python/fixtures/fastapi-service"
+      purpose: "Detect FastAPI routes, services, serializers, mocks, fixtures, and hardcoded catalogues."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - serializer_detection
+        - mock_detection
+        - fixture_detection
+        - hardcoded_catalog_detection
+    - id: python-django-app
+      path: "adapters/python/fixtures/django-app"
+      purpose: "Detect Django URL patterns, views, serializers, and fixtures."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - serializer_detection
+        - fixture_detection
+    - id: python-flask-api
+      path: "adapters/python/fixtures/flask-api"
+      purpose: "Detect Flask routes, services, and mocks."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - mock_detection
+  required_checks:
+    - manifest-validates
+    - capabilities-declared
+    - version-compatibility-declared
+    - commands-smoke-tested
+    - fixtures-pass
+    - limitations-declared
+  compatibility_matrix:
+    - nomos_core: "0.1.0"
+      adapter: "0.1.0"
+      status: supported
+
+metadata:
+  documentation: "adapters/python/README.md"
+  notes: "First Python adapter profile for NOM-403."
