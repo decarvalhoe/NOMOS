@@ -30,3 +30,8 @@ adapter.nomos.yaml
 Le manifeste est l'interface stable entre le coeur Nomos et les adapters. Une
 implementation sans manifeste valide n'est pas chargeable par le coeur, meme si
 son code existe.
+
+Le coeur CLI expose maintenant une couche de parsing Tree-sitter commune pour
+les premiers adapters : Go, Java, JavaScript, Python, TSX et TypeScript. Quand
+une grammaire n'est pas enregistree, le rapport de detection doit emettre un
+diagnostic explicite plutot que masquer la limite de support.

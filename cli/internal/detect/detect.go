@@ -14,6 +14,7 @@ import (
 const (
 	maxEvidenceEntries = 20
 	maxContentBytes    = 128 * 1024
+	maxDiagnostics     = 20
 )
 
 type aggregate struct {
@@ -24,6 +25,7 @@ type aggregate struct {
 	tools        map[string]*toolAggregate
 	ci           map[string]*ciAggregate
 	surfaces     map[string]*surfaceAggregate
+	treeSitter   *treeSitterAggregate
 }
 
 type languageAggregate struct {
@@ -49,6 +51,15 @@ type surfaceAggregate struct {
 	evidence   []Evidence
 }
 
+type treeSitterAggregate struct {
+	enabled         bool
+	parsedFiles     int
+	languages       map[string]*languageAggregate
+	missingGrammars []TreeSitterDiagnostic
+	parseErrors     []TreeSitterDiagnostic
+	registry        *treeSitterRegistry
+}
+
 type packageManifest struct {
 	Dependencies         map[string]string `json:"dependencies"`
 	DevDependencies      map[string]string `json:"devDependencies"`
@@ -69,12 +80,13 @@ func Detect(root string) (Report, error) {
 	}
 
 	a := aggregate{
-		format:    ReportFormat,
-		root:      cleanRoot,
-		languages: map[string]*languageAggregate{},
-		tools:     map[string]*toolAggregate{},
-		ci:        map[string]*ciAggregate{},
-		surfaces:  map[string]*surfaceAggregate{},
+		format:     ReportFormat,
+		root:       cleanRoot,
+		languages:  map[string]*languageAggregate{},
+		tools:      map[string]*toolAggregate{},
+		ci:         map[string]*ciAggregate{},
+		surfaces:   map[string]*surfaceAggregate{},
+		treeSitter: newTreeSitterAggregate(),
 	}
 
 	err = filepath.WalkDir(cleanRoot, func(filePath string, entry os.DirEntry, walkErr error) error {
@@ -108,6 +120,7 @@ func Detect(root string) (Report, error) {
 				return err
 			}
 			a.detectContent(rel, content)
+			a.detectTreeSitter(rel, []byte(content))
 		}
 		return nil
 	})
@@ -273,6 +286,41 @@ func (a *aggregate) detectContent(rel string, content string) {
 		strings.Contains(lowerContent, "create table ") ||
 		strings.Contains(lowerContent, "alter table ") {
 		a.addSurface("data", "high", rel, "SQL schema or migration content")
+	}
+}
+
+func (a *aggregate) detectTreeSitter(rel string, content []byte) {
+	language := treeSitterLanguageForPath(rel)
+	if language == "" {
+		return
+	}
+
+	result, err := a.treeSitter.registry.parse(rel, language, content)
+	if err != nil {
+		a.treeSitter.addDiagnostic(&a.treeSitter.missingGrammars, rel, language, err)
+		return
+	}
+
+	a.treeSitter.parsedFiles++
+	item, ok := a.treeSitter.languages[result.Language]
+	if !ok {
+		item = &languageAggregate{name: result.Language}
+		a.treeSitter.languages[result.Language] = item
+	}
+	item.files++
+	addEvidence(
+		&item.evidence,
+		rel,
+		"Tree-sitter parsed "+result.Language+" AST root "+result.RootType,
+	)
+
+	if result.HasError {
+		a.treeSitter.addDiagnostic(
+			&a.treeSitter.parseErrors,
+			rel,
+			result.Language,
+			errors.New("tree-sitter parse completed with syntax errors"),
+		)
 	}
 }
 
@@ -521,6 +569,35 @@ func addEvidence(target *[]Evidence, rel string, reason string) {
 	*target = append(*target, Evidence{Path: rel, Reason: reason})
 }
 
+func newTreeSitterAggregate() *treeSitterAggregate {
+	return &treeSitterAggregate{
+		enabled:   true,
+		languages: map[string]*languageAggregate{},
+		registry:  newTreeSitterRegistry(),
+	}
+}
+
+func (a *treeSitterAggregate) addDiagnostic(
+	target *[]TreeSitterDiagnostic,
+	rel string,
+	language string,
+	err error,
+) {
+	if len(*target) >= maxDiagnostics {
+		return
+	}
+	for _, existing := range *target {
+		if existing.Path == rel && existing.Language == language && existing.Message == err.Error() {
+			return
+		}
+	}
+	*target = append(*target, TreeSitterDiagnostic{
+		Path:     rel,
+		Language: language,
+		Message:  err.Error(),
+	})
+}
+
 func (a *aggregate) report() Report {
 	report := Report{
 		Format:       a.format,
@@ -530,6 +607,13 @@ func (a *aggregate) report() Report {
 		Tools:        make([]ToolFinding, 0, len(a.tools)),
 		CI:           make([]CIFinding, 0, len(a.ci)),
 		Surfaces:     make([]SurfaceFinding, 0, len(a.surfaces)),
+		TreeSitter: TreeSitterReport{
+			Enabled:         a.treeSitter.enabled,
+			ParsedFiles:     a.treeSitter.parsedFiles,
+			Languages:       make([]TreeSitterLanguageReport, 0, len(a.treeSitter.languages)),
+			MissingGrammars: append([]TreeSitterDiagnostic(nil), a.treeSitter.missingGrammars...),
+			ParseErrors:     append([]TreeSitterDiagnostic(nil), a.treeSitter.parseErrors...),
+		},
 	}
 
 	for _, item := range a.languages {
@@ -582,6 +666,23 @@ func (a *aggregate) report() Report {
 		return report.Surfaces[i].Name < report.Surfaces[j].Name
 	})
 
+	for _, item := range a.treeSitter.languages {
+		sortEvidence(item.evidence)
+		report.TreeSitter.Languages = append(report.TreeSitter.Languages, TreeSitterLanguageReport{
+			Name:     item.name,
+			Files:    item.files,
+			Evidence: item.evidence,
+		})
+	}
+	sort.Slice(report.TreeSitter.Languages, func(i, j int) bool {
+		if report.TreeSitter.Languages[i].Files == report.TreeSitter.Languages[j].Files {
+			return report.TreeSitter.Languages[i].Name < report.TreeSitter.Languages[j].Name
+		}
+		return report.TreeSitter.Languages[i].Files > report.TreeSitter.Languages[j].Files
+	})
+	sortTreeSitterDiagnostics(report.TreeSitter.MissingGrammars)
+	sortTreeSitterDiagnostics(report.TreeSitter.ParseErrors)
+
 	return report
 }
 
@@ -589,6 +690,18 @@ func sortEvidence(items []Evidence) {
 	sort.Slice(items, func(i, j int) bool {
 		if items[i].Path == items[j].Path {
 			return items[i].Reason < items[j].Reason
+		}
+		return items[i].Path < items[j].Path
+	})
+}
+
+func sortTreeSitterDiagnostics(items []TreeSitterDiagnostic) {
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Path == items[j].Path {
+			if items[i].Language == items[j].Language {
+				return items[i].Message < items[j].Message
+			}
+			return items[i].Language < items[j].Language
 		}
 		return items[i].Path < items[j].Path
 	})

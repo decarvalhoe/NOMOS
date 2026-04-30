@@ -3,9 +3,12 @@ package detect
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestDetectFullStackCorpus(t *testing.T) {
@@ -17,10 +20,20 @@ func TestDetectFullStackCorpus(t *testing.T) {
 	assertHasLanguage(t, report, "Go")
 	assertHasLanguage(t, report, "TypeScript")
 	assertHasLanguage(t, report, "Python")
+	assertHasTreeSitterLanguage(t, report, "Go")
+	assertHasTreeSitterLanguage(t, report, "Java")
+	assertHasTreeSitterLanguage(t, report, "Python")
+	assertHasTreeSitterLanguage(t, report, "TSX")
 	assertHasTool(t, report, "Go modules")
 	assertHasTool(t, report, "React")
 	assertHasTool(t, report, "GitHub Actions")
 	assertHasCI(t, report, "GitHub Actions")
+	if report.TreeSitter.ParsedFiles == 0 {
+		t.Fatalf("expected Tree-sitter parsed files in %#v", report.TreeSitter)
+	}
+	if len(report.TreeSitter.MissingGrammars) != 0 {
+		t.Fatalf("did not expect missing grammars: %#v", report.TreeSitter.MissingGrammars)
+	}
 
 	for _, surface := range []string{"api", "ui", "worker", "data", "infra", "docs"} {
 		assertHasSurface(t, report, surface)
@@ -50,6 +63,72 @@ func TestDetectSkipsDependencyAndBuildDirectories(t *testing.T) {
 		t.Fatalf("did not expect ignored tool/cache directories to be scanned")
 	}
 	assertHasSurface(t, report, "docs")
+}
+
+func TestDetectReportsClearMissingTreeSitterGrammar(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "src/Program.cs", "namespace Demo { class Program {} }\n")
+
+	report, err := Detect(root)
+	if err != nil {
+		t.Fatalf("detect temp corpus: %v", err)
+	}
+
+	if len(report.TreeSitter.MissingGrammars) != 1 {
+		t.Fatalf("expected one missing grammar diagnostic, got %#v", report.TreeSitter.MissingGrammars)
+	}
+	diagnostic := report.TreeSitter.MissingGrammars[0]
+	if diagnostic.Language != "C#" {
+		t.Fatalf("expected C# diagnostic, got %#v", diagnostic)
+	}
+	for _, expected := range []string{
+		"tree-sitter grammar missing for language C#",
+		"registered grammars: Go, Java, JavaScript, Python, TSX, TypeScript",
+	} {
+		if !strings.Contains(diagnostic.Message, expected) {
+			t.Fatalf("expected diagnostic %q to contain %q", diagnostic.Message, expected)
+		}
+	}
+}
+
+func TestDetectTreeSitterMediumRepoPerformance(t *testing.T) {
+	root := t.TempDir()
+	const filesPerLanguage = 80
+	for i := 0; i < filesPerLanguage; i++ {
+		writeTestFile(t, root, fmt.Sprintf("go/pkg_%03d/service.go", i), fmt.Sprintf(
+			"package pkg_%03d\nfunc Value() int { return %d }\n",
+			i,
+			i,
+		))
+		writeTestFile(t, root, fmt.Sprintf("web/src/component_%03d.ts", i), fmt.Sprintf(
+			"export function component%d(): number { return %d; }\n",
+			i,
+			i,
+		))
+		writeTestFile(t, root, fmt.Sprintf("workers/task_%03d.py", i), fmt.Sprintf(
+			"def task_%03d():\n    return %d\n",
+			i,
+			i,
+		))
+	}
+
+	started := time.Now()
+	report, err := Detect(root)
+	elapsed := time.Since(started)
+	if err != nil {
+		t.Fatalf("detect medium corpus: %v", err)
+	}
+
+	const parsedFiles = filesPerLanguage * 3
+	if report.TreeSitter.ParsedFiles != parsedFiles {
+		t.Fatalf("expected %d parsed files, got %d", parsedFiles, report.TreeSitter.ParsedFiles)
+	}
+	if len(report.TreeSitter.MissingGrammars) != 0 || len(report.TreeSitter.ParseErrors) != 0 {
+		t.Fatalf("expected clean Tree-sitter parse, got %#v", report.TreeSitter)
+	}
+	if elapsed > 10*time.Second {
+		t.Fatalf("medium corpus detection took %s, expected <= 10s", elapsed)
+	}
 }
 
 func TestWriteJSONExportsStableDetectionReport(t *testing.T) {
@@ -92,6 +171,19 @@ func assertHasLanguage(t *testing.T, report Report, name string) {
 	if !hasLanguage(report, name) {
 		t.Fatalf("expected language %q in %#v", name, report.Languages)
 	}
+}
+
+func assertHasTreeSitterLanguage(t *testing.T, report Report, name string) {
+	t.Helper()
+	for _, item := range report.TreeSitter.Languages {
+		if item.Name == name {
+			if item.Files == 0 || len(item.Evidence) == 0 {
+				t.Fatalf("Tree-sitter language %q has incomplete evidence: %#v", name, item)
+			}
+			return
+		}
+	}
+	t.Fatalf("expected Tree-sitter language %q in %#v", name, report.TreeSitter.Languages)
 }
 
 func hasLanguage(report Report, name string) bool {

@@ -10,6 +10,7 @@ type Report struct {
 	Tools        []ToolFinding     `json:"tools"`
 	CI           []CIFinding       `json:"ci"`
 	Surfaces     []SurfaceFinding  `json:"surfaces"`
+	TreeSitter   TreeSitterReport  `json:"treeSitter"`
 }
 
 type LanguageFinding struct {
@@ -38,4 +39,24 @@ type SurfaceFinding struct {
 type Evidence struct {
 	Path   string `json:"path"`
 	Reason string `json:"reason"`
+}
+
+type TreeSitterReport struct {
+	Enabled         bool                       `json:"enabled"`
+	ParsedFiles     int                        `json:"parsedFiles"`
+	Languages       []TreeSitterLanguageReport `json:"languages"`
+	MissingGrammars []TreeSitterDiagnostic     `json:"missingGrammars,omitempty"`
+	ParseErrors     []TreeSitterDiagnostic     `json:"parseErrors,omitempty"`
+}
+
+type TreeSitterLanguageReport struct {
+	Name     string     `json:"name"`
+	Files    int        `json:"files"`
+	Evidence []Evidence `json:"evidence"`
+}
+
+type TreeSitterDiagnostic struct {
+	Path     string `json:"path"`
+	Language string `json:"language"`
+	Message  string `json:"message"`
 }
