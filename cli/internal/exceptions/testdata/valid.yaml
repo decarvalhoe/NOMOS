@@ -1,0 +1,12 @@
+exceptions:
+  - id: EXC-001
+    summary: "Allow release without full coverage"
+    owner: tech-lead@example.com
+    approver: cto@example.com
+    severity: medium
+    status: active
+    created_at: "2026-04-01"
+    expires_at: "2026-12-31"
+    reason: "Coverage gap in legacy module pending strangler migration."
+    scope: "module:legacy-pricing"
+    decision_ref: ADR-0042

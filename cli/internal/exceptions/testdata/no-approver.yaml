@@ -1,0 +1,10 @@
+exceptions:
+  - id: EXC-NO-APPROVER
+    summary: "Missing approver"
+    owner: dev@example.com
+    approver: ""
+    severity: low
+    status: active
+    created_at: "2026-04-01"
+    expires_at: "2026-12-31"
+    reason: "Test."

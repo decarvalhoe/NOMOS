@@ -1,0 +1,10 @@
+exceptions:
+  - id: EXC-NO-EXPIRY
+    summary: "Missing expiration"
+    owner: dev@example.com
+    approver: lead@example.com
+    severity: medium
+    status: active
+    created_at: "2026-04-01"
+    expires_at: ""
+    reason: "Test."
