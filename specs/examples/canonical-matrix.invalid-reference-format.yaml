@@ -1,0 +1,18 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: ins-home-lowercase-id
+    unit_type: rule
+    name: Invalid lowercase unit ID
+    domain: insurance-home
+    criticality: medium
+    source_refs:
+      - source_id: invalid source id
+        locator: ""
+        hash: md5:not-allowed
+    business_rule: This fixture is expected to fail CUE validation.
+    api_refs:
+      - method: TRACE
+        path: api/no-leading-slash
+    status: partial
+    gaps:
+      - Invalid IDs, hash, locator, method and path should be rejected.

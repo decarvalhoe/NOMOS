@@ -1,0 +1,69 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-HOME-WARRANTY-WATER-DAMAGE
+    unit_type: catalog_entry
+    name: Water damage warranty
+    domain: insurance-home
+    criticality: high
+    source_refs:
+      - source_id: INS-CONTRACT-HOME-2026
+        locator: "p. 12, clause 3.1"
+        hash: sha256:contract-home-2026-clause-3-1
+    business_rule: Water damage is covered when the event matches the canonical warranty and exclusions are absent.
+    canonical_contract:
+      path: data/canonical/warranties.yaml
+      object_id: INS-HOME-WARRANTY-WATER-DAMAGE
+      status: present
+    schema_refs:
+      - schemas/warranty.schema.json
+    db_refs:
+      - table: canonical_warranties
+        key: INS-HOME-WARRANTY-WATER-DAMAGE
+    vector_refs:
+      - collection: canonical_chunks
+        filter: "unit_id = INS-HOME-WARRANTY-WATER-DAMAGE"
+    core_refs:
+      - module: core/warranties/water_damage.go
+        symbol: EvaluateWaterDamageWarranty
+    api_refs:
+      - method: POST
+        path: /api/warranties/evaluate
+    ui_refs:
+      - app: policyholder
+        path: /claims/water-damage
+    test_refs:
+      - tests/golden/INS-HOME-WARRANTY-WATER-DAMAGE.yaml
+      - tests/core/water_damage_test.go
+    decision_refs:
+      - ADR-0007
+    status: covered
+    gaps: []
+  - unit_id: INS-HOME-WARRANTY-ROOF-INFILTRATION
+    unit_type: exception
+    name: Roof infiltration without maintenance
+    domain: insurance-home
+    criticality: medium
+    source_refs:
+      - source_id: INS-CONTRACT-HOME-2026
+        locator: "p. 14, exclusion 2"
+    business_rule: Roof infiltration is excluded when maintenance obligations are not met.
+    canonical_contract:
+      path: data/canonical/exclusions.yaml
+      object_id: INS-HOME-WARRANTY-ROOF-INFILTRATION
+      status: planned
+    status: partial
+    gaps:
+      - Add structured exclusion payload.
+      - Add golden case covering missing maintenance evidence.
+  - unit_id: DECISION-INS-HOME-WATER-DAMAGE-DEDUCTIBLE
+    unit_type: decision
+    name: Historical deductible decision
+    domain: insurance-home
+    criticality: low
+    source_refs:
+      - source_id: ADR-INS-0003
+        locator: "decision body"
+    business_rule: Old deductible handling is deprecated after migration to canonical contracts.
+    status: deprecated
+    decision_refs:
+      - DEC-INS-0003
