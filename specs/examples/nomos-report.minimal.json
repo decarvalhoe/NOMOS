@@ -1,0 +1,62 @@
+{
+  "schema_version": "0.1.0",
+  "report_type": "nomos-report",
+  "generated_at": "2026-04-30T00:00:00Z",
+  "run": {
+    "id": "run-20260430-000000",
+    "mode": "validate",
+    "tool": {
+      "name": "nomos",
+      "version": "0.1.0"
+    },
+    "command": ["nomos", "validate", "--report", "nomos-report.json"],
+    "duration_ms": 1280
+  },
+  "project": {
+    "id": "minimal-greenfield",
+    "name": "Minimal Greenfield",
+    "domain": "example",
+    "risk_level": "low",
+    "manifest_path": "nomos.project.yaml"
+  },
+  "summary": {
+    "check_count": 2,
+    "finding_count": 0,
+    "blocking_finding_count": 0,
+    "evidence_count": 0,
+    "coverage": {
+      "unit_total": 0,
+      "unit_covered": 0,
+      "unit_partial": 0,
+      "unit_missing": 0,
+      "unit_not_applicable": 0,
+      "coverage_ratio": 1
+    }
+  },
+  "verdict": {
+    "status": "pass",
+    "severity": "info",
+    "blocking": false,
+    "summary": "Nomos project manifest and baseline contracts are valid."
+  },
+  "checks": [
+    {
+      "id": "project.schema",
+      "name": "Project manifest schema",
+      "category": "scope",
+      "status": "passed",
+      "severity": "info",
+      "duration_ms": 320
+    },
+    {
+      "id": "report.schema",
+      "name": "Nomos report schema",
+      "category": "execution",
+      "status": "passed",
+      "severity": "info",
+      "duration_ms": 18
+    }
+  ],
+  "findings": [],
+  "evidence": []
+}
