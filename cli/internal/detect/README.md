@@ -12,9 +12,9 @@ report containing:
 - product surfaces: `api`, `ui`, `worker`, `data`, `infra`, `docs`.
 
 The detector is heuristic by design. Findings include evidence paths and
-reasons so later `diagnose` and adapter work can decide whether a signal is
-strong enough for admission.
+reasons so `diagnose` and adapter work can decide whether a signal is strong
+enough for admission.
 
-Command integration is intentionally deferred to NOM-302 (`nomos diagnose`).
-This keeps NOM-301 owned by the detection package while still making the report
-exportable through `WriteJSON`.
+`nomos diagnose` consumes this package but keeps admission classification in
+`internal/diagnose`. This keeps NOM-301 owned by the detection package while
+still making the raw detection report exportable through `WriteJSON`.

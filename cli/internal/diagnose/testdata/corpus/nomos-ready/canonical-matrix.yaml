@@ -1,0 +1,8 @@
+schema_version: "0.1.0"
+units:
+  - id: UNIT-REFERENCE-001
+    source_ref: SRC-REFERENCE-001
+    product_refs:
+      - api/reference.go
+    test_refs:
+      - api/reference_test.go

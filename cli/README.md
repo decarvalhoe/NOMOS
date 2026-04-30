@@ -14,5 +14,6 @@ Etat actuel :
 
 - module Go initialise ;
 - point d'entree `main.go` ;
-- dispatch minimal `help`, `version`, `init`, `validate`, `diagnose` ;
-- tests unitaires ecrits pour le squelette du dispatcher.
+- dispatch minimal `help`, `version`, `init`, `validate` ;
+- `diagnose` heuristique avec sorties JSON / Markdown ;
+- tests unitaires pour le dispatcher, la detection et le diagnostic.
