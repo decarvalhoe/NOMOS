@@ -1,0 +1,12 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: DEC-OLD-BEHAVIOR
+    unit_type: decision
+    name: Old behavior without decision ref
+    domain: insurance-home
+    criticality: low
+    source_refs:
+      - source_id: ADR-0001
+        locator: "body"
+    business_rule: Deprecated without a decision_ref.
+    status: deprecated
