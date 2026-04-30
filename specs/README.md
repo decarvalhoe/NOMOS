@@ -15,4 +15,9 @@ Premiers artefacts poses :
 - `nomos-project.cue`
 - `source-manifest.cue`
 - `canonical-matrix.cue`
+- `adapter-manifest.cue`
 - `examples/`
+
+Exemples de contrat :
+
+- `examples/adapter-manifest.node-typescript.yaml`
