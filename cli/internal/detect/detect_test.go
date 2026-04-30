@@ -1,0 +1,150 @@
+package detect
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestDetectFullStackCorpus(t *testing.T) {
+	report, err := Detect(filepath.Join("testdata", "corpus", "fullstack"))
+	if err != nil {
+		t.Fatalf("detect fullstack corpus: %v", err)
+	}
+
+	assertHasLanguage(t, report, "Go")
+	assertHasLanguage(t, report, "TypeScript")
+	assertHasLanguage(t, report, "Python")
+	assertHasTool(t, report, "Go modules")
+	assertHasTool(t, report, "React")
+	assertHasTool(t, report, "GitHub Actions")
+	assertHasCI(t, report, "GitHub Actions")
+
+	for _, surface := range []string{"api", "ui", "worker", "data", "infra", "docs"} {
+		assertHasSurface(t, report, surface)
+	}
+}
+
+func TestDetectSkipsDependencyAndBuildDirectories(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "node_modules/react/package.json", `{"dependencies":{"react":"latest"}}`)
+	writeTestFile(t, root, "vendor/server.go", "package vendor\nimport \"net/http\"\n")
+	writeTestFile(t, root, ".tools/go/src/tool.go", "package tool\n")
+	writeTestFile(t, root, ".cache/generated/server.go", "package cache\n")
+	writeTestFile(t, root, "README.md", "# docs\n")
+
+	report, err := Detect(root)
+	if err != nil {
+		t.Fatalf("detect temp corpus: %v", err)
+	}
+
+	if hasTool(report, "React") {
+		t.Fatalf("did not expect dependency directory package.json to be scanned")
+	}
+	if hasSurface(report, "api") {
+		t.Fatalf("did not expect vendor source to create an API surface")
+	}
+	if hasLanguage(report, "Go") {
+		t.Fatalf("did not expect ignored tool/cache directories to be scanned")
+	}
+	assertHasSurface(t, report, "docs")
+}
+
+func TestWriteJSONExportsStableDetectionReport(t *testing.T) {
+	report, err := Detect(filepath.Join("testdata", "corpus", "fullstack"))
+	if err != nil {
+		t.Fatalf("detect fullstack corpus: %v", err)
+	}
+
+	var out bytes.Buffer
+	if err := WriteJSON(&out, report); err != nil {
+		t.Fatalf("write json: %v", err)
+	}
+
+	var decoded Report
+	if err := json.Unmarshal(out.Bytes(), &decoded); err != nil {
+		t.Fatalf("decode json report: %v\n%s", err, out.String())
+	}
+	if decoded.Format != ReportFormat {
+		t.Fatalf("expected format %q, got %q", ReportFormat, decoded.Format)
+	}
+	if decoded.FilesScanned == 0 {
+		t.Fatalf("expected filesScanned to be populated")
+	}
+	assertHasSurface(t, decoded, "api")
+}
+
+func writeTestFile(t *testing.T, root string, rel string, content string) {
+	t.Helper()
+	filePath := filepath.Join(root, filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
+		t.Fatalf("create test directory for %s: %v", rel, err)
+	}
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		t.Fatalf("write test file %s: %v", rel, err)
+	}
+}
+
+func assertHasLanguage(t *testing.T, report Report, name string) {
+	t.Helper()
+	if !hasLanguage(report, name) {
+		t.Fatalf("expected language %q in %#v", name, report.Languages)
+	}
+}
+
+func hasLanguage(report Report, name string) bool {
+	for _, item := range report.Languages {
+		if item.Name != name {
+			continue
+		}
+		return len(item.Evidence) > 0
+	}
+	return false
+}
+
+func assertHasTool(t *testing.T, report Report, name string) {
+	t.Helper()
+	if !hasTool(report, name) {
+		t.Fatalf("expected tool %q in %#v", name, report.Tools)
+	}
+}
+
+func hasTool(report Report, name string) bool {
+	for _, item := range report.Tools {
+		if item.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func assertHasCI(t *testing.T, report Report, provider string) {
+	t.Helper()
+	for _, item := range report.CI {
+		if item.Provider == provider {
+			if len(item.Evidence) == 0 {
+				t.Fatalf("CI provider %q has no evidence", provider)
+			}
+			return
+		}
+	}
+	t.Fatalf("expected CI provider %q in %#v", provider, report.CI)
+}
+
+func assertHasSurface(t *testing.T, report Report, name string) {
+	t.Helper()
+	if !hasSurface(report, name) {
+		t.Fatalf("expected surface %q in %#v", name, report.Surfaces)
+	}
+}
+
+func hasSurface(report Report, name string) bool {
+	for _, item := range report.Surfaces {
+		if item.Name == name {
+			return true
+		}
+	}
+	return false
+}
