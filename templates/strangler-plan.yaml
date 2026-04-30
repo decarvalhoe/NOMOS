@@ -1,0 +1,101 @@
+id: STRANGLE-DOMAIN-0001
+name: "Strangler migration plan title"
+description: "Incremental migration plan from legacy to canonical-first."
+
+domain: example-domain
+owner: migration-lead@example.com
+status: in_progress
+created_at: "2026-04-30"
+target_date: "2026-06-30"
+
+legacy_module:
+  path: "legacy/module/path"
+  language: python
+  description: "What this legacy module does."
+  source_id: SOURCE-LEGACY-ID
+  risk_level: medium
+
+phases:
+  - id: PHASE-1-CHARACTERIZE
+    name: "Characterize"
+    status: done
+    tasks:
+      - "Register legacy source in source-manifest"
+      - "Write characterization tests for all observed behaviors"
+      - "Document edge cases and known bugs"
+    outputs:
+      - "characterization tests in tests/characterization/"
+      - "source-manifest entry with priority: legacy"
+
+  - id: PHASE-2-EXTRACT
+    name: "Extract pure core"
+    status: in_progress
+    tasks:
+      - "Create canonical contracts from characterized behaviors"
+      - "Implement pure core module with no infra dependencies"
+      - "Map units in canonical matrix"
+      - "Write golden cases from characterization tests"
+    outputs:
+      - "data/canonical/domain-contracts.yaml"
+      - "core/domain/ module"
+      - "tests/golden/ cases"
+
+  - id: PHASE-3-COMPARE
+    name: "Compare legacy vs core"
+    status: pending
+    tasks:
+      - "Run legacy and new core side-by-side on same inputs"
+      - "Diff outputs and flag discrepancies"
+      - "Resolve discrepancies with decision records"
+    outputs:
+      - "comparison report"
+      - "ADRs for intentional divergences"
+
+  - id: PHASE-4-ROUTE
+    name: "Progressive routing"
+    status: pending
+    tasks:
+      - "Add feature flag or routing layer"
+      - "Route percentage of traffic to new core"
+      - "Monitor for regressions"
+    outputs:
+      - "routing configuration"
+      - "monitoring dashboard"
+
+  - id: PHASE-5-RETIRE
+    name: "Retire legacy"
+    status: pending
+    tasks:
+      - "Route 100% to new core"
+      - "Verify all golden cases pass"
+      - "Run canonical strict check"
+      - "Remove legacy code"
+      - "Update source-manifest status to superseded"
+    outputs:
+      - "legacy source status: superseded"
+      - "clean canonical strict pass"
+
+gate_criteria:
+  - "All characterization tests pass on new core"
+  - "All golden cases pass"
+  - "canonical strict is green"
+  - "No orphan sources"
+  - "Decision records exist for every intentional divergence"
+
+risks:
+  - id: RISK-STRANGLE-001
+    description: "Undiscovered legacy behavior not covered by characterization tests"
+    severity: high
+    mitigation: "Run shadow mode comparison before full routing"
+  - id: RISK-STRANGLE-002
+    description: "Legacy side effects relied upon by other modules"
+    severity: medium
+    mitigation: "Map all consumers before retirement phase"
+
+decision_refs:
+  - ADR-0000
+
+notes: |
+  Follow the strangler pattern from docs/09-adaptation-guide.md.
+  Never rewrite all legacy at once. The legacy is a historical
+  source of truth as long as it describes real behavior.
