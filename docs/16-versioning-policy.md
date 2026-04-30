@@ -68,6 +68,36 @@ Chaque adapter doit declarer :
 
 Un adapter peut evoluer sans forcer un bump du coeur si son contrat public ne change pas.
 
+### Contrat De Manifeste Adapter
+
+Le contrat public d'un adapter est son manifeste `adapter.nomos.yaml`, valide
+contre `specs/adapter-manifest.cue` (`#AdapterManifest`). Le manifeste fait
+partie de l'API publique de l'adapter au meme titre que ses commandes.
+
+Champs publics versionnes :
+
+- `adapter.version` ;
+- `compatibility.nomos_core.min_version` et `max_version` ;
+- `compatibility.manifest_contract.version` ;
+- `stack_support` ;
+- `capabilities.provides` ;
+- `commands` ;
+- `limitations` ;
+- `test_contract`.
+
+Regles de bump propres au manifeste :
+
+- `MAJOR` : suppression ou renommage d'une capability, commande, surface,
+  evidence kind ou output kind ; changement incompatible de protocole de
+  commande ;
+- `MINOR` : ajout compatible d'une capability, surface, framework, commande
+  optionnelle ou evidence kind ;
+- `PATCH` : correction de detection, documentation ou metadata sans changement
+  de champ public.
+
+Une capability `experimental` peut etre ajoutee en `MINOR`; une capability
+`stable` ne peut pas changer de signification sans bump `MAJOR`.
+
 ## 3. Schemas
 
 Les schemas Nomos doivent etre versionnes separément du coeur.
