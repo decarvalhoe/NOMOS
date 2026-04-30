@@ -1,0 +1,6 @@
+units:
+  - unit_id: UNIT-001
+    domain: finance
+    source_refs:
+      - source_id: SRC-001
+    status: covered
