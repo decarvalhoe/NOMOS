@@ -1,8 +1,12 @@
-# Canonical-First Method
+# Nomos
+
+**Canonical Product Intelligence**
 
 Méthode généralisable pour transformer des sources métier d'autorité en logiciel vérifiable, traçable et difficile à faire dériver par accident, y compris quand des agents IA participent au travail.
 
-Cette méthode est née d'un constat simple : une application peut être techniquement propre et pourtant métier fausse si ses écrans, ses moteurs, ses catalogues ou ses réponses LLM consomment des données de démonstration, des interprétations cachées ou des fragments de règles non tracés. Le remède n'est pas "plus d'IA". Le remède est une chaîne d'autorité explicite, testée, gouvernée et auditée.
+Nomos est née d'un constat simple : une application peut être techniquement propre et pourtant métier fausse si ses écrans, ses moteurs, ses catalogues ou ses réponses LLM consomment des données de démonstration, des interprétations cachées ou des fragments de règles non tracés. Le remède n'est pas "plus d'IA". Le remède est une chaîne d'autorité explicite, testée, gouvernée et auditée.
+
+Nomos vient du grec `nomos` : loi, règle, norme. Le nom reflète l'objectif du projet : transformer les règles d'un domaine en preuves produit exécutables.
 
 ## Le Principe
 
