@@ -40,6 +40,33 @@ func TestDetectFullStackCorpus(t *testing.T) {
 	}
 }
 
+func TestDetectNodeTypeScriptOfficialFixture(t *testing.T) {
+	report, err := Detect(filepath.Join("..", "..", "..", "adapters", "node-typescript", "fixtures", "nextjs-api-ui"))
+	if err != nil {
+		t.Fatalf("detect Node/TypeScript fixture: %v", err)
+	}
+
+	assertHasLanguage(t, report, "TypeScript")
+	assertHasTreeSitterLanguage(t, report, "TypeScript")
+	assertHasTreeSitterLanguage(t, report, "TSX")
+	if len(report.TreeSitter.ParseErrors) != 0 {
+		t.Fatalf("expected clean Tree-sitter parse for official fixture, got %#v", report.TreeSitter.ParseErrors)
+	}
+	assertHasSurface(t, report, "api")
+	assertHasSurface(t, report, "ui")
+	assertHasSurface(t, report, "data")
+
+	assertHasNodeTypeScriptFinding(t, report, "language_detection", "Node package manifest", "")
+	assertHasNodeTypeScriptFinding(t, report, "dependency_detection", "Next.js", "ui")
+	assertHasNodeTypeScriptFinding(t, report, "route_detection", "Next.js API route", "api")
+	assertHasNodeTypeScriptFinding(t, report, "route_detection", "Next.js UI route", "ui")
+	assertHasNodeTypeScriptFinding(t, report, "route_detection", "Node route handler", "api")
+	assertHasNodeTypeScriptFinding(t, report, "service_detection", "Service module", "")
+	assertHasNodeTypeScriptFinding(t, report, "mock_detection", "Test mock", "")
+	assertHasNodeTypeScriptFinding(t, report, "fixture_detection", "Test fixture", "")
+	assertHasNodeTypeScriptFinding(t, report, "hardcoded_catalog_detection", "Hardcoded catalogue", "data")
+}
+
 func TestDetectSkipsDependencyAndBuildDirectories(t *testing.T) {
 	root := t.TempDir()
 	writeTestFile(t, root, "node_modules/react/package.json", `{"dependencies":{"react":"latest"}}`)
@@ -152,6 +179,9 @@ func TestWriteJSONExportsStableDetectionReport(t *testing.T) {
 	if decoded.FilesScanned == 0 {
 		t.Fatalf("expected filesScanned to be populated")
 	}
+	if !decoded.NodeTypeScript.Enabled {
+		t.Fatalf("expected Node/TypeScript adapter report to be enabled")
+	}
 	assertHasSurface(t, decoded, "api")
 }
 
@@ -239,4 +269,23 @@ func hasSurface(report Report, name string) bool {
 		}
 	}
 	return false
+}
+
+func assertHasNodeTypeScriptFinding(t *testing.T, report Report, kind string, name string, surface string) {
+	t.Helper()
+	for _, item := range report.NodeTypeScript.Findings {
+		if item.Kind == kind && item.Name == name && item.Surface == surface {
+			if item.Confidence == "" || len(item.Evidence) == 0 {
+				t.Fatalf("Node/TypeScript finding %s/%s/%s has incomplete evidence: %#v", kind, name, surface, item)
+			}
+			return
+		}
+	}
+	t.Fatalf(
+		"expected Node/TypeScript finding %s/%s/%s in %#v",
+		kind,
+		name,
+		surface,
+		report.NodeTypeScript.Findings,
+	)
 }

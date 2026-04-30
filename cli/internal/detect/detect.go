@@ -18,14 +18,15 @@ const (
 )
 
 type aggregate struct {
-	format       string
-	root         string
-	filesScanned int
-	languages    map[string]*languageAggregate
-	tools        map[string]*toolAggregate
-	ci           map[string]*ciAggregate
-	surfaces     map[string]*surfaceAggregate
-	treeSitter   *treeSitterAggregate
+	format         string
+	root           string
+	filesScanned   int
+	languages      map[string]*languageAggregate
+	tools          map[string]*toolAggregate
+	ci             map[string]*ciAggregate
+	surfaces       map[string]*surfaceAggregate
+	treeSitter     *treeSitterAggregate
+	nodeTypeScript *nodeTypeScriptAggregate
 }
 
 type languageAggregate struct {
@@ -60,6 +61,19 @@ type treeSitterAggregate struct {
 	registry        *treeSitterRegistry
 }
 
+type nodeTypeScriptAggregate struct {
+	enabled  bool
+	findings map[string]*nodeTypeScriptFindingAggregate
+}
+
+type nodeTypeScriptFindingAggregate struct {
+	kind       string
+	name       string
+	surface    string
+	confidence string
+	evidence   []Evidence
+}
+
 type packageManifest struct {
 	Dependencies         map[string]string `json:"dependencies"`
 	DevDependencies      map[string]string `json:"devDependencies"`
@@ -80,13 +94,14 @@ func Detect(root string) (Report, error) {
 	}
 
 	a := aggregate{
-		format:     ReportFormat,
-		root:       cleanRoot,
-		languages:  map[string]*languageAggregate{},
-		tools:      map[string]*toolAggregate{},
-		ci:         map[string]*ciAggregate{},
-		surfaces:   map[string]*surfaceAggregate{},
-		treeSitter: newTreeSitterAggregate(),
+		format:         ReportFormat,
+		root:           cleanRoot,
+		languages:      map[string]*languageAggregate{},
+		tools:          map[string]*toolAggregate{},
+		ci:             map[string]*ciAggregate{},
+		surfaces:       map[string]*surfaceAggregate{},
+		treeSitter:     newTreeSitterAggregate(),
+		nodeTypeScript: newNodeTypeScriptAggregate(),
 	}
 
 	err = filepath.WalkDir(cleanRoot, func(filePath string, entry os.DirEntry, walkErr error) error {
@@ -114,12 +129,14 @@ func Detect(root string) (Report, error) {
 
 		a.filesScanned++
 		a.detectPath(rel)
+		a.detectNodeTypeScriptPath(rel)
 		if shouldReadContent(rel) {
 			content, err := readFilePrefix(filePath)
 			if err != nil {
 				return err
 			}
 			a.detectContent(rel, content)
+			a.detectNodeTypeScriptContent(rel, content)
 			a.detectTreeSitter(rel, []byte(content))
 		}
 		return nil
@@ -289,6 +306,197 @@ func (a *aggregate) detectContent(rel string, content string) {
 	}
 }
 
+func (a *aggregate) detectNodeTypeScriptPath(rel string) {
+	lower := strings.ToLower(rel)
+	lowerBase := strings.ToLower(path.Base(rel))
+	ext := strings.ToLower(path.Ext(rel))
+
+	if lowerBase == "package.json" {
+		a.addNodeTypeScriptFinding(
+			"language_detection",
+			"Node package manifest",
+			"",
+			"high",
+			rel,
+			"Node/TypeScript adapter package manifest",
+		)
+	}
+
+	if isNodeTypeScriptFixturePath(lower, lowerBase) {
+		a.addNodeTypeScriptFinding(
+			"fixture_detection",
+			"Test fixture",
+			"",
+			"high",
+			rel,
+			"Node/TypeScript fixture path convention",
+		)
+	}
+	if !isNodeTypeScriptSourceExt(ext) {
+		return
+	}
+
+	switch {
+	case isNextAPIRoutePath(lower, lowerBase):
+		a.addSurface("api", "high", rel, "Next.js API route convention")
+		a.addNodeTypeScriptFinding(
+			"route_detection",
+			"Next.js API route",
+			"api",
+			"high",
+			rel,
+			"Next.js app/pages API route path",
+		)
+	case isNextUIRoutePath(lower, lowerBase):
+		a.addSurface("ui", "high", rel, "Next.js UI route convention")
+		a.addNodeTypeScriptFinding(
+			"route_detection",
+			"Next.js UI route",
+			"ui",
+			"high",
+			rel,
+			"Next.js app/pages UI route path",
+		)
+	case strings.Contains(lower, "/routes/") ||
+		strings.Contains(lower, "/controllers/") ||
+		strings.HasSuffix(lowerBase, "routes.ts") ||
+		strings.HasSuffix(lowerBase, "routes.js") ||
+		strings.HasSuffix(lowerBase, ".route.ts") ||
+		strings.HasSuffix(lowerBase, ".route.js"):
+		a.addSurface("api", "medium", rel, "Node route path convention")
+		a.addNodeTypeScriptFinding(
+			"route_detection",
+			"Node route module",
+			"api",
+			"medium",
+			rel,
+			"Node route/controller path convention",
+		)
+	}
+
+	if strings.Contains(lower, "/services/") ||
+		strings.HasSuffix(lowerBase, ".service.ts") ||
+		strings.HasSuffix(lowerBase, ".service.js") ||
+		strings.HasSuffix(lowerBase, "service.ts") ||
+		strings.HasSuffix(lowerBase, "service.js") {
+		a.addNodeTypeScriptFinding(
+			"service_detection",
+			"Service module",
+			"",
+			"high",
+			rel,
+			"Node/TypeScript service path convention",
+		)
+	}
+
+	if isNodeTypeScriptMockPath(lower, lowerBase) {
+		a.addNodeTypeScriptFinding(
+			"mock_detection",
+			"Test mock",
+			"",
+			"high",
+			rel,
+			"Node/TypeScript mock path convention",
+		)
+	}
+
+	if strings.Contains(lower, "/catalogs/") ||
+		strings.Contains(lower, "/catalogues/") ||
+		strings.Contains(lower, "/catalog/") ||
+		strings.Contains(lowerBase, "catalog") ||
+		strings.Contains(lowerBase, "catalogue") {
+		a.addSurface("data", "medium", rel, "Node/TypeScript catalogue path")
+		a.addNodeTypeScriptFinding(
+			"hardcoded_catalog_detection",
+			"Hardcoded catalogue",
+			"data",
+			"medium",
+			rel,
+			"Node/TypeScript catalogue path convention",
+		)
+	}
+}
+
+func (a *aggregate) detectNodeTypeScriptContent(rel string, content string) {
+	lowerContent := strings.ToLower(content)
+	lowerBase := strings.ToLower(path.Base(rel))
+	ext := strings.ToLower(path.Ext(rel))
+
+	if lowerBase == "package.json" {
+		a.detectNodeTypeScriptPackageJSON(rel, content)
+		return
+	}
+	if !isNodeTypeScriptSourceExt(ext) {
+		return
+	}
+
+	for _, pattern := range []string{
+		"app.get(", "app.post(", "app.put(", "app.patch(", "app.delete(",
+		"router.get(", "router.post(", "router.put(", "router.patch(", "router.delete(",
+		"routes.get(", "routes.post(", "routes.put(", "routes.patch(", "routes.delete(",
+		"fastify.get(", "fastify.post(", "fastify.put(", "fastify.patch(", "fastify.delete(",
+		"export function get(", "export function post(", "export function put(",
+		"export function patch(", "export function delete(",
+		"export async function get(", "export async function post(", "export async function put(",
+		"export async function patch(", "export async function delete(",
+	} {
+		if strings.Contains(lowerContent, pattern) {
+			a.addSurface("api", "high", rel, "Node/TypeScript route handler content")
+			a.addNodeTypeScriptFinding(
+				"route_detection",
+				"Node route handler",
+				"api",
+				"high",
+				rel,
+				"Node/TypeScript route handler pattern "+pattern,
+			)
+			break
+		}
+	}
+
+	if (strings.Contains(lowerContent, "export class ") && strings.Contains(lowerContent, "service")) ||
+		(strings.Contains(lowerContent, "export const ") && strings.Contains(lowerContent, "service =")) ||
+		(strings.Contains(lowerContent, "export function ") && strings.Contains(lowerContent, "service(")) {
+		a.addNodeTypeScriptFinding(
+			"service_detection",
+			"Service module",
+			"",
+			"medium",
+			rel,
+			"Node/TypeScript service symbol pattern",
+		)
+	}
+
+	for _, pattern := range []string{
+		"jest.mock(", "vi.mock(", "setupserver(", "mockserviceworker",
+		" from \"msw\"", " from 'msw'", "rest.get(", "http.get(",
+	} {
+		if strings.Contains(lowerContent, pattern) {
+			a.addNodeTypeScriptFinding(
+				"mock_detection",
+				"Test mock",
+				"",
+				"medium",
+				rel,
+				"Node/TypeScript mock content pattern "+pattern,
+			)
+			break
+		}
+	}
+
+	if looksLikeHardcodedCatalogue(lowerContent) {
+		a.addSurface("data", "medium", rel, "hardcoded Node/TypeScript catalogue content")
+		a.addNodeTypeScriptFinding(
+			"hardcoded_catalog_detection",
+			"Hardcoded catalogue",
+			"data",
+			"medium",
+			rel,
+			"Node/TypeScript hardcoded catalogue constant",
+		)
+	}
+}
+
 func (a *aggregate) detectTreeSitter(rel string, content []byte) {
 	language := treeSitterLanguageForPath(rel)
 	if language == "" {
@@ -364,6 +572,77 @@ func (a *aggregate) detectPackageJSON(rel string, content string) {
 		}
 		a.addTool(rule.name, rule.kind, rel, "package.json dependency "+dependency)
 		a.addSurface(rule.surface, "high", rel, "package.json dependency "+dependency)
+	}
+}
+
+func (a *aggregate) detectNodeTypeScriptPackageJSON(rel string, content string) {
+	var manifest packageManifest
+	if err := json.Unmarshal([]byte(content), &manifest); err != nil {
+		return
+	}
+	deps := map[string]string{}
+	for key, value := range manifest.Dependencies {
+		deps[strings.ToLower(key)] = value
+	}
+	for key, value := range manifest.DevDependencies {
+		deps[strings.ToLower(key)] = value
+	}
+	for key, value := range manifest.OptionalDependencies {
+		deps[strings.ToLower(key)] = value
+	}
+
+	frameworkRules := map[string]struct {
+		name    string
+		surface string
+	}{
+		"@nestjs/core":  {"NestJS", "api"},
+		"@sveltejs/kit": {"SvelteKit", "ui"},
+		"express":       {"Express", "api"},
+		"fastify":       {"Fastify", "api"},
+		"next":          {"Next.js", "ui"},
+		"react":         {"React", "ui"},
+		"vue":           {"Vue", "ui"},
+	}
+	for dependency, rule := range frameworkRules {
+		if _, ok := deps[dependency]; !ok {
+			continue
+		}
+		a.addNodeTypeScriptFinding(
+			"dependency_detection",
+			rule.name,
+			rule.surface,
+			"high",
+			rel,
+			"package.json dependency "+dependency,
+		)
+	}
+
+	for _, dependency := range []string{"@types/node", "typescript", "ts-node", "tsx"} {
+		if _, ok := deps[dependency]; !ok {
+			continue
+		}
+		a.addNodeTypeScriptFinding(
+			"language_detection",
+			"TypeScript toolchain",
+			"",
+			"high",
+			rel,
+			"package.json dependency "+dependency,
+		)
+	}
+
+	for _, dependency := range []string{"jest", "vitest", "msw", "@testing-library/react"} {
+		if _, ok := deps[dependency]; !ok {
+			continue
+		}
+		a.addNodeTypeScriptFinding(
+			"test_surface_detection",
+			"Node/TypeScript test tooling",
+			"",
+			"medium",
+			rel,
+			"package.json dependency "+dependency,
+		)
 	}
 }
 
@@ -518,6 +797,98 @@ func isWorkerPath(lower string, lowerBase string) bool {
 		strings.Contains(lower, "/consumers/")
 }
 
+func isNodeTypeScriptSourceExt(ext string) bool {
+	switch ext {
+	case ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx":
+		return true
+	default:
+		return false
+	}
+}
+
+func isNextAPIRoutePath(lower string, lowerBase string) bool {
+	inAppAPI := strings.Contains(lower, "/app/api/") || strings.HasPrefix(lower, "app/api/")
+	isAppRoute := strings.HasSuffix(lower, "/route.ts") || strings.HasSuffix(lower, "/route.js")
+	isPagesAPI := strings.HasPrefix(lower, "pages/api/") || strings.Contains(lower, "/pages/api/")
+	isFrameworkBootstrap := lowerBase == "_app.tsx" || lowerBase == "_document.tsx"
+	return inAppAPI && isAppRoute || isPagesAPI && !isFrameworkBootstrap
+}
+
+func isNextUIRoutePath(lower string, lowerBase string) bool {
+	if strings.HasSuffix(lower, "/page.tsx") ||
+		strings.HasSuffix(lower, "/page.ts") ||
+		strings.HasSuffix(lower, "/page.jsx") ||
+		strings.HasSuffix(lower, "/page.js") {
+		return strings.HasPrefix(lower, "app/") ||
+			strings.HasPrefix(lower, "src/app/") ||
+			strings.Contains(lower, "/app/")
+	}
+	if !(strings.HasPrefix(lower, "pages/") || strings.HasPrefix(lower, "src/pages/") || strings.Contains(lower, "/pages/")) {
+		return false
+	}
+	return lowerBase != "_app.tsx" &&
+		lowerBase != "_app.ts" &&
+		lowerBase != "_app.jsx" &&
+		lowerBase != "_app.js" &&
+		lowerBase != "_document.tsx" &&
+		lowerBase != "_document.ts" &&
+		lowerBase != "_document.jsx" &&
+		lowerBase != "_document.js" &&
+		!strings.HasPrefix(lowerBase, "api.")
+}
+
+func isNodeTypeScriptMockPath(lower string, lowerBase string) bool {
+	return strings.HasPrefix(lower, "__mocks__/") ||
+		strings.HasPrefix(lower, "mocks/") ||
+		strings.HasPrefix(lower, "mock-data/") ||
+		strings.HasPrefix(lower, "msw/") ||
+		strings.Contains(lower, "/__mocks__/") ||
+		strings.Contains(lower, "/mocks/") ||
+		strings.Contains(lower, "/mock-data/") ||
+		strings.Contains(lower, "/msw/") ||
+		strings.Contains(lowerBase, ".mock.") ||
+		strings.Contains(lowerBase, ".mocks.") ||
+		strings.HasSuffix(lowerBase, "mock.ts") ||
+		strings.HasSuffix(lowerBase, "mock.tsx") ||
+		strings.HasSuffix(lowerBase, "mock.js") ||
+		strings.HasSuffix(lowerBase, "mock.jsx")
+}
+
+func isNodeTypeScriptFixturePath(lower string, lowerBase string) bool {
+	return strings.HasPrefix(lower, "__fixtures__/") ||
+		strings.HasPrefix(lower, "fixtures/") ||
+		strings.HasPrefix(lower, "testdata/") ||
+		strings.HasPrefix(lower, "cypress/fixtures/") ||
+		strings.Contains(lower, "/__fixtures__/") ||
+		strings.Contains(lower, "/fixtures/") ||
+		strings.Contains(lower, "/testdata/") ||
+		strings.Contains(lower, "/cypress/fixtures/") ||
+		strings.Contains(lowerBase, ".fixture.") ||
+		strings.Contains(lowerBase, ".fixtures.")
+}
+
+func looksLikeHardcodedCatalogue(lowerContent string) bool {
+	for _, line := range strings.Split(lowerContent, "\n") {
+		if !(strings.Contains(line, "const ") || strings.Contains(line, "readonly ")) {
+			continue
+		}
+		if !(strings.Contains(line, " = [") ||
+			strings.Contains(line, " = {") ||
+			strings.Contains(line, " as const")) {
+			continue
+		}
+		for _, name := range []string{
+			"catalog", "catalogue", "status", "statuses", "tier", "tiers",
+			"bracket", "brackets", "option", "options",
+		} {
+			if strings.Contains(line, name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (a *aggregate) addLanguage(name string, rel string, reason string) {
 	item, ok := a.languages[name]
 	if !ok {
@@ -557,6 +928,43 @@ func (a *aggregate) addSurface(name string, confidence string, rel string, reaso
 	addEvidence(&item.evidence, rel, reason)
 }
 
+func (a *aggregate) addNodeTypeScriptFinding(
+	kind string,
+	name string,
+	surface string,
+	confidence string,
+	rel string,
+	reason string,
+) {
+	key := strings.Join([]string{kind, name, surface}, "\x00")
+	item, ok := a.nodeTypeScript.findings[key]
+	if !ok {
+		item = &nodeTypeScriptFindingAggregate{
+			kind:       kind,
+			name:       name,
+			surface:    surface,
+			confidence: confidence,
+		}
+		a.nodeTypeScript.findings[key] = item
+	} else if confidenceRank(confidence) > confidenceRank(item.confidence) {
+		item.confidence = confidence
+	}
+	addEvidence(&item.evidence, rel, reason)
+}
+
+func confidenceRank(confidence string) int {
+	switch confidence {
+	case "high":
+		return 3
+	case "medium":
+		return 2
+	case "low":
+		return 1
+	default:
+		return 0
+	}
+}
+
 func addEvidence(target *[]Evidence, rel string, reason string) {
 	for _, existing := range *target {
 		if existing.Path == rel && existing.Reason == reason {
@@ -574,6 +982,13 @@ func newTreeSitterAggregate() *treeSitterAggregate {
 		enabled:   true,
 		languages: map[string]*languageAggregate{},
 		registry:  newTreeSitterRegistry(),
+	}
+}
+
+func newNodeTypeScriptAggregate() *nodeTypeScriptAggregate {
+	return &nodeTypeScriptAggregate{
+		enabled:  true,
+		findings: map[string]*nodeTypeScriptFindingAggregate{},
 	}
 }
 
@@ -613,6 +1028,10 @@ func (a *aggregate) report() Report {
 			Languages:       make([]TreeSitterLanguageReport, 0, len(a.treeSitter.languages)),
 			MissingGrammars: append([]TreeSitterDiagnostic(nil), a.treeSitter.missingGrammars...),
 			ParseErrors:     append([]TreeSitterDiagnostic(nil), a.treeSitter.parseErrors...),
+		},
+		NodeTypeScript: NodeTypeScriptReport{
+			Enabled:  a.nodeTypeScript.enabled,
+			Findings: make([]NodeTypeScriptAdapterSignal, 0, len(a.nodeTypeScript.findings)),
 		},
 	}
 
@@ -682,6 +1101,28 @@ func (a *aggregate) report() Report {
 	})
 	sortTreeSitterDiagnostics(report.TreeSitter.MissingGrammars)
 	sortTreeSitterDiagnostics(report.TreeSitter.ParseErrors)
+
+	for _, item := range a.nodeTypeScript.findings {
+		sortEvidence(item.evidence)
+		report.NodeTypeScript.Findings = append(report.NodeTypeScript.Findings, NodeTypeScriptAdapterSignal{
+			Kind:       item.kind,
+			Name:       item.name,
+			Surface:    item.surface,
+			Confidence: item.confidence,
+			Evidence:   item.evidence,
+		})
+	}
+	sort.Slice(report.NodeTypeScript.Findings, func(i, j int) bool {
+		left := report.NodeTypeScript.Findings[i]
+		right := report.NodeTypeScript.Findings[j]
+		if left.Kind != right.Kind {
+			return left.Kind < right.Kind
+		}
+		if left.Name != right.Name {
+			return left.Name < right.Name
+		}
+		return left.Surface < right.Surface
+	})
 
 	return report
 }

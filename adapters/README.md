@@ -7,6 +7,8 @@ Contrat courant :
 
 - `adapter-contract.md` : regles de manifeste, capabilities, versioning et
   compatibilite ;
+- `node-typescript/` : premier profile adapter Node / TypeScript avec manifeste,
+  conventions et fixtures officielles NOM-402 ;
 - `../specs/adapter-manifest.cue` : schema CUE machine-readable du manifeste ;
 - `../specs/examples/adapter-manifest.node-typescript.yaml` : exemple concret de
   manifeste adapter.
@@ -35,3 +37,7 @@ Le coeur CLI expose maintenant une couche de parsing Tree-sitter commune pour
 les premiers adapters : Go, Java, JavaScript, Python, TSX et TypeScript. Quand
 une grammaire n'est pas enregistree, le rapport de detection doit emettre un
 diagnostic explicite plutot que masquer la limite de support.
+
+Le profile Node / TypeScript v1 couvre les conventions backend/frontend
+suivantes : routes Next.js app/pages et Express/Fastify, modules de service,
+mocks de test, fixtures, et constantes de catalogue metier hardcodees.
