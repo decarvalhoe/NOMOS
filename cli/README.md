@@ -15,4 +15,13 @@ Etat actuel :
 - module Go initialise ;
 - point d'entree `main.go` ;
 - dispatch minimal `help`, `version`, `init`, `validate`, `diagnose` ;
-- tests unitaires ecrits pour le squelette du dispatcher.
+- `validate` lit les manifests YAML Nomos (`nomos-project`, `source-manifest`,
+  `canonical-matrix`, `adapter-manifest`) et retourne des erreurs structurees ;
+- tests unitaires ecrits pour le dispatcher et les exemples officiels.
+
+Validation de manifests :
+
+```bash
+nomos validate specs/examples/nomos-project.minimal.yaml
+nomos validate --format json examples/insurance/source-manifest.example.yaml
+```

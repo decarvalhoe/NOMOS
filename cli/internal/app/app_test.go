@@ -49,11 +49,24 @@ func TestRunScaffoldedCommand(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	code := Run([]string{"validate"}, &stdout, &stderr)
+	code := Run([]string{"diagnose"}, &stdout, &stderr)
 	if code != 2 {
 		t.Fatalf("expected exit code 2, got %d", code)
 	}
 	if !strings.Contains(stderr.String(), "not implemented yet") {
 		t.Fatalf("expected not implemented message, got %q", stderr.String())
+	}
+}
+
+func TestRunValidateRequiresManifestPath(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := Run([]string{"validate"}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("expected exit code 2, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "at least one manifest path is required") {
+		t.Fatalf("expected usage error, got %q", stderr.String())
 	}
 }
