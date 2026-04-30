@@ -1,0 +1,15 @@
+project:
+  id: delta
+  name: Delta New
+  domain: internal
+  lifecycle: greenfield
+  risk_level: low
+  owners:
+    - name: Diana
+scope:
+  in_scope:
+    - misc
+surfaces:
+  - name: cli
+    type: cli
+    stack: go
