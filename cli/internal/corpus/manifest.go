@@ -1,0 +1,180 @@
+package corpus
+
+import (
+	"fmt"
+	"io"
+	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+var extToSourceType = map[string]string{
+	".md":    "markdown",
+	".mdx":   "markdown",
+	".txt":   "markdown",
+	".pdf":   "pdf",
+	".html":  "html",
+	".htm":   "html",
+	".php":   "php",
+	".go":    "source_code",
+	".py":    "source_code",
+	".js":    "source_code",
+	".ts":    "source_code",
+	".java":  "source_code",
+	".kt":    "source_code",
+	".cs":    "source_code",
+	".rb":    "source_code",
+	".rs":    "source_code",
+	".c":     "source_code",
+	".cpp":   "source_code",
+	".h":     "source_code",
+	".yaml":  "source_code",
+	".yml":   "source_code",
+	".json":  "source_code",
+	".toml":  "source_code",
+	".csv":   "csv",
+	".tsv":   "csv",
+	".xls":   "spreadsheet",
+	".xlsx":  "spreadsheet",
+	".ods":   "spreadsheet",
+	".png":   "image",
+	".jpg":   "image",
+	".jpeg":  "image",
+	".gif":   "image",
+	".svg":   "image",
+	".mp3":   "audio",
+	".wav":   "audio",
+	".ogg":   "audio",
+	".sql":   "database_export",
+	".dump":  "database_export",
+}
+
+// ManifestSource is a single entry in the sidecar source manifest.
+type ManifestSource struct {
+	ID              string   `yaml:"id"`
+	Path            string   `yaml:"path"`
+	Type            string   `yaml:"type"`
+	Domain          string   `yaml:"domain"`
+	Priority        string   `yaml:"priority"`
+	Status          string   `yaml:"status"`
+	Hash            string   `yaml:"hash"`
+	Owner           string   `yaml:"owner"`
+	License         string   `yaml:"license"`
+	Confidentiality string   `yaml:"confidentiality"`
+	AllowedUses     []string `yaml:"allowed_uses"`
+}
+
+// SidecarManifest is the YAML structure matching source-manifest.cue.
+type SidecarManifest struct {
+	SchemaVersion string           `yaml:"schema_version"`
+	Sources       []ManifestSource `yaml:"sources"`
+}
+
+// ManifestOptions configures sidecar manifest generation.
+type ManifestOptions struct {
+	Domain          string
+	Owner           string
+	License         string
+	Confidentiality string
+	Priority        string
+	AllowedUses     []string
+	IDPrefix        string
+}
+
+// GenerateManifest converts a Snapshot into a SidecarManifest.
+// Defaults are applied from ManifestOptions for fields that cannot
+// be inferred from the scan alone.
+func GenerateManifest(snap Snapshot, opts ManifestOptions) SidecarManifest {
+	priority := opts.Priority
+	if priority == "" {
+		priority = "primary"
+	}
+	confidentiality := opts.Confidentiality
+	if confidentiality == "" {
+		confidentiality = "internal"
+	}
+	license := opts.License
+	if license == "" {
+		license = "internal"
+	}
+	owner := opts.Owner
+	if owner == "" {
+		owner = "unknown"
+	}
+	allowedUses := opts.AllowedUses
+	if len(allowedUses) == 0 {
+		allowedUses = []string{"structured_contract", "citation_internal"}
+	}
+	prefix := opts.IDPrefix
+	if prefix == "" {
+		prefix = "CORPUS"
+	}
+
+	sources := make([]ManifestSource, 0, len(snap.Sources))
+	for i, entry := range snap.Sources {
+		sources = append(sources, ManifestSource{
+			ID:              generateID(prefix, i+1, entry.Path),
+			Path:            entry.Path,
+			Type:            inferSourceType(entry.Extension),
+			Domain:          opts.Domain,
+			Priority:        priority,
+			Status:          "active",
+			Hash:            entry.Hash,
+			Owner:           owner,
+			License:         license,
+			Confidentiality: confidentiality,
+			AllowedUses:     allowedUses,
+		})
+	}
+
+	return SidecarManifest{
+		SchemaVersion: "0.1.0",
+		Sources:       sources,
+	}
+}
+
+// WriteManifestYAML writes the sidecar manifest as YAML.
+func WriteManifestYAML(w io.Writer, manifest SidecarManifest) error {
+	enc := yaml.NewEncoder(w)
+	enc.SetIndent(2)
+	return enc.Encode(manifest)
+}
+
+func inferSourceType(ext string) string {
+	ext = strings.ToLower(ext)
+	if t, ok := extToSourceType[ext]; ok {
+		return t
+	}
+	return "source_code"
+}
+
+func generateID(prefix string, index int, path string) string {
+	// Use filename stem as slug, uppercased
+	base := filepath.Base(path)
+	stem := strings.TrimSuffix(base, filepath.Ext(base))
+	slug := strings.ToUpper(stem)
+	slug = sanitizeIDChars(slug)
+	if slug == "" {
+		slug = fmt.Sprintf("%04d", index)
+	}
+	return fmt.Sprintf("%s-%s", prefix, slug)
+}
+
+func sanitizeIDChars(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch {
+		case r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == '-', r == '_', r == ' ', r == '.':
+			b.WriteByte('-')
+		}
+	}
+	result := b.String()
+	// Collapse multiple dashes
+	for strings.Contains(result, "--") {
+		result = strings.ReplaceAll(result, "--", "-")
+	}
+	return strings.Trim(result, "-")
+}
