@@ -1,0 +1,17 @@
+units:
+  - unit_id: UNIT-001
+    unit_type: rule
+    name: "Test rule"
+    domain: testing
+    criticality: high
+    source_refs:
+      - source_id: SRC-001
+        locator: "section 1"
+    business_rule: "A test rule."
+    canonical_contract:
+      path: data/canonical/test.yaml
+      object_id: UNIT-001
+      status: planned
+    test_refs:
+      - tests/unit_001_test.go
+    status: covered

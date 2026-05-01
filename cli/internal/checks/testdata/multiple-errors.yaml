@@ -1,0 +1,12 @@
+sources:
+  - id: lowercase-bad
+    path: ""
+    type: unknown_type
+    domain: insurance
+    priority: bogus
+    status: archived
+    hash: ""
+    owner: ""
+    license: internal
+    confidentiality: top_secret
+    allowed_uses: []

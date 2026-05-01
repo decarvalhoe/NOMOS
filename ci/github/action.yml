@@ -1,0 +1,159 @@
+name: Nomos Strict Gate
+description: Run nomos strict checks with PR annotations and fail-closed mode.
+
+inputs:
+  nomos-version:
+    description: Version of nomos CLI to install.
+    required: false
+    default: "latest"
+  project-path:
+    description: Path to the project root containing nomos.project.yaml.
+    required: false
+    default: "."
+  fail-mode:
+    description: >
+      Gate behaviour on check failure.
+      "closed" (default) fails the workflow. "open" warns but does not fail.
+    required: false
+    default: "closed"
+  write-report:
+    description: Write nomos-report.json to this path. Empty string disables.
+    required: false
+    default: "nomos-report.json"
+  annotate-pr:
+    description: Post findings as PR review annotations.
+    required: false
+    default: "true"
+  extra-args:
+    description: Additional arguments passed to nomos strict.
+    required: false
+    default: ""
+
+outputs:
+  verdict:
+    description: The verdict produced by nomos strict (pass/fail).
+    value: ${{ steps.run.outputs.verdict }}
+  report-path:
+    description: Path to the generated nomos-report.json.
+    value: ${{ steps.run.outputs.report_path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install nomos CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.nomos-version }}"
+        if [ "$VERSION" = "latest" ]; then
+          echo "::group::Install nomos (latest)"
+          curl -fsSL https://get.nomos.dev/install.sh | bash
+          echo "::endgroup::"
+        else
+          echo "::group::Install nomos ($VERSION)"
+          curl -fsSL "https://get.nomos.dev/install.sh" | bash -s -- --version "$VERSION"
+          echo "::endgroup::"
+        fi
+        echo "$(dirname "$(command -v nomos)")" >> "$GITHUB_PATH"
+
+    - name: Run nomos strict
+      id: run
+      shell: bash
+      env:
+        NOMOS_FAIL_MODE: ${{ inputs.fail-mode }}
+        NOMOS_PROJECT_PATH: ${{ inputs.project-path }}
+        NOMOS_WRITE_REPORT: ${{ inputs.write-report }}
+        NOMOS_EXTRA_ARGS: ${{ inputs.extra-args }}
+      run: |
+        set -euo pipefail
+
+        ARGS=()
+        if [ -n "$NOMOS_WRITE_REPORT" ]; then
+          ARGS+=(--write-report "$NOMOS_WRITE_REPORT")
+        fi
+        if [ -n "$NOMOS_EXTRA_ARGS" ]; then
+          # shellcheck disable=SC2206
+          ARGS+=($NOMOS_EXTRA_ARGS)
+        fi
+
+        EXIT_CODE=0
+        nomos strict --project "$NOMOS_PROJECT_PATH" "${ARGS[@]}" || EXIT_CODE=$?
+
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo "verdict=pass" >> "$GITHUB_OUTPUT"
+        else
+          echo "verdict=fail" >> "$GITHUB_OUTPUT"
+        fi
+
+        if [ -n "$NOMOS_WRITE_REPORT" ] && [ -f "$NOMOS_WRITE_REPORT" ]; then
+          echo "report_path=$NOMOS_WRITE_REPORT" >> "$GITHUB_OUTPUT"
+        fi
+
+        if [ "$NOMOS_FAIL_MODE" = "closed" ] && [ $EXIT_CODE -ne 0 ]; then
+          echo "::error::Nomos strict gate failed (fail-closed mode). See findings below."
+          exit $EXIT_CODE
+        elif [ $EXIT_CODE -ne 0 ]; then
+          echo "::warning::Nomos strict gate found issues but fail-mode is open."
+        fi
+
+    - name: Annotate PR with findings
+      if: inputs.annotate-pr == 'true' && steps.run.outputs.report_path != ''
+      shell: bash
+      env:
+        REPORT_PATH: ${{ steps.run.outputs.report_path }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -f "$REPORT_PATH" ]; then
+          echo "::notice::No report file found at $REPORT_PATH, skipping annotations."
+          exit 0
+        fi
+
+        # Parse findings from nomos-report.json and emit GitHub annotations.
+        # Each finding has: severity, message, file (optional), line (optional).
+        python3 -c "
+        import json, sys
+
+        with open('$REPORT_PATH') as f:
+            report = json.load(f)
+
+        findings = report.get('findings', [])
+        if not findings:
+            print('::notice::No findings to annotate.')
+            sys.exit(0)
+
+        severity_map = {
+            'critical': 'error',
+            'high': 'error',
+            'medium': 'warning',
+            'low': 'notice',
+            'info': 'notice',
+        }
+
+        for f in findings:
+            level = severity_map.get(f.get('severity', 'info'), 'notice')
+            msg = f.get('message', 'Nomos finding')
+            title = f.get('code', 'nomos')
+            file_path = f.get('file', '')
+            line = f.get('line', '')
+
+            annotation = f'::{level}'
+            params = []
+            if file_path:
+                params.append(f'file={file_path}')
+            if line:
+                params.append(f'line={line}')
+            params.append(f'title={title}')
+            if params:
+                annotation += ' ' + ','.join(params)
+            annotation += f'::{msg}'
+            print(annotation)
+        " || echo "::warning::Failed to parse report for annotations."
+
+    - name: Upload report artifact
+      if: inputs.write-report != '' && steps.run.outputs.report_path != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: nomos-report
+        path: ${{ steps.run.outputs.report_path }}
+        retention-days: 30

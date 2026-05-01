@@ -1,0 +1,13 @@
+sources:
+  - id: SRC-NO-OWNER
+    path: docs/readme.txt
+    type: pdf
+    domain: insurance
+    priority: primary
+    status: active
+    hash: "sha256:abcdef1234567890"
+    owner: ""
+    license: internal
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract

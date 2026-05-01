@@ -1,0 +1,14 @@
+sources:
+  - id: SRC-001
+    path: docs/readme.txt
+    type: markdown
+    domain: general
+    priority: primary
+    status: active
+    hash: "sha256:abcdef1234567890"
+    owner: team@example.com
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index

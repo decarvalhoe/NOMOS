@@ -1,0 +1,10 @@
+exceptions:
+  - id: ""
+    summary: ""
+    owner: ""
+    approver: ""
+    severity: extreme
+    status: bogus
+    created_at: ""
+    expires_at: "not-a-date"
+    reason: ""

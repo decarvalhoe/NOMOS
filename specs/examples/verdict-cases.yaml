@@ -1,0 +1,52 @@
+schema_version: "0.1.0"
+cases:
+  - id: VERDICT-PARTIAL-LEGACY-001
+    title: Brownfield surface with useful legacy behavior and missing source PDFs
+    verdict: partial
+    confidence: medium
+    escalation: domain_owner
+    rationale: The surface can enter Nomos, but strict release must wait for source completion.
+    evidence:
+      - legacy behavior source identified
+      - missing PDF list documented
+    remediations:
+      - Add active source-manifest entries for the missing PDFs.
+      - Convert accepted legacy behavior into decision records.
+    expected_action: Admit for bootstrap, block strict release until remediation is complete.
+
+  - id: VERDICT-BLOCKED-OWNER-001
+    title: Critical regulated calculation without accountable decision owner
+    verdict: blocked
+    confidence: low
+    escalation: compliance_owner
+    rationale: The calculation cannot be promoted without an accountable owner for the ambiguity.
+    evidence:
+      - criticality marked high
+      - ambiguity has no owner
+    blockers:
+      - Assign a compliance owner or remove the surface from release scope.
+    expected_action: Fail canonical gates until ownership and decision evidence exist.
+
+  - id: VERDICT-OOS-PARTNER-001
+    title: Partner billing code present but outside current launch boundary
+    verdict: out_of_scope
+    confidence: medium
+    escalation: none
+    rationale: The boundary is explicit and no active launch behavior depends on partner billing.
+    evidence:
+      - launch scope excludes partner billing
+      - route inventory shows no active partner billing surface
+    out_of_scope_reason: Partner billing is deferred to a later launch.
+    expected_action: Exclude from current gates and monitor for boundary drift.
+
+  - id: VERDICT-INSCOPE-REGULATED-001
+    title: Regulated API with active sources and signed evidence
+    verdict: in_scope
+    confidence: high
+    escalation: none
+    rationale: The scope has active sources, owners, contracts, tests, and signed evidence.
+    evidence:
+      - active source manifest entries
+      - canonical matrix rows covered
+      - signed attestation present
+    expected_action: Admit into canonical checks and strict release gates.

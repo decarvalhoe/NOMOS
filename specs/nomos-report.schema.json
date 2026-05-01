@@ -1,0 +1,597 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nomos.dev/nomos-report-0.1.0.schema.json",
+  "title": "Nomos report",
+  "description": "Machine-readable Nomos execution report produced by admission, validation, strict, and reporting gates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "report_type",
+    "generated_at",
+    "run",
+    "project",
+    "summary",
+    "verdict",
+    "checks",
+    "findings",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0",
+      "description": "Nomos report schema version."
+    },
+    "report_type": {
+      "const": "nomos-report"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "verdict": {
+      "$ref": "#/$defs/verdict"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/check_result"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/waiver"
+      },
+      "default": []
+    },
+    "links": {
+      "$ref": "#/$defs/report_links"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    }
+  },
+  "$defs": {
+    "severity": {
+      "type": "string",
+      "enum": ["info", "low", "medium", "high", "critical"]
+    },
+    "report_status": {
+      "type": "string",
+      "enum": ["pass", "warn", "fail", "blocked"]
+    },
+    "check_status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "warning",
+        "failed",
+        "blocked",
+        "skipped",
+        "not_applicable"
+      ]
+    },
+    "check_category": {
+      "type": "string",
+      "enum": [
+        "scope",
+        "sources",
+        "matrix",
+        "contracts",
+        "read_models",
+        "knowledge_base",
+        "product",
+        "policies",
+        "attestations",
+        "execution"
+      ]
+    },
+    "error_code": {
+      "type": "string",
+      "enum": [
+        "NOMOS_SCHEMA_INVALID",
+        "NOMOS_SOURCE_MISSING",
+        "NOMOS_SOURCE_HASH_MISMATCH",
+        "NOMOS_SOURCE_OUT_OF_SCOPE",
+        "NOMOS_MATRIX_SOURCE_UNKNOWN",
+        "NOMOS_MATRIX_UNIT_INVALID",
+        "NOMOS_CONTRACT_SCHEMA_INVALID",
+        "NOMOS_CONTRACT_SOURCE_MISSING",
+        "NOMOS_READ_MODEL_STALE",
+        "NOMOS_KB_CHUNK_STALE",
+        "NOMOS_PRODUCT_SAMPLE_LEAK",
+        "NOMOS_PRODUCT_HARDCODED_CATALOG",
+        "NOMOS_POLICY_DENIED",
+        "NOMOS_EVIDENCE_MISSING",
+        "NOMOS_ATTESTATION_INVALID",
+        "NOMOS_EXECUTION_ERROR"
+      ]
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "source_manifest",
+        "canonical_matrix",
+        "contract_schema",
+        "contract_payload",
+        "read_model",
+        "test_result",
+        "coverage_report",
+        "attestation",
+        "sbom",
+        "provenance",
+        "git_diff",
+        "ci_run",
+        "log",
+        "screenshot",
+        "api_response",
+        "code_reference",
+        "decision_record",
+        "manual_review"
+      ]
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "tool", "mode"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["admission", "validate", "strict", "report", "release"]
+        },
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "nomos"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "git": {
+          "$ref": "#/$defs/git_context"
+        },
+        "environment": {
+          "$ref": "#/$defs/environment"
+        }
+      }
+    },
+    "git_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "dirty": {
+          "type": "boolean"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ci": {
+          "type": "boolean"
+        },
+        "runner": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "domain", "risk_level"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "manifest_path": {
+          "type": "string"
+        },
+        "manifest_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_count",
+        "finding_count",
+        "blocking_finding_count",
+        "evidence_count",
+        "coverage"
+      ],
+      "properties": {
+        "check_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocking_finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage_summary"
+        }
+      }
+    },
+    "coverage_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_total",
+        "unit_covered",
+        "unit_partial",
+        "unit_missing",
+        "unit_not_applicable",
+        "coverage_ratio"
+      ],
+      "properties": {
+        "unit_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit_covered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit_partial": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit_missing": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit_not_applicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coverage_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "severity", "blocking", "summary"],
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/report_status"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "blocking": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "check_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category", "status", "severity"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/check_category"
+        },
+        "status": {
+          "$ref": "#/$defs/check_status"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finding_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "severity",
+        "status",
+        "blocking",
+        "message",
+        "target",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+        },
+        "code": {
+          "$ref": "#/$defs/error_code"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "accepted", "waived", "resolved"]
+        },
+        "blocking": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "first_seen_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "project",
+            "source",
+            "unit",
+            "contract",
+            "schema",
+            "read_model",
+            "knowledge_base",
+            "api",
+            "ui",
+            "code",
+            "policy",
+            "run"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+        },
+        "type": {
+          "$ref": "#/$defs/evidence_type"
+        },
+        "description": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "collected_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/metadata"
+        }
+      }
+    },
+    "waiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "finding_id", "reason", "owner", "expires_at"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "finding_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "decision_ref": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "report_links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "markdown_report": {
+          "type": "string"
+        },
+        "coverage_report": {
+          "type": "string"
+        },
+        "attestations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sbom": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

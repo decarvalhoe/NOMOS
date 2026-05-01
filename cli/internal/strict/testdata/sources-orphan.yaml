@@ -1,0 +1,10 @@
+sources:
+  - id: SRC-USED
+    domain: insurance-home
+    status: active
+  - id: SRC-ORPHAN
+    domain: insurance-home
+    status: active
+  - id: SRC-SUPERSEDED
+    domain: insurance-home
+    status: superseded

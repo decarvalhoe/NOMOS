@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  go-test:
+    name: Go vet & test (cli)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - run: go vet ./...
+      - run: go test -race ./...
+
+  go-test-control-plane:
+    name: Go vet & test (control-plane)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [dashboard, registry, storage]
+    defaults:
+      run:
+        working-directory: control-plane/${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: control-plane/${{ matrix.module }}/go.mod
+          cache-dependency-path: control-plane/${{ matrix.module }}/go.sum
+      - run: go vet ./...
+      - run: go test -race ./...
+
+  cue-vet:
+    name: CUE vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cue-lang/setup-cue@v1.0.1
+        with:
+          version: v0.16.1
+      - run: cue vet specs/*.cue
+
+  yaml-lint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          pip install --quiet yamllint
+          yamllint -d relaxed specs/examples/ examples/ templates/

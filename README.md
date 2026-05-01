@@ -70,9 +70,22 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/11-roadmap-and-issues.md` : plan v0.x vers v1.0 et issue list générique.
 - `docs/12-operational-procedure.md` : procédure détaillée étape par étape.
 - `docs/13-agent-skills-blueprint.md` : skills/agents généralisables.
+- `docs/14-product-roadmap.md` : roadmap produit v0.1 -> v1.0 et architecture cible.
+- `docs/15-product-backlog.md` : backlog concret d'epics/issues, dépendances et DoD.
+- `docs/16-versioning-policy.md` : politique de versionning du coeur, des adapters et des schemas.
+- `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
 - `examples/` : exemples courts par domaine.
+
+## Product Layout
+
+Le dépôt porte maintenant deux couches complémentaires :
+
+- la couche méthode, dans `docs/`, `templates/`, `examples/` et `references/` ;
+- la couche produit, dans `cli/`, `adapters/`, `policies/`, `attestations/`, `sdk/`, `control-plane/` et `specs/`.
+
+Cette séparation permet de faire évoluer Nomos comme plateforme sans perdre la lisibilité méthodologique.
 
 ## Quick Start
 
@@ -86,6 +99,19 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 8. Indexer tout le corpus en base vectorielle avec metadata de provenance.
 9. Connecter une première surface produit end-to-end.
 10. Installer les gates `canonical:check`, `canonical:check:strict` et `release:compliance`.
+
+## Local Environment
+
+Pour cette copie locale du repo, un toolchain minimal a ete installe dans `.tools/` :
+
+- Go `1.26.2`
+- CUE `0.16.1`
+
+Activer le PATH local :
+
+```bash
+source scripts/nomos-env.sh
+```
 
 ## Gates Standards
 

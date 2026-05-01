@@ -1,0 +1,304 @@
+schema_version: "0.1.0"
+
+adapter:
+  id: node-typescript
+  name: "Node / TypeScript"
+  version: "0.1.0"
+  status: experimental
+  owners:
+    - name: "Nomos Core Team"
+      role: "adapter-owner"
+  license: "Apache-2.0"
+  package:
+    type: npm
+    name: "@nomos/adapter-node-typescript"
+    version: "0.1.0"
+
+compatibility:
+  nomos_core:
+    min_version: "0.1.0"
+    tested_versions:
+      - "0.1.0"
+  manifest_contract:
+    version: "0.1.0"
+  schemas:
+    nomos_project:
+      min_version: "0.1.0"
+    source_manifest:
+      min_version: "0.1.0"
+    canonical_matrix:
+      min_version: "0.1.0"
+    adapter_manifest:
+      min_version: "0.1.0"
+
+stack_support:
+  - language: typescript
+    runtime: node
+    frameworks:
+      - nextjs
+      - express
+      - fastify
+    package_managers:
+      - npm
+      - pnpm
+      - yarn
+    file_globs:
+      - "package.json"
+      - "src/**/*.{ts,tsx}"
+      - "app/**/*.{ts,tsx}"
+      - "pages/**/*.{ts,tsx}"
+      - "fixtures/**/*.{json,ts}"
+      - "__mocks__/**/*.{ts,tsx}"
+    exclude_globs:
+      - "node_modules/**"
+      - ".next/**"
+      - "dist/**"
+      - "coverage/**"
+    surfaces:
+      - api
+      - ui
+      - worker
+      - data
+      - cli
+
+capabilities:
+  contract_version: "0.1.0"
+  provides:
+    - id: language_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - ui
+        - worker
+        - cli
+      languages:
+        - javascript
+        - typescript
+      inputs:
+        - filesystem
+        - package_manifest
+        - lockfile
+      outputs:
+        - surface_inventory
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: high
+    - id: dependency_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - ui
+        - worker
+        - data
+      languages:
+        - javascript
+        - typescript
+      inputs:
+        - package_manifest
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: high
+    - id: route_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - ui
+      languages:
+        - typescript
+      frameworks:
+        - nextjs
+        - express
+        - fastify
+      inputs:
+        - source_file
+        - ast
+        - config_file
+      outputs:
+        - surface_inventory
+        - capability_result
+      evidence:
+        - file_path
+        - line_range
+        - route
+        - ast_node
+      confidence: medium
+    - id: service_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - worker
+      languages:
+        - typescript
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+        - ast_node
+      confidence: medium
+    - id: fixture_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - ui
+        - data
+      languages:
+        - javascript
+        - typescript
+      inputs:
+        - filesystem
+        - source_file
+      outputs:
+        - capability_result
+      evidence:
+        - file_path
+      confidence: high
+    - id: test_surface_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - ui
+      languages:
+        - javascript
+        - typescript
+      inputs:
+        - package_manifest
+        - source_file
+      outputs:
+        - capability_result
+      evidence:
+        - file_path
+        - package_metadata
+      confidence: medium
+    - id: mock_detection
+      category: detection
+      status: stable
+      surfaces:
+        - api
+        - ui
+      languages:
+        - javascript
+        - typescript
+      inputs:
+        - filesystem
+        - source_file
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+      confidence: high
+    - id: hardcoded_catalog_detection
+      category: validation
+      status: experimental
+      surfaces:
+        - api
+        - ui
+        - worker
+        - data
+      languages:
+        - typescript
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - forbidden_pattern_finding
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - line_range
+        - symbol
+        - ast_node
+      confidence: medium
+  requires:
+    - id: tree-sitter-typescript
+      type: grammar
+      optional: true
+      reason: "AST-backed detection improves confidence for routes and hardcoded catalogues."
+
+commands:
+  - id: detect
+    argv:
+      - nomos-adapter-node-typescript
+      - detect
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterDetectionResult"
+    timeout_seconds: 120
+    required: true
+  - id: self-check
+    argv:
+      - nomos-adapter-node-typescript
+      - self-check
+      - --format
+      - json
+    input:
+      transport: argv
+      repo_arg: "--repo"
+    output:
+      transport: stdout-json
+      schema_ref: "#AdapterSelfCheckResult"
+    timeout_seconds: 60
+    required: true
+
+limitations:
+  - id: dynamic-runtime-dispatch
+    severity: medium
+    description: "Routes built entirely through runtime string composition may be reported with lower confidence."
+    mitigation: "Emit adapter_diagnostic evidence and require human review before strict admission."
+  - id: catalogue-semantics
+    severity: medium
+    description: "Hardcoded catalogue detection identifies likely static business enumerations but cannot prove source authority."
+    mitigation: "Link findings to canonical matrix units before strict release."
+
+test_contract:
+  fixtures:
+    - id: node-nextjs-api-ui
+      path: "adapters/node-typescript/fixtures/nextjs-api-ui"
+      purpose: "Detect API routes, UI routes, services, mocks, fixtures, package metadata, and hardcoded catalogues."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - mock_detection
+        - fixture_detection
+        - test_surface_detection
+        - hardcoded_catalog_detection
+  required_checks:
+    - manifest-validates
+    - capabilities-declared
+    - version-compatibility-declared
+    - commands-smoke-tested
+    - fixtures-pass
+    - limitations-declared
+  compatibility_matrix:
+    - nomos_core: "0.1.0"
+      adapter: "0.1.0"
+      status: supported
+
+metadata:
+  documentation: "adapters/node-typescript/README.md"
+  notes: "First Node / TypeScript adapter profile for NOM-402."

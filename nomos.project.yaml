@@ -1,0 +1,53 @@
+schema_version: "0.1.0"
+project:
+  id: nomos
+  name: Nomos
+  description: Canonical-first product intelligence platform.
+  repository: https://github.com/RBOKproject/Nomos
+  domain: product-intelligence
+  lifecycle: greenfield
+  risk_level: medium
+  owners:
+    - name: RBOK Team
+      role: maintainer
+scope:
+  verdict: in_scope
+  confidence: high
+  in_scope:
+    - manifest-validation
+    - source-checks
+    - contract-checks
+    - product-checks
+    - strict-cross-checks
+    - exception-management
+    - adapter-contracts
+    - portfolio-dashboard
+surfaces:
+  - name: cli
+    type: cli
+    path: cli/
+    stack: go
+    critical: true
+  - name: specs
+    type: docs
+    path: specs/
+    critical: true
+  - name: control-plane
+    type: api
+    path: control-plane/
+    stack: go
+toolchain:
+  test:
+    - go test ./...
+  lint:
+    - go vet ./...
+  ci_systems:
+    - github-actions
+compliance:
+  regulated: false
+  data_sensitivity: public
+evidence:
+  required_reports:
+    - nomos-report.json
+    - coverage-report.md
+  attestation_level: none

@@ -1,0 +1,73 @@
+schema_version: "0.1.0"
+project:
+  id: regulated-benefits-core
+  name: Regulated Benefits Core
+  description: Projet reglemente exigeant admission forte et evidence signee.
+  repository: https://example.com/regulated-benefits-core
+  domain: public-benefits
+  lifecycle: greenfield
+  risk_level: critical
+  owners:
+    - name: Dana Example
+      role: domain-owner
+      email: dana@example.com
+    - name: Evan Example
+      role: compliance-owner
+      email: evan@example.com
+scope:
+  verdict: in_scope
+  confidence: high
+  bounded_contexts:
+    - eligibility
+    - calculation
+    - evidence
+  in_scope:
+    - benefits-eligibility
+    - benefits-calculation
+    - audit-trace
+surfaces:
+  - name: benefits-api
+    type: api
+    path: api/
+    stack: go
+    critical: true
+  - name: caseworker-ui
+    type: ui
+    path: app/
+    stack: typescript
+    critical: true
+  - name: canonical-data
+    type: data
+    path: data/
+    stack: sql
+    critical: true
+toolchain:
+  build:
+    - make build
+  test:
+    - make test
+  lint:
+    - make lint
+  typecheck:
+    - make typecheck
+  package_managers:
+    - go-modules
+    - npm
+  ci_systems:
+    - github-actions
+compliance:
+  regulated: true
+  standards:
+    - internal-control
+    - external-audit
+  data_sensitivity: secret
+  exceptions_allowed: false
+evidence:
+  required_reports:
+    - nomos-report.json
+    - coverage-report.md
+    - attestation
+    - sbom
+    - provenance
+  attestation_level: signed
+notes: Toute promotion requiert strict gate, provenance et attestation signee.

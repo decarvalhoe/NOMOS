@@ -1,0 +1,300 @@
+{
+  "schema_version": "0.1.0",
+  "report_type": "nomos-report",
+  "generated_at": "2026-04-30T09:15:00Z",
+  "run": {
+    "id": "run-20260430-091500",
+    "mode": "strict",
+    "tool": {
+      "name": "nomos",
+      "version": "0.1.0"
+    },
+    "command": ["nomos", "strict", "--write-report", "nomos-report.json"],
+    "started_at": "2026-04-30T09:14:41Z",
+    "completed_at": "2026-04-30T09:15:00Z",
+    "duration_ms": 19042,
+    "git": {
+      "repository": "https://example.com/regulated-benefits-core.git",
+      "branch": "release/2026-04",
+      "commit": "9f6f5d2c3f04b6b441a3c9c0e2c46b7f4c0c1000",
+      "dirty": false
+    },
+    "environment": {
+      "ci": true,
+      "runner": "github-actions",
+      "os": "linux"
+    }
+  },
+  "project": {
+    "id": "regulated-benefits-core",
+    "name": "Regulated Benefits Core",
+    "repository": "https://example.com/regulated-benefits-core",
+    "domain": "public-benefits",
+    "risk_level": "critical",
+    "manifest_path": "nomos.project.yaml",
+    "manifest_hash": "sha256:9244bb1f1a0a0d8d6f8c2de35a9d1bb84d6f41a37e951c85c5df17b986e3fdd1"
+  },
+  "summary": {
+    "check_count": 7,
+    "finding_count": 3,
+    "blocking_finding_count": 2,
+    "evidence_count": 7,
+    "coverage": {
+      "unit_total": 42,
+      "unit_covered": 37,
+      "unit_partial": 3,
+      "unit_missing": 2,
+      "unit_not_applicable": 0,
+      "coverage_ratio": 0.881
+    }
+  },
+  "verdict": {
+    "status": "fail",
+    "severity": "critical",
+    "blocking": true,
+    "summary": "Strict gate failed because one source hash changed and product code still imports a sample catalogue.",
+    "next_actions": [
+      "Refresh or supersede source CONTRACT-BENEFITS-2026 before release.",
+      "Replace app/fixtures/benefit-catalog.sample.json with the canonical read-model.",
+      "Link matrix unit BENEFIT-CALC-THRESHOLD to an active source or waiver."
+    ]
+  },
+  "checks": [
+    {
+      "id": "sources.hashes",
+      "name": "Source manifest hashes",
+      "category": "sources",
+      "status": "failed",
+      "severity": "high",
+      "duration_ms": 2100,
+      "finding_ids": ["F-001"],
+      "evidence_ids": ["E-001", "E-002"],
+      "message": "One active source hash differs from the manifest."
+    },
+    {
+      "id": "matrix.refs",
+      "name": "Canonical matrix references",
+      "category": "matrix",
+      "status": "warning",
+      "severity": "medium",
+      "duration_ms": 1740,
+      "finding_ids": ["F-002"],
+      "evidence_ids": ["E-003"]
+    },
+    {
+      "id": "contracts.schema",
+      "name": "Canonical contracts schema",
+      "category": "contracts",
+      "status": "passed",
+      "severity": "info",
+      "duration_ms": 2440,
+      "evidence_ids": ["E-004"]
+    },
+    {
+      "id": "read-model.freshness",
+      "name": "Read-model freshness",
+      "category": "read_models",
+      "status": "passed",
+      "severity": "info",
+      "duration_ms": 1120,
+      "evidence_ids": ["E-005"]
+    },
+    {
+      "id": "product.sample-leak",
+      "name": "Product sample leak scan",
+      "category": "product",
+      "status": "failed",
+      "severity": "critical",
+      "duration_ms": 6980,
+      "finding_ids": ["F-003"],
+      "evidence_ids": ["E-006", "E-007"]
+    },
+    {
+      "id": "policies.strict",
+      "name": "Strict release policies",
+      "category": "policies",
+      "status": "blocked",
+      "severity": "critical",
+      "duration_ms": 980,
+      "finding_ids": ["F-001", "F-003"]
+    },
+    {
+      "id": "report.schema",
+      "name": "Nomos report schema",
+      "category": "execution",
+      "status": "passed",
+      "severity": "info",
+      "duration_ms": 24
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "code": "NOMOS_SOURCE_HASH_MISMATCH",
+      "severity": "high",
+      "status": "open",
+      "blocking": true,
+      "message": "Active source CONTRACT-BENEFITS-2026 has a different hash than source-manifest.yaml.",
+      "remediation": "Re-run source hashing after domain-owner approval, or mark the old source superseded and add the replacement source.",
+      "target": {
+        "type": "source",
+        "id": "CONTRACT-BENEFITS-2026",
+        "path": "sources/contracts/benefits-2026.md",
+        "locator": "sha256"
+      },
+      "evidence_ids": ["E-001", "E-002"],
+      "first_seen_at": "2026-04-30T09:14:44Z"
+    },
+    {
+      "id": "F-002",
+      "code": "NOMOS_MATRIX_SOURCE_UNKNOWN",
+      "severity": "medium",
+      "status": "accepted",
+      "blocking": false,
+      "message": "Matrix unit BENEFIT-CALC-THRESHOLD references a source ID not present in the source manifest.",
+      "remediation": "Replace source ref LEGACY-THRESHOLD-NOTE with an active source ID or add the missing source.",
+      "target": {
+        "type": "unit",
+        "id": "BENEFIT-CALC-THRESHOLD",
+        "path": "canonical-matrix.yaml",
+        "locator": "units[12].source_refs[0]"
+      },
+      "evidence_ids": ["E-003"],
+      "first_seen_at": "2026-04-30T09:14:48Z"
+    },
+    {
+      "id": "F-003",
+      "code": "NOMOS_PRODUCT_SAMPLE_LEAK",
+      "severity": "critical",
+      "status": "open",
+      "blocking": true,
+      "message": "Product runtime imports a sample benefits catalogue from app/fixtures.",
+      "remediation": "Replace the sample import with the canonical read-model artifact and add a regression guard.",
+      "target": {
+        "type": "code",
+        "path": "app/services/benefitCatalog.ts",
+        "symbol": "loadBenefitCatalog",
+        "locator": "import benefitCatalog from '../fixtures/benefit-catalog.sample.json'"
+      },
+      "evidence_ids": ["E-006", "E-007"],
+      "first_seen_at": "2026-04-30T09:14:55Z"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-001",
+      "type": "source_manifest",
+      "description": "Current source manifest containing expected source hashes.",
+      "uri": "source-manifest.yaml",
+      "hash": "sha256:2f9e2ef3b9230f488f40a4af6a4b1f76d8f387e89a2b9b31b3a817acdf2fb987",
+      "target": {
+        "type": "source",
+        "id": "CONTRACT-BENEFITS-2026",
+        "path": "source-manifest.yaml",
+        "locator": "sources[0].hash"
+      },
+      "collected_at": "2026-04-30T09:14:44Z",
+      "producer": "nomos sources --check"
+    },
+    {
+      "id": "E-002",
+      "type": "log",
+      "description": "Hash mismatch diagnostic emitted by the source check.",
+      "uri": "artifacts/nomos/sources-check.log",
+      "target": {
+        "type": "source",
+        "id": "CONTRACT-BENEFITS-2026"
+      },
+      "collected_at": "2026-04-30T09:14:45Z",
+      "producer": "nomos sources --check"
+    },
+    {
+      "id": "E-003",
+      "type": "canonical_matrix",
+      "description": "Canonical matrix row referencing the missing source ID.",
+      "uri": "canonical-matrix.yaml",
+      "target": {
+        "type": "unit",
+        "id": "BENEFIT-CALC-THRESHOLD",
+        "path": "canonical-matrix.yaml",
+        "locator": "units[12]"
+      },
+      "collected_at": "2026-04-30T09:14:48Z",
+      "producer": "nomos matrix --check"
+    },
+    {
+      "id": "E-004",
+      "type": "contract_schema",
+      "description": "JSON Schema validation result for benefits contracts.",
+      "uri": "artifacts/nomos/contracts-schema.json",
+      "target": {
+        "type": "schema",
+        "path": "schemas/benefit.schema.json"
+      },
+      "collected_at": "2026-04-30T09:14:50Z",
+      "producer": "nomos contracts --check"
+    },
+    {
+      "id": "E-005",
+      "type": "read_model",
+      "description": "Read-model freshness proof generated from canonical contracts.",
+      "uri": "artifacts/nomos/read-model-freshness.json",
+      "target": {
+        "type": "read_model",
+        "path": "data/read-model/benefits.sqlite"
+      },
+      "collected_at": "2026-04-30T09:14:53Z",
+      "producer": "nomos read-model --check"
+    },
+    {
+      "id": "E-006",
+      "type": "code_reference",
+      "description": "Code reference showing the product runtime imports a sample catalogue.",
+      "uri": "app/services/benefitCatalog.ts#L14",
+      "target": {
+        "type": "code",
+        "path": "app/services/benefitCatalog.ts",
+        "symbol": "loadBenefitCatalog",
+        "locator": "L14"
+      },
+      "collected_at": "2026-04-30T09:14:55Z",
+      "producer": "nomos product --check",
+      "metadata": {
+        "matcher": "sample-catalog-import"
+      }
+    },
+    {
+      "id": "E-007",
+      "type": "git_diff",
+      "description": "Git context for the product sample leak finding.",
+      "uri": "artifacts/nomos/git-diff.patch",
+      "target": {
+        "type": "run",
+        "id": "run-20260430-091500"
+      },
+      "collected_at": "2026-04-30T09:14:56Z",
+      "producer": "nomos product --check"
+    }
+  ],
+  "waivers": [
+    {
+      "id": "W-2026-04-BENEFIT-CALC-THRESHOLD",
+      "finding_id": "F-002",
+      "reason": "Known documentation migration gap accepted for the April release candidate only.",
+      "owner": "compliance-owner@example.com",
+      "decision_ref": "DEC-2026-04-17",
+      "expires_at": "2026-05-15"
+    }
+  ],
+  "links": {
+    "markdown_report": "docs/canonical/nomos-report.md",
+    "coverage_report": "docs/canonical/coverage-report.md",
+    "attestations": ["attestations/nomos-run-20260430.intoto.jsonl"],
+    "sbom": "artifacts/sbom.cyclonedx.json",
+    "provenance": "attestations/provenance.slsa.json"
+  },
+  "metadata": {
+    "policy_bundle": "nomos-policies@0.1.0",
+    "schema_bundle": "nomos-schemas@0.1.0"
+  }
+}

@@ -1,0 +1,15 @@
+project:
+  id: gate-demo
+  name: Gate Demo
+  domain: testing
+  lifecycle: greenfield
+  risk_level: medium
+  owners:
+    - name: Alice
+scope:
+  verdict: in_scope
+  in_scope:
+    - testing
+surfaces:
+  - name: api
+    type: api

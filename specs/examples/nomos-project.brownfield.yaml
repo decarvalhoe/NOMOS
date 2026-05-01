@@ -1,0 +1,72 @@
+schema_version: "0.1.0"
+project:
+  id: legacy-policy-engine
+  name: Legacy Policy Engine
+  description: Legacy brownfield avec sources partielles et remediation progressive.
+  repository: https://example.com/legacy-policy-engine
+  domain: insurance-home
+  lifecycle: brownfield
+  risk_level: high
+  owners:
+    - name: Bob Example
+      role: engineering-owner
+      email: bob@example.com
+    - name: Clara Example
+      role: domain-owner
+      email: clara@example.com
+scope:
+  verdict: partial
+  confidence: medium
+  bounded_contexts:
+    - claims
+    - deductibles
+  in_scope:
+    - claims-evaluation
+    - deductible-rules
+  out_of_scope:
+    - partner-billing
+  assumptions:
+    - Le code legacy reste autorite de transition pour certaines exclusions.
+  blockers:
+    - id: BROWNFIELD-001
+      severity: high
+      description: Les PDF sources sont incomplets pour les avenants 2023.
+      remediation: Completer le corpus avant strict gate.
+surfaces:
+  - name: claims-api
+    type: api
+    path: services/claims
+    stack: java
+    critical: true
+  - name: legacy-batch
+    type: batch
+    path: jobs/
+    stack: java
+  - name: backoffice-ui
+    type: ui
+    path: web/
+    stack: typescript
+toolchain:
+  build:
+    - ./gradlew build
+  test:
+    - ./gradlew test
+  lint:
+    - ./gradlew checkstyleMain
+  package_managers:
+    - gradle
+  ci_systems:
+    - gitlab-ci
+compliance:
+  regulated: true
+  standards:
+    - internal-audit
+  data_sensitivity: restricted
+  exceptions_allowed: true
+evidence:
+  required_reports:
+    - nomos-report.json
+    - coverage-report.md
+    - attestation
+  attestation_level: basic
+notes: Legacy accepte en mode partial uniquement tant que les gaps critiques sont suivis.

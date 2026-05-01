@@ -1,0 +1,114 @@
+{
+  "schema_version": "0.1.0",
+  "report_type": "nomos-report",
+  "generated_at": "2026-04-30T00:00:00Z",
+  "run": {
+    "id": "run-20260430-000000",
+    "mode": "validate",
+    "tool": {
+      "name": "nomos",
+      "version": "0.1.0"
+    },
+    "command": [
+      "nomos",
+      "validate",
+      "--report",
+      "nomos-report.json"
+    ],
+    "duration_ms": 1280
+  },
+  "project": {
+    "id": "insurance-example",
+    "name": "Insurance Example",
+    "domain": "insurance",
+    "risk_level": "medium",
+    "manifest_path": "nomos.project.yaml"
+  },
+  "summary": {
+    "check_count": 2,
+    "finding_count": 1,
+    "blocking_finding_count": 0,
+    "evidence_count": 2,
+    "coverage": {
+      "unit_total": 10,
+      "unit_covered": 8,
+      "unit_partial": 1,
+      "unit_missing": 1,
+      "unit_not_applicable": 0,
+      "coverage_ratio": 0.8
+    }
+  },
+  "verdict": {
+    "status": "warn",
+    "severity": "medium",
+    "blocking": false,
+    "summary": "Nomos can validate the repository, but one product surface needs evidence.",
+    "next_actions": [
+      "Attach canonical matrix evidence for UI catalogue rendering.",
+      "Keep sample data out of product surfaces."
+    ]
+  },
+  "checks": [
+    {
+      "id": "product.ui",
+      "name": "Product UI traceability",
+      "category": "product",
+      "status": "warning",
+      "severity": "medium",
+      "finding_ids": [
+        "FINDING-002"
+      ],
+      "evidence_ids": [
+        "EVIDENCE-002"
+      ]
+    },
+    {
+      "id": "sources.manifest",
+      "name": "Source manifest",
+      "category": "sources",
+      "status": "passed",
+      "severity": "info",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "FINDING-002",
+      "code": "NOMOS_PRODUCT_SAMPLE_LEAK",
+      "severity": "medium",
+      "status": "open",
+      "blocking": false,
+      "message": "UI catalogue still renders sample data.",
+      "remediation": "Replace sample catalogue with read-model data backed by canonical sources.",
+      "target": {
+        "type": "ui",
+        "path": "web/app/page.tsx"
+      },
+      "evidence_ids": [
+        "EVIDENCE-002"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EVIDENCE-001",
+      "type": "source_manifest",
+      "description": "Source manifest exists.",
+      "uri": "docs/canonical/source-manifest.yaml",
+      "producer": "nomos"
+    },
+    {
+      "id": "EVIDENCE-002",
+      "type": "code_reference",
+      "description": "UI renders hardcoded sample catalogue.",
+      "target": {
+        "type": "ui",
+        "path": "web/app/page.tsx",
+        "locator": "line 42"
+      },
+      "producer": "nomos"
+    }
+  ]
+}

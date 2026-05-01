@@ -1,0 +1,74 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:nomos:nomos:run-20260501-122407",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-05-01T12:24:07Z",
+    "tools": [
+      {
+        "vendor": "Nomos",
+        "name": "nomos",
+        "version": "0.1.0-dev"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "nomos-project-nomos",
+      "name": "nomos",
+      "version": "0.1.0-dev"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "nomos-project-nomos",
+      "name": "nomos",
+      "version": "0.1.0-dev"
+    },
+    {
+      "type": "data",
+      "bom-ref": "nomos-report-run-20260501-122407",
+      "name": "nomos-report",
+      "version": "0.1.0",
+      "properties": [
+        {
+          "name": "nomos:verdict:status",
+          "value": "warn"
+        },
+        {
+          "name": "nomos:verdict:severity",
+          "value": "medium"
+        },
+        {
+          "name": "nomos:summary:check_count",
+          "value": "3"
+        },
+        {
+          "name": "nomos:summary:finding_count",
+          "value": "1"
+        },
+        {
+          "name": "nomos:summary:blocking_finding_count",
+          "value": "0"
+        },
+        {
+          "name": "nomos:summary:coverage_ratio",
+          "value": "1.000"
+        },
+        {
+          "name": "nomos:finding:F-001",
+          "value": "[medium] NOMOS_PRODUCT_HARDCODED_CATALOG: Hardcoded catalogue \"Hardcoded catalogue\" found at adapters/node-typescript/fixtures/nextjs-api-ui/src/catalogs/benefitCatalog.ts."
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "nomos-project-nomos",
+      "dependsOn": [
+        "nomos-report-run-20260501-122407"
+      ]
+    }
+  ]
+}

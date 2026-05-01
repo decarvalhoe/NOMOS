@@ -1,0 +1,9 @@
+units:
+  - unit_id: ""
+    unit_type: bogus
+    name: ""
+    domain: ""
+    criticality: extreme
+    source_refs: []
+    business_rule: ""
+    status: unknown

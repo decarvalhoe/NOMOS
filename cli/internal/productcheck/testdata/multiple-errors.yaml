@@ -1,0 +1,18 @@
+project:
+  id: ""
+  name: ""
+  domain: ""
+  lifecycle: wrong
+  risk_level: extreme
+  owners: []
+scope:
+  verdict: maybe
+  confidence: uncertain
+  in_scope: []
+surfaces: []
+compliance:
+  data_sensitivity: ultra
+evidence:
+  required_reports:
+    - unknown-report
+  attestation_level: mega
