@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  go-test:
+    name: Go vet & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+      - run: go vet ./...
+      - run: go test ./...
+
+  cue-vet:
+    name: CUE vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cue-lang/setup-cue@v1.1.0
+        with:
+          version: latest
+      - run: cue vet specs/*.cue
