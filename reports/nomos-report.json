@@ -1,0 +1,105 @@
+{
+  "schema_version": "0.1.0",
+  "report_type": "nomos-report",
+  "generated_at": "2026-05-01T12:21:08Z",
+  "run": {
+    "id": "run-20260501-122108",
+    "mode": "report",
+    "tool": {
+      "name": "nomos",
+      "version": "0.1.0-dev"
+    },
+    "environment": {
+      "os": "linux"
+    }
+  },
+  "project": {
+    "id": "nomos",
+    "name": "Nomos",
+    "domain": "product-intelligence",
+    "risk_level": "medium"
+  },
+  "summary": {
+    "check_count": 3,
+    "finding_count": 1,
+    "blocking_finding_count": 0,
+    "evidence_count": 1,
+    "coverage": {
+      "unit_total": 0,
+      "unit_covered": 0,
+      "unit_partial": 0,
+      "unit_missing": 0,
+      "unit_not_applicable": 0,
+      "coverage_ratio": 1
+    }
+  },
+  "verdict": {
+    "status": "warn",
+    "severity": "medium",
+    "blocking": false,
+    "summary": "Report gate passed with warnings."
+  },
+  "checks": [
+    {
+      "id": "sources.languages",
+      "name": "Language detection",
+      "category": "sources",
+      "status": "passed",
+      "severity": "info",
+      "message": "Detected 11 language(s)."
+    },
+    {
+      "id": "sources.surfaces",
+      "name": "Surface detection",
+      "category": "sources",
+      "status": "passed",
+      "severity": "info",
+      "message": "Detected 6 surface(s)."
+    },
+    {
+      "id": "product.hardcoded-catalogs",
+      "name": "Hardcoded catalogue check",
+      "category": "product",
+      "status": "warning",
+      "severity": "medium",
+      "finding_ids": [
+        "F-001"
+      ],
+      "evidence_ids": [
+        "E-001"
+      ],
+      "message": "Found 1 hardcoded catalogue(s)."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "code": "NOMOS_PRODUCT_HARDCODED_CATALOG",
+      "severity": "medium",
+      "status": "open",
+      "blocking": false,
+      "message": "Hardcoded catalogue \"Hardcoded catalogue\" found at adapters/node-typescript/fixtures/nextjs-api-ui/src/catalogs/benefitCatalog.ts.",
+      "remediation": "Replace with a canonical read-model or link to an authoritative source.",
+      "target": {
+        "type": "code",
+        "path": "adapters/node-typescript/fixtures/nextjs-api-ui/src/catalogs/benefitCatalog.ts"
+      },
+      "evidence_ids": [
+        "E-001"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-001",
+      "type": "code_reference",
+      "description": "Hardcoded catalogue detected: Hardcoded catalogue",
+      "target": {
+        "type": "code",
+        "path": "adapters/node-typescript/fixtures/nextjs-api-ui/src/catalogs/benefitCatalog.ts"
+      },
+      "collected_at": "2026-05-01T12:21:08Z",
+      "producer": "nomos-adapter-node-typescript"
+    }
+  ]
+}
