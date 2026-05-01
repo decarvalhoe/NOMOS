@@ -1,0 +1,21 @@
+parcours:
+  id: minimal
+  name: "Parcours minimal"
+  domain: test
+  version: "1.0"
+  owner: test@example.com
+  status: active
+
+  etapes:
+    - id: unique
+      name: "Étape unique"
+      description: "Une seule étape."
+      ordre: 1
+      objectifs:
+        - id: objectif-unique
+          description: "Un seul objectif."
+          criteres:
+            - id: critere-unique
+              description: "Un seul critère."
+              type: rule
+              criticality: low

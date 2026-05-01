@@ -1,0 +1,43 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-HOME-WATER
+    unit_type: catalog_entry
+    name: Water damage warranty
+    domain: insurance-home
+    criticality: high
+    status: covered
+    business_rule: Water damage is covered.
+    source_refs:
+      - source_id: SRC-FULL-CONTRACT
+        locator: "clause 3.1"
+    canonical_contract:
+      path: data/warranties.yaml
+      object_id: INS-HOME-WATER
+      status: present
+    test_refs:
+      - tests/water_test.go
+    gaps: []
+  - unit_id: INS-HOME-ROOF
+    unit_type: exception
+    name: Roof infiltration exclusion
+    domain: insurance-home
+    criticality: medium
+    status: partial
+    business_rule: Roof infiltration excluded without maintenance.
+    source_refs:
+      - source_id: SRC-FULL-CONTRACT
+        locator: "exclusion 2"
+    gaps:
+      - Add structured exclusion payload.
+  - unit_id: DEC-DEDUCTIBLE
+    unit_type: decision
+    name: Legacy deductible
+    domain: insurance-home
+    criticality: low
+    status: deprecated
+    business_rule: Old deductible handling deprecated.
+    source_refs:
+      - source_id: SRC-FULL-CONTRACT
+        locator: "deductible section"
+    decision_refs:
+      - DEC-INS-0003

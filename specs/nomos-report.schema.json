@@ -149,7 +149,12 @@
         "api_response",
         "code_reference",
         "decision_record",
-        "manual_review"
+        "manual_review",
+        "source_hash",
+        "file_inventory",
+        "confidentiality_tag",
+        "owner_assignment",
+        "read_only_proof"
       ]
     },
     "run": {

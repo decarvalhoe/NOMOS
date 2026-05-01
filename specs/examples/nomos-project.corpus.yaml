@@ -1,0 +1,62 @@
+schema_version: "0.1.0"
+mode: canonical_corpus
+
+project:
+  id: insurance-sources
+  name: Insurance Source Corpus
+  description: Authoritative source collection for insurance domain. Contains contracts, regulations, and actuarial tables.
+  domain: insurance
+  lifecycle: brownfield
+  risk_level: high
+  owners:
+    - name: Actuarial Team
+      role: domain-owner
+      email: actuarial@example.com
+
+scope:
+  verdict: in_scope
+  confidence: high
+  in_scope:
+    - home-insurance-contracts
+    - auto-insurance-contracts
+    - actuarial-tables
+  out_of_scope:
+    - life-insurance
+
+corpus_surfaces:
+  - name: contracts
+    type: docs
+    path: sources/contracts/
+  - name: tables
+    type: data
+    path: sources/tables/
+
+source_inventory:
+  manifest_path: source-manifest.yaml
+  hash_required: true
+  owner_required: true
+  confidentiality_required: true
+
+corpus_policy:
+  execution: read_only
+  allowed_consumers:
+    - insurance-pricing-engine
+    - insurance-claims-platform
+  retention: "7 years per regulatory requirement"
+
+compliance:
+  regulated: true
+  standards:
+    - solvency-ii
+  data_sensitivity: restricted
+
+evidence:
+  required_reports:
+    - nomos-report.json
+    - attestation
+  attestation_level: signed
+
+notes: |
+  This corpus is the single source of truth for insurance domain knowledge.
+  All consuming products must reference sources by ID and hash.
+  No code execution — read-only consumption via structured contracts.
