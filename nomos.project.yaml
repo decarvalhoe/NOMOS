@@ -1,0 +1,28 @@
+schema_version: "0.1.0"
+project:
+  id: nomos-codex
+  name: Nomos Codex
+  description: Canonical Product Intelligence CLI and methodology.
+  domain: product-intelligence
+  lifecycle: greenfield
+  risk_level: medium
+  owners:
+    - name: Nomos Core Team
+      role: product-owner
+scope:
+  verdict: in_scope
+  confidence: high
+  in_scope:
+    - product-intelligence
+    - cli
+    - adapters
+surfaces:
+  - name: cli
+    type: cli
+    path: cli/
+    stack: go
+    critical: true
+  - name: adapters
+    type: data
+    path: adapters/
+    stack: yaml
