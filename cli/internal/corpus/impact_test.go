@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-var testMatrix = CanonicalMatrix{
+var impactTestMatrix = CanonicalMatrix{
 	SchemaVersion: "0.1.0",
 	Units: []MatrixUnit{
 		{
@@ -49,7 +49,7 @@ func TestComputeImpactSingleUnit(t *testing.T) {
 		Modified: []string{"data/canonical/warranties.yaml"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 1 {
 		t.Fatalf("expected 1 affected unit, got %d", skeleton.Summary.UnitsAffected)
@@ -67,7 +67,7 @@ func TestComputeImpactMultipleUnits(t *testing.T) {
 		Modified: []string{"core/warranties/water_damage.go", "core/exclusions/roof.go"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 2 {
 		t.Fatalf("expected 2 affected units, got %d", skeleton.Summary.UnitsAffected)
@@ -86,7 +86,7 @@ func TestComputeImpactChunks(t *testing.T) {
 		Modified: []string{"data/canonical/warranties.yaml"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.ChunksAffected != 1 {
 		t.Fatalf("expected 1 affected chunk, got %d", skeleton.Summary.ChunksAffected)
@@ -105,7 +105,7 @@ func TestComputeImpactNoMatch(t *testing.T) {
 		Modified: []string{"unrelated/file.txt"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 0 {
 		t.Fatalf("expected 0 affected units, got %d", skeleton.Summary.UnitsAffected)
@@ -118,7 +118,7 @@ func TestComputeImpactNoMatch(t *testing.T) {
 func TestComputeImpactEmptyDiff(t *testing.T) {
 	diff := CorpusDiff{}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.TotalChanged != 0 {
 		t.Fatalf("expected 0 total changed, got %d", skeleton.Summary.TotalChanged)
@@ -133,7 +133,7 @@ func TestComputeImpactTestRefMatch(t *testing.T) {
 		Modified: []string{"tests/core/water_damage_test.go"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 1 {
 		t.Fatalf("expected 1 affected unit from test ref, got %d", skeleton.Summary.UnitsAffected)
@@ -148,7 +148,7 @@ func TestComputeImpactSchemaRefMatch(t *testing.T) {
 		Added: []string{"schemas/warranty.schema.json"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 1 {
 		t.Fatalf("expected 1 affected unit from schema ref, got %d", skeleton.Summary.UnitsAffected)
@@ -160,7 +160,7 @@ func TestComputeImpactRemovedFile(t *testing.T) {
 		Removed: []string{"core/deductibles/calc.go"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 1 {
 		t.Fatalf("expected 1 affected unit, got %d", skeleton.Summary.UnitsAffected)
@@ -178,7 +178,7 @@ func TestComputeImpactChangedRefsPopulated(t *testing.T) {
 		},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.UnitsAffected != 1 {
 		t.Fatalf("expected 1 unit, got %d", skeleton.Summary.UnitsAffected)
@@ -196,7 +196,7 @@ func TestComputeImpactSummaryTotalChanged(t *testing.T) {
 		Removed:  []string{"old.go"},
 	}
 
-	skeleton := ComputeImpact(diff, testMatrix)
+	skeleton := ComputeImpact(diff, impactTestMatrix)
 
 	if skeleton.Summary.TotalChanged != 3 {
 		t.Fatalf("expected 3 total changed, got %d", skeleton.Summary.TotalChanged)

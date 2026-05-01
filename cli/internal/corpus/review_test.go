@@ -5,24 +5,24 @@ import (
 	"time"
 )
 
-var testNow = time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)
+var reviewTestNow = time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)
 
 func TestNewUnitReviewStartsInDraft(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
+	r := NewUnitReview("UNIT-001", reviewTestNow)
 	if r.State != StateDraft {
 		t.Fatalf("expected draft, got %s", r.State)
 	}
 	if r.UnitID != "UNIT-001" {
 		t.Fatalf("expected UNIT-001, got %s", r.UnitID)
 	}
-	if !r.CreatedAt.Equal(testNow) {
-		t.Fatalf("expected created_at %v, got %v", testNow, r.CreatedAt)
+	if !r.CreatedAt.Equal(reviewTestNow) {
+		t.Fatalf("expected created_at %v, got %v", reviewTestNow, r.CreatedAt)
 	}
 }
 
 func TestSubmitForReview(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	err := r.Apply(StatePendingReview, "alice", "ready for review", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	err := r.Apply(StatePendingReview, "alice", "ready for review", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -41,9 +41,9 @@ func TestSubmitForReview(t *testing.T) {
 }
 
 func TestApproveFromPendingReview(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	err := r.Apply(StateApproved, "bob", "looks good", testNow.Add(2*time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	err := r.Apply(StateApproved, "bob", "looks good", reviewTestNow.Add(2*time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -56,9 +56,9 @@ func TestApproveFromPendingReview(t *testing.T) {
 }
 
 func TestRejectFromPendingReview(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	err := r.Apply(StateRejected, "bob", "needs rework", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	err := r.Apply(StateRejected, "bob", "needs rework", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -68,10 +68,10 @@ func TestRejectFromPendingReview(t *testing.T) {
 }
 
 func TestReviseFromRejected(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	_ = r.Apply(StateRejected, "bob", "bad", testNow)
-	err := r.Apply(StateDraft, "alice", "will fix", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	_ = r.Apply(StateRejected, "bob", "bad", reviewTestNow)
+	err := r.Apply(StateDraft, "alice", "will fix", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -84,8 +84,8 @@ func TestReviseFromRejected(t *testing.T) {
 }
 
 func TestArchiveFromDraft(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	err := r.Apply(StateArchived, "admin", "no longer needed", testNow)
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	err := r.Apply(StateArchived, "admin", "no longer needed", reviewTestNow)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -95,9 +95,9 @@ func TestArchiveFromDraft(t *testing.T) {
 }
 
 func TestUnarchive(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StateArchived, "admin", "", testNow)
-	err := r.Apply(StateDraft, "admin", "reopening", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StateArchived, "admin", "", reviewTestNow)
+	err := r.Apply(StateDraft, "admin", "reopening", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -110,10 +110,10 @@ func TestUnarchive(t *testing.T) {
 }
 
 func TestRequestReReview(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	_ = r.Apply(StateApproved, "bob", "", testNow)
-	err := r.Apply(StatePendingReview, "carol", "source changed", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	_ = r.Apply(StateApproved, "bob", "", reviewTestNow)
+	err := r.Apply(StatePendingReview, "carol", "source changed", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -126,8 +126,8 @@ func TestRequestReReview(t *testing.T) {
 }
 
 func TestInvalidTransitionFromDraft(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	err := r.Apply(StateApproved, "alice", "", testNow)
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	err := r.Apply(StateApproved, "alice", "", reviewTestNow)
 	if err == nil {
 		t.Fatal("expected error for invalid transition draft->approved")
 	}
@@ -145,18 +145,18 @@ func TestInvalidTransitionFromDraft(t *testing.T) {
 }
 
 func TestInvalidTransitionFromApproved(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	_ = r.Apply(StateApproved, "bob", "", testNow)
-	err := r.Apply(StateDraft, "alice", "", testNow)
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	_ = r.Apply(StateApproved, "bob", "", reviewTestNow)
+	err := r.Apply(StateDraft, "alice", "", reviewTestNow)
 	if err == nil {
 		t.Fatal("expected error for invalid transition approved->draft")
 	}
 }
 
 func TestInvalidTargetState(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	err := r.Apply(ReviewState("invalid"), "alice", "", testNow)
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	err := r.Apply(ReviewState("invalid"), "alice", "", reviewTestNow)
 	if err == nil {
 		t.Fatal("expected error for invalid target state")
 	}
@@ -219,9 +219,9 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestReturnToDraft(t *testing.T) {
-	r := NewUnitReview("UNIT-001", testNow)
-	_ = r.Apply(StatePendingReview, "alice", "", testNow)
-	err := r.Apply(StateDraft, "alice", "not ready yet", testNow.Add(time.Hour))
+	r := NewUnitReview("UNIT-001", reviewTestNow)
+	_ = r.Apply(StatePendingReview, "alice", "", reviewTestNow)
+	err := r.Apply(StateDraft, "alice", "not ready yet", reviewTestNow.Add(time.Hour))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

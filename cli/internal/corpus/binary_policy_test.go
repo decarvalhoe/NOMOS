@@ -109,7 +109,7 @@ func TestClassifyNonexistent(t *testing.T) {
 // --- Policy.Apply tests ---
 
 func TestDefaultPolicyActions(t *testing.T) {
-	p := DefaultPolicy()
+	p := DefaultBinaryPolicy()
 
 	cases := []struct {
 		class  FileClass
@@ -130,7 +130,7 @@ func TestDefaultPolicyActions(t *testing.T) {
 }
 
 func TestCustomPolicy(t *testing.T) {
-	p := Policy{
+	p := BinaryPolicy{
 		PDF:    ActionBlock,
 		Office: ActionBlock,
 		Image:  ActionBlock,
@@ -148,7 +148,7 @@ func TestCustomPolicy(t *testing.T) {
 
 func TestEvaluateFilePDF(t *testing.T) {
 	f := writeTempFile(t, "spec.pdf", []byte("%PDF-1.5"))
-	p := DefaultPolicy()
+	p := DefaultBinaryPolicy()
 	result, err := p.EvaluateFile(f)
 	assertNoErr(t, err)
 	assertEqual(t, ClassPDF, result.Class)
@@ -159,7 +159,7 @@ func TestEvaluateFileBlocksBinary(t *testing.T) {
 	content := make([]byte, 64)
 	content[0] = 0x00
 	f := writeTempFile(t, "blob.dat", content)
-	p := DefaultPolicy()
+	p := DefaultBinaryPolicy()
 	result, err := p.EvaluateFile(f)
 	assertNoErr(t, err)
 	assertEqual(t, ClassBinary, result.Class)
@@ -179,7 +179,7 @@ func TestEvaluateDir(t *testing.T) {
 	binContent[0] = 0x00
 	writeFile(t, dir, "firmware.bin", binContent)
 
-	p := DefaultPolicy()
+	p := DefaultBinaryPolicy()
 	results, err := p.EvaluateDir(dir)
 	assertNoErr(t, err)
 
@@ -204,7 +204,7 @@ func TestEvaluateDirSubdirectories(t *testing.T) {
 	writeFile(t, dir, "sub/nested.go", []byte("package main\n"))
 	writeFile(t, dir, "sub/data.xlsx", []byte("PK\x03\x04 xlsx"))
 
-	p := DefaultPolicy()
+	p := DefaultBinaryPolicy()
 	results, err := p.EvaluateDir(dir)
 	assertNoErr(t, err)
 

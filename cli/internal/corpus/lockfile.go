@@ -139,9 +139,9 @@ func (lf *Lockfile) IsApproved(path, hash string) bool {
 
 // Verify checks that all entries in a snapshot are approved in the lockfile.
 // Returns a list of unapproved file entries.
-func (lf *Lockfile) Verify(snapshot Snapshot) []FileEntry {
-	var unapproved []FileEntry
-	for _, fe := range snapshot.Entries {
+func (lf *Lockfile) Verify(snapshot Snapshot) []SourceEntry {
+	var unapproved []SourceEntry
+	for _, fe := range snapshot.Sources {
 		if !lf.IsApproved(fe.Path, fe.Hash) {
 			unapproved = append(unapproved, fe)
 		}

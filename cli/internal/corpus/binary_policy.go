@@ -37,7 +37,7 @@ type PolicyResult struct {
 }
 
 // Policy configures the behaviour for each file class.
-type Policy struct {
+type BinaryPolicy struct {
 	PDF    Action `json:"pdf"`
 	Office Action `json:"office"`
 	Image  Action `json:"image"`
@@ -49,8 +49,8 @@ type Policy struct {
 //   - Office → extract-metadata-only
 //   - Image  → skip
 //   - Binary → block
-func DefaultPolicy() Policy {
-	return Policy{
+func DefaultBinaryPolicy() BinaryPolicy {
+	return BinaryPolicy{
 		PDF:    ActionExtractMetadata,
 		Office: ActionExtractMetadata,
 		Image:  ActionSkip,
@@ -78,7 +78,7 @@ func Classify(path string) (FileClass, error) {
 }
 
 // Apply returns the policy decision for a file class.
-func (p Policy) Apply(class FileClass) (Action, string) {
+func (p BinaryPolicy) Apply(class FileClass) (Action, string) {
 	switch class {
 	case ClassText:
 		return ActionAllow, "text files are always allowed"
@@ -96,7 +96,7 @@ func (p Policy) Apply(class FileClass) (Action, string) {
 }
 
 // EvaluateFile classifies a file and applies the policy in one call.
-func (p Policy) EvaluateFile(path string) (PolicyResult, error) {
+func (p BinaryPolicy) EvaluateFile(path string) (PolicyResult, error) {
 	class, err := Classify(path)
 	if err != nil {
 		return PolicyResult{
@@ -117,7 +117,7 @@ func (p Policy) EvaluateFile(path string) (PolicyResult, error) {
 }
 
 // EvaluateDir walks a directory and evaluates every regular file.
-func (p Policy) EvaluateDir(root string) ([]PolicyResult, error) {
+func (p BinaryPolicy) EvaluateDir(root string) ([]PolicyResult, error) {
 	var results []PolicyResult
 	err := filepath.WalkDir(root, func(path string, d os.DirEntry, walkErr error) error {
 		if walkErr != nil {

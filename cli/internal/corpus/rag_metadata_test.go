@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var testNow = time.Date(2026, 5, 1, 10, 0, 0, 0, time.UTC)
+var ragTestNow = time.Date(2026, 5, 1, 10, 0, 0, 0, time.UTC)
 
 func validInput() ChunkInput {
 	return ChunkInput{
@@ -27,7 +27,7 @@ func validInput() ChunkInput {
 func validConfig() EnrichConfig {
 	return EnrichConfig{
 		IngestionVersion: "0.1.0",
-		Now:              testNow,
+		Now:              ragTestNow,
 	}
 }
 

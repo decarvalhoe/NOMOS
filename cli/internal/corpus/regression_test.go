@@ -20,7 +20,7 @@ func TestRegressionMinimalPipeline(t *testing.T) {
 	root := filepath.Join(regressionDir, "minimal")
 
 	// Step 1: Binary policy scan — all files should be text/allow.
-	policy := DefaultPolicy()
+	policy := DefaultBinaryPolicy()
 	results, err := policy.EvaluateDir(root)
 	if err != nil {
 		t.Fatalf("scan: %v", err)
@@ -37,7 +37,7 @@ func TestRegressionMinimalPipeline(t *testing.T) {
 	// Step 2: Sidecar validation (patch hash to actual content).
 	corpusDir := filepath.Join(root, "docs")
 	manifestBytes := readFixture(t, filepath.Join(root, "source-manifest.yaml"))
-	actualHash := hashFile(t, filepath.Join(corpusDir, "contract.md"))
+	actualHash := testHashFile(t, filepath.Join(corpusDir, "contract.md"))
 	manifestBytes = []byte(strings.Replace(
 		string(manifestBytes), "sha256:placeholder", "sha256:"+actualHash, 1,
 	))
@@ -95,7 +95,7 @@ func TestRegressionWithBinaries(t *testing.T) {
 	t.Cleanup(func() { os.Remove(binPath) })
 
 	// Step 1: Scan should detect the binary.
-	policy := DefaultPolicy()
+	policy := DefaultBinaryPolicy()
 	results, err := policy.EvaluateDir(corpusDir)
 	if err != nil {
 		t.Fatalf("scan: %v", err)
@@ -119,7 +119,7 @@ func TestRegressionWithBinaries(t *testing.T) {
 
 	// Step 2: Sidecar validation — binary is undeclared → error.
 	manifestBytes := readFixture(t, filepath.Join(root, "source-manifest.yaml"))
-	actualHash := hashFile(t, filepath.Join(corpusDir, "spec.md"))
+	actualHash := testHashFile(t, filepath.Join(corpusDir, "spec.md"))
 	manifestBytes = []byte(strings.Replace(
 		string(manifestBytes), "sha256:placeholder", "sha256:"+actualHash, 1,
 	))
@@ -154,7 +154,7 @@ func TestRegressionWithConflicts(t *testing.T) {
 	corpusDir := filepath.Join(root, "docs")
 
 	// Step 1: Scan — all text, no blocks.
-	policy := DefaultPolicy()
+	policy := DefaultBinaryPolicy()
 	results, err := policy.EvaluateDir(corpusDir)
 	if err != nil {
 		t.Fatalf("scan: %v", err)
@@ -215,7 +215,7 @@ func TestRegressionWithUnits(t *testing.T) {
 	corpusDir := filepath.Join(root, "docs")
 
 	// Step 1: Scan.
-	policy := DefaultPolicy()
+	policy := DefaultBinaryPolicy()
 	results, err := policy.EvaluateDir(corpusDir)
 	if err != nil {
 		t.Fatalf("scan: %v", err)
@@ -228,7 +228,7 @@ func TestRegressionWithUnits(t *testing.T) {
 
 	// Step 2: Sidecar validation.
 	manifestBytes := readFixture(t, filepath.Join(root, "source-manifest.yaml"))
-	actualHash := hashFile(t, filepath.Join(corpusDir, "contract.md"))
+	actualHash := testHashFile(t, filepath.Join(corpusDir, "contract.md"))
 	manifestBytes = []byte(strings.Replace(
 		string(manifestBytes), "sha256:placeholder", "sha256:"+actualHash, 1,
 	))
@@ -316,7 +316,7 @@ func readFixture(t *testing.T, path string) []byte {
 	return data
 }
 
-func hashFile(t *testing.T, path string) string {
+func testHashFile(t *testing.T, path string) string {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {

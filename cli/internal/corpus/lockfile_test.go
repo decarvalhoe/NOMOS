@@ -96,7 +96,7 @@ func TestVerifyAllApproved(t *testing.T) {
 	lf.Add("a.go", "sha256:a1", "alice", "")
 	lf.Add("b.go", "sha256:b1", "alice", "")
 
-	snap := Snapshot{Entries: []FileEntry{
+	snap := Snapshot{Sources: []SourceEntry{
 		{Path: "a.go", Hash: "sha256:a1"},
 		{Path: "b.go", Hash: "sha256:b1"},
 	}}
@@ -111,7 +111,7 @@ func TestVerifyDetectsUnapproved(t *testing.T) {
 	lf := NewLockfile()
 	lf.Add("a.go", "sha256:a1", "alice", "")
 
-	snap := Snapshot{Entries: []FileEntry{
+	snap := Snapshot{Sources: []SourceEntry{
 		{Path: "a.go", Hash: "sha256:a1"},
 		{Path: "new.go", Hash: "sha256:new"},
 		{Path: "a.go", Hash: "sha256:a2"}, // same path, different hash
@@ -127,7 +127,7 @@ func TestGuardPassesWhenAllApproved(t *testing.T) {
 	lf := NewLockfile()
 	lf.Add("x.go", "sha256:x", "alice", "")
 
-	snap := Snapshot{Entries: []FileEntry{{Path: "x.go", Hash: "sha256:x"}}}
+	snap := Snapshot{Sources: []SourceEntry{{Path: "x.go", Hash: "sha256:x"}}}
 	if err := lf.Guard(snap); err != nil {
 		t.Fatalf("expected guard to pass: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestGuardFailsWhenUnapproved(t *testing.T) {
 	lf := NewLockfile()
 	lf.Add("x.go", "sha256:x", "alice", "")
 
-	snap := Snapshot{Entries: []FileEntry{
+	snap := Snapshot{Sources: []SourceEntry{
 		{Path: "x.go", Hash: "sha256:x"},
 		{Path: "y.go", Hash: "sha256:y"},
 	}}

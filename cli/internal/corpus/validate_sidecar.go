@@ -36,26 +36,8 @@ var (
 	validConfidentiality = []string{"public", "internal", "restricted", "secret"}
 )
 
-// SidecarManifest is the YAML structure of a source-manifest sidecar file.
-type SidecarManifest struct {
-	SchemaVersion string          `yaml:"schema_version"`
-	Sources       []SidecarSource `yaml:"sources"`
-}
 
-// SidecarSource is one entry in the sidecar manifest.
-type SidecarSource struct {
-	ID              string   `yaml:"id"`
-	Path            string   `yaml:"path"`
-	Type            string   `yaml:"type"`
-	Domain          string   `yaml:"domain"`
-	Priority        string   `yaml:"priority"`
-	Status          string   `yaml:"status"`
-	Hash            string   `yaml:"hash"`
-	Owner           string   `yaml:"owner"`
-	License         string   `yaml:"license"`
-	Confidentiality string   `yaml:"confidentiality"`
-	AllowedUses     []string `yaml:"allowed_uses"`
-}
+// ManifestSource is one entry in the sidecar manifest.
 
 // SidecarError is a single structured validation error.
 type SidecarError struct {
@@ -140,7 +122,7 @@ func ValidateSidecar(manifest SidecarManifest, corpusRoot string) SidecarResult 
 	return result
 }
 
-func validateSourceID(result *SidecarResult, src SidecarSource, seen map[string]bool) {
+func validateSourceID(result *SidecarResult, src ManifestSource, seen map[string]bool) {
 	if strings.TrimSpace(src.ID) == "" {
 		addSidecarErr(result, src.ID, CodeIDMissing, "id", "source id is required")
 		return
@@ -156,14 +138,14 @@ func validateSourceID(result *SidecarResult, src SidecarSource, seen map[string]
 	seen[src.ID] = true
 }
 
-func validateOwner(result *SidecarResult, src SidecarSource) {
+func validateOwner(result *SidecarResult, src ManifestSource) {
 	if strings.TrimSpace(src.Owner) == "" {
 		addSidecarErr(result, src.ID, CodeOwnerMissing, "owner",
 			"owner is required for every source")
 	}
 }
 
-func validateConfidentiality(result *SidecarResult, src SidecarSource) {
+func validateConfidentiality(result *SidecarResult, src ManifestSource) {
 	if strings.TrimSpace(src.Confidentiality) == "" {
 		addSidecarErr(result, src.ID, CodeConfidentialityEmpty, "confidentiality",
 			"confidentiality classification is required")
@@ -176,7 +158,7 @@ func validateConfidentiality(result *SidecarResult, src SidecarSource) {
 	}
 }
 
-func validateHash(result *SidecarResult, src SidecarSource, corpusRoot string) {
+func validateHash(result *SidecarResult, src ManifestSource, corpusRoot string) {
 	if strings.TrimSpace(src.Hash) == "" {
 		addSidecarErr(result, src.ID, CodeHashMissing, "hash", "hash is required")
 		return
@@ -207,7 +189,7 @@ func validateHash(result *SidecarResult, src SidecarSource, corpusRoot string) {
 	}
 }
 
-func validateFileExists(result *SidecarResult, src SidecarSource, corpusRoot string) {
+func validateFileExists(result *SidecarResult, src ManifestSource, corpusRoot string) {
 	filePath := filepath.Join(corpusRoot, src.Path)
 	if _, err := os.Stat(filePath); err != nil {
 		addSidecarErr(result, src.ID, CodeFileMissing, "path",

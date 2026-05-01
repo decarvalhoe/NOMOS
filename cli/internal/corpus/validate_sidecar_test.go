@@ -11,7 +11,7 @@ import (
 func validManifest() SidecarManifest {
 	return SidecarManifest{
 		SchemaVersion: "0.1.0",
-		Sources: []SidecarSource{
+		Sources: []ManifestSource{
 			{
 				ID:              "SRC-001",
 				Path:            "docs/contract.pdf",

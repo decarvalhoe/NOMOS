@@ -1,10 +1,7 @@
 package corpus
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,16 +19,7 @@ const (
 	StatusUnchanged FileStatus = "unchanged"
 )
 
-// FileEntry represents a single file in a corpus snapshot.
-type FileEntry struct {
-	Path string `json:"path"`
-	Hash string `json:"hash"`
-}
 
-// Snapshot is a set of file entries representing corpus state at a point in time.
-type Snapshot struct {
-	Entries []FileEntry `json:"entries"`
-}
 
 // DiffEntry describes one file's transition between two snapshots.
 type DiffEntry struct {
@@ -59,8 +47,8 @@ func (r DiffReport) TotalChanges() int {
 // Files present in old but absent in new with path containing "archive" are
 // classified as archived; otherwise they are removed.
 func Diff(old, new Snapshot) DiffReport {
-	oldIndex := indexByPath(old.Entries)
-	newIndex := indexByPath(new.Entries)
+	oldIndex := indexByPath(old.Sources)
+	newIndex := indexByPath(new.Sources)
 
 	var report DiffReport
 
@@ -134,7 +122,7 @@ func SnapshotFromDir(root string) (Snapshot, error) {
 		return Snapshot{}, fmt.Errorf("corpus root must be a directory: %s", absRoot)
 	}
 
-	var entries []FileEntry
+	var entries []SourceEntry
 	err = filepath.WalkDir(absRoot, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -159,11 +147,11 @@ func SnapshotFromDir(root string) (Snapshot, error) {
 			return nil
 		}
 
-		hash, err := hashFile(path)
+		hash, _, err := hashFile(path)
 		if err != nil {
 			return err
 		}
-		entries = append(entries, FileEntry{Path: rel, Hash: hash})
+		entries = append(entries, SourceEntry{Path: rel, Hash: hash})
 		return nil
 	})
 	if err != nil {
@@ -173,11 +161,11 @@ func SnapshotFromDir(root string) (Snapshot, error) {
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i].Path < entries[j].Path
 	})
-	return Snapshot{Entries: entries}, nil
+	return Snapshot{Sources: entries}, nil
 }
 
-func indexByPath(entries []FileEntry) map[string]FileEntry {
-	m := make(map[string]FileEntry, len(entries))
+func indexByPath(entries []SourceEntry) map[string]SourceEntry {
+	m := make(map[string]SourceEntry, len(entries))
 	for _, e := range entries {
 		m[e.Path] = e
 	}
@@ -203,16 +191,3 @@ func shouldSkip(base string) bool {
 	return false
 }
 
-func hashFile(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	return "sha256:" + hex.EncodeToString(h.Sum(nil)), nil
-}

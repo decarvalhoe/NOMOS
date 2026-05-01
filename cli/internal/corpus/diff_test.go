@@ -7,12 +7,12 @@ import (
 )
 
 func TestDiffIdenticalSnapshots(t *testing.T) {
-	entries := []FileEntry{
+	entries := []SourceEntry{
 		{Path: "a.go", Hash: "sha256:aaa"},
 		{Path: "b.go", Hash: "sha256:bbb"},
 	}
-	old := Snapshot{Entries: entries}
-	new := Snapshot{Entries: entries}
+	old := Snapshot{Sources: entries}
+	new := Snapshot{Sources: entries}
 
 	report := Diff(old, new)
 
@@ -25,10 +25,10 @@ func TestDiffIdenticalSnapshots(t *testing.T) {
 }
 
 func TestDiffAddedFiles(t *testing.T) {
-	old := Snapshot{Entries: []FileEntry{
+	old := Snapshot{Sources: []SourceEntry{
 		{Path: "existing.go", Hash: "sha256:111"},
 	}}
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "existing.go", Hash: "sha256:111"},
 		{Path: "new-file.go", Hash: "sha256:222"},
 	}}
@@ -50,10 +50,10 @@ func TestDiffAddedFiles(t *testing.T) {
 }
 
 func TestDiffChangedFiles(t *testing.T) {
-	old := Snapshot{Entries: []FileEntry{
+	old := Snapshot{Sources: []SourceEntry{
 		{Path: "main.go", Hash: "sha256:old"},
 	}}
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "main.go", Hash: "sha256:new"},
 	}}
 
@@ -68,11 +68,11 @@ func TestDiffChangedFiles(t *testing.T) {
 }
 
 func TestDiffRemovedFiles(t *testing.T) {
-	old := Snapshot{Entries: []FileEntry{
+	old := Snapshot{Sources: []SourceEntry{
 		{Path: "deleted.go", Hash: "sha256:del"},
 		{Path: "kept.go", Hash: "sha256:keep"},
 	}}
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "kept.go", Hash: "sha256:keep"},
 	}}
 
@@ -90,12 +90,12 @@ func TestDiffRemovedFiles(t *testing.T) {
 }
 
 func TestDiffArchivedFiles(t *testing.T) {
-	old := Snapshot{Entries: []FileEntry{
+	old := Snapshot{Sources: []SourceEntry{
 		{Path: "archive/old-policy.yaml", Hash: "sha256:arc"},
 		{Path: "docs/archived/legacy.md", Hash: "sha256:leg"},
 		{Path: "src/normal.go", Hash: "sha256:norm"},
 	}}
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "src/normal.go", Hash: "sha256:norm"},
 	}}
 
@@ -110,13 +110,13 @@ func TestDiffArchivedFiles(t *testing.T) {
 }
 
 func TestDiffMixedChanges(t *testing.T) {
-	old := Snapshot{Entries: []FileEntry{
+	old := Snapshot{Sources: []SourceEntry{
 		{Path: "a.go", Hash: "sha256:a1"},
 		{Path: "b.go", Hash: "sha256:b1"},
 		{Path: "c.go", Hash: "sha256:c1"},
 		{Path: "archive/d.go", Hash: "sha256:d1"},
 	}}
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "a.go", Hash: "sha256:a1"},
 		{Path: "b.go", Hash: "sha256:b2"},
 		{Path: "e.go", Hash: "sha256:e1"},
@@ -156,7 +156,7 @@ func TestDiffEmptySnapshots(t *testing.T) {
 }
 
 func TestDiffOldEmptyNewPopulated(t *testing.T) {
-	new := Snapshot{Entries: []FileEntry{
+	new := Snapshot{Sources: []SourceEntry{
 		{Path: "x.go", Hash: "sha256:x"},
 		{Path: "y.go", Hash: "sha256:y"},
 	}}
@@ -182,7 +182,7 @@ func TestSnapshotFromDir(t *testing.T) {
 	}
 
 	paths := make(map[string]bool)
-	for _, e := range snap.Entries {
+	for _, e := range snap.Sources {
 		paths[e.Path] = true
 		if e.Hash == "" {
 			t.Fatalf("empty hash for %s", e.Path)
@@ -213,8 +213,8 @@ func TestSnapshotFromDirHashConsistency(t *testing.T) {
 		t.Fatalf("snapshot 2: %v", err)
 	}
 
-	if snap1.Entries[0].Hash != snap2.Entries[0].Hash {
-		t.Fatalf("hashes should be deterministic: %s vs %s", snap1.Entries[0].Hash, snap2.Entries[0].Hash)
+	if snap1.Sources[0].Hash != snap2.Sources[0].Hash {
+		t.Fatalf("hashes should be deterministic: %s vs %s", snap1.Sources[0].Hash, snap2.Sources[0].Hash)
 	}
 }
 
