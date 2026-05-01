@@ -1,0 +1,10 @@
+exceptions:
+  - id: EXC-001
+    summary: "Temporary bypass"
+    owner: alice@example.com
+    approver: bob@example.com
+    severity: low
+    status: active
+    created_at: "2026-01-01"
+    expires_at: "2027-12-31"
+    reason: "Waiting for upstream fix."
