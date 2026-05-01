@@ -1,0 +1,26 @@
+schema_version: "0.1.0"
+units:
+  - id: UNIT-DETECT-LANGUAGES
+    source_ref: SRC-NOMOS-METHOD
+    product_refs:
+      - cli/internal/detect/detect.go
+    test_refs:
+      - cli/internal/detect/detect_test.go
+  - id: UNIT-DETECT-SURFACES
+    source_ref: SRC-NOMOS-METHOD
+    product_refs:
+      - cli/internal/detect/detect.go
+    test_refs:
+      - cli/internal/detect/detect_test.go
+  - id: UNIT-REPORT-GENERATION
+    source_ref: SRC-NOMOS-SCHEMAS
+    product_refs:
+      - cli/internal/report/generate.go
+    test_refs:
+      - cli/internal/report/generate_test.go
+  - id: UNIT-ADAPTER-NODE-TS
+    source_ref: SRC-NOMOS-ADAPTERS
+    product_refs:
+      - adapters/node-typescript/adapter.nomos.yaml
+    test_refs:
+      - cli/internal/detect/detect_test.go

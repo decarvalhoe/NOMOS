@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+sources:
+  - id: SRC-NOMOS-METHOD
+    title: Nomos methodology documentation
+    status: active
+    owner: Nomos Core Team
+  - id: SRC-NOMOS-SCHEMAS
+    title: Nomos schema specifications
+    status: active
+    owner: Nomos Core Team
+  - id: SRC-NOMOS-ADAPTERS
+    title: Adapter manifest contracts
+    status: active
+    owner: Nomos Core Team
