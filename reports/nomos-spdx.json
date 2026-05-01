@@ -3,9 +3,9 @@
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "nomos-sbom-nomos",
-  "documentNamespace": "https://nomos.dev/spdx/nomos/run-20260501-122108",
+  "documentNamespace": "https://nomos.dev/spdx/nomos/run-20260501-122407",
   "creationInfo": {
-    "created": "2026-05-01T12:21:08Z",
+    "created": "2026-05-01T12:24:07Z",
     "creators": [
       "Tool: nomos-0.1.0-dev"
     ]

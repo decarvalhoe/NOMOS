@@ -1,9 +1,9 @@
 {
   "schema_version": "0.1.0",
   "report_type": "nomos-report",
-  "generated_at": "2026-05-01T12:21:08Z",
+  "generated_at": "2026-05-01T12:24:07Z",
   "run": {
-    "id": "run-20260501-122108",
+    "id": "run-20260501-122407",
     "mode": "report",
     "tool": {
       "name": "nomos",
@@ -98,7 +98,7 @@
         "type": "code",
         "path": "adapters/node-typescript/fixtures/nextjs-api-ui/src/catalogs/benefitCatalog.ts"
       },
-      "collected_at": "2026-05-01T12:21:08Z",
+      "collected_at": "2026-05-01T12:24:07Z",
       "producer": "nomos-adapter-node-typescript"
     }
   ]
