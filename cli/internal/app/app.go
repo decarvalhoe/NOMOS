@@ -23,6 +23,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"init":     initCommand,
 		"validate": validate.Command,
 		"diagnose": diagnoseCommand,
+		"corpus":   corpusCommand,
 	}
 
 	if len(args) == 0 {
@@ -33,7 +34,8 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 	command, ok := commands[name]
 	if !ok {
 		fmt.Fprintf(stderr, "unknown command %q\n\n", name)
-		return helpCommand(nil, stdout, stderr)
+		helpCommand(nil, stderr, stderr)
+		return 2
 	}
 
 	return command(args[1:], stdout, stderr)
@@ -52,6 +54,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  init       Initialize Nomos manifests in a repository")
 	fmt.Fprintln(stdout, "  validate   Validate Nomos manifests and schemas")
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
+	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
 	return 0
@@ -74,6 +77,7 @@ func diagnoseCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	root := flags.String("root", ".", "repository root to inspect")
 	format := flags.String("format", "json", "output format: json or markdown")
+	mode := flags.String("mode", "auto", "diagnosis mode: auto, product, or canonical_corpus")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -95,6 +99,7 @@ func diagnoseCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		Now:         time.Now().UTC(),
 		ToolVersion: Version,
 		Command:     command,
+		Mode:        *mode,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "diagnose failed: %v\n", err)

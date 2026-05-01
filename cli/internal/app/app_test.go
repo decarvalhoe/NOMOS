@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/RBOKproject/Nomos/cli/internal/corpus"
 	"github.com/RBOKproject/Nomos/cli/internal/output"
 )
 
@@ -42,14 +44,13 @@ func TestRunUnknownCommand(t *testing.T) {
 	var stderr bytes.Buffer
 
 	code := Run([]string{"unknown"}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("expected exit code 0 after help fallback, got %d", code)
+	if code != 2 {
+		t.Fatalf("expected exit code 2 for unknown command, got %d", code)
 	}
 	if !strings.Contains(stderr.String(), "unknown command") {
 		t.Fatalf("expected unknown command error, got %q", stderr.String())
 	}
 }
-
 
 func TestRunInitMinimalCreatesBaselineProject(t *testing.T) {
 	target := t.TempDir()
@@ -237,6 +238,169 @@ func TestRunDiagnoseMarkdown(t *testing.T) {
 	}
 }
 
+func TestRunDiagnoseCanonicalCorpusMode(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "nomos.project.yaml", `schema_version: "0.1.0"
+mode: canonical_corpus
+project:
+  id: rbok-corpus
+  name: RBOK Corpus
+  domain: rbok
+source_inventory:
+  manifest_path: source-manifest.yaml
+  hash_required: true
+  owner_required: true
+  confidentiality_required: true
+corpus_policy:
+  execution: read_only
+`)
+	writeTestFile(t, root, "source-manifest.yaml", `schema_version: "0.1.0"
+sources:
+  - id: RBOK-RULE
+    path: 01_rbok/rule.md
+    type: markdown
+    domain: rbok
+    priority: primary
+    status: active
+    hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    owner: domain-owner@example.com
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+`)
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"diagnose", "--mode", "canonical_corpus", "--root", root, "--format", "json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d; stderr=%q", code, stderr.String())
+	}
+
+	var report output.Report
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode diagnose json: %v\n%s", err, stdout.String())
+	}
+	raw := report.Metadata["diagnose"].(map[string]any)
+	if raw["preliminary_verdict"] != "corpus_admissible" {
+		t.Fatalf("expected corpus_admissible, got %#v", raw)
+	}
+	if !strings.Contains(report.Verdict.Summary, "corpus_admissible") {
+		t.Fatalf("expected corpus verdict summary, got %#v", report.Verdict)
+	}
+}
+
+func TestRunCorpusScanWritesSnapshotOutsideSourceRoot(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n")
+	writeTestFile(t, root, "03_catalogue_services/service.yaml", "id: service\n")
+	initGitRepo(t, root)
+
+	out := filepath.Join(t.TempDir(), "snapshot.json")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"corpus", "scan",
+		"--root", root,
+		"--out", out,
+		"--format", "json",
+		"--ext", ".md",
+		"--ext", ".yaml",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d; stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "scanned 2 files") {
+		t.Fatalf("expected scan summary, got %q", stdout.String())
+	}
+
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("read snapshot: %v", err)
+	}
+	var snapshot corpus.Snapshot
+	if err := json.Unmarshal(data, &snapshot); err != nil {
+		t.Fatalf("decode snapshot: %v\n%s", err, string(data))
+	}
+	if snapshot.TotalFiles != 2 {
+		t.Fatalf("expected 2 files, got %#v", snapshot)
+	}
+	if snapshot.Commit == "" {
+		t.Fatalf("expected git commit metadata in snapshot: %#v", snapshot)
+	}
+	for _, source := range snapshot.Sources {
+		if source.Hash == "" || source.Extension == "" || source.Classification == "" {
+			t.Fatalf("expected hash, extension, classification for source: %#v", source)
+		}
+	}
+}
+
+func TestRunCorpusScanRejectsOutputInsideSourceRoot(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n")
+	initGitRepo(t, root)
+
+	out := filepath.Join(root, "snapshot.json")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"corpus", "scan", "--root", root, "--out", out}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("expected exit code 2, got %d; stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "inside source root") {
+		t.Fatalf("expected source-root guard error, got %q", stderr.String())
+	}
+	if _, err := os.Stat(out); !os.IsNotExist(err) {
+		t.Fatalf("expected no output file inside source root, stat err=%v", err)
+	}
+}
+
+func TestRunCorpusManifestAndValidateSidecar(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n")
+	initGitRepo(t, root)
+
+	outDir := t.TempDir()
+	snapshotPath := filepath.Join(outDir, "snapshot.json")
+	manifestPath := filepath.Join(outDir, "source-manifest.yaml")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"corpus", "scan", "--root", root, "--out", snapshotPath, "--ext", ".md"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("scan failed: code=%d stderr=%q", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "manifest",
+		"--snapshot", snapshotPath,
+		"--out", manifestPath,
+		"--domain", "rbok",
+		"--owner", "domain-owner@example.com",
+		"--confidentiality", "internal",
+		"--id-prefix", "RBOK",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("manifest failed: code=%d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(readTestFile(t, outDir, "source-manifest.yaml"), "RBOK-RULE") {
+		t.Fatalf("expected generated manifest to contain RBOK-RULE")
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{"corpus", "validate-sidecar", "--root", root, "--manifest", manifestPath, "--format", "json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("validate-sidecar failed: code=%d stderr=%q stdout=%q", code, stderr.String(), stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"valid": true`) {
+		t.Fatalf("expected valid sidecar json, got %s", stdout.String())
+	}
+}
+
 func TestRunValidateRequiresManifestPath(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -247,5 +411,34 @@ func TestRunValidateRequiresManifestPath(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "at least one manifest path is required") {
 		t.Fatalf("expected usage error, got %q", stderr.String())
+	}
+}
+
+func writeTestFile(t *testing.T, root string, rel string, content string) {
+	t.Helper()
+	path := filepath.Join(root, filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("create parent for %s: %v", rel, err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", rel, err)
+	}
+}
+
+func initGitRepo(t *testing.T, root string) {
+	t.Helper()
+	runGit(t, root, "init")
+	runGit(t, root, "config", "user.email", "nomos@example.com")
+	runGit(t, root, "config", "user.name", "Nomos Test")
+	runGit(t, root, "add", ".")
+	runGit(t, root, "commit", "-m", "seed corpus")
+}
+
+func runGit(t *testing.T, root string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-C", root}, args...)...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v failed: %v\n%s", args, err, string(out))
 	}
 }

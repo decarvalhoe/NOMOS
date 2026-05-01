@@ -22,18 +22,24 @@ const (
 	verdictPartial    = "partial"
 	verdictBlocked    = "blocked"
 	verdictOutOfScope = "out_of_scope"
+
+	verdictCorpusAdmissible = "corpus_admissible"
+	verdictCorpusPartial    = "corpus_partial"
+	verdictCorpusBlocked    = "corpus_blocked"
 )
 
 type Options struct {
 	Now         time.Time
 	ToolVersion string
 	Command     []string
+	Mode        string
 }
 
 type Classification struct {
 	PreliminaryVerdict string                  `json:"preliminary_verdict"`
 	Confidence         string                  `json:"confidence"`
 	Escalation         string                  `json:"escalation"`
+	RepositoryMode     string                  `json:"repository_mode,omitempty"`
 	Blockers           []Gap                   `json:"blockers,omitempty"`
 	MissingEvidence    []Gap                   `json:"missing_evidence,omitempty"`
 	Surfaces           []SurfaceClassification `json:"surfaces,omitempty"`
@@ -54,6 +60,7 @@ type SurfaceClassification struct {
 
 type repositoryEvidence struct {
 	projectManifest string
+	projectMode     string
 	sourceManifest  string
 	canonicalMatrix string
 	tests           []string
@@ -81,8 +88,10 @@ func Diagnose(root string, options Options) (output.Report, error) {
 	}
 
 	surfaces := classifySurfaces(detection.Surfaces)
-	blockers, missing := classifyGaps(surfaces, repoEvidence, detection.CI)
-	classification := classifyRepository(surfaces, blockers, missing)
+	requestedMode := normalizeMode(options.Mode)
+	corpusMode := requestedMode == "canonical_corpus" || repoEvidence.projectMode == "canonical_corpus"
+	blockers, missing := classifyGaps(surfaces, repoEvidence, detection.CI, corpusMode)
+	classification := classifyRepository(surfaces, blockers, missing, corpusMode)
 
 	evidence := buildEvidence(surfaces, repoEvidence, detection.CI)
 	findings := buildFindings(blockers, missing, surfaceEvidenceIDs(productSurfaces(surfaces)))
@@ -100,7 +109,7 @@ func Diagnose(root string, options Options) (output.Report, error) {
 		GeneratedAt:   now.Format(time.RFC3339),
 		Run: output.Run{
 			ID:   "run-" + now.Format("20060102-150405"),
-			Mode: "admission",
+			Mode: reportMode(corpusMode),
 			Tool: output.Tool{
 				Name:    "nomos",
 				Version: version,
@@ -147,7 +156,10 @@ func classifySurfaces(items []detect.SurfaceFinding) []SurfaceClassification {
 	return surfaces
 }
 
-func classifyGaps(surfaces []SurfaceClassification, repo repositoryEvidence, ci []detect.CIFinding) ([]Gap, []Gap) {
+func classifyGaps(surfaces []SurfaceClassification, repo repositoryEvidence, ci []detect.CIFinding, corpusMode bool) ([]Gap, []Gap) {
+	if corpusMode {
+		return classifyCorpusGaps(repo)
+	}
 	if !hasProductSurface(surfaces) {
 		return nil, nil
 	}
@@ -209,14 +221,52 @@ func classifyGaps(surfaces []SurfaceClassification, repo repositoryEvidence, ci 
 	return blockers, missing
 }
 
-func classifyRepository(surfaces []SurfaceClassification, blockers []Gap, missing []Gap) Classification {
+func classifyCorpusGaps(repo repositoryEvidence) ([]Gap, []Gap) {
+	var missing []Gap
+	if repo.projectManifest == "" {
+		missing = append(missing, Gap{
+			ID:          "project_manifest",
+			Label:       "Nomos corpus project manifest",
+			Blocking:    false,
+			Remediation: "Keep the source repository untouched and provide a sidecar nomos.project.yaml declaring mode: canonical_corpus.",
+		})
+	}
+	if repo.sourceManifest == "" {
+		missing = append(missing, Gap{
+			ID:          "source_manifest",
+			Label:       "Corpus source manifest",
+			Blocking:    false,
+			Remediation: "Run nomos corpus scan and nomos corpus manifest to create a sidecar source manifest outside the source corpus.",
+		})
+	}
+	sortGaps(missing)
+	return nil, missing
+}
+
+func classifyRepository(surfaces []SurfaceClassification, blockers []Gap, missing []Gap, corpusMode bool) Classification {
 	classification := Classification{
 		PreliminaryVerdict: verdictInScope,
 		Confidence:         "high",
 		Escalation:         "none",
+		RepositoryMode:     "product",
 		Blockers:           blockers,
 		MissingEvidence:    missing,
 		Surfaces:           surfaces,
+	}
+
+	if corpusMode {
+		classification.RepositoryMode = "canonical_corpus"
+		classification.PreliminaryVerdict = verdictCorpusAdmissible
+		if len(blockers) > 0 {
+			classification.PreliminaryVerdict = verdictCorpusBlocked
+			classification.Confidence = "low"
+			classification.Escalation = "product_owner"
+		} else if len(missing) > 0 {
+			classification.PreliminaryVerdict = verdictCorpusPartial
+			classification.Confidence = "medium"
+			classification.Escalation = "domain_owner"
+		}
+		return classification
 	}
 
 	switch {
@@ -436,6 +486,32 @@ func buildVerdict(classification Classification) output.Verdict {
 				"Document scope boundaries before adding product surfaces.",
 			},
 		}
+	case verdictCorpusAdmissible:
+		return output.Verdict{
+			Status:   "pass",
+			Severity: "info",
+			Blocking: false,
+			Summary:  "Preliminary verdict corpus_admissible: authoritative corpus can feed the canonical chain.",
+			NextActions: []string{
+				"Run nomos corpus scan, manifest, feed, and attest with outputs outside the source corpus root.",
+			},
+		}
+	case verdictCorpusPartial:
+		return output.Verdict{
+			Status:      "warn",
+			Severity:    "medium",
+			Blocking:    false,
+			Summary:     "Preliminary verdict corpus_partial: authoritative corpus is recognized but feed evidence is incomplete.",
+			NextActions: nextActions(classification.MissingEvidence),
+		}
+	case verdictCorpusBlocked:
+		return output.Verdict{
+			Status:      "blocked",
+			Severity:    "high",
+			Blocking:    true,
+			Summary:     "Preliminary verdict corpus_blocked: corpus cannot feed the canonical chain until blockers are resolved.",
+			NextActions: nextActions(append(append([]Gap{}, classification.Blockers...), classification.MissingEvidence...)),
+		}
 	default:
 		return output.Verdict{
 			Status:   "warn",
@@ -469,6 +545,15 @@ func buildSummary(surfaces []SurfaceClassification, findings []output.Finding, e
 		coverage.UnitPartial = unitTotal
 		coverage.CoverageRatio = 0.5
 	case verdict == verdictBlocked:
+		coverage.UnitMissing = unitTotal
+		coverage.CoverageRatio = 0
+	case verdict == verdictCorpusAdmissible:
+		coverage.UnitCovered = unitTotal
+		coverage.CoverageRatio = 1
+	case verdict == verdictCorpusPartial:
+		coverage.UnitPartial = unitTotal
+		coverage.CoverageRatio = 0.5
+	case verdict == verdictCorpusBlocked:
 		coverage.UnitMissing = unitTotal
 		coverage.CoverageRatio = 0
 	}
@@ -524,6 +609,7 @@ func scanRepositoryEvidence(root string) (repositoryEvidence, error) {
 		switch {
 		case isProjectManifest(lower, base) && repo.projectManifest == "":
 			repo.projectManifest = rel
+			repo.projectMode = readProjectMode(filepath.Join(cleanRoot, filepath.FromSlash(rel)))
 		case isSourceManifest(base) && repo.sourceManifest == "":
 			repo.sourceManifest = rel
 		case isCanonicalMatrix(base) && repo.canonicalMatrix == "":
@@ -555,6 +641,46 @@ func isProjectManifest(lower string, base string) bool {
 		base == "nomos.project.yml" ||
 		lower == ".nomos/project.yaml" ||
 		lower == ".nomos/project.yml"
+}
+
+func readProjectMode(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	text := strings.ToLower(string(data))
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "mode:") {
+			continue
+		}
+		value := strings.TrimSpace(strings.TrimPrefix(line, "mode:"))
+		value = strings.Trim(value, `"'`)
+		return normalizeMode(value)
+	}
+	return ""
+}
+
+func normalizeMode(mode string) string {
+	mode = strings.ToLower(strings.TrimSpace(mode))
+	mode = strings.ReplaceAll(mode, "-", "_")
+	switch mode {
+	case "", "auto":
+		return "auto"
+	case "product":
+		return "product"
+	case "corpus", "canonical_corpus":
+		return "canonical_corpus"
+	default:
+		return mode
+	}
+}
+
+func reportMode(corpusMode bool) string {
+	if corpusMode {
+		return "corpus_admission"
+	}
+	return "admission"
 }
 
 func isSourceManifest(base string) bool {

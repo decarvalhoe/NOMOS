@@ -130,6 +130,26 @@ func TestGenerateManifestIDFormat(t *testing.T) {
 	}
 }
 
+func TestGenerateManifestDisambiguatesDuplicateBasenames(t *testing.T) {
+	snapshot := Snapshot{
+		Sources: []SourceEntry{
+			{Path: "01_rbok/README.md", Hash: "sha256:aaaa", Extension: ".md"},
+			{Path: "04_marketing/README.md", Hash: "sha256:bbbb", Extension: ".md"},
+		},
+	}
+	m := GenerateManifest(snapshot, ManifestOptions{Domain: "rbok", IDPrefix: "RBOK"})
+
+	if m.Sources[0].ID != "RBOK-README" {
+		t.Fatalf("expected first duplicate to keep stable base ID, got %q", m.Sources[0].ID)
+	}
+	if m.Sources[1].ID == "RBOK-README" {
+		t.Fatalf("expected second duplicate to be disambiguated, got %q", m.Sources[1].ID)
+	}
+	if !strings.HasPrefix(m.Sources[1].ID, "RBOK-README-") {
+		t.Fatalf("expected path-hash suffix, got %q", m.Sources[1].ID)
+	}
+}
+
 func TestGenerateManifestDefaultPrefix(t *testing.T) {
 	m := GenerateManifest(sampleSnapshot(), ManifestOptions{Domain: "test"})
 	if !strings.HasPrefix(m.Sources[0].ID, "CORPUS-") {

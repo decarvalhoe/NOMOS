@@ -1,6 +1,8 @@
 package corpus
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -10,44 +12,44 @@ import (
 )
 
 var extToSourceType = map[string]string{
-	".md":    "markdown",
-	".mdx":   "markdown",
-	".txt":   "markdown",
-	".pdf":   "pdf",
-	".html":  "html",
-	".htm":   "html",
-	".php":   "php",
-	".go":    "source_code",
-	".py":    "source_code",
-	".js":    "source_code",
-	".ts":    "source_code",
-	".java":  "source_code",
-	".kt":    "source_code",
-	".cs":    "source_code",
-	".rb":    "source_code",
-	".rs":    "source_code",
-	".c":     "source_code",
-	".cpp":   "source_code",
-	".h":     "source_code",
-	".yaml":  "source_code",
-	".yml":   "source_code",
-	".json":  "source_code",
-	".toml":  "source_code",
-	".csv":   "csv",
-	".tsv":   "csv",
-	".xls":   "spreadsheet",
-	".xlsx":  "spreadsheet",
-	".ods":   "spreadsheet",
-	".png":   "image",
-	".jpg":   "image",
-	".jpeg":  "image",
-	".gif":   "image",
-	".svg":   "image",
-	".mp3":   "audio",
-	".wav":   "audio",
-	".ogg":   "audio",
-	".sql":   "database_export",
-	".dump":  "database_export",
+	".md":   "markdown",
+	".mdx":  "markdown",
+	".txt":  "markdown",
+	".pdf":  "pdf",
+	".html": "html",
+	".htm":  "html",
+	".php":  "php",
+	".go":   "source_code",
+	".py":   "source_code",
+	".js":   "source_code",
+	".ts":   "source_code",
+	".java": "source_code",
+	".kt":   "source_code",
+	".cs":   "source_code",
+	".rb":   "source_code",
+	".rs":   "source_code",
+	".c":    "source_code",
+	".cpp":  "source_code",
+	".h":    "source_code",
+	".yaml": "source_code",
+	".yml":  "source_code",
+	".json": "source_code",
+	".toml": "source_code",
+	".csv":  "csv",
+	".tsv":  "csv",
+	".xls":  "spreadsheet",
+	".xlsx": "spreadsheet",
+	".ods":  "spreadsheet",
+	".png":  "image",
+	".jpg":  "image",
+	".jpeg": "image",
+	".gif":  "image",
+	".svg":  "image",
+	".mp3":  "audio",
+	".wav":  "audio",
+	".ogg":  "audio",
+	".sql":  "database_export",
+	".dump": "database_export",
 }
 
 // ManifestSource is a single entry in the sidecar source manifest.
@@ -112,9 +114,15 @@ func GenerateManifest(snap Snapshot, opts ManifestOptions) SidecarManifest {
 	}
 
 	sources := make([]ManifestSource, 0, len(snap.Sources))
+	seenIDs := map[string]bool{}
 	for i, entry := range snap.Sources {
+		id := generateID(prefix, i+1, entry.Path)
+		if seenIDs[id] {
+			id = id + "-" + pathHashSuffix(entry.Path)
+		}
+		seenIDs[id] = true
 		sources = append(sources, ManifestSource{
-			ID:              generateID(prefix, i+1, entry.Path),
+			ID:              id,
 			Path:            entry.Path,
 			Type:            inferSourceType(entry.Extension),
 			Domain:          opts.Domain,
@@ -159,6 +167,11 @@ func generateID(prefix string, index int, path string) string {
 		slug = fmt.Sprintf("%04d", index)
 	}
 	return fmt.Sprintf("%s-%s", prefix, slug)
+}
+
+func pathHashSuffix(path string) string {
+	sum := sha256.Sum256([]byte(filepath.ToSlash(path)))
+	return strings.ToUpper(hex.EncodeToString(sum[:3]))
 }
 
 func sanitizeIDChars(s string) string {
