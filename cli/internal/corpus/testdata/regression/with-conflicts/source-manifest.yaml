@@ -1,0 +1,26 @@
+schema_version: "0.1.0"
+sources:
+  - id: SRC-ALPHA
+    path: alpha.md
+    type: markdown
+    domain: test
+    priority: primary
+    status: active
+    hash: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    owner: Alice
+    license: MIT
+    confidentiality: public
+    allowed_uses:
+      - citation_internal
+  - id: SRC-ALPHA
+    path: beta.md
+    type: markdown
+    domain: test
+    priority: secondary
+    status: active
+    hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    owner: ""
+    license: MIT
+    confidentiality: top-secret
+    allowed_uses:
+      - citation_internal

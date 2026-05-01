@@ -1,0 +1,73 @@
+parcours:
+  id: assurance-habitation
+  name: "Parcours assurance habitation"
+  domain: insurance-home
+  version: "2026"
+  owner: actuarial@example.com
+  status: active
+
+  etapes:
+    - id: souscription
+      name: "Souscription"
+      description: "Le client souscrit un contrat habitation."
+      ordre: 1
+      objectifs:
+        - id: eligibilite
+          description: "Vérifier l'éligibilité du bien et du client."
+          criteres:
+            - id: surface-habitable
+              description: "Surface habitable déclarée entre 9m² et 500m²."
+              type: rule
+              criticality: high
+            - id: zone-risque
+              description: "Zone de risque naturel évaluée."
+              type: rule
+              criticality: medium
+        - id: tarification
+          description: "Calculer la prime annuelle."
+          criteres:
+            - id: calcul-prime
+              description: "Prime calculée selon barème actuariel."
+              type: formula
+              criticality: critical
+            - id: franchise
+              description: "Franchise applicable déterminée."
+              type: rule
+              criticality: high
+
+    - id: sinistre
+      name: "Déclaration de sinistre"
+      description: "Le client déclare un sinistre sur son bien."
+      ordre: 2
+      objectifs:
+        - id: recevabilite
+          description: "Vérifier la recevabilité du sinistre."
+          criteres:
+            - id: delai-declaration
+              description: "Sinistre déclaré dans les délais contractuels."
+              type: rule
+              criticality: high
+            - id: garantie-applicable
+              description: "Le sinistre est couvert par une garantie active."
+              type: rule
+              criticality: critical
+        - id: indemnisation
+          description: "Calculer l'indemnisation."
+          criteres:
+            - id: calcul-indemnite
+              description: "Indemnité calculée selon expertise et plafonds."
+              type: formula
+              criticality: critical
+
+    - id: resiliation
+      name: "Résiliation"
+      description: "Le client ou l'assureur résilie le contrat."
+      ordre: 3
+      objectifs:
+        - id: motif-resiliation
+          description: "Vérifier le motif de résiliation."
+          criteres:
+            - id: motif-valide
+              description: "Le motif est prévu par le code des assurances."
+              type: rule
+              criticality: medium

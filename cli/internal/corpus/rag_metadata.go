@@ -1,0 +1,208 @@
+package corpus
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strings"
+	"time"
+	"unicode/utf8"
+)
+
+// ChunkMetadata carries the metadata required by the RAG ingestion pipeline.
+// Every chunk stored in a vector database must carry this envelope so that
+// retrieval results are traceable, filterable, and auditable.
+type ChunkMetadata struct {
+	ChunkID          string   `json:"chunk_id"`
+	SourceID         string   `json:"source_id"`
+	SourcePath       string   `json:"source_path"`
+	SourceHash       string   `json:"source_hash"`
+	Domain           string   `json:"domain"`
+	UnitIDs          []string `json:"unit_ids,omitempty"`
+	Locator          string   `json:"locator"`
+	Priority         string   `json:"priority"`
+	Status           string   `json:"status"`
+	Confidence       string   `json:"confidence"`
+	SemanticTags     []string `json:"semantic_tags,omitempty"`
+	TokenCount       int      `json:"token_count"`
+	CharCount        int      `json:"char_count"`
+	IngestedAt       string   `json:"ingested_at"`
+	IngestionVersion string   `json:"ingestion_version"`
+}
+
+// ChunkInput holds the raw data needed to build chunk metadata.
+type ChunkInput struct {
+	Content    string
+	SourceID   string
+	SourcePath string
+	SourceHash string
+	Domain     string
+	UnitIDs    []string
+	Locator    string
+	Priority   string
+	Status     string
+	Confidence string
+	Tags       []string
+}
+
+// EnrichConfig controls metadata enrichment parameters.
+type EnrichConfig struct {
+	IngestionVersion string
+	Now              time.Time
+	// TokenEstimateRatio is the approximate chars-per-token ratio.
+	// Default (0) uses 4, which is a reasonable estimate for English/French text.
+	TokenEstimateRatio float64
+}
+
+func (c EnrichConfig) tokenRatio() float64 {
+	if c.TokenEstimateRatio > 0 {
+		return c.TokenEstimateRatio
+	}
+	return 4.0
+}
+
+// Enrich builds ChunkMetadata from a ChunkInput.
+func Enrich(input ChunkInput, config EnrichConfig) (ChunkMetadata, error) {
+	if input.Content == "" {
+		return ChunkMetadata{}, fmt.Errorf("chunk content must not be empty")
+	}
+	if input.SourceID == "" {
+		return ChunkMetadata{}, fmt.Errorf("source_id is required")
+	}
+	if input.Domain == "" {
+		return ChunkMetadata{}, fmt.Errorf("domain is required")
+	}
+
+	if err := validateConfidence(input.Confidence); err != nil {
+		return ChunkMetadata{}, err
+	}
+	if err := validatePriority(input.Priority); err != nil {
+		return ChunkMetadata{}, err
+	}
+	if err := validateStatus(input.Status); err != nil {
+		return ChunkMetadata{}, err
+	}
+
+	charCount := utf8.RuneCountInString(input.Content)
+	tokenCount := estimateTokens(charCount, config.tokenRatio())
+	chunkID := computeChunkID(input.SourceID, input.Locator, input.Content)
+
+	now := config.Now
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+
+	return ChunkMetadata{
+		ChunkID:          chunkID,
+		SourceID:         input.SourceID,
+		SourcePath:       input.SourcePath,
+		SourceHash:       input.SourceHash,
+		Domain:           input.Domain,
+		UnitIDs:          input.UnitIDs,
+		Locator:          input.Locator,
+		Priority:         input.Priority,
+		Status:           input.Status,
+		Confidence:       input.Confidence,
+		SemanticTags:     input.Tags,
+		TokenCount:       tokenCount,
+		CharCount:        charCount,
+		IngestedAt:       now.Format(time.RFC3339),
+		IngestionVersion: config.IngestionVersion,
+	}, nil
+}
+
+// estimateTokens provides a rough token count from character count.
+func estimateTokens(charCount int, charsPerToken float64) int {
+	if charCount == 0 || charsPerToken <= 0 {
+		return 0
+	}
+	return int(float64(charCount)/charsPerToken + 0.5)
+}
+
+// computeChunkID produces a deterministic chunk ID from source + locator + content.
+func computeChunkID(sourceID, locator, content string) string {
+	h := sha256.New()
+	h.Write([]byte(sourceID))
+	h.Write([]byte{0})
+	h.Write([]byte(locator))
+	h.Write([]byte{0})
+	h.Write([]byte(content))
+	digest := hex.EncodeToString(h.Sum(nil))
+	return "chunk-" + digest[:16]
+}
+
+func validateConfidence(c string) error {
+	switch c {
+	case "high", "medium", "low":
+		return nil
+	case "":
+		return fmt.Errorf("confidence is required (high, medium, or low)")
+	default:
+		return fmt.Errorf("invalid confidence %q; expected high, medium, or low", c)
+	}
+}
+
+func validatePriority(p string) error {
+	switch p {
+	case "primary", "secondary", "legacy", "derived", "reference":
+		return nil
+	case "":
+		return fmt.Errorf("priority is required")
+	default:
+		return fmt.Errorf("invalid priority %q", p)
+	}
+}
+
+func validateStatus(s string) error {
+	switch s {
+	case "active", "superseded", "duplicate", "out_of_scope", "needs_review", "blocked":
+		return nil
+	case "":
+		return fmt.Errorf("status is required")
+	default:
+		return fmt.Errorf("invalid status %q", s)
+	}
+}
+
+// EnrichBatch processes multiple chunks and returns metadata for each.
+// It stops on the first error.
+func EnrichBatch(inputs []ChunkInput, config EnrichConfig) ([]ChunkMetadata, error) {
+	results := make([]ChunkMetadata, 0, len(inputs))
+	for i, input := range inputs {
+		meta, err := Enrich(input, config)
+		if err != nil {
+			return nil, fmt.Errorf("chunk[%d]: %w", i, err)
+		}
+		results = append(results, meta)
+	}
+	return results, nil
+}
+
+// FilterByConfidence returns only chunks matching the given confidence level.
+func FilterByConfidence(chunks []ChunkMetadata, confidence string) []ChunkMetadata {
+	var out []ChunkMetadata
+	for _, c := range chunks {
+		if c.Confidence == confidence {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// FilterByTag returns chunks that have at least one of the given tags.
+func FilterByTag(chunks []ChunkMetadata, tags ...string) []ChunkMetadata {
+	tagSet := make(map[string]struct{}, len(tags))
+	for _, t := range tags {
+		tagSet[strings.ToLower(t)] = struct{}{}
+	}
+	var out []ChunkMetadata
+	for _, c := range chunks {
+		for _, st := range c.SemanticTags {
+			if _, ok := tagSet[strings.ToLower(st)]; ok {
+				out = append(out, c)
+				break
+			}
+		}
+	}
+	return out
+}

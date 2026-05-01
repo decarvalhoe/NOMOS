@@ -7,6 +7,14 @@ package nomos
 	"blocked" |
 	"out_of_scope"
 
+// #CorpusVerdictName is the corpus admission verdict vocabulary.
+// Corpus admission determines whether a source corpus can feed the
+// canonical chain, independent of the product surface verdict.
+#CorpusVerdictName:
+	"corpus_admissible" |
+	"corpus_partial" |
+	"corpus_blocked"
+
 // #ConfidenceLevel captures how strong the evidence is for a verdict.
 #ConfidenceLevel: "low" | "medium" | "high"
 
@@ -137,6 +145,80 @@ package nomos
 				"no open blocker for the admitted scope",
 			]
 			escalation: "none"
+		}
+	}
+}
+
+// #CorpusVerdictDefinition captures the admission rules for a source corpus.
+#CorpusVerdictDefinition: {
+	value:   #CorpusVerdictName
+	label:   string
+	summary: string
+	entry_conditions: [string, ...string]
+	gate_effect:              string
+	default_confidence_floor: #ConfidenceLevel
+	default_escalation:       #EscalationLevel
+	required_evidence: [...string]
+}
+
+// #CorpusVerdictTaxonomy extends the base taxonomy with corpus admission verdicts.
+#CorpusVerdictTaxonomy: {
+	schema_version: string | *"0.1.0"
+	corpus_verdicts: {
+		corpus_admissible: #CorpusVerdictDefinition & {
+			value:   "corpus_admissible"
+			label:   "Corpus Admissible"
+			summary: "The source corpus is complete, hashed, owned, and ready to feed the canonical chain without restrictions."
+			entry_conditions: [
+				"All corpus documents are indexed with provenance metadata.",
+				"Every document has a valid hash and an identified owner.",
+				"No contradictory or stale document is present without a supersession record.",
+				"The corpus scope aligns with the declared Nomos project domain.",
+			]
+			gate_effect:              "Corpus can feed canonical contracts, read-models, and knowledge base without further human review."
+			default_confidence_floor: "high"
+			default_escalation:       "none"
+			required_evidence: [
+				"source manifest with all corpus entries hashed",
+				"owner for each source",
+				"no stale or contradictory document without decision record",
+			]
+		}
+		corpus_partial: #CorpusVerdictDefinition & {
+			value:   "corpus_partial"
+			label:   "Corpus Partial"
+			summary: "The corpus can begin feeding the canonical chain but has known gaps, stale documents, or missing provenance that require tracked remediation."
+			entry_conditions: [
+				"At least one authoritative source document is indexed and hashed.",
+				"Known gaps or stale documents are listed explicitly.",
+				"A remediation plan exists for each missing or stale source before strict gate.",
+			]
+			gate_effect:              "Corpus can feed non-critical surfaces and bootstrap contracts; strict gates on critical surfaces require remediation completion."
+			default_confidence_floor: "medium"
+			default_escalation:       "domain_owner"
+			required_evidence: [
+				"partial source manifest with gap annotations",
+				"remediation plan for missing sources",
+				"decision record for accepted staleness",
+			]
+		}
+		corpus_blocked: #CorpusVerdictDefinition & {
+			value:   "corpus_blocked"
+			label:   "Corpus Blocked"
+			summary: "The corpus cannot feed the canonical chain because critical sources are missing, inaccessible, legally restricted, or have no accountable owner."
+			entry_conditions: [
+				"A critical source document is missing or inaccessible.",
+				"Legal, licensing, or confidentiality restrictions prevent indexing.",
+				"No accountable owner can approve the corpus for canonical use.",
+			]
+			gate_effect:              "Corpus is excluded from canonical chain until blockers are resolved; product surfaces depending on this corpus inherit blocked status."
+			default_confidence_floor: "low"
+			default_escalation:       "product_owner"
+			required_evidence: [
+				"blocker description with source reference",
+				"owner or legal contact",
+				"remediation or stop decision",
+			]
 		}
 	}
 }

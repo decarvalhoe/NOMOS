@@ -1,0 +1,66 @@
+schema_version: "0.1.0"
+source_manifest_hash: "sha256:9244bb1f1a0a0d8d6f8c2de35a9d1bb84d6f41a37e951c85c5df17b986e3fdd1"
+entries:
+  - id: CE-001
+    type: source_hash
+    source_id: INS-CONTRACT-HOME-2026
+    description: SHA-256 hash verification for home insurance contract PDF.
+    collected_at: "2026-04-30T10:00:00Z"
+    collector: nomos-cli
+    value:
+      kind: source_hash
+      algorithm: sha256
+      expected_hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+      actual_hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+      match: true
+      path: sources/contracts/home-2026.pdf
+
+  - id: CE-002
+    type: file_inventory
+    source_id: INS-CONTRACT-HOME-2026
+    description: File inventory check for insurance corpus.
+    collected_at: "2026-04-30T10:00:01Z"
+    collector: nomos-cli
+    value:
+      kind: file_inventory
+      declared_count: 12
+      found_count: 12
+      missing: []
+      undeclared: []
+      complete: true
+
+  - id: CE-003
+    type: confidentiality_tag
+    source_id: INS-CONTRACT-HOME-2026
+    description: Confidentiality classification verified for home contract.
+    collected_at: "2026-04-30T10:00:02Z"
+    collector: nomos-cli
+    value:
+      kind: confidentiality_tag
+      source_level: restricted
+      tag_present: true
+      tag_valid: true
+
+  - id: CE-004
+    type: owner_assignment
+    source_id: INS-CONTRACT-HOME-2026
+    description: Owner assignment verified for home contract source.
+    collected_at: "2026-04-30T10:00:03Z"
+    collector: manual-review
+    value:
+      kind: owner_assignment
+      owner: Clara Example
+      owner_present: true
+
+  - id: CE-005
+    type: read_only_proof
+    source_id: INS-CONTRACT-HOME-2026
+    description: Immutability proof via git log for home contract.
+    collected_at: "2026-04-30T10:00:04Z"
+    collector: ci-pipeline
+    value:
+      kind: read_only_proof
+      method: git_log
+      path: sources/contracts/home-2026.pdf
+      last_modified: "2026-01-15T08:30:00Z"
+      immutable: true
