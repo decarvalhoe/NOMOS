@@ -2,10 +2,13 @@ package app
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/RBOKproject/Nomos/cli/internal/output"
 )
 
 func TestRunHelpByDefault(t *testing.T) {
@@ -209,5 +212,36 @@ func assertPathExists(t *testing.T, root string, rel string) {
 	t.Helper()
 	if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(rel))); err != nil {
 		t.Fatalf("expected %s to exist: %v", rel, err)
+func TestRunDiagnoseJSON(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := Run([]string{"diagnose", "--root", "../diagnose/testdata/corpus/nomos-ready", "--format", "json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d; stderr=%q", code, stderr.String())
+	}
+
+	var report output.Report
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode diagnose json: %v\n%s", err, stdout.String())
+	}
+	if report.Run.Mode != "admission" {
+		t.Fatalf("expected admission report, got %q", report.Run.Mode)
+	}
+	if report.Verdict.Status != "pass" {
+		t.Fatalf("expected pass verdict, got %#v", report.Verdict)
+	}
+}
+
+func TestRunDiagnoseMarkdown(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := Run([]string{"diagnose", "--format", "markdown", "../diagnose/testdata/corpus/docs-only"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d; stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Preliminary verdict out_of_scope") {
+		t.Fatalf("expected markdown diagnose verdict, got %q", stdout.String())
 	}
 }
