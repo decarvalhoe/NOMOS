@@ -1,0 +1,7 @@
+[
+  {
+    "caseId": "policy-active",
+    "policyId": "POL-001",
+    "expectedBenefits": ["DENTAL", "VISION"]
+  }
+]

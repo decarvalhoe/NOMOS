@@ -3,13 +3,15 @@ package detect
 const ReportFormat = "nomos.detect.v1"
 
 type Report struct {
-	Format       string            `json:"format"`
-	Root         string            `json:"root"`
-	FilesScanned int               `json:"filesScanned"`
-	Languages    []LanguageFinding `json:"languages"`
-	Tools        []ToolFinding     `json:"tools"`
-	CI           []CIFinding       `json:"ci"`
-	Surfaces     []SurfaceFinding  `json:"surfaces"`
+	Format         string               `json:"format"`
+	Root           string               `json:"root"`
+	FilesScanned   int                  `json:"filesScanned"`
+	Languages      []LanguageFinding    `json:"languages"`
+	Tools          []ToolFinding        `json:"tools"`
+	CI             []CIFinding          `json:"ci"`
+	Surfaces       []SurfaceFinding     `json:"surfaces"`
+	TreeSitter     TreeSitterReport     `json:"treeSitter"`
+	NodeTypeScript NodeTypeScriptReport `json:"nodeTypeScript"`
 }
 
 type LanguageFinding struct {
@@ -38,4 +40,37 @@ type SurfaceFinding struct {
 type Evidence struct {
 	Path   string `json:"path"`
 	Reason string `json:"reason"`
+}
+
+type TreeSitterReport struct {
+	Enabled         bool                       `json:"enabled"`
+	ParsedFiles     int                        `json:"parsedFiles"`
+	Languages       []TreeSitterLanguageReport `json:"languages"`
+	MissingGrammars []TreeSitterDiagnostic     `json:"missingGrammars,omitempty"`
+	ParseErrors     []TreeSitterDiagnostic     `json:"parseErrors,omitempty"`
+}
+
+type TreeSitterLanguageReport struct {
+	Name     string     `json:"name"`
+	Files    int        `json:"files"`
+	Evidence []Evidence `json:"evidence"`
+}
+
+type TreeSitterDiagnostic struct {
+	Path     string `json:"path"`
+	Language string `json:"language"`
+	Message  string `json:"message"`
+}
+
+type NodeTypeScriptReport struct {
+	Enabled  bool                          `json:"enabled"`
+	Findings []NodeTypeScriptAdapterSignal `json:"findings"`
+}
+
+type NodeTypeScriptAdapterSignal struct {
+	Kind       string     `json:"kind"`
+	Name       string     `json:"name"`
+	Surface    string     `json:"surface,omitempty"`
+	Confidence string     `json:"confidence"`
+	Evidence   []Evidence `json:"evidence"`
 }

@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 
 adapter:
-  id: node-typescript
-  name: "Node / TypeScript"
+  id: python
+  name: "Python"
   version: "0.1.0"
   status: experimental
   owners:
@@ -10,8 +10,8 @@ adapter:
       role: "adapter-owner"
   license: "Apache-2.0"
   package:
-    type: npm
-    name: "@nomos/adapter-node-typescript"
+    type: pip
+    name: "nomos-adapter-python"
     version: "0.1.0"
 
 compatibility:
@@ -32,31 +32,32 @@ compatibility:
       min_version: "0.1.0"
 
 stack_support:
-  - language: typescript
-    runtime: node
+  - language: python
+    runtime: cpython
     frameworks:
-      - nextjs
-      - express
-      - fastify
+      - fastapi
+      - django
+      - flask
     package_managers:
-      - npm
-      - pnpm
-      - yarn
+      - pip
+      - poetry
+      - pipenv
     file_globs:
-      - "package.json"
-      - "src/**/*.{ts,tsx}"
-      - "app/**/*.{ts,tsx}"
-      - "pages/**/*.{ts,tsx}"
-      - "fixtures/**/*.{json,ts}"
-      - "__mocks__/**/*.{ts,tsx}"
+      - "pyproject.toml"
+      - "setup.py"
+      - "requirements*.txt"
+      - "**/*.py"
+      - "fixtures/**/*.json"
+      - "tests/conftest.py"
     exclude_globs:
-      - "node_modules/**"
-      - ".next/**"
+      - ".venv/**"
+      - "venv/**"
+      - "__pycache__/**"
+      - "*.egg-info/**"
+      - ".tox/**"
       - "dist/**"
-      - "coverage/**"
     surfaces:
       - api
-      - ui
       - worker
       - data
       - cli
@@ -69,16 +70,13 @@ capabilities:
       status: stable
       surfaces:
         - api
-        - ui
         - worker
         - cli
       languages:
-        - javascript
-        - typescript
+        - python
       inputs:
         - filesystem
         - package_manifest
-        - lockfile
       outputs:
         - surface_inventory
         - adapter_diagnostic
@@ -91,12 +89,10 @@ capabilities:
       status: stable
       surfaces:
         - api
-        - ui
         - worker
         - data
       languages:
-        - javascript
-        - typescript
+        - python
       inputs:
         - package_manifest
       outputs:
@@ -111,17 +107,15 @@ capabilities:
       status: experimental
       surfaces:
         - api
-        - ui
       languages:
-        - typescript
+        - python
       frameworks:
-        - nextjs
-        - express
-        - fastify
+        - fastapi
+        - django
+        - flask
       inputs:
         - source_file
         - ast
-        - config_file
       outputs:
         - surface_inventory
         - capability_result
@@ -138,7 +132,29 @@ capabilities:
         - api
         - worker
       languages:
-        - typescript
+        - python
+      inputs:
+        - source_file
+        - ast
+      outputs:
+        - capability_result
+        - adapter_diagnostic
+      evidence:
+        - file_path
+        - symbol
+        - ast_node
+      confidence: medium
+    - id: serializer_detection
+      category: detection
+      status: experimental
+      surfaces:
+        - api
+        - data
+      languages:
+        - python
+      frameworks:
+        - fastapi
+        - django
       inputs:
         - source_file
         - ast
@@ -155,11 +171,9 @@ capabilities:
       status: stable
       surfaces:
         - api
-        - ui
         - data
       languages:
-        - javascript
-        - typescript
+        - python
       inputs:
         - filesystem
         - source_file
@@ -168,33 +182,14 @@ capabilities:
       evidence:
         - file_path
       confidence: high
-    - id: test_surface_detection
-      category: detection
-      status: stable
-      surfaces:
-        - api
-        - ui
-      languages:
-        - javascript
-        - typescript
-      inputs:
-        - package_manifest
-        - source_file
-      outputs:
-        - capability_result
-      evidence:
-        - file_path
-        - package_metadata
-      confidence: medium
     - id: mock_detection
       category: detection
       status: stable
       surfaces:
         - api
-        - ui
+        - worker
       languages:
-        - javascript
-        - typescript
+        - python
       inputs:
         - filesystem
         - source_file
@@ -210,11 +205,10 @@ capabilities:
       status: experimental
       surfaces:
         - api
-        - ui
         - worker
         - data
       languages:
-        - typescript
+        - python
       inputs:
         - source_file
         - ast
@@ -228,15 +222,15 @@ capabilities:
         - ast_node
       confidence: medium
   requires:
-    - id: tree-sitter-typescript
+    - id: tree-sitter-python
       type: grammar
       optional: true
-      reason: "AST-backed detection improves confidence for routes and hardcoded catalogues."
+      reason: "AST-backed detection improves confidence for routes, services, and hardcoded catalogues."
 
 commands:
   - id: detect
     argv:
-      - nomos-adapter-node-typescript
+      - nomos-adapter-python
       - detect
       - --format
       - json
@@ -250,7 +244,7 @@ commands:
     required: true
   - id: self-check
     argv:
-      - nomos-adapter-node-typescript
+      - nomos-adapter-python
       - self-check
       - --format
       - json
@@ -264,29 +258,52 @@ commands:
     required: true
 
 limitations:
-  - id: dynamic-runtime-dispatch
+  - id: dynamic-route-dispatch
     severity: medium
-    description: "Routes built entirely through runtime string composition may be reported with lower confidence."
+    description: "Routes registered dynamically via loops or metaprogramming may be reported with lower confidence."
     mitigation: "Emit adapter_diagnostic evidence and require human review before strict admission."
   - id: catalogue-semantics
     severity: medium
     description: "Hardcoded catalogue detection identifies likely static business enumerations but cannot prove source authority."
     mitigation: "Link findings to canonical matrix units before strict release."
+  - id: decorator-stacking
+    severity: low
+    description: "Deeply stacked decorators or class-based views with multiple inheritance may obscure route paths."
+    mitigation: "Fallback to file-path heuristics when AST confidence is below threshold."
 
 test_contract:
   fixtures:
-    - id: node-nextjs-api-ui
-      path: "adapters/node-typescript/fixtures/nextjs-api-ui"
-      purpose: "Detect API routes, UI routes, services, mocks, fixtures, package metadata, and hardcoded catalogues."
+    - id: python-fastapi-service
+      path: "adapters/python/fixtures/fastapi-service"
+      purpose: "Detect FastAPI routes, services, serializers, mocks, fixtures, and hardcoded catalogues."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - serializer_detection
+        - mock_detection
+        - fixture_detection
+        - hardcoded_catalog_detection
+    - id: python-django-app
+      path: "adapters/python/fixtures/django-app"
+      purpose: "Detect Django URL patterns, views, serializers, and fixtures."
+      expected_capabilities:
+        - language_detection
+        - dependency_detection
+        - route_detection
+        - service_detection
+        - serializer_detection
+        - fixture_detection
+    - id: python-flask-api
+      path: "adapters/python/fixtures/flask-api"
+      purpose: "Detect Flask routes, services, and mocks."
       expected_capabilities:
         - language_detection
         - dependency_detection
         - route_detection
         - service_detection
         - mock_detection
-        - fixture_detection
-        - test_surface_detection
-        - hardcoded_catalog_detection
   required_checks:
     - manifest-validates
     - capabilities-declared
@@ -300,5 +317,5 @@ test_contract:
       status: supported
 
 metadata:
-  documentation: "adapters/node-typescript/README.md"
-  notes: "First Node / TypeScript adapter profile for NOM-402."
+  documentation: "adapters/python/README.md"
+  notes: "First Python adapter profile for NOM-403."

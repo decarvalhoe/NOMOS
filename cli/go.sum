@@ -1,3 +1,5 @@
+github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82 h1:HKiCUwJCbNyVF5dSLaYx9dSZpdDqRObqOmjk0VtCB6Y=
+github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82/go.mod h1:LSKZ4nrJfgo2fRWF2OuCbj85/BhjqcYmm0QX+FcKa1I=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1EVCAEJBkOfkSuQQ1skiXFQoGk/Y2O6UJo=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Gy0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
