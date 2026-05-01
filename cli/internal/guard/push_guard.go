@@ -62,9 +62,21 @@ func parsePushRemotes(output string) []RemotePush {
 		if len(parts) < 2 {
 			continue
 		}
+		if isDisabledPushURL(parts[1]) {
+			continue
+		}
 		result = append(result, RemotePush{Name: parts[0], URL: parts[1]})
 	}
 	return result
+}
+
+func isDisabledPushURL(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "", "disabled", "no_push", "no-push", "none":
+		return true
+	default:
+		return false
+	}
 }
 
 // PushRemoteError is returned when a corpus repo has push-capable remotes.

@@ -15,13 +15,45 @@ type ParcoursFile struct {
 
 // Parcours describes a structured learning or business path.
 type Parcours struct {
-	ID      string  `yaml:"id"`
-	Name    string  `yaml:"name"`
-	Domain  string  `yaml:"domain"`
-	Version string  `yaml:"version"`
-	Owner   string  `yaml:"owner"`
-	Status  string  `yaml:"status"`
-	Etapes  []Etape `yaml:"etapes"`
+	ID                string           `yaml:"id"`
+	Code              string           `yaml:"code"`
+	Name              string           `yaml:"name"`
+	Description       string           `yaml:"description"`
+	ObjectifPrincipal string           `yaml:"objectif_principal"`
+	Domain            string           `yaml:"domain"`
+	Version           string           `yaml:"version"`
+	Owner             string           `yaml:"owner"`
+	Status            string           `yaml:"status"`
+	Etapes            []Etape          `yaml:"etapes"`
+	Modules           []ParcoursModule `yaml:"modules"`
+}
+
+// ParcoursModule is the RBOK production parcours module shape.
+type ParcoursModule struct {
+	Code             string              `yaml:"code"`
+	Name             string              `yaml:"name"`
+	Type             string              `yaml:"type"`
+	Description      string              `yaml:"description"`
+	AIInstructions   string              `yaml:"ai_instructions"`
+	SourceRBOK       string              `yaml:"source_rbok"`
+	ContenuReference string              `yaml:"contenu_reference"`
+	Objectives       []ParcoursObjective `yaml:"objectives"`
+}
+
+// ParcoursObjective is a production parcours objective.
+type ParcoursObjective struct {
+	Key         string             `yaml:"key"`
+	Titre       string             `yaml:"titre"`
+	Description string             `yaml:"description"`
+	Questions   []ParcoursQuestion `yaml:"questions"`
+}
+
+// ParcoursQuestion is a production parcours question.
+type ParcoursQuestion struct {
+	Key      string `yaml:"key"`
+	Label    string `yaml:"label"`
+	Type     string `yaml:"type"`
+	HelpText string `yaml:"help_text"`
 }
 
 // Etape is a stage within a parcours.
@@ -92,26 +124,72 @@ func ExtractParcoursFromBytes(data []byte) (ExtractResult, error) {
 	}
 
 	p := file.Parcours
-	if p.ID == "" {
+	parcoursID := firstNonEmpty(p.ID, p.Code)
+	if parcoursID == "" {
 		return ExtractResult{}, fmt.Errorf("parcours.id is required")
 	}
+	domain := firstNonEmpty(p.Domain, "rbok")
+	owner := firstNonEmpty(p.Owner, "unknown")
 
 	var units []ParcoursUnit
 	for _, etape := range p.Etapes {
 		for _, objectif := range etape.Objectifs {
 			for _, critere := range objectif.Criteres {
 				units = append(units, ParcoursUnit{
-					UnitID:       makeParcoursUnitID(p.ID, etape.ID, critere.ID),
+					UnitID:       makeParcoursUnitID(parcoursID, etape.ID, critere.ID),
 					UnitType:     mapCritereType(critere.Type),
 					Name:         critere.Description,
-					Domain:       p.Domain,
+					Domain:       domain,
 					Criticality:  normalizeCriticality(critere.Criticality),
 					BusinessRule: critere.Description,
 					EtapeID:      etape.ID,
 					EtapeName:    etape.Name,
 					ObjectifID:   objectif.ID,
-					ParcoursID:   p.ID,
-					Owner:        p.Owner,
+					ParcoursID:   parcoursID,
+					Owner:        owner,
+					Status:       "partial",
+				})
+			}
+		}
+	}
+	for _, module := range p.Modules {
+		moduleID := firstNonEmpty(module.Code, module.Name)
+		if moduleID == "" {
+			continue
+		}
+		businessRule := firstNonEmpty(module.AIInstructions, module.Description, module.Name)
+		units = append(units, ParcoursUnit{
+			UnitID:       makeParcoursUnitID(parcoursID, "MODULE", moduleID),
+			UnitType:     mapModuleType(module.Type),
+			Name:         firstNonEmpty(module.Name, moduleID),
+			Domain:       domain,
+			Criticality:  "medium",
+			BusinessRule: businessRule,
+			EtapeID:      moduleID,
+			EtapeName:    module.Name,
+			ObjectifID:   firstNonEmpty(module.ContenuReference, module.SourceRBOK),
+			ParcoursID:   parcoursID,
+			Owner:        owner,
+			Status:       "partial",
+		})
+		for _, objective := range module.Objectives {
+			for _, question := range objective.Questions {
+				questionID := firstNonEmpty(question.Key, question.Label)
+				if questionID == "" {
+					continue
+				}
+				units = append(units, ParcoursUnit{
+					UnitID:       makeParcoursUnitID(parcoursID, moduleID, questionID),
+					UnitType:     mapQuestionType(question.Type),
+					Name:         firstNonEmpty(question.Label, questionID),
+					Domain:       domain,
+					Criticality:  "medium",
+					BusinessRule: firstNonEmpty(question.HelpText, question.Label, objective.Description),
+					EtapeID:      moduleID,
+					EtapeName:    module.Name,
+					ObjectifID:   firstNonEmpty(objective.Key, objective.Titre),
+					ParcoursID:   parcoursID,
+					Owner:        owner,
 					Status:       "partial",
 				})
 			}
@@ -119,10 +197,10 @@ func ExtractParcoursFromBytes(data []byte) (ExtractResult, error) {
 	}
 
 	return ExtractResult{
-		ParcoursID:   p.ID,
+		ParcoursID:   parcoursID,
 		ParcoursName: p.Name,
-		Domain:       p.Domain,
-		TotalEtapes:  len(p.Etapes),
+		Domain:       domain,
+		TotalEtapes:  len(p.Etapes) + len(p.Modules),
 		TotalUnits:   len(units),
 		Units:        units,
 	}, nil
@@ -166,6 +244,28 @@ func mapCritereType(t string) string {
 		return "term"
 	case "decision":
 		return "decision"
+	default:
+		return "rule"
+	}
+}
+
+func mapModuleType(t string) string {
+	switch strings.ToLower(strings.TrimSpace(t)) {
+	case "decision":
+		return "decision"
+	case "scenario":
+		return "scenario"
+	default:
+		return "workflow"
+	}
+}
+
+func mapQuestionType(t string) string {
+	switch strings.ToLower(strings.TrimSpace(t)) {
+	case "number", "integer", "decimal":
+		return "formula"
+	case "select", "boolean", "text", "textarea":
+		return "rule"
 	default:
 		return "rule"
 	}

@@ -78,6 +78,9 @@ func diagnoseCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	root := flags.String("root", ".", "repository root to inspect")
 	format := flags.String("format", "json", "output format: json or markdown")
 	mode := flags.String("mode", "auto", "diagnosis mode: auto, product, or canonical_corpus")
+	projectManifest := flags.String("project-manifest", "", "sidecar nomos.project.yaml path outside the inspected root")
+	sourceManifest := flags.String("source-manifest", "", "sidecar source-manifest.yaml path outside the inspected root")
+	canonicalMatrix := flags.String("canonical-matrix", "", "sidecar canonical-matrix.yaml path outside the inspected root")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -96,10 +99,13 @@ func diagnoseCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 
 	command := append([]string{"nomos", "diagnose"}, args...)
 	report, err := diagnose.Diagnose(*root, diagnose.Options{
-		Now:         time.Now().UTC(),
-		ToolVersion: Version,
-		Command:     command,
-		Mode:        *mode,
+		Now:                 time.Now().UTC(),
+		ToolVersion:         Version,
+		Command:             command,
+		Mode:                *mode,
+		ProjectManifestPath: *projectManifest,
+		SourceManifestPath:  *sourceManifest,
+		CanonicalMatrixPath: *canonicalMatrix,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "diagnose failed: %v\n", err)

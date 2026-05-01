@@ -3,20 +3,29 @@ name: Corpus Scan
 on:
   workflow_dispatch:
     inputs:
+      corpus_repository:
+        description: "Corpus repository to scan (owner/repo)"
+        required: true
+        default: "RBOKproject/realisons-business"
+      corpus_ref:
+        description: "Corpus branch, tag, or SHA"
+        required: true
+        default: "main"
       corpus_root:
-        description: "Path to corpus root (relative to repo)"
+        description: "Path to corpus root (relative to corpus checkout)"
         required: true
         default: "."
       consumer_repo:
-        description: "Consumer repository (owner/repo) to receive sidecar manifest"
+        description: "Consumer repository (owner/repo) referenced in feed metadata"
         required: false
       domain:
         description: "Domain for sidecar manifest"
         required: true
+        default: "rbok"
       id_prefix:
         description: "ID prefix for generated source IDs"
         required: true
-        default: "CORPUS"
+        default: "RBOK"
       owner:
         description: "Owner email for manifest sources"
         required: true
@@ -27,11 +36,17 @@ on:
       extensions:
         description: "Comma-separated file extensions to include (empty = all)"
         required: false
+        default: ".md,.yaml,.bpmn"
       allow_globs:
         description: "Comma-separated allow globs for corpus paths"
         required: false
+        default: "00_meta/**,01_rbok/**,02_organisation/**,03_catalogue_services/**,04_marketing/**,05_pilotage/**"
       ignore_globs:
         description: "Comma-separated ignore globs for corpus paths"
+        required: false
+        default: ".claude/**,tools/**,uploads/**,99_archive/**"
+      lockfile_path:
+        description: "Optional accepted lockfile path, relative to corpus checkout"
         required: false
 
 permissions:
@@ -45,23 +60,40 @@ jobs:
       snapshot_path: ${{ steps.scan.outputs.snapshot_path }}
       total_files: ${{ steps.scan.outputs.total_files }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Nomos
+        uses: actions/checkout@v4
+        with:
+          path: nomos
+
+      - name: Checkout source corpus
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          path: corpus-src
+          persist-credentials: false
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN || github.token }}
+
+      - name: Disable corpus push remote
+        run: git -C corpus-src remote set-url --push origin DISABLED
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: cli/go.mod
-          cache-dependency-path: cli/go.sum
+          go-version-file: nomos/cli/go.mod
+          cache-dependency-path: nomos/cli/go.sum
 
       - name: Build nomos CLI
-        working-directory: cli
-        run: go build -o ../nomos .
+        working-directory: nomos/cli
+        run: go build -o "$GITHUB_WORKSPACE/nomos-cli" .
 
       - name: Run corpus scan
         id: scan
+        env:
+          CORPUS_ROOT: ${{ github.workspace }}/corpus-src/${{ inputs.corpus_root }}
         run: |
           mkdir -p /tmp/nomos-corpus-output
 
-          SCAN_ARGS=(--root "${{ inputs.corpus_root }}")
+          SCAN_ARGS=(--root "$CORPUS_ROOT")
           if [ -n "${{ inputs.extensions }}" ]; then
             IFS=',' read -ra EXTS <<< "${{ inputs.extensions }}"
             for ext in "${EXTS[@]}"; do
@@ -81,7 +113,7 @@ jobs:
             done
           fi
 
-          ./nomos corpus scan \
+          "$GITHUB_WORKSPACE/nomos-cli" corpus scan \
             "${SCAN_ARGS[@]}" \
             --out /tmp/nomos-corpus-output/snapshot.json \
             --format json
@@ -92,7 +124,7 @@ jobs:
           TOTAL=$(python3 -c "import json; d=json.load(open('/tmp/nomos-corpus-output/snapshot.json')); print(d.get('total_files',0))")
           test "$TOTAL" -gt 0
           echo "total_files=$TOTAL" >> "$GITHUB_OUTPUT"
-          echo "Scanned $TOTAL files"
+          echo "Scanned $TOTAL files from ${{ inputs.corpus_repository }}@${{ inputs.corpus_ref }}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -107,12 +139,31 @@ jobs:
     outputs:
       manifest_path: ${{ steps.generate.outputs.manifest_path }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Nomos
+        uses: actions/checkout@v4
+        with:
+          path: nomos
+
+      - name: Checkout source corpus
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          path: corpus-src
+          persist-credentials: false
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN || github.token }}
+
+      - name: Disable corpus push remote
+        run: git -C corpus-src remote set-url --push origin DISABLED
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: cli/go.mod
-          cache-dependency-path: cli/go.sum
+          go-version-file: nomos/cli/go.mod
+          cache-dependency-path: nomos/cli/go.sum
+
+      - name: Build nomos CLI
+        working-directory: nomos/cli
+        run: go build -o "$GITHUB_WORKSPACE/nomos-cli" .
 
       - uses: actions/download-artifact@v4
         with:
@@ -121,10 +172,9 @@ jobs:
 
       - name: Generate sidecar manifest
         id: generate
-        working-directory: cli
         run: |
           mkdir -p /tmp/nomos-corpus-output
-          go run . corpus manifest \
+          "$GITHUB_WORKSPACE/nomos-cli" corpus manifest \
             --snapshot /tmp/nomos-corpus-input/snapshot.json \
             --out /tmp/nomos-corpus-output/source-manifest.yaml \
             --domain "${{ inputs.domain }}" \
@@ -136,10 +186,11 @@ jobs:
           echo "manifest_path=/tmp/nomos-corpus-output/source-manifest.yaml" >> "$GITHUB_OUTPUT"
 
       - name: Validate sidecar manifest
-        working-directory: cli
+        env:
+          CORPUS_ROOT: ${{ github.workspace }}/corpus-src/${{ inputs.corpus_root }}
         run: |
           VALIDATE_ARGS=(
-            --root "../${{ inputs.corpus_root }}"
+            --root "$CORPUS_ROOT"
             --manifest /tmp/nomos-corpus-output/source-manifest.yaml
             --format json
           )
@@ -161,7 +212,7 @@ jobs:
               VALIDATE_ARGS+=(--ignore "$(echo "$glob" | xargs)")
             done
           fi
-          go run . corpus validate-sidecar "${VALIDATE_ARGS[@]}"
+          "$GITHUB_WORKSPACE/nomos-cli" corpus validate-sidecar "${VALIDATE_ARGS[@]}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -170,20 +221,80 @@ jobs:
           retention-days: 30
 
   feed:
-    name: Feed sidecar to consumer
+    name: Build real corpus feed
     runs-on: ubuntu-latest
-    needs: validate-sidecar
-    if: ${{ inputs.consumer_repo != '' }}
+    needs:
+      - scan
+      - validate-sidecar
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Checkout Nomos
+        uses: actions/checkout@v4
         with:
-          name: sidecar-manifest
-          path: /tmp/nomos-corpus-output
+          path: nomos
+
+      - name: Checkout source corpus
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          path: corpus-src
+          persist-credentials: false
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN || github.token }}
+
+      - name: Disable corpus push remote
+        run: git -C corpus-src remote set-url --push origin DISABLED
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: nomos/cli/go.mod
+          cache-dependency-path: nomos/cli/go.sum
+
+      - name: Build nomos CLI
+        working-directory: nomos/cli
+        run: go build -o "$GITHUB_WORKSPACE/nomos-cli" .
 
       - uses: actions/download-artifact@v4
         with:
           name: corpus-snapshot
           path: /tmp/nomos-corpus-input
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sidecar-manifest
+          path: /tmp/nomos-corpus-output
+
+      - name: Build feed artifact
+        env:
+          CORPUS_ROOT: ${{ github.workspace }}/corpus-src/${{ inputs.corpus_root }}
+          LOCKFILE_PATH: ${{ inputs.lockfile_path }}
+          PROJECT_ID: ${{ inputs.consumer_repo }}
+        run: |
+          FEED_ARGS=(
+            --root "$CORPUS_ROOT"
+            --snapshot /tmp/nomos-corpus-input/snapshot.json
+            --manifest /tmp/nomos-corpus-output/source-manifest.yaml
+            --corpus-id "${{ inputs.id_prefix }}"
+            --project-id "${PROJECT_ID:-corpus-consumer}"
+            --out /tmp/nomos-corpus-output/rbok-feed.json
+          )
+          if [ -n "$LOCKFILE_PATH" ]; then
+            FEED_ARGS+=(--lockfile "$GITHUB_WORKSPACE/corpus-src/$LOCKFILE_PATH")
+          fi
+
+          "$GITHUB_WORKSPACE/nomos-cli" corpus feed "${FEED_ARGS[@]}"
+          test -s /tmp/nomos-corpus-output/rbok-feed.json
+
+          UNITS=$(python3 -c "import json; d=json.load(open('/tmp/nomos-corpus-output/rbok-feed.json')); print(d.get('unit_count',0))")
+          CHUNKS=$(python3 -c "import json; d=json.load(open('/tmp/nomos-corpus-output/rbok-feed.json')); print(len(d.get('rag_metadata',[])))")
+          test "$UNITS" -gt 0
+          test "$CHUNKS" -gt 0
+          echo "Built feed with $UNITS units and $CHUNKS RAG chunks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: corpus-feed
+          path: /tmp/nomos-corpus-output/rbok-feed.json
+          retention-days: 30
 
       - name: Display feed summary
         run: |
@@ -191,11 +302,10 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Corpus | \`${{ inputs.corpus_repository }}@${{ inputs.corpus_ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Consumer | \`${{ inputs.consumer_repo }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Domain | \`${{ inputs.domain }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| ID Prefix | \`${{ inputs.id_prefix }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Confidentiality | \`${{ inputs.confidentiality }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total files | \`${{ needs.scan.outputs.total_files }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Sidecar manifest and snapshot are available as artifacts." >> "$GITHUB_STEP_SUMMARY"
-          echo "To feed into the consumer repository, download the sidecar-manifest artifact" >> "$GITHUB_STEP_SUMMARY"
-          echo "and place it at \`docs/canonical/source-manifest.{domain}.yaml\`." >> "$GITHUB_STEP_SUMMARY"
+          echo "Snapshot, sidecar manifest, and real feed are available as workflow artifacts." >> "$GITHUB_STEP_SUMMARY"
