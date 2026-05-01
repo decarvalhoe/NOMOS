@@ -1,14 +1,279 @@
 schema_version: "0.1.0"
 sources:
-  - id: SRC-NOMOS-METHOD
-    title: Nomos methodology documentation
+  - id: NOMOS-METHOD-OVERVIEW
+    path: docs/01-method-overview.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
     status: active
-    owner: Nomos Core Team
-  - id: SRC-NOMOS-SCHEMAS
-    title: Nomos schema specifications
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Canonical-first methodology overview."
+
+  - id: NOMOS-SOURCE-REGISTRY
+    path: docs/02-source-registry.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
     status: active
-    owner: Nomos Core Team
-  - id: SRC-NOMOS-ADAPTERS
-    title: Adapter manifest contracts
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Source registry specification and conventions."
+
+  - id: NOMOS-ATOMIZATION-MATRIX
+    path: docs/03-atomization-and-matrix.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
     status: active
-    owner: Nomos Core Team
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Atomization and canonical matrix design."
+
+  - id: NOMOS-CONTRACTS-SCHEMAS
+    path: docs/04-contracts-schemas-readmodels.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Contracts, schemas, and read models specification."
+
+  - id: NOMOS-KB-RAG
+    path: docs/05-knowledge-base-and-rag.md
+    type: markdown
+    domain: product-intelligence
+    priority: secondary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - vector_index
+      - citation_internal
+    notes: "Knowledge base and RAG integration guide."
+
+  - id: NOMOS-PRODUCT-INTEGRATION
+    path: docs/06-product-integration.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Product surface integration patterns."
+
+  - id: NOMOS-TESTS-GATES
+    path: docs/07-tests-gates-release.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Tests, gates, and release process."
+
+  - id: NOMOS-GOVERNANCE
+    path: docs/08-governance-and-change.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Governance and change management."
+
+  - id: NOMOS-ADAPTATION-GUIDE
+    path: docs/09-adaptation-guide.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - vector_index
+      - citation_external
+    notes: "Adaptation guide for all domains and stacks. Includes strangler pattern."
+
+  - id: NOMOS-OPERATIONAL-PROCEDURE
+    path: docs/12-operational-procedure.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_internal
+    notes: "Day-to-day operational procedures."
+
+  - id: NOMOS-PRODUCT-ROADMAP
+    path: docs/14-product-roadmap.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_internal
+    notes: "Product roadmap v0.1 to v1.0."
+
+  - id: NOMOS-VERSIONING-POLICY
+    path: docs/16-versioning-policy.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_internal
+    notes: "Versioning and compatibility policy."
+
+  - id: NOMOS-CUE-PROJECT
+    path: specs/nomos-project.cue
+    type: source_code
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_external
+    notes: "CUE schema for nomos.project.yaml."
+
+  - id: NOMOS-CUE-SOURCE-MANIFEST
+    path: specs/source-manifest.cue
+    type: source_code
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_external
+    notes: "CUE schema for source-manifest.yaml."
+
+  - id: NOMOS-CUE-CANONICAL-MATRIX
+    path: specs/canonical-matrix.cue
+    type: source_code
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_external
+    notes: "CUE schema for canonical-matrix.yaml."
+
+  - id: NOMOS-CUE-ADAPTER-MANIFEST
+    path: specs/adapter-manifest.cue
+    type: source_code
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_external
+    notes: "CUE schema for adapter manifests."
+
+  - id: NOMOS-AGENT-INSTRUCTIONS
+    path: templates/AGENTS.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_internal
+    notes: "Agent absolute rules and canonical-first workflow."
+
+  - id: NOMOS-TOOL-CONTRACT
+    path: templates/canonical-tool-contract.md
+    type: markdown
+    domain: product-intelligence
+    priority: primary
+    status: active
+    hash: sha256:pending
+    owner: rbok-team
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
+      - citation_internal
+    notes: "Contract for canonical CLI tool commands."

@@ -1,0 +1,13 @@
+sources:
+  - id: SRC-001
+    path: docs/spec.md
+    type: markdown
+    domain: testing
+    priority: primary
+    status: active
+    hash: sha256:abc123
+    owner: alice@example.com
+    license: internal
+    confidentiality: public
+    allowed_uses:
+      - structured_contract
