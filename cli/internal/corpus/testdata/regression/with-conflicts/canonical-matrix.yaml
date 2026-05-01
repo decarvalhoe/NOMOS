@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: TEST-CONFLICT-UNIT
+    unit_type: rule
+    name: Conflict test
+    domain: test
+    criticality: medium
+    status: missing
+    business_rule: Deliberately broken for regression testing.
+    source_refs:
+      - source_id: SRC-ALPHA
+        locator: "body"
+    gaps:
+      - Intentional conflict fixture.

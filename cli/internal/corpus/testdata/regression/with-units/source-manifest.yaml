@@ -1,0 +1,15 @@
+schema_version: "0.1.0"
+sources:
+  - id: SRC-FULL-CONTRACT
+    path: contract.md
+    type: markdown
+    domain: insurance-home
+    priority: primary
+    status: active
+    hash: "sha256:placeholder"
+    owner: Clara Example
+    license: proprietary
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract
+      - golden_case
