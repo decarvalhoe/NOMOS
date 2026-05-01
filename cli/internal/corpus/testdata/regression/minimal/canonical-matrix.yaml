@@ -1,0 +1,15 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-HOME-WATER
+    unit_type: catalog_entry
+    name: Water damage warranty
+    domain: insurance-home
+    criticality: high
+    status: covered
+    business_rule: Water damage is covered when event matches warranty.
+    source_refs:
+      - source_id: SRC-CONTRACT-2026
+        locator: "clause 3.1"
+    test_refs:
+      - tests/water_test.go
+    gaps: []

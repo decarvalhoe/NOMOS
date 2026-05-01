@@ -1,0 +1,15 @@
+schema_version: "0.1.0"
+sources:
+  - id: SRC-CONTRACT-2026
+    path: contract.md
+    type: markdown
+    domain: insurance-home
+    priority: primary
+    status: active
+    hash: "sha256:placeholder"
+    owner: Alice Example
+    license: proprietary
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+      - citation_internal

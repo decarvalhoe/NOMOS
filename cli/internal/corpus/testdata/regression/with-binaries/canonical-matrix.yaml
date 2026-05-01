@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-DEDUCTIBLE-CALC
+    unit_type: rule
+    name: Deductible calculation
+    domain: insurance-home
+    criticality: high
+    status: partial
+    business_rule: Deductible is computed from canonical contract terms.
+    source_refs:
+      - source_id: SRC-SPEC-DOC
+        locator: "section 2"
+    gaps:
+      - Missing golden test for edge cases.
