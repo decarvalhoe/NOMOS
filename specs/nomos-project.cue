@@ -3,34 +3,23 @@ package nomos
 // #Project defines the canonical project admission manifest for Nomos.
 // It validates `nomos.project.yaml`, the first contract Nomos reads before
 // detecting adapters, validating canonical sources, or producing reports.
+//
+// Two modes are supported:
+//   - "product" (default): a code repository with surfaces, toolchain, and
+//     build/test commands. This is the standard admission path.
+//   - "canonical_corpus": an authoritative source collection with no code
+//     surfaces. Requires source inventory, hashability, owner/confidentiality
+//     metadata, and read-only execution. No build/test toolchain.
 
-#Project: {
+#Project: #ProductProject | #CorpusProject
+
+// #ProductProject is the default mode for code repositories.
+#ProductProject: {
 	schema_version: string | *"0.1.0"
+	mode:           *"product" | "product"
 
-	// project carries stable metadata used to identify ownership, lifecycle,
-	// domain and risk before Nomos performs any repository inspection.
-	project: {
-		id:           =~"^[a-z0-9][a-z0-9-]*$"
-		name:         #NonEmptyString
-		description?: string
-		repository?:  string
-		domain:       #NonEmptyString
-		lifecycle:    #LifecycleMode
-		risk_level:   #RiskLevel
-		owners: [#Owner, ...#Owner]
-	}
-
-	// scope states where Nomos should apply. `in_scope` is required so an
-	// admission verdict cannot be detached from explicit product boundaries.
-	scope: {
-		verdict?:    #ScopeVerdict
-		confidence?: #ConfidenceLevel
-		in_scope: [#NonEmptyString, ...#NonEmptyString]
-		out_of_scope?: [...#NonEmptyString]
-		assumptions?: [...#NonEmptyString]
-		bounded_contexts?: [...#NonEmptyString]
-		blockers?: [...#Blocker]
-	}
+	project: #ProjectIdentity
+	scope:   #Scope
 
 	// surfaces is required because adapters and gates operate on concrete
 	// product surfaces rather than a repository as an undifferentiated blob.
@@ -48,19 +37,81 @@ package nomos
 		ci_systems?: [...#NonEmptyString]
 	}
 
-	compliance?: {
-		regulated?: bool | *false
-		standards?: [...#NonEmptyString]
-		data_sensitivity?:   "public" | "internal" | "restricted" | "secret"
-		exceptions_allowed?: bool | *false
+	compliance?: #Compliance
+	evidence?:   #Evidence
+	notes?:      string
+}
+
+// #CorpusProject admits a repository as an authoritative source collection.
+// A corpus has no code surfaces, no build/test toolchain, and is read-only
+// from an execution standpoint. It is verified through source inventory
+// completeness, hash integrity, and ownership metadata.
+#CorpusProject: {
+	schema_version: string | *"0.1.0"
+	mode:           "canonical_corpus"
+
+	project: #ProjectIdentity
+	scope:   #Scope
+
+	// corpus_surfaces: optional docs/data surfaces for organizational purposes.
+	// Unlike product mode, corpus surfaces are never inspected by adapters.
+	corpus_surfaces?: [...#CorpusSurfaceDecl]
+
+	// source_inventory is required for corpus mode. It points to the manifest
+	// that registers all authoritative sources with hashes and metadata.
+	source_inventory: {
+		manifest_path: #NonEmptyString
+		hash_required: bool | *true
+		owner_required: bool | *true
+		confidentiality_required: bool | *true
 	}
 
-	evidence?: {
-		required_reports?: [...#RequiredReport]
-		attestation_level?: "none" | "basic" | "signed"
+	// corpus_policy controls how the corpus is consumed.
+	corpus_policy: {
+		execution: *"read_only" | "read_only"
+		allowed_consumers?: [...#NonEmptyString]
+		retention?: #NonEmptyString
 	}
 
-	notes?: string
+	compliance?: #Compliance
+	evidence?:   #Evidence
+	notes?:      string
+}
+
+// #ProjectIdentity carries stable metadata used to identify ownership,
+// lifecycle, domain and risk before Nomos performs any repository inspection.
+#ProjectIdentity: {
+	id:           =~"^[a-z0-9][a-z0-9-]*$"
+	name:         #NonEmptyString
+	description?: string
+	repository?:  string
+	domain:       #NonEmptyString
+	lifecycle:    #LifecycleMode
+	risk_level:   #RiskLevel
+	owners: [#Owner, ...#Owner]
+}
+
+// #Scope states where Nomos should apply.
+#Scope: {
+	verdict?:    #ScopeVerdict
+	confidence?: #ConfidenceLevel
+	in_scope: [#NonEmptyString, ...#NonEmptyString]
+	out_of_scope?: [...#NonEmptyString]
+	assumptions?: [...#NonEmptyString]
+	bounded_contexts?: [...#NonEmptyString]
+	blockers?: [...#Blocker]
+}
+
+#Compliance: {
+	regulated?: bool | *false
+	standards?: [...#NonEmptyString]
+	data_sensitivity?:   "public" | "internal" | "restricted" | "secret"
+	exceptions_allowed?: bool | *false
+}
+
+#Evidence: {
+	required_reports?: [...#RequiredReport]
+	attestation_level?: "none" | "basic" | "signed"
 }
 
 #Owner: {
@@ -84,6 +135,16 @@ package nomos
 	critical?: bool | *false
 	entrypoints?: [...#NonEmptyString]
 }
+
+// #CorpusSurfaceDecl is a lightweight surface for corpus mode.
+// Only docs and data types are allowed — no code surfaces.
+#CorpusSurfaceDecl: {
+	name: =~"^[a-z0-9][a-z0-9-]*$"
+	type: #CorpusSurfaceType
+	path?: #NonEmptyString
+}
+
+#CorpusSurfaceType: "docs" | "data"
 
 #LifecycleMode: "greenfield" | "brownfield"
 
