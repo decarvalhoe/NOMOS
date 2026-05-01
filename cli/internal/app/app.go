@@ -9,6 +9,7 @@ import (
 
 	"github.com/RBOKproject/Nomos/cli/internal/diagnose"
 	"github.com/RBOKproject/Nomos/cli/internal/output"
+	"github.com/RBOKproject/Nomos/cli/internal/validate"
 )
 
 const Version = "0.1.0-dev"
@@ -20,7 +21,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"help":     helpCommand,
 		"version":  versionCommand,
 		"init":     initCommand,
-		"validate": notImplemented("validate"),
+		"validate": validate.Command,
 		"diagnose": diagnoseCommand,
 	}
 

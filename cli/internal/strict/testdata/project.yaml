@@ -1,0 +1,9 @@
+project:
+  domain: insurance
+scope:
+  in_scope:
+    - insurance-home
+    - insurance-auto
+surfaces:
+  - name: api
+    type: api

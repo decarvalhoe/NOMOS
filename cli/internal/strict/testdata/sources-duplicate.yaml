@@ -1,0 +1,7 @@
+sources:
+  - id: SRC-DUP
+    domain: insurance
+    status: active
+  - id: SRC-DUP
+    domain: insurance
+    status: active

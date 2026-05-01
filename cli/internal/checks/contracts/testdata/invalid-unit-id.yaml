@@ -1,0 +1,15 @@
+units:
+  - unit_id: lowercase-bad
+    unit_type: rule
+    name: "Bad ID"
+    domain: insurance
+    criticality: high
+    source_refs:
+      - source_id: SRC-001
+        locator: "p. 1"
+    business_rule: "Rule."
+    canonical_contract:
+      path: contracts/rule.yaml
+      object_id: OBJ-001
+      status: planned
+    status: covered

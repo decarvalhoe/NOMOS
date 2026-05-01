@@ -1,0 +1,22 @@
+project:
+  id: alpha
+  name: Alpha Service
+  domain: insurance
+  lifecycle: greenfield
+  risk_level: high
+  owners:
+    - name: Alice
+      role: tech-lead
+      email: alice@example.com
+scope:
+  verdict: in_scope
+  in_scope:
+    - pricing
+surfaces:
+  - name: api
+    type: api
+    stack: python
+    critical: true
+  - name: ui
+    type: ui
+    stack: typescript

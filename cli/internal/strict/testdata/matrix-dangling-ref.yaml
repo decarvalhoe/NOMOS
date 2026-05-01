@@ -1,0 +1,6 @@
+units:
+  - unit_id: UNIT-001
+    domain: insurance-home
+    source_refs:
+      - source_id: SRC-NONEXISTENT
+    status: covered

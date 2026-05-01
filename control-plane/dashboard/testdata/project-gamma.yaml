@@ -1,0 +1,15 @@
+project:
+  id: gamma
+  name: Gamma Blocked
+  domain: compliance
+  lifecycle: brownfield
+  risk_level: medium
+  owners:
+    - name: Charlie
+scope:
+  verdict: blocked
+  in_scope:
+    - audit
+surfaces:
+  - name: docs
+    type: docs

@@ -1,0 +1,14 @@
+project:
+  id: demo-app
+  name: Demo App
+  domain: internal
+  lifecycle: greenfield
+  risk_level: medium
+  owners:
+    - name: Alice
+scope:
+  in_scope:
+    - pricing
+surfaces:
+  - name: api
+    type: api

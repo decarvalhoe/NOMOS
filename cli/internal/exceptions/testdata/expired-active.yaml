@@ -1,0 +1,11 @@
+exceptions:
+  - id: EXC-EXPIRED
+    summary: "Temporary bypass"
+    owner: dev@example.com
+    approver: lead@example.com
+    severity: high
+    status: active
+    created_at: "2025-01-01"
+    expires_at: "2025-06-30"
+    reason: "Waiting for upstream fix."
+    scope: "module:legacy"

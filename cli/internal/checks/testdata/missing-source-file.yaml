@@ -1,0 +1,13 @@
+sources:
+  - id: SRC-GHOST
+    path: nonexistent/file.pdf
+    type: pdf
+    domain: insurance
+    priority: primary
+    status: active
+    hash: "sha256:abcdef1234567890"
+    owner: team@example.com
+    license: internal
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract

@@ -1,0 +1,21 @@
+project:
+  id: beta
+  name: Beta Legacy
+  domain: finance
+  lifecycle: brownfield
+  risk_level: critical
+  owners:
+    - name: Bob
+      role: architect
+scope:
+  verdict: partial
+  in_scope:
+    - accounting
+surfaces:
+  - name: batch
+    type: batch
+    stack: java
+    critical: true
+  - name: worker
+    type: worker
+    stack: java

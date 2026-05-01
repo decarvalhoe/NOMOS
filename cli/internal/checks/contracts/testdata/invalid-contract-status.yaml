@@ -1,0 +1,15 @@
+units:
+  - unit_id: UNIT-BAD-STATUS
+    unit_type: rule
+    name: "Bad contract status"
+    domain: insurance
+    criticality: high
+    source_refs:
+      - source_id: SRC-001
+        locator: "p. 1"
+    business_rule: "Rule."
+    canonical_contract:
+      path: contracts/rule.yaml
+      object_id: UNIT-BAD-STATUS
+      status: archived
+    status: covered
