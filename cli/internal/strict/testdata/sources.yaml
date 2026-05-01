@@ -1,0 +1,7 @@
+sources:
+  - id: SRC-001
+    domain: insurance-home
+    status: active
+  - id: SRC-002
+    domain: insurance-auto
+    status: active

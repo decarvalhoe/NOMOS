@@ -1,0 +1,11 @@
+units:
+  - unit_id: UNIT-001
+    domain: insurance-home
+    source_refs:
+      - source_id: SRC-001
+    status: covered
+  - unit_id: UNIT-002
+    domain: insurance-auto
+    source_refs:
+      - source_id: SRC-002
+    status: partial

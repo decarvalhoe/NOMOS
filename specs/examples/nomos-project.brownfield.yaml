@@ -17,6 +17,9 @@ project:
 scope:
   verdict: partial
   confidence: medium
+  bounded_contexts:
+    - claims
+    - deductibles
   in_scope:
     - claims-evaluation
     - deductible-rules
@@ -48,6 +51,10 @@ toolchain:
     - ./gradlew build
   test:
     - ./gradlew test
+  lint:
+    - ./gradlew checkstyleMain
+  package_managers:
+    - gradle
   ci_systems:
     - gitlab-ci
 compliance:

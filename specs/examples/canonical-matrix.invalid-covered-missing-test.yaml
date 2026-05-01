@@ -1,0 +1,13 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-HOME-WARRANTY-WATER-DAMAGE
+    unit_type: catalog_entry
+    name: Water damage warranty
+    domain: insurance-home
+    criticality: high
+    source_refs:
+      - source_id: INS-CONTRACT-HOME-2026
+        locator: "p. 12, clause 3.1"
+    business_rule: Water damage is covered.
+    status: covered
+    gaps: []

@@ -1,0 +1,15 @@
+units:
+  - unit_id: UNIT-GHOST
+    unit_type: rule
+    name: "Ghost contract file"
+    domain: insurance
+    criticality: high
+    source_refs:
+      - source_id: SRC-001
+        locator: "p. 1"
+    business_rule: "Rule."
+    canonical_contract:
+      path: nonexistent/contract.yaml
+      object_id: UNIT-GHOST
+      status: present
+    status: covered

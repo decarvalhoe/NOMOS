@@ -1,0 +1,12 @@
+[
+  {
+    "policy_id": "POL-001",
+    "benefits": [
+      {"code": "DENTAL", "label": "Dental coverage", "annual_limit": 750}
+    ]
+  },
+  {
+    "policy_id": "POL-002",
+    "benefits": []
+  }
+]

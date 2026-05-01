@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: INS-HOME-WARRANTY-WATER-DAMAGE
+    unit_type: rule
+    name: Invalid source ref
+    domain: insurance-home
+    criticality: medium
+    source_refs:
+      - source_id: "invalid lowercase id"
+        locator: ""
+    business_rule: This fixture has an invalid source_ref.
+    status: partial
+    gaps:
+      - Invalid source_id should be flagged.

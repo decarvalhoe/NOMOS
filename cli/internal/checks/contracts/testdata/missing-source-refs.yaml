@@ -1,0 +1,13 @@
+units:
+  - unit_id: UNIT-NO-REFS
+    unit_type: rule
+    name: "No source refs"
+    domain: insurance
+    criticality: high
+    source_refs: []
+    business_rule: "Rule."
+    canonical_contract:
+      path: contracts/rule.yaml
+      object_id: UNIT-NO-REFS
+      status: planned
+    status: partial

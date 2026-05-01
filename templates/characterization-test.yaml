@@ -1,0 +1,46 @@
+id: CHAR-DOMAIN-0001
+name: "Characterization test title"
+description: "Documents an observed legacy behavior before extraction."
+
+legacy_source:
+  source_id: SOURCE-LEGACY-ID
+  module: "legacy/module/path"
+  function: "function_or_endpoint"
+  locator: "file:line or route"
+
+observed_behavior:
+  summary: "What the legacy code actually does."
+  inputs:
+    example_input: value
+  outputs:
+    example_output: value
+  side_effects:
+    - "Describe any side effects (DB writes, events, external calls)."
+
+assertions:
+  - path: outputs.example_output
+    operator: equals
+    value: value
+  - path: side_effects
+    operator: contains
+    value: "expected side effect"
+
+edge_cases:
+  - input: { edge_field: null }
+    expected_output: "What happens on null"
+    notes: "Undocumented behavior — confirmed by running legacy."
+  - input: { edge_field: -1 }
+    expected_output: "What happens on negative"
+    notes: "Possibly a bug, but current production relies on this."
+
+known_bugs:
+  - description: "Describe a known bug that is preserved intentionally."
+    severity: low
+    decision_ref: ADR-0000
+
+unit_ids:
+  - DOMAIN-RULE-0001
+
+owner: legacy-expert@example.com
+validated_at: "2026-04-30"
+status: active

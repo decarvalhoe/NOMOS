@@ -1,0 +1,17 @@
+schema_version: "0.1.0"
+project:
+  id: nomos-ready
+  name: Nomos Ready
+  domain: reference
+  risk_level: medium
+  owners:
+    - name: Domain Owner
+      role: domain-owner
+scope:
+  in_scope:
+    - reference-api
+surfaces:
+  - name: reference-api
+    type: api
+    path: api/
+    stack: go

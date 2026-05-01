@@ -1,0 +1,11 @@
+units:
+  - unit_id: UNIT-NO-CONTRACT
+    unit_type: catalog_entry
+    name: "Missing contract"
+    domain: insurance
+    criticality: medium
+    source_refs:
+      - source_id: SRC-001
+        locator: "p. 5"
+    business_rule: "A rule."
+    status: missing

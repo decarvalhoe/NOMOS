@@ -1,3 +1,4 @@
+schema_version: "0.1.0"
 units:
   - unit_id: INS-HOME-WARRANTY-WATER-DAMAGE
     unit_type: catalog_entry
@@ -13,7 +14,8 @@ units:
       path: data/canonical/warranties.yaml
       object_id: INS-HOME-WARRANTY-WATER-DAMAGE
       status: planned
-    schema_refs: []
+    schema_refs:
+      - schemas/warranty.schema.json
     db_refs: []
     vector_refs: []
     core_refs: []
@@ -25,4 +27,3 @@ units:
       - "Contrat structuré à créer."
       - "Golden case sinistre à valider."
     decision_refs: []
-

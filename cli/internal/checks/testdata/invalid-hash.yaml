@@ -1,0 +1,13 @@
+sources:
+  - id: SRC-BAD-HASH
+    path: docs/readme.txt
+    type: pdf
+    domain: insurance
+    priority: primary
+    status: active
+    hash: "md5:notvalid"
+    owner: team@example.com
+    license: internal
+    confidentiality: restricted
+    allowed_uses:
+      - structured_contract

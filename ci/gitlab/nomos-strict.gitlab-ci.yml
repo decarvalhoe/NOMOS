@@ -1,0 +1,77 @@
+# Nomos Strict Gate — Reusable GitLab CI Job
+#
+# Include this template in your .gitlab-ci.yml:
+#
+#   include:
+#     - project: 'nomos/ci-templates'
+#       ref: main
+#       file: '/ci/gitlab/nomos-strict.gitlab-ci.yml'
+#
+# Then use the job in your pipeline:
+#
+#   nomos-gate:
+#     extends: .nomos-strict
+#     variables:
+#       NOMOS_FAIL_MODE: "closed"
+#
+# Variables:
+#   NOMOS_VERSION:      Version of nomos CLI to install (default: "latest").
+#   NOMOS_PROJECT_PATH: Path to the project root (default: ".").
+#   NOMOS_FAIL_MODE:    "closed" (default) fails the pipeline, "open" warns only.
+#   NOMOS_WRITE_REPORT: Path to write nomos-report.json (default: "nomos-report.json").
+#   NOMOS_EXTRA_ARGS:   Additional arguments passed to nomos strict.
+
+.nomos-strict:
+  stage: test
+  image: alpine:3.20
+  variables:
+    NOMOS_VERSION: "latest"
+    NOMOS_PROJECT_PATH: "."
+    NOMOS_FAIL_MODE: "closed"
+    NOMOS_WRITE_REPORT: "nomos-report.json"
+    NOMOS_EXTRA_ARGS: ""
+  before_script:
+    - apk add --no-cache curl bash python3
+    - |
+      set -euo pipefail
+      if [ "$NOMOS_VERSION" = "latest" ]; then
+        curl -fsSL https://get.nomos.dev/install.sh | bash
+      else
+        curl -fsSL https://get.nomos.dev/install.sh | bash -s -- --version "$NOMOS_VERSION"
+      fi
+  script:
+    - |
+      set -euo pipefail
+
+      ARGS=""
+      if [ -n "$NOMOS_WRITE_REPORT" ]; then
+        ARGS="--write-report $NOMOS_WRITE_REPORT"
+      fi
+      if [ -n "$NOMOS_EXTRA_ARGS" ]; then
+        ARGS="$ARGS $NOMOS_EXTRA_ARGS"
+      fi
+
+      EXIT_CODE=0
+      nomos strict --project "$NOMOS_PROJECT_PATH" $ARGS || EXIT_CODE=$?
+
+      # Annotate merge request if report exists and CI has MR context.
+      if [ -f "$NOMOS_WRITE_REPORT" ] && [ -n "${CI_MERGE_REQUEST_IID:-}" ]; then
+        python3 ci/gitlab/annotate-mr.py "$NOMOS_WRITE_REPORT" || echo "WARNING: MR annotation failed."
+      fi
+
+      if [ "$NOMOS_FAIL_MODE" = "closed" ] && [ $EXIT_CODE -ne 0 ]; then
+        echo "ERROR: Nomos strict gate failed (fail-closed mode)."
+        exit $EXIT_CODE
+      elif [ $EXIT_CODE -ne 0 ]; then
+        echo "WARNING: Nomos strict gate found issues but fail-mode is open."
+      fi
+  artifacts:
+    when: always
+    paths:
+      - $NOMOS_WRITE_REPORT
+    expire_in: 30 days
+    reports:
+      codequality: $NOMOS_WRITE_REPORT
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
