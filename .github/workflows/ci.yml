@@ -48,9 +48,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cue-lang/setup-cue@v1.1.0
+      - uses: cue-lang/setup-cue@v1.0.1
         with:
-          version: latest
+          version: v0.16.1
       - run: cue vet specs/*.cue
 
   yaml-lint:
