@@ -1,0 +1,184 @@
+{
+  "schema_version": "0.1.0",
+  "report_type": "nomos-report",
+  "generated_at": "2026-05-01T12:00:00Z",
+  "run": {
+    "id": "run-20260501-120000",
+    "mode": "admission",
+    "tool": {
+      "name": "nomos",
+      "version": "0.1.0-dev"
+    },
+    "command": ["nomos", "diagnose", "--root", ".", "--format", "json"],
+    "started_at": "2026-05-01T11:59:58Z",
+    "completed_at": "2026-05-01T12:00:00Z",
+    "duration_ms": 2034,
+    "git": {
+      "repository": "RBOKproject/Nomos",
+      "branch": "feat/nomos-first-report-1302",
+      "commit": "849720d65a9d0c33d56bd45ef1789b8928cb2809",
+      "dirty": false
+    },
+    "environment": {
+      "ci": false,
+      "runner": "local",
+      "os": "linux"
+    }
+  },
+  "project": {
+    "id": "nomos",
+    "name": "Nomos",
+    "repository": "RBOKproject/Nomos",
+    "domain": "product-intelligence",
+    "risk_level": "medium",
+    "manifest_path": "nomos.project.yaml"
+  },
+  "summary": {
+    "check_count": 4,
+    "finding_count": 0,
+    "blocking_finding_count": 0,
+    "evidence_count": 6,
+    "coverage": {
+      "unit_total": 3,
+      "unit_covered": 3,
+      "unit_partial": 0,
+      "unit_missing": 0,
+      "unit_not_applicable": 0,
+      "coverage_ratio": 1
+    }
+  },
+  "verdict": {
+    "status": "pass",
+    "severity": "info",
+    "blocking": false,
+    "summary": "All admission criteria met. Repository has required manifests, detected surfaces, CI evidence, and automated tests.",
+    "next_actions": [
+      "Run strict mode once canonical matrix and contract schemas are finalized."
+    ]
+  },
+  "checks": [
+    {
+      "id": "admission.scope",
+      "name": "Product surface detection",
+      "category": "scope",
+      "status": "passed",
+      "severity": "info",
+      "started_at": "2026-05-01T11:59:58Z",
+      "completed_at": "2026-05-01T11:59:59Z",
+      "duration_ms": 812,
+      "evidence_ids": ["EVIDENCE-SURFACE-API", "EVIDENCE-SURFACE-CLI", "EVIDENCE-SURFACE-DATA"],
+      "message": "Detected 3 product surfaces: api, cli, data."
+    },
+    {
+      "id": "admission.sources",
+      "name": "Required admission evidence",
+      "category": "sources",
+      "status": "passed",
+      "severity": "info",
+      "started_at": "2026-05-01T11:59:59Z",
+      "completed_at": "2026-05-01T11:59:59Z",
+      "duration_ms": 203,
+      "evidence_ids": ["EVIDENCE-PROJECT-MANIFEST", "EVIDENCE-SOURCE-MANIFEST"],
+      "message": "Required admission evidence is present."
+    },
+    {
+      "id": "admission.ci",
+      "name": "CI evidence",
+      "category": "execution",
+      "status": "passed",
+      "severity": "info",
+      "evidence_ids": ["EVIDENCE-CI"],
+      "message": "CI configuration evidence detected."
+    },
+    {
+      "id": "admission.tests",
+      "name": "Automated test evidence",
+      "category": "execution",
+      "status": "passed",
+      "severity": "info",
+      "evidence_ids": ["EVIDENCE-TESTS"],
+      "message": "Automated test files detected across 15 packages."
+    }
+  ],
+  "findings": [],
+  "evidence": [
+    {
+      "id": "EVIDENCE-PROJECT-MANIFEST",
+      "type": "manual_review",
+      "description": "Nomos project manifest declares scope, owners, risk level, and surfaces.",
+      "uri": "nomos.project.yaml",
+      "producer": "nomos",
+      "target": {
+        "type": "project",
+        "path": "nomos.project.yaml"
+      }
+    },
+    {
+      "id": "EVIDENCE-SOURCE-MANIFEST",
+      "type": "source_manifest",
+      "description": "Source manifest declares authoritative sources for detected product surfaces.",
+      "uri": "docs/canonical/source-manifest.yaml",
+      "producer": "nomos",
+      "target": {
+        "type": "source",
+        "path": "docs/canonical/source-manifest.yaml"
+      }
+    },
+    {
+      "id": "EVIDENCE-CI",
+      "type": "ci_run",
+      "description": "CI workflow configuration exists for automated gate execution.",
+      "uri": ".github/workflows/ci.yml",
+      "producer": "nomos",
+      "target": {
+        "type": "run",
+        "path": ".github/workflows/ci.yml"
+      }
+    },
+    {
+      "id": "EVIDENCE-TESTS",
+      "type": "test_result",
+      "description": "Go test files detected across cli/internal packages providing automated verification.",
+      "uri": "cli/internal",
+      "producer": "nomos",
+      "target": {
+        "type": "code",
+        "path": "cli/internal"
+      }
+    },
+    {
+      "id": "EVIDENCE-SURFACE-API",
+      "type": "code_reference",
+      "description": "Detected api surface with high confidence from adapter contracts and CLI detect module.",
+      "producer": "nomos",
+      "target": {
+        "type": "api",
+        "id": "api"
+      }
+    },
+    {
+      "id": "EVIDENCE-SURFACE-CLI",
+      "type": "code_reference",
+      "description": "Detected cli surface from cli/main.go entry point and command dispatcher.",
+      "producer": "nomos",
+      "target": {
+        "type": "code",
+        "id": "cli"
+      }
+    },
+    {
+      "id": "EVIDENCE-SURFACE-DATA",
+      "type": "code_reference",
+      "description": "Detected data surface from control-plane registry and CUE schema definitions.",
+      "producer": "nomos",
+      "target": {
+        "type": "code",
+        "id": "data"
+      }
+    }
+  ],
+  "metadata": {
+    "generator": "gemini-agent",
+    "ticket": "NOM-1302"
+  }
+}
