@@ -50,18 +50,6 @@ func TestRunUnknownCommand(t *testing.T) {
 	}
 }
 
-func TestRunScaffoldedCommand(t *testing.T) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	code := Run([]string{"diagnose"}, &stdout, &stderr)
-	if code != 2 {
-		t.Fatalf("expected exit code 2, got %d", code)
-	}
-	if !strings.Contains(stderr.String(), "not implemented yet") {
-		t.Fatalf("expected not implemented message, got %q", stderr.String())
-	}
-}
 
 func TestRunInitMinimalCreatesBaselineProject(t *testing.T) {
 	target := t.TempDir()
@@ -212,6 +200,9 @@ func assertPathExists(t *testing.T, root string, rel string) {
 	t.Helper()
 	if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(rel))); err != nil {
 		t.Fatalf("expected %s to exist: %v", rel, err)
+	}
+}
+
 func TestRunDiagnoseJSON(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -243,6 +234,9 @@ func TestRunDiagnoseMarkdown(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "Preliminary verdict out_of_scope") {
 		t.Fatalf("expected markdown diagnose verdict, got %q", stdout.String())
+	}
+}
+
 func TestRunValidateRequiresManifestPath(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
