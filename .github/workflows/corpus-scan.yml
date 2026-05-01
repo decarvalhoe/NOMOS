@@ -27,6 +27,12 @@ on:
       extensions:
         description: "Comma-separated file extensions to include (empty = all)"
         required: false
+      allow_globs:
+        description: "Comma-separated allow globs for corpus paths"
+        required: false
+      ignore_globs:
+        description: "Comma-separated ignore globs for corpus paths"
+        required: false
 
 permissions:
   contents: read
@@ -55,34 +61,36 @@ jobs:
         run: |
           mkdir -p /tmp/nomos-corpus-output
 
-          # Build scan args
-          SCAN_ARGS="--root ${{ inputs.corpus_root }}"
+          SCAN_ARGS=(--root "${{ inputs.corpus_root }}")
           if [ -n "${{ inputs.extensions }}" ]; then
             IFS=',' read -ra EXTS <<< "${{ inputs.extensions }}"
             for ext in "${EXTS[@]}"; do
-              SCAN_ARGS="$SCAN_ARGS --ext $(echo $ext | xargs)"
+              SCAN_ARGS+=(--ext "$(echo "$ext" | xargs)")
+            done
+          fi
+          if [ -n "${{ inputs.allow_globs }}" ]; then
+            IFS=',' read -ra ALLOWS <<< "${{ inputs.allow_globs }}"
+            for glob in "${ALLOWS[@]}"; do
+              SCAN_ARGS+=(--allow "$(echo "$glob" | xargs)")
+            done
+          fi
+          if [ -n "${{ inputs.ignore_globs }}" ]; then
+            IFS=',' read -ra IGNORES <<< "${{ inputs.ignore_globs }}"
+            for glob in "${IGNORES[@]}"; do
+              SCAN_ARGS+=(--ignore "$(echo "$glob" | xargs)")
             done
           fi
 
-          # Run scan via Go test helper (corpus scan is a library, not a CLI command yet)
-          cd cli
-          go test -tags generate -run TestCorpusScanCI ./internal/corpus/ \
-            -corpus-root="../${{ inputs.corpus_root }}" \
-            -output="/tmp/nomos-corpus-output/snapshot.json" \
-            2>&1 || true
+          ./nomos corpus scan \
+            "${SCAN_ARGS[@]}" \
+            --out /tmp/nomos-corpus-output/snapshot.json \
+            --format json
 
-          # Fallback: generate snapshot directly
-          if [ ! -f /tmp/nomos-corpus-output/snapshot.json ]; then
-            cd ..
-            go run -C cli -tags generate . corpus scan \
-              --root "${{ inputs.corpus_root }}" \
-              --output /tmp/nomos-corpus-output/snapshot.json \
-              2>&1 || echo '{"format":"nomos.corpus-snapshot.v1","total_files":0,"sources":[]}' > /tmp/nomos-corpus-output/snapshot.json
-          fi
-
+          test -s /tmp/nomos-corpus-output/snapshot.json
           echo "snapshot_path=/tmp/nomos-corpus-output/snapshot.json" >> "$GITHUB_OUTPUT"
 
-          TOTAL=$(python3 -c "import json; d=json.load(open('/tmp/nomos-corpus-output/snapshot.json')); print(d.get('total_files',0))" 2>/dev/null || echo "0")
+          TOTAL=$(python3 -c "import json; d=json.load(open('/tmp/nomos-corpus-output/snapshot.json')); print(d.get('total_files',0))")
+          test "$TOTAL" -gt 0
           echo "total_files=$TOTAL" >> "$GITHUB_OUTPUT"
           echo "Scanned $TOTAL files"
 
@@ -116,50 +124,44 @@ jobs:
         working-directory: cli
         run: |
           mkdir -p /tmp/nomos-corpus-output
+          go run . corpus manifest \
+            --snapshot /tmp/nomos-corpus-input/snapshot.json \
+            --out /tmp/nomos-corpus-output/source-manifest.yaml \
+            --domain "${{ inputs.domain }}" \
+            --owner "${{ inputs.owner }}" \
+            --confidentiality "${{ inputs.confidentiality }}" \
+            --id-prefix "${{ inputs.id_prefix }}"
 
-          # Generate manifest from snapshot using Go
-          cat > /tmp/gen_manifest.go <<'GEOF'
-          //go:build ignore
-          package main
-
-          import (
-            "encoding/json"
-            "fmt"
-            "os"
-            "github.com/RBOKproject/Nomos/cli/internal/corpus"
-          )
-
-          func main() {
-            data, _ := os.ReadFile(os.Args[1])
-            var snap corpus.Snapshot
-            json.Unmarshal(data, &snap)
-            m := corpus.GenerateManifest(snap, corpus.ManifestOptions{
-              Domain:          os.Getenv("DOMAIN"),
-              Owner:           os.Getenv("OWNER"),
-              Confidentiality: os.Getenv("CONFIDENTIALITY"),
-              IDPrefix:        os.Getenv("ID_PREFIX"),
-            })
-            f, _ := os.Create(os.Args[2])
-            defer f.Close()
-            corpus.WriteManifestYAML(f, m)
-            fmt.Printf("Generated manifest with %d sources\n", len(m.Sources))
-          }
-          GEOF
-
-          DOMAIN="${{ inputs.domain }}" \
-          OWNER="${{ inputs.owner }}" \
-          CONFIDENTIALITY="${{ inputs.confidentiality }}" \
-          ID_PREFIX="${{ inputs.id_prefix }}" \
-          go run /tmp/gen_manifest.go \
-            /tmp/nomos-corpus-input/snapshot.json \
-            /tmp/nomos-corpus-output/source-manifest.yaml
-
+          test -s /tmp/nomos-corpus-output/source-manifest.yaml
           echo "manifest_path=/tmp/nomos-corpus-output/source-manifest.yaml" >> "$GITHUB_OUTPUT"
 
       - name: Validate sidecar manifest
         working-directory: cli
         run: |
-          go run . validate /tmp/nomos-corpus-output/source-manifest.yaml || echo "Validation completed (may require schema registration)"
+          VALIDATE_ARGS=(
+            --root "../${{ inputs.corpus_root }}"
+            --manifest /tmp/nomos-corpus-output/source-manifest.yaml
+            --format json
+          )
+          if [ -n "${{ inputs.extensions }}" ]; then
+            IFS=',' read -ra EXTS <<< "${{ inputs.extensions }}"
+            for ext in "${EXTS[@]}"; do
+              VALIDATE_ARGS+=(--ext "$(echo "$ext" | xargs)")
+            done
+          fi
+          if [ -n "${{ inputs.allow_globs }}" ]; then
+            IFS=',' read -ra ALLOWS <<< "${{ inputs.allow_globs }}"
+            for glob in "${ALLOWS[@]}"; do
+              VALIDATE_ARGS+=(--allow "$(echo "$glob" | xargs)")
+            done
+          fi
+          if [ -n "${{ inputs.ignore_globs }}" ]; then
+            IFS=',' read -ra IGNORES <<< "${{ inputs.ignore_globs }}"
+            for glob in "${IGNORES[@]}"; do
+              VALIDATE_ARGS+=(--ignore "$(echo "$glob" | xargs)")
+            done
+          fi
+          go run . corpus validate-sidecar "${VALIDATE_ARGS[@]}"
 
       - uses: actions/upload-artifact@v4
         with:

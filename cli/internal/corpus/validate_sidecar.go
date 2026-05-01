@@ -16,26 +16,25 @@ import (
 
 // Diagnostic codes for sidecar validation.
 const (
-	CodeHashMismatch          = "HASH_MISMATCH"
-	CodeHashMissing           = "HASH_MISSING"
-	CodeHashMalformed         = "HASH_MALFORMED"
-	CodeOwnerMissing          = "OWNER_MISSING"
-	CodeConfidentialityEmpty  = "CONFIDENTIALITY_EMPTY"
-	CodeConfidentialityBad    = "CONFIDENTIALITY_INVALID"
-	CodeFileMissing           = "FILE_MISSING"
-	CodeFileUndeclared        = "FILE_UNDECLARED"
-	CodeIDMissing             = "ID_MISSING"
-	CodeIDInvalid             = "ID_INVALID"
-	CodeIDDuplicate           = "ID_DUPLICATE"
-	CodeNoSources             = "NO_SOURCES"
+	CodeHashMismatch         = "HASH_MISMATCH"
+	CodeHashMissing          = "HASH_MISSING"
+	CodeHashMalformed        = "HASH_MALFORMED"
+	CodeOwnerMissing         = "OWNER_MISSING"
+	CodeConfidentialityEmpty = "CONFIDENTIALITY_EMPTY"
+	CodeConfidentialityBad   = "CONFIDENTIALITY_INVALID"
+	CodeFileMissing          = "FILE_MISSING"
+	CodeFileUndeclared       = "FILE_UNDECLARED"
+	CodeIDMissing            = "ID_MISSING"
+	CodeIDInvalid            = "ID_INVALID"
+	CodeIDDuplicate          = "ID_DUPLICATE"
+	CodeNoSources            = "NO_SOURCES"
 )
 
 var (
-	sidecarIDPattern    = regexp.MustCompile(`^[A-Z0-9][A-Z0-9-]*$`)
-	hashDigestPattern   = regexp.MustCompile(`^(sha256|sha384|sha512):[a-fA-F0-9]+$`)
+	sidecarIDPattern     = regexp.MustCompile(`^[A-Z0-9][A-Z0-9-]*$`)
+	hashDigestPattern    = regexp.MustCompile(`^(sha256|sha384|sha512):[a-fA-F0-9]+$`)
 	validConfidentiality = []string{"public", "internal", "restricted", "secret"}
 )
-
 
 // ManifestSource is one entry in the sidecar manifest.
 
@@ -80,6 +79,14 @@ func ParseSidecarManifestBytes(data []byte) (SidecarManifest, error) {
 // corpusRoot is the directory containing the actual source files referenced
 // by the manifest paths. Pass empty string to skip file-system checks.
 func ValidateSidecar(manifest SidecarManifest, corpusRoot string) SidecarResult {
+	return ValidateSidecarWithPolicy(manifest, corpusRoot, nil)
+}
+
+func ValidateSidecarWithPolicy(manifest SidecarManifest, corpusRoot string, policy *Policy) SidecarResult {
+	return ValidateSidecarWithOptions(manifest, corpusRoot, policy, nil)
+}
+
+func ValidateSidecarWithOptions(manifest SidecarManifest, corpusRoot string, policy *Policy, extensions []string) SidecarResult {
 	result := SidecarResult{
 		Valid:       true,
 		SourceCount: len(manifest.Sources),
@@ -115,7 +122,7 @@ func ValidateSidecar(manifest SidecarManifest, corpusRoot string) SidecarResult 
 
 	// Check for undeclared files in corpus root.
 	if corpusRoot != "" {
-		checkUndeclaredFiles(&result, declaredPaths, corpusRoot)
+		checkUndeclaredFiles(&result, declaredPaths, corpusRoot, policy, extensionSet(extensions))
 	}
 
 	result.Valid = len(result.Errors) == 0
@@ -197,9 +204,18 @@ func validateFileExists(result *SidecarResult, src ManifestSource, corpusRoot st
 	}
 }
 
-func checkUndeclaredFiles(result *SidecarResult, declared map[string]bool, corpusRoot string) {
+func checkUndeclaredFiles(result *SidecarResult, declared map[string]bool, corpusRoot string, policy *Policy, extensions map[string]bool) {
 	_ = filepath.WalkDir(corpusRoot, func(path string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !d.Type().IsRegular() {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if skipDirs[strings.ToLower(filepath.Base(path))] {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !d.Type().IsRegular() {
 			return nil
 		}
 		rel, relErr := filepath.Rel(corpusRoot, path)
@@ -207,12 +223,36 @@ func checkUndeclaredFiles(result *SidecarResult, declared map[string]bool, corpu
 			return nil
 		}
 		rel = filepath.ToSlash(rel)
+		if policy != nil && !policy.Match(rel) {
+			return nil
+		}
+		if len(extensions) > 0 && !extensions[strings.ToLower(filepath.Ext(rel))] {
+			return nil
+		}
 		if !declared[rel] {
 			addSidecarErr(result, "", CodeFileUndeclared, "path",
 				fmt.Sprintf("file %q exists in corpus but is not declared in manifest", rel))
 		}
 		return nil
 	})
+}
+
+func extensionSet(extensions []string) map[string]bool {
+	if len(extensions) == 0 {
+		return nil
+	}
+	result := make(map[string]bool, len(extensions))
+	for _, ext := range extensions {
+		ext = strings.ToLower(strings.TrimSpace(ext))
+		if ext == "" {
+			continue
+		}
+		if !strings.HasPrefix(ext, ".") {
+			ext = "." + ext
+		}
+		result[ext] = true
+	}
+	return result
 }
 
 func hashFileSHA256(path string) (string, error) {

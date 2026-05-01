@@ -25,6 +25,7 @@ type SourceEntry struct {
 	Hash            string `json:"hash"`
 	SizeBytes       int64  `json:"size_bytes"`
 	Extension       string `json:"extension"`
+	Classification  string `json:"classification,omitempty"`
 	Confidentiality string `json:"confidentiality,omitempty"`
 }
 
@@ -33,6 +34,9 @@ type Snapshot struct {
 	Format      string        `json:"format"`
 	GeneratedAt string        `json:"generated_at"`
 	CorpusRoot  string        `json:"corpus_root"`
+	Repository  string        `json:"repository,omitempty"`
+	Branch      string        `json:"branch,omitempty"`
+	Commit      string        `json:"commit,omitempty"`
 	TotalFiles  int           `json:"total_files"`
 	TotalBytes  int64         `json:"total_bytes"`
 	Sources     []SourceEntry `json:"sources"`
@@ -43,6 +47,7 @@ type ScanOptions struct {
 	// Extensions filters to specific file extensions (e.g. ".pdf", ".yaml").
 	// Empty means accept all files.
 	Extensions []string
+	Policy     *Policy
 }
 
 // Scan walks a corpus root directory and produces a snapshot of all files
@@ -99,17 +104,25 @@ func Scan(root string, opts ScanOptions) (Snapshot, error) {
 		if len(extFilter) > 0 && !extFilter[ext] {
 			return nil
 		}
+		if opts.Policy != nil && !opts.Policy.Match(rel) {
+			return nil
+		}
 
 		hash, size, err := hashFile(path)
 		if err != nil {
 			return fmt.Errorf("hash %s: %w", rel, err)
 		}
+		class, err := Classify(path)
+		if err != nil {
+			class = ClassBinary
+		}
 
 		entries = append(entries, SourceEntry{
-			Path:      rel,
-			Hash:      "sha256:" + hash,
-			SizeBytes: size,
-			Extension: ext,
+			Path:           rel,
+			Hash:           "sha256:" + hash,
+			SizeBytes:      size,
+			Extension:      ext,
+			Classification: string(class),
 		})
 		totalBytes += size
 		return nil
