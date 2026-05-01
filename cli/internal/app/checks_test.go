@@ -108,47 +108,9 @@ func TestContractsCheckNoArgs(t *testing.T) {
 
 // --- product-check ---
 
-func TestProductCheckValid(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	code := ProductCheckCommand([]string{"../productcheck/testdata/valid-project.yaml"}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("expected 0, got %d; stderr=%q", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "ok") {
-		t.Fatalf("expected ok, got %q", stdout.String())
-	}
-}
 
-func TestProductCheckInvalid(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	code := ProductCheckCommand([]string{"../productcheck/testdata/no-owners.yaml"}, &stdout, &stderr)
-	if code != 1 {
-		t.Fatalf("expected 1, got %d", code)
-	}
-	if !strings.Contains(stdout.String(), "NO_OWNERS") {
-		t.Fatalf("expected NO_OWNERS, got %q", stdout.String())
-	}
-}
 
-func TestProductCheckJSON(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	code := ProductCheckCommand([]string{"--format", "json", "../productcheck/testdata/valid-project.yaml"}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("expected 0, got %d; stderr=%q", code, stderr.String())
-	}
-	var result map[string]any
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
-		t.Fatalf("expected valid JSON: %v", err)
-	}
-}
 
-func TestProductCheckNoArgs(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	code := ProductCheckCommand(nil, &stdout, &stderr)
-	if code != 2 {
-		t.Fatalf("expected 2, got %d", code)
-	}
-}
 
 // --- matrix check ---
 

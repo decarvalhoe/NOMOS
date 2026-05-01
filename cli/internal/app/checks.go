@@ -10,7 +10,6 @@ import (
 	"github.com/RBOKproject/Nomos/cli/internal/checks"
 	"github.com/RBOKproject/Nomos/cli/internal/checks/contracts"
 	"github.com/RBOKproject/Nomos/cli/internal/exceptions"
-	"github.com/RBOKproject/Nomos/cli/internal/productcheck"
 	"github.com/RBOKproject/Nomos/cli/internal/strict"
 )
 
@@ -70,32 +69,6 @@ func ContractsCheckCommand(args []string, stdout io.Writer, stderr io.Writer) in
 	return 1
 }
 
-// ProductCheckCommand implements "nomos product-check".
-func ProductCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
-	flags := flag.NewFlagSet("product-check", flag.ContinueOnError)
-	flags.SetOutput(stderr)
-	format := flags.String("format", "text", "output format: text or json")
-	if err := flags.Parse(args); err != nil {
-		return 2
-	}
-	if flags.NArg() < 1 {
-		fmt.Fprintln(stderr, "product-check: at least one manifest path is required")
-		return 2
-	}
-
-	manifestPath := flags.Arg(0)
-	result, err := productcheck.CheckProduct(manifestPath)
-	if err != nil {
-		fmt.Fprintf(stderr, "product-check: %v\n", err)
-		return 1
-	}
-
-	writeProductResult(result, *format, stdout)
-	if result.Valid {
-		return 0
-	}
-	return 1
-}
 
 // MatrixCheckCommand implements "nomos matrix check".
 func MatrixCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -222,20 +195,6 @@ func writeContractsResult(result contracts.CheckResult, format string, w io.Writ
 	}
 }
 
-func writeProductResult(result productcheck.CheckResult, format string, w io.Writer) {
-	if format == "json" {
-		writeJSON(w, result)
-		return
-	}
-	if result.Valid {
-		fmt.Fprintln(w, "product-check: ok")
-		return
-	}
-	fmt.Fprintln(w, "product-check: FAILED")
-	for _, e := range result.Errors {
-		fmt.Fprintf(w, "  [%s] %s: %s\n", e.Code, e.Path, e.Message)
-	}
-}
 
 func writeMatrixResult(result checks.MatrixCheckResult, format string, w io.Writer) {
 	if format == "json" {
