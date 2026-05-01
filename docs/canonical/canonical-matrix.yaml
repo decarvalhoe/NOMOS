@@ -1,0 +1,206 @@
+schema_version: "0.1.0"
+units:
+  - unit_id: NOMOS-RULE-SOURCE-AUTHORITY
+    unit_type: rule
+    name: "Source authority principle"
+    domain: product-intelligence
+    criticality: critical
+    source_refs:
+      - source_id: NOMOS-METHOD-OVERVIEW
+        locator: "section: Règles Absolues"
+      - source_id: NOMOS-AGENT-INSTRUCTIONS
+        locator: "section: Règles Absolues"
+    business_rule: "No domain data may enter the product without an authoritative source or decision record."
+    canonical_contract:
+      path: specs/source-manifest.cue
+      object_id: NOMOS-RULE-SOURCE-AUTHORITY
+      status: present
+    core_refs:
+      - module: cli/internal/checks/sources.go
+        symbol: CheckSources
+    test_refs:
+      - cli/internal/checks/sources_test.go
+    status: covered
+
+  - unit_id: NOMOS-RULE-EXPIRING-EXCEPTION
+    unit_type: rule
+    name: "Expiring exception rule"
+    domain: product-intelligence
+    criticality: critical
+    source_refs:
+      - source_id: NOMOS-AGENT-INSTRUCTIONS
+        locator: "rule: sauf dérogation expirante approuvée"
+      - source_id: NOMOS-TESTS-GATES
+        locator: "section: exceptions"
+    business_rule: "No permanent exceptions. Every exception must have an owner, an approver, and a mandatory expiry date. Active exceptions past expiry block release."
+    core_refs:
+      - module: cli/internal/exceptions/exceptions.go
+        symbol: CheckExceptions
+    test_refs:
+      - cli/internal/exceptions/exceptions_test.go
+    status: covered
+
+  - unit_id: NOMOS-RULE-STRICT-GATE
+    unit_type: rule
+    name: "Strict gate blocks release"
+    domain: product-intelligence
+    criticality: critical
+    source_refs:
+      - source_id: NOMOS-AGENT-INSTRUCTIONS
+        locator: "rule: canonical:check:strict est rouge"
+      - source_id: NOMOS-TESTS-GATES
+        locator: "section: release gates"
+    business_rule: "A release must not be promoted if canonical strict check is red, unless an approved expiring exception exists."
+    core_refs:
+      - module: cli/internal/strict/strict.go
+        symbol: Check
+    test_refs:
+      - cli/internal/strict/strict_test.go
+    status: covered
+
+  - unit_id: NOMOS-RULE-NO-LLM-DECISIONS
+    unit_type: rule
+    name: "No LLM critical decisions"
+    domain: product-intelligence
+    criticality: critical
+    source_refs:
+      - source_id: NOMOS-AGENT-INSTRUCTIONS
+        locator: "rule: Ne jamais faire calculer une décision critique par un LLM"
+    business_rule: "An LLM must never compute a critical business decision. LLMs cite and explain, but do not decide."
+    status: partial
+    gaps:
+      - "Runtime enforcement not yet implemented."
+
+  - unit_id: NOMOS-TERM-SOURCE
+    unit_type: term
+    name: "Source"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-SOURCE-REGISTRY
+        locator: "section: definition"
+      - source_id: NOMOS-ADAPTATION-GUIDE
+        locator: "table: Concept générique"
+    business_rule: "A source is an authoritative document (contract, regulation, decision record) that anchors domain truth."
+    canonical_contract:
+      path: specs/source-manifest.cue
+      object_id: NOMOS-TERM-SOURCE
+      status: present
+    status: covered
+    test_refs:
+      - cli/internal/validate/validate_test.go
+
+  - unit_id: NOMOS-TERM-UNIT
+    unit_type: term
+    name: "Canonical unit"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-ATOMIZATION-MATRIX
+        locator: "section: definition"
+    business_rule: "A unit is the smallest traceable piece of domain knowledge (rule, term, exception, formula, etc.)."
+    canonical_contract:
+      path: specs/canonical-matrix.cue
+      object_id: NOMOS-TERM-UNIT
+      status: present
+    status: covered
+    test_refs:
+      - cli/internal/checks/matrix_test.go
+
+  - unit_id: NOMOS-WORKFLOW-VALIDATE
+    unit_type: workflow
+    name: "Manifest validation workflow"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-TOOL-CONTRACT
+        locator: "section: commands"
+      - source_id: NOMOS-PRODUCT-ROADMAP
+        locator: "section: v0.2 - CLI Minimal"
+    business_rule: "nomos validate checks all manifest files against their CUE schemas and returns structured errors with codes."
+    core_refs:
+      - module: cli/internal/validate/validate.go
+        symbol: ValidateFiles
+    test_refs:
+      - cli/internal/validate/validate_test.go
+    status: covered
+
+  - unit_id: NOMOS-WORKFLOW-SOURCES-CHECK
+    unit_type: workflow
+    name: "Source check workflow"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-TOOL-CONTRACT
+        locator: "command: canonical sources --check"
+    business_rule: "nomos sources check verifies presence, hash, owner, status, and allowed_uses for each source in the manifest."
+    core_refs:
+      - module: cli/internal/checks/sources.go
+        symbol: CheckSourcesFromBytes
+    test_refs:
+      - cli/internal/checks/sources_test.go
+    status: covered
+
+  - unit_id: NOMOS-WORKFLOW-CONTRACTS-CHECK
+    unit_type: workflow
+    name: "Contract check workflow"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-TOOL-CONTRACT
+        locator: "command: canonical contracts --check"
+    business_rule: "nomos contracts check validates canonical contracts in the matrix: presence, path, object_id, status, and source ref integrity."
+    core_refs:
+      - module: cli/internal/checks/contracts/contracts.go
+        symbol: CheckContracts
+    test_refs:
+      - cli/internal/checks/contracts/contracts_test.go
+    status: covered
+
+  - unit_id: NOMOS-WORKFLOW-PRODUCT-CHECK
+    unit_type: workflow
+    name: "Product check workflow"
+    domain: product-intelligence
+    criticality: high
+    source_refs:
+      - source_id: NOMOS-TOOL-CONTRACT
+        locator: "command: canonical product --check"
+    business_rule: "nomos product-check validates project manifests: id, owners, surfaces, scope, compliance, and evidence."
+    core_refs:
+      - module: cli/internal/productcheck/productcheck.go
+        symbol: CheckProduct
+    test_refs:
+      - cli/internal/productcheck/productcheck_test.go
+    status: covered
+
+  - unit_id: NOMOS-WORKFLOW-STRICT
+    unit_type: workflow
+    name: "Strict cross-check workflow"
+    domain: product-intelligence
+    criticality: critical
+    source_refs:
+      - source_id: NOMOS-TOOL-CONTRACT
+        locator: "command: canonical strict"
+      - source_id: NOMOS-PRODUCT-ROADMAP
+        locator: "section: v0.5 - Canonical Checks"
+    business_rule: "nomos strict aggregates blocking cross-manifest checks: duplicate IDs, dangling source refs, orphan sources, domain coverage."
+    core_refs:
+      - module: cli/internal/strict/strict.go
+        symbol: CheckFromManifests
+    test_refs:
+      - cli/internal/strict/strict_test.go
+    status: covered
+
+  - unit_id: NOMOS-WORKFLOW-STRANGLER
+    unit_type: workflow
+    name: "Strangler migration workflow"
+    domain: product-intelligence
+    criticality: medium
+    source_refs:
+      - source_id: NOMOS-ADAPTATION-GUIDE
+        locator: "section: Adapter Au Legacy"
+    business_rule: "Legacy systems are migrated using the strangler pattern: characterize, extract, compare, route, retire. Legacy is never rewritten all at once."
+    status: partial
+    gaps:
+      - "CLI automation for strangler phases not yet implemented."
+      - "Comparison tooling between legacy and new core pending."

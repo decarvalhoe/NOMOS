@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/RBOKproject/Nomos/cli/internal/app"
 	"github.com/RBOKproject/Nomos/cli/internal/detect"
 )
 
@@ -23,6 +22,7 @@ type Options struct {
 	Domain      string
 	RiskLevel   string
 	Mode        string
+	ToolVersion string
 	Command     []string
 }
 
@@ -56,7 +56,7 @@ func Generate(dr detect.Report, opts Options) NomosReport {
 			Mode: mode,
 			Tool: Tool{
 				Name:    "nomos",
-				Version: app.Version,
+				Version: opts.ToolVersion,
 			},
 			Command: opts.Command,
 			Environment: &Environment{

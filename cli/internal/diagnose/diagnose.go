@@ -590,7 +590,9 @@ func isCIEvidence(lower string, base string) bool {
 func isDecisionRecord(lower string, base string) bool {
 	return strings.HasPrefix(lower, "adr/") ||
 		strings.HasPrefix(lower, "docs/adr/") ||
+		strings.HasPrefix(lower, "docs/decisions/") ||
 		strings.Contains(lower, "/adr/") ||
+		strings.Contains(lower, "/decisions/") ||
 		strings.Contains(base, "decision") ||
 		strings.Contains(base, "owner")
 }

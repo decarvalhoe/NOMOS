@@ -1,0 +1,10 @@
+{
+  "payloadType": "application/vnd.dev.cosign.simplesigning.v1+json",
+  "payload": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"subject\":[{\"name\":\"../../../reports/nomos-report.json\",\"digest\":{\"sha256\":\"b3e1cce9da429001f1ab1bdb8d60dd0f0c024fd33cef4ea8daf438457efe0512\"}}],\"predicateType\":\"https://nomos.dev/attestation/v1\",\"predicate\":{\"projectId\":\"nomos\",\"verdict\":\"pass\",\"confidence\":\"\",\"timestamp\":\"0001-01-01T00:00:00Z\",\"evidence\":null,\"attesterId\":\"\",\"attestLevel\":\"\"}}",
+  "signatures": [
+    {
+      "keyid": "nomos-dev",
+      "sig": ""
+    }
+  ]
+}
