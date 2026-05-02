@@ -46,8 +46,8 @@ func TestExtractMarkdown_DocumentNode(t *testing.T) {
 	if doc.NodeType != NodeDocument {
 		t.Fatalf("expected document node, got %s", doc.NodeType)
 	}
-	if doc.Depth != 1 {
-		t.Fatalf("expected depth 1, got %d", doc.Depth)
+	if doc.Depth != NodeDocument.Depth() {
+		t.Fatalf("expected depth %d, got %d", NodeDocument.Depth(), doc.Depth)
 	}
 	if doc.Title != "Reglement General Assurance Auto" {
 		t.Fatalf("unexpected title: %q", doc.Title)
@@ -93,8 +93,8 @@ func TestExtractMarkdown_ChapterParent(t *testing.T) {
 	if chapter.NodeID == "" {
 		t.Fatal("chapter 1 not found")
 	}
-	if chapter.Depth != 2 {
-		t.Fatalf("expected depth 2, got %d", chapter.Depth)
+	if chapter.Depth != NodeChapter.Depth() {
+		t.Fatalf("expected depth %d, got %d", NodeChapter.Depth(), chapter.Depth)
 	}
 	if chapter.ParentID != result.Nodes[0].NodeID {
 		t.Fatalf("chapter parent should be document, got %q", chapter.ParentID)
@@ -124,8 +124,8 @@ func TestExtractMarkdown_SectionParent(t *testing.T) {
 	if section.ParentID != chapter1ID {
 		t.Fatalf("section parent should be chapter 1, got %q", section.ParentID)
 	}
-	if section.Depth != 3 {
-		t.Fatalf("expected depth 3, got %d", section.Depth)
+	if section.Depth != NodeSection.Depth() {
+		t.Fatalf("expected depth %d, got %d", NodeSection.Depth(), section.Depth)
 	}
 }
 
@@ -143,8 +143,8 @@ func TestExtractMarkdown_ArticleParent(t *testing.T) {
 	if article.NodeID == "" {
 		t.Fatal("article 1 not found")
 	}
-	if article.Depth != 4 {
-		t.Fatalf("expected depth 4, got %d", article.Depth)
+	if article.Depth != NodeArticle.Depth() {
+		t.Fatalf("expected depth %d, got %d", NodeArticle.Depth(), article.Depth)
 	}
 	// Parent chain should be: document -> chapter -> section
 	if article.ParentID == "" {
@@ -177,8 +177,8 @@ func TestExtractMarkdown_AlineaNodes(t *testing.T) {
 	if listAlinea.NodeID == "" {
 		t.Fatal("expected list item to become an alinea")
 	}
-	if listAlinea.Depth != 6 {
-		t.Fatalf("expected alinea depth 6, got %d", listAlinea.Depth)
+	if listAlinea.Depth != NodeAlinea.Depth() {
+		t.Fatalf("expected alinea depth %d, got %d", NodeAlinea.Depth(), listAlinea.Depth)
 	}
 }
 
@@ -195,8 +195,8 @@ func TestExtractMarkdown_ParagraphNodes(t *testing.T) {
 	if len(paragraphs) == 0 {
 		t.Fatal("expected paragraph nodes")
 	}
-	if paragraphs[0].Depth != 5 {
-		t.Fatalf("expected paragraph depth 5, got %d", paragraphs[0].Depth)
+	if paragraphs[0].Depth != NodeParagraph.Depth() {
+		t.Fatalf("expected paragraph depth %d, got %d", NodeParagraph.Depth(), paragraphs[0].Depth)
 	}
 }
 
@@ -386,8 +386,8 @@ func TestComputeNodeID_Deterministic(t *testing.T) {
 	if id1 != id2 {
 		t.Fatalf("expected deterministic ID, got %q and %q", id1, id2)
 	}
-	if !strings.HasPrefix(id1, "node-") {
-		t.Fatalf("expected node- prefix, got %q", id1)
+	if !strings.HasPrefix(id1, "N-") {
+		t.Fatalf("expected N- prefix, got %q", id1)
 	}
 }
 
@@ -396,5 +396,174 @@ func TestComputeNodeID_Unique(t *testing.T) {
 	id2 := computeNodeID("test/doc/b")
 	if id1 == id2 {
 		t.Fatal("expected different IDs for different refs")
+	}
+}
+
+// --- RBOK realistic fixture tests ---
+
+func TestRBOK_FullHierarchy(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	counts := map[LawbookNodeType]int{}
+	for _, n := range result.Nodes {
+		counts[n.NodeType]++
+	}
+
+	// 1 document, 3 chapters, 5 sections, 10 articles
+	if counts[NodeDocument] != 1 {
+		t.Fatalf("expected 1 document, got %d", counts[NodeDocument])
+	}
+	if counts[NodeChapter] != 3 {
+		t.Fatalf("expected 3 chapters, got %d", counts[NodeChapter])
+	}
+	if counts[NodeSection] != 6 {
+		t.Fatalf("expected 6 sections, got %d", counts[NodeSection])
+	}
+	if counts[NodeArticle] != 10 {
+		t.Fatalf("expected 10 articles, got %d", counts[NodeArticle])
+	}
+	if counts[NodeParagraph] == 0 {
+		t.Fatal("expected paragraph nodes")
+	}
+	if counts[NodeAlinea] == 0 {
+		t.Fatal("expected alinea nodes")
+	}
+}
+
+func TestRBOK_MetadataComplete(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	doc := result.Nodes[0]
+	if doc.Metadata == nil {
+		t.Fatal("expected metadata on document node")
+	}
+	if doc.Metadata["reference"] != "RBOK-PS-2026-003" {
+		t.Fatalf("expected reference RBOK-PS-2026-003, got %v", doc.Metadata["reference"])
+	}
+	if doc.Metadata["statut"] != "En vigueur" {
+		t.Fatalf("expected statut 'En vigueur', got %v", doc.Metadata["statut"])
+	}
+	if doc.Metadata["emetteur"] != "Direction Metier Sante" {
+		t.Fatalf("expected emetteur 'Direction Metier Sante', got %v", doc.Metadata["emetteur"])
+	}
+	if doc.Metadata["derniere_revision"] != "2026-03-15" {
+		t.Fatalf("expected derniere_revision 2026-03-15, got %v", doc.Metadata["derniere_revision"])
+	}
+	if doc.Metadata["version"] != "3.2" {
+		t.Fatalf("expected version 3.2, got %v", doc.Metadata["version"])
+	}
+	if doc.Metadata["domaine"] != "prestations-sante" {
+		t.Fatalf("expected domaine prestations-sante, got %v", doc.Metadata["domaine"])
+	}
+}
+
+func TestRBOK_ParentChainIntegrity(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	nodeByID := map[string]LawbookNode{}
+	for _, n := range result.Nodes {
+		nodeByID[n.NodeID] = n
+	}
+
+	// Every non-document heading node must have a parent.
+	for _, n := range result.Nodes {
+		if n.NodeType == NodeDocument || n.NodeType == NodeParagraph || n.NodeType == NodeAlinea {
+			continue
+		}
+		if n.ParentID == "" {
+			t.Fatalf("heading node %q (%s) has no parent", n.Title, n.NodeType)
+		}
+		parent, ok := nodeByID[n.ParentID]
+		if !ok {
+			t.Fatalf("node %q parent %q not found", n.Title, n.ParentID)
+		}
+		if parent.Depth >= n.Depth {
+			t.Fatalf("node %q (depth %d) has parent %q (depth %d) — parent should be shallower",
+				n.Title, n.Depth, parent.Title, parent.Depth)
+		}
+	}
+}
+
+func TestRBOK_CanonicalRefsAreConsistent(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	for _, n := range result.Nodes {
+		if n.CanonicalRef == "" {
+			t.Fatalf("node %q has empty canonical_ref", n.Title)
+		}
+		if !strings.HasPrefix(n.CanonicalRef, "rbok-ps-2026/") {
+			t.Fatalf("canonical_ref %q should start with doc slug", n.CanonicalRef)
+		}
+		if !strings.Contains(n.CanonicalRef, string(n.NodeType)) {
+			t.Fatalf("canonical_ref %q should contain node type %s", n.CanonicalRef, n.NodeType)
+		}
+	}
+}
+
+func TestRBOK_NumberedListBecomesAlineas(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	// Article 6 has a numbered list with 3 items.
+	var art6Alineas []LawbookNode
+	var inArt6 bool
+	for _, n := range result.Nodes {
+		if n.NodeType == NodeArticle && strings.Contains(n.Title, "Article 6") {
+			inArt6 = true
+			continue
+		}
+		if inArt6 && n.NodeType == NodeAlinea {
+			art6Alineas = append(art6Alineas, n)
+		}
+		if inArt6 && (n.NodeType == NodeArticle || n.NodeType == NodeSection || n.NodeType == NodeChapter) {
+			break
+		}
+	}
+	if len(art6Alineas) < 3 {
+		t.Fatalf("expected at least 3 alineas under Article 6, got %d", len(art6Alineas))
+	}
+}
+
+func TestRBOK_DepthsMatchNodeTypes(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	for _, n := range result.Nodes {
+		expected := n.NodeType.Depth()
+		if n.Depth != expected {
+			t.Fatalf("node %q type=%s depth=%d expected=%d", n.Title, n.NodeType, n.Depth, expected)
+		}
+	}
+}
+
+func TestRBOK_AllIDsStableAcrossRuns(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	r1 := ExtractMarkdown(src, "rbok-ps-2026")
+	r2 := ExtractMarkdown(src, "rbok-ps-2026")
+
+	if len(r1.Nodes) != len(r2.Nodes) {
+		t.Fatalf("node count changed: %d vs %d", len(r1.Nodes), len(r2.Nodes))
+	}
+	for i := range r1.Nodes {
+		if r1.Nodes[i].NodeID != r2.Nodes[i].NodeID {
+			t.Fatalf("node[%d] ID unstable: %q vs %q", i, r1.Nodes[i].NodeID, r2.Nodes[i].NodeID)
+		}
+	}
+}
+
+func TestRBOK_AllIDsUnique(t *testing.T) {
+	src := loadFixture(t, "rbok-reglement-complet.md")
+	result := ExtractMarkdown(src, "rbok-ps-2026")
+
+	seen := map[string]string{}
+	for _, n := range result.Nodes {
+		if prev, dup := seen[n.NodeID]; dup {
+			t.Fatalf("duplicate ID %s: %q and %q", n.NodeID, prev, n.Title)
+		}
+		seen[n.NodeID] = n.Title
 	}
 }

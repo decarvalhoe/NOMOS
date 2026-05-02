@@ -1,0 +1,55 @@
+schema_version: "0.1.0"
+document_id: TP-TEMPLATE-001
+status: template
+owner: validation-owner
+
+protocol:
+  id: ""
+  title: ""
+  version: ""
+  function_under_test: ""
+  intended_use_ref: ""
+  risk_level: ""
+  preconditions: []
+
+test_cases:
+  - id: ""
+    description: ""
+    category: ""  # functional, boundary, negative, regression, challenge
+    inputs: {}
+    expected_outputs: {}
+    acceptance_criteria: ""
+    risk_coverage: ""
+    status: planned  # planned, passed, failed, blocked, deferred
+    executed_by: ""
+    executed_at: ""
+    evidence_ref: ""
+    notes: ""
+
+deviations: []
+  # - id: ""
+  #   test_case_ref: ""
+  #   description: ""
+  #   severity: ""
+  #   root_cause: ""
+  #   remediation: ""
+  #   owner: ""
+  #   status: ""  # open, resolved, accepted_risk
+
+summary:
+  total_cases: 0
+  passed: 0
+  failed: 0
+  blocked: 0
+  deferred: 0
+  coverage_ratio: 0.0
+  verdict: ""  # passed, failed, incomplete
+  reviewer: ""
+  review_date: ""
+  notes: ""
+
+approval:
+  - role: ""
+    name: ""
+    date: ""
+    signature: ""
