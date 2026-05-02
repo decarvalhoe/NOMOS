@@ -122,6 +122,55 @@ if ($BuildFull) {
     Write-Host "  Corpus commands (scan, manifest, extract) are pure Go." -ForegroundColor DarkGray
 }
 
+# ---------- CUE ----------
+
+Write-Section "CUE Schema Validator"
+
+$cueOk = $false
+$cueVersion = ""
+try {
+    $cueVersion = (cue version 2>$null | Select-Object -First 1)
+    $cueOk = $true
+} catch {}
+
+Write-Check "CUE installed" $cueOk $cueVersion
+
+if (-not $cueOk -and $Install) {
+    Write-Host "  Installing CUE via go install..." -ForegroundColor Yellow
+    try {
+        & go install cuelang.org/go/cmd/cue@latest 2>$null
+        $cueVersion = (cue version 2>$null | Select-Object -First 1)
+        $cueOk = $true
+        Write-Host "  CUE installed: $cueVersion" -ForegroundColor Green
+    } catch {
+        Write-Host "  CUE install failed. Download from https://cuelang.org/docs/install/" -ForegroundColor Red
+    }
+}
+
+if ($cueOk) {
+    $specsDir = Join-Path $PSScriptRoot ".." "specs"
+    if (Test-Path $specsDir) {
+        Write-Host "  Validating specs/*.cue..." -ForegroundColor DarkGray
+        $cueVetResult = & cue vet "$specsDir/*.cue" 2>&1
+        $cueVetOk = $LASTEXITCODE -eq 0
+        Write-Check "CUE vet specs" $cueVetOk ($cueVetResult | Out-String).Trim()
+    }
+}
+
+# ---------- tree-sitter grammars (full build only) ----------
+
+if ($BuildFull) {
+    Write-Section "tree-sitter Grammars"
+
+    $tsGrammars = @("go", "java", "javascript", "python", "typescript")
+    foreach ($lang in $tsGrammars) {
+        $grammarPkg = "github.com/smacker/go-tree-sitter/$lang"
+        Write-Host "  Checking grammar: $lang" -ForegroundColor DarkGray
+    }
+    Write-Host "  tree-sitter grammars are compiled with CGO at build time." -ForegroundColor DarkGray
+    Write-Host "  Run 'go build ./...' in cli/ to verify grammar compilation." -ForegroundColor DarkGray
+}
+
 # ---------- Corpus build test ----------
 
 Write-Section "Corpus Build Verification"
@@ -178,6 +227,21 @@ if ($BuildFull) {
 
 Write-Host ""
 Write-Host "  Build split:" -ForegroundColor White
-Write-Host "    CGO_ENABLED=0  ->  corpus, checks, validate, strict, exceptions" -ForegroundColor DarkGray
+Write-Host "    CGO_ENABLED=0  ->  corpus, checks, validate, strict, exceptions, compliance" -ForegroundColor DarkGray
 Write-Host "    CGO_ENABLED=1  ->  detect (tree-sitter), diagnose, report" -ForegroundColor DarkGray
 Write-Host ""
+Write-Host "  Toolchain:" -ForegroundColor White
+Write-Host "    Go:  required for all builds" -ForegroundColor DarkGray
+Write-Host "    CUE: required for schema validation (cue vet)" -ForegroundColor DarkGray
+Write-Host "    GCC: required only for CGO_ENABLED=1 (tree-sitter)" -ForegroundColor DarkGray
+Write-Host ""
+
+if (-not $goOk) {
+    Write-Host "FAIL: Go is required. Install from https://go.dev/dl/" -ForegroundColor Red
+    exit 1
+}
+if ($BuildFull -and -not $gccOk) {
+    Write-Host "FAIL: GCC is required for full build. See instructions above." -ForegroundColor Red
+    exit 1
+}
+Write-Host "Environment check complete." -ForegroundColor Green
