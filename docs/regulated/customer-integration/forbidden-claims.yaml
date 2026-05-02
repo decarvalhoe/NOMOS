@@ -1,0 +1,110 @@
+schema_version: "0.1.0"
+document_id: FC-NOMOS-001
+status: effective
+owner: compliance-team
+product: nomos
+
+description: >
+  Claims listed here are forbidden in public-facing documentation
+  (README, docs/, marketing, website) until the required evidence
+  level is reached. Per docs/25-regulated-by-design-structure.md,
+  any claim without full Operating Rule evidence stays not_qualified.
+
+forbidden_claims:
+  - id: FC-001
+    pattern: "compliant"
+    aliases: ["compliance", "comply", "complies"]
+    reason: "Implies regulatory conformity without verified evidence"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-002
+    pattern: "certified"
+    aliases: ["certification", "certify", "certificate"]
+    reason: "Implies third-party certification that does not exist"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-003
+    pattern: "validated"
+    aliases: ["validation complete", "fully validated"]
+    reason: "Implies completed validation lifecycle; VMP is draft"
+    required_evidence_level: verified
+    current_status: planned
+
+  - id: FC-004
+    pattern: "enterprise-grade"
+    aliases: ["enterprise grade", "enterprise ready"]
+    reason: "Implies maturity level not yet demonstrated by evidence"
+    required_evidence_level: verified
+    current_status: not_qualified
+
+  - id: FC-005
+    pattern: "production-ready"
+    aliases: ["production ready", "prod-ready"]
+    reason: "Implies operational readiness without release evidence"
+    required_evidence_level: verified
+    current_status: not_qualified
+
+  - id: FC-006
+    pattern: "regulated-grade"
+    aliases: ["regulated grade", "regulatory grade"]
+    reason: "Implies suitability for regulated environments without evidence"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-007
+    pattern: "guaranteed"
+    aliases: ["guarantee", "guarantees", "warranty", "warranted"]
+    reason: "Implies contractual commitment without backing evidence"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-008
+    pattern: "GDPR compliant"
+    aliases: ["GDPR-compliant", "GDPR certified"]
+    reason: "Implies GDPR conformity assessment not performed"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-009
+    pattern: "HIPAA compliant"
+    aliases: ["HIPAA-compliant", "HIPAA certified"]
+    reason: "Implies HIPAA assessment not performed"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-010
+    pattern: "SOC 2"
+    aliases: ["SOC2", "SOC 2 Type II", "SOC2 Type 2"]
+    reason: "Implies SOC 2 audit not performed"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-011
+    pattern: "ISO 27001"
+    aliases: ["ISO27001", "ISO 27001 certified"]
+    reason: "Implies ISO 27001 certification not obtained"
+    required_evidence_level: approved
+    current_status: not_qualified
+
+  - id: FC-012
+    pattern: "zero downtime"
+    aliases: ["zero-downtime", "100% uptime"]
+    reason: "Implies availability guarantee without SLA evidence"
+    required_evidence_level: verified
+    current_status: not_qualified
+
+allowed_alternatives:
+  - instead_of: "compliant"
+    use: "designed to support compliance workflows"
+  - instead_of: "certified"
+    use: "undergoing validation per VMP-NOMOS-001"
+  - instead_of: "validated"
+    use: "validation planned per VMP-NOMOS-001"
+  - instead_of: "enterprise-grade"
+    use: "built for structured, auditable workflows"
+  - instead_of: "production-ready"
+    use: "available for evaluation and non-regulated use"
+  - instead_of: "guaranteed"
+    use: "designed with evidence-based verification"
