@@ -19,13 +19,24 @@ var (
 	metaSepRe  = regexp.MustCompile(`^\|[\s:_-]+\|[\s:_-]+\|$`)
 	listItemRe = regexp.MustCompile(`^\s*(?:[-*+]|\d+[.)])\s+(.+\S)\s*$`)
 	metaKeyMap = map[string]string{
-		"reference": "reference",
-		"référence": "reference",
-		"statut":    "statut",
-		"status":    "statut",
-		"emetteur":  "emetteur",
-		"émetteur":  "emetteur",
-		"issuer":    "emetteur",
+		"reference":          "reference",
+		"référence":          "reference",
+		"ref":                "reference",
+		"statut":             "statut",
+		"status":             "statut",
+		"emetteur":           "emetteur",
+		"émetteur":           "emetteur",
+		"issuer":             "emetteur",
+		"derniere revision":  "derniere_revision",
+		"dernière révision":  "derniere_revision",
+		"last revision":      "derniere_revision",
+		"date":               "date",
+		"version":            "version",
+		"domaine":            "domaine",
+		"domain":             "domaine",
+		"portee":             "portee",
+		"portée":             "portee",
+		"scope":              "portee",
 	}
 )
 
@@ -53,8 +64,6 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 
 		level := len(m[1])
 		title := strings.TrimSpace(m[2])
-		_ = i + 1 // 1-based
-
 		nodeType := headingToNodeType(level)
 		parentIdx := findParent(stack, level)
 		parentID := ""
@@ -265,7 +274,7 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 		paragraph := LawbookNode{
 			NodeID:       computeNodeID(paragraphRef),
 			NodeType:     NodeParagraph,
-			Depth:        5,
+			Depth:        NodeParagraph.Depth(),
 			Title:        "",
 			Text:         text,
 			ParentID:     parentID,
@@ -280,7 +289,7 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 			nodes = append(nodes, LawbookNode{
 				NodeID:       computeNodeID(ref),
 				NodeType:     NodeAlinea,
-				Depth:        6,
+				Depth:        NodeAlinea.Depth(),
 				Title:        "",
 				Text:         item,
 				ParentID:     paragraph.NodeID,
