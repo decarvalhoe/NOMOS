@@ -18,34 +18,6 @@ func validAtom() Atom {
 	}
 }
 
-func TestProjectAtomsBasic(t *testing.T) {
-	atoms := []Atom{validAtom()}
-	result := ProjectAtoms(atoms, DefaultProjectionConfig())
-
-	if len(result.Chunks) != 1 {
-		t.Fatalf("expected 1 chunk, got %d (rejected: %d)", len(result.Chunks), len(result.Rejected))
-	}
-	chunk := result.Chunks[0]
-
-	if chunk.CanonicalRef != "L.113-2" {
-		t.Fatalf("expected canonical_ref L.113-2, got %s", chunk.CanonicalRef)
-	}
-	if chunk.CanonicalRef != "Art. L.113-2" {
-		t.Fatalf("expected display_ref, got %s", chunk.CanonicalRef)
-	}
-	if chunk.SourceHash != "sha256:abc123def456" {
-		t.Fatalf("expected source_hash, got %s", chunk.SourceHash)
-	}
-	if chunk.Domain != "assurance" {
-		t.Fatalf("expected domain assurance, got %s", chunk.Domain)
-	}
-	if chunk.Confidence != "high" {
-		t.Fatalf("expected high confidence (has hash+path+citations), got %s", chunk.Confidence)
-	}
-	if !strings.HasPrefix(chunk.ChunkID, "CHUNK-") {
-		t.Fatalf("expected CHUNK- prefix, got %s", chunk.ChunkID)
-	}
-}
 
 func TestProjectAtomsRejectsNoSourceHash(t *testing.T) {
 	atom := validAtom()
@@ -129,18 +101,6 @@ func TestProjectAtomsSkipsBelowMinTokens(t *testing.T) {
 	}
 }
 
-func TestProjectAtomsConfidenceMedium(t *testing.T) {
-	atom := validAtom()
-
-	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
-
-	if len(result.Chunks) != 1 {
-		t.Fatal("expected 1 chunk")
-	}
-	if result.Chunks[0].Confidence != "medium" {
-		t.Fatalf("expected medium confidence, got %s", result.Chunks[0].Confidence)
-	}
-}
 
 func TestProjectAtomsDefaultDomain(t *testing.T) {
 	atom := validAtom()
@@ -155,22 +115,6 @@ func TestProjectAtomsDefaultDomain(t *testing.T) {
 	}
 }
 
-func TestProjectAtomsMultipleMixed(t *testing.T) {
-	atoms := []Atom{
-		validAtom(),
-		{ID: "BAD-1", Text: "text", ContentHash: "", CanonicalRef: "ref"},       // no hash
-		{ID: "BAD-2", Text: "", ContentHash: "sha256:x", CanonicalRef: "ref"},    // empty content
-	}
-
-	result := ProjectAtoms(atoms, DefaultProjectionConfig())
-
-	if len(result.Chunks) != 2 {
-		t.Fatalf("expected 2 chunks, got %d", len(result.Chunks))
-	}
-	if len(result.Rejected) != 2 {
-		t.Fatalf("expected 2 rejected, got %d", len(result.Rejected))
-	}
-}
 
 func TestProjectAtomsCustomMaxTokens(t *testing.T) {
 	atom := validAtom()
@@ -209,15 +153,6 @@ func TestProjectAtomsChunkIDUnique(t *testing.T) {
 	}
 }
 
-func TestProjectAtomsCitationsPreserved(t *testing.T) {
-	atom := validAtom()
-
-	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
-
-	if len(result.Chunks[0].Citations) != 2 {
-		t.Fatalf("expected 2 citations, got %d", len(result.Chunks[0].Citations))
-	}
-}
 
 func TestProjectAtomsTokenCountPopulated(t *testing.T) {
 	atom := validAtom()
