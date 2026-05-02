@@ -25,6 +25,7 @@ The current execution order is:
 | `supplier-pack/` | Supplier qualification evidence and customer-facing assurance pack. |
 | `release-bundle/` | Release-level evidence inventory, deviations, waivers, approvals, and claim status. |
 | `ai-rag-governance/` | AI-assisted extraction, RAG, citation, prompt-injection, and human-review controls. |
+| `atomization-certification/` | Structure-aware atomization reports, coverage evidence, review status, and certification gates. |
 | `operations/` | Periodic review, incident/CAPA handling, retention, backup/restore, audit-trail review. |
 | `customer-integration/` | Client validation support, shared responsibility, deployment boundaries, acceptance checklist. |
 | `decisions/` | Controlled decisions that alter scope, claims, validation strategy, or regulated posture. |

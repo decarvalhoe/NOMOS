@@ -15,15 +15,21 @@ Un projet Canonical-First traite les sources métier comme la première dépenda
 ```mermaid
 flowchart LR
   S["Sources d'autorité"] --> U["Unités atomiques"]
+  S --> DS["Structure documentaire"]
+  DS --> U
+  U --> R["Références canoniques"]
   U --> C["Contrats canoniques YAML/JSON"]
   C --> SC["Schémas typés"]
   SC --> DB["Read-model relationnel"]
-  S --> VS["Base vectorielle avec provenance"]
+  R --> M["Matrice de traçabilité"]
+  M --> C
+  U --> VS["Chunks/RAG avec provenance"]
   DB --> CORE["Core déterministe"]
   VS --> LLM["LLM explicatif/citant"]
   CORE --> API["API"]
   API --> UI["UI produit"]
   U --> T["Tests et golden cases"]
+  M --> T
   C --> T
   CORE --> T
   API --> T
@@ -78,6 +84,7 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/23-regulated-implementation-plan.md` : plan d'implémentation pour aligner Nomos avec ses exigences de conformité.
 - `docs/24-regulated-client-compliance-evidence.md` : recherche et checklist des preuves attendues par les clients régulés.
 - `docs/25-regulated-by-design-structure.md` : structure operationnelle `regulated by design` pour Nomos et Praxis.
+- `docs/26-structure-aware-atomization-process.md` : process et architecture cible pour une atomisation documentaire fiable, certifiable et consciente de la structure.
 - `docs/regulated/` : dossiers de profils produit, matrices, validation, supplier pack, release bundle et operations qualite.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
@@ -103,6 +110,7 @@ Le track régulé est maintenant gouverné par trois documents :
 - `docs/22-nomos-praxis-synergy-market-audit.md` compare la thèse Nomos/Praxis aux attentes du marché ALM, validation lifecycle, test management et evidence/CAPA.
 - `docs/23-regulated-implementation-plan.md` transforme l'audit en phases d'implémentation, dépendances GitHub, gates et règles d'alignement documentaire.
 - `docs/25-regulated-by-design-structure.md` installe la structure partagee Nomos/Praxis : profils produit, matrice de controles, pack fournisseur, validation pack, release bundle, AI/RAG governance et integration client.
+- `docs/26-structure-aware-atomization-process.md` definit l'engine cible d'atomisation structure-aware et son systeme de certification.
 
 Le prochain seuil crédible est `NQ-3` : Nomos build/test green, références externes gouvernées, self-compliance exécutable, métadonnées ALCOA+, validation pack initial et claims publics limités au niveau de preuve réel.
 

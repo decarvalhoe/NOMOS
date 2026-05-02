@@ -15,6 +15,10 @@ Release candidate: vX.Y.Z
 | Units covered | 0 |
 | Units partial | 0 |
 | Units missing | 0 |
+| Structure nodes covered | 0 |
+| Matrix rows reconciled | 0 |
+| Chunks linked to atoms/structure | 0 |
+| Orphan chunks | 0 |
 | Critical gaps | 0 |
 | Contracts valid | 0 |
 | Contracts invalid | 0 |
@@ -36,6 +40,11 @@ Release candidate: vX.Y.Z
 | Unit ID | Criticality | Status | Missing Layers |
 |---|---|---|---|
 
+## Structure And Chunk Coverage
+
+| Chunk ID | Type | Source ID | Structural refs | Unit refs | Matrix refs | Status |
+|---|---|---|---|---|---|---|
+
 ## Product Leaks
 
 | File | Issue | Severity |
@@ -48,4 +57,3 @@ Go / No-Go:
 Approver:
 
 Notes:
-

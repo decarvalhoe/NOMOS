@@ -23,20 +23,23 @@ Le RAG est dangereux s'il :
 
 ## Ingestion
 
-L'ingestion doit partir du manifest, jamais d'un scan libre non contrôlé.
+L'ingestion doit partir du manifest et des artefacts d'atomisation, jamais d'un scan libre non contrôlé.
 
 Pipeline standard :
 
 ```text
 source-manifest.yaml
-  -> extract text
-  -> normalize
-  -> chunk
+  -> structure tree
+  -> atomic units
+  -> canonical matrix
+  -> chunk projection
   -> attach metadata
   -> embed
   -> store
   -> audit coverage
 ```
+
+La base vectorielle ne découpe pas le corpus à sa place. Elle consomme une projection issue de la structure documentaire et des unités atomiques. Un chunk qui ne peut pas être relié à une source, une structure, et si applicable une unité/matrice, est un artefact non conforme.
 
 ## Metadata Obligatoire
 
@@ -50,7 +53,11 @@ Chaque chunk doit porter au minimum :
 | `source_hash` | Hash au moment de l'indexation. |
 | `domain` | Domaine métier. |
 | `unit_ids` | Unités atomiques liées si connues. |
+| `matrix_refs` | Lignes de matrice liées si l'unité est gouvernée. |
+| `structural_refs` | Chemin documentaire parent : document, section, article, paragraphe, alinéa, table. |
 | `locator` | Page, ligne, section, sélecteur, fonction legacy. |
+| `chunk_type` | `atom`, `structure_context`, `table`, `example`, `governance`, `retrieval_context`. |
+| `chunking_strategy` | Profil et version du découpage. |
 | `priority` | Priorité source. |
 | `status` | Statut source. |
 | `effective_from` | Date d'application si pertinente. |
@@ -61,7 +68,7 @@ Chaque chunk doit porter au minimum :
 
 ## Chunking
 
-Le chunking doit respecter le sens métier.
+Le chunking doit respecter le sens métier et la structure documentaire.
 
 Mauvaises stratégies :
 
@@ -77,6 +84,14 @@ Bonnes stratégies :
 - conservation des titres hiérarchiques ;
 - extraction des tableaux en structure lisible ;
 - score qualité pour OCR et parsing.
+
+Règles Canonical-First :
+
+- un chunk d'autorité doit correspondre à un atome ou à une structure explicitement référencée ;
+- un chunk de contexte peut regrouper plusieurs atomes mais doit lister tous les `unit_ids` et `canonical_refs` ;
+- un chunk ne doit pas fusionner des sources de priorité différente sans signaler le conflit ou la raison ;
+- un changement de source, structure, atome ou matrice invalide les chunks liés ;
+- une réponse RAG doit refuser de conclure quand le chunk retrouvé pointe vers un atome `missing`, `blocked`, `deprecated` ou `needs_review` au-delà du niveau de risque autorisé.
 
 ## Recherche Et Citations
 
@@ -119,8 +134,9 @@ Un RAG Canonical-First doit être évalué sur :
 - Toutes les sources actives sont indexées.
 - Tous les chunks ont metadata complète.
 - Tous les chunks référencent un hash de source courant.
+- Tous les chunks liés à une règle critique pointent vers une unité et une ligne de matrice.
+- Aucun chunk d'autorité ne référence un atome bloqué ou sans review state.
 - Un changement de source invalide les chunks correspondants.
 - Les questions de golden set retrouvent les chunks attendus.
 - Le LLM ne répond pas sans citation pour les domaines marqués critiques.
 - Les données structurées priment sur le texte récupéré.
-

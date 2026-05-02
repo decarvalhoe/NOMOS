@@ -6,10 +6,19 @@ units:
     name: "Nom de l'unité"
     domain: example-domain
     criticality: high
+    structural_refs:
+      - structural_id: STRUCTURE-ID-STABLE
+        role: article
+        ordinal_path: "1.2.3"
+        parent_id: PARENT-STRUCTURE-ID
     source_refs:
       - source_id: SOURCE-ID-STABLE
         locator: "section 1.2, p. 4"
         hash: sha256:replace-with-real-hash
+    canonical_refs:
+      - canonical_ref: EXAMPLE.1.2.3
+        display_ref: "Example 1.2.3"
+        aliases: []
     business_rule: "Résumé contrôlé de la règle, sans invention."
     canonical_contract:
       path: data/canonical/example.yaml
@@ -23,6 +32,10 @@ units:
     vector_refs:
       - collection: canonical_chunks
         filter: "unit_ids contains DOMAIN-RULE-0001"
+        chunk_ids:
+          - CHUNK-DOMAIN-RULE-0001
+        chunk_type: atom
+        chunking_strategy: profile-v1
     core_refs:
       - package: rules-core
         symbol: evaluateExampleRule
@@ -36,6 +49,7 @@ units:
       - tests/example-rule.test.ts
       - tests/golden/DOMAIN-RULE-0001.yaml
     status: covered
+    review_state: approved
     gaps: []
     decision_refs: []
 
@@ -62,4 +76,9 @@ enums:
     - missing
     - not_applicable
     - deprecated
-
+  review_state:
+    - draft
+    - needs_review
+    - reviewed
+    - approved
+    - rejected
