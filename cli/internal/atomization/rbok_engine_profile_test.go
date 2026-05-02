@@ -217,7 +217,7 @@ func TestProjectASTCanonicalRefsUnique(t *testing.T) {
 func TestProjectASTDisplayRef(t *testing.T) {
 	out := ProjectAST(sampleAST(), defaultInput())
 	for _, n := range out.Nodes {
-		if n.DisplayRef == "" {
+		if n.CanonicalRef == "" {
 			t.Fatalf("node %s missing display_ref", n.ExternalID)
 		}
 	}

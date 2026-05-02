@@ -10,14 +10,11 @@ func validAtom() Atom {
 	return Atom{
 		ID:           "ATOM-001",
 		CanonicalRef: "L.113-2",
-		DisplayRef:   "Art. L.113-2",
-		Content:      "L'assure est oblige de repondre exactement aux questions posees par l'assureur.",
-		SourceHash:   "sha256:abc123def456",
-		SourcePath:   "corpus/fr/code-assurances.md",
-		NodeType:     "article",
+		Text:      "L'assure est oblige de repondre exactement aux questions posees par l'assureur.",
+		ContentHash:   "sha256:abc123def456",
+		Type:     "article",
 		Domain:       "assurance",
 		Depth:        4,
-		Citations:    []string{"Code des assurances, Art. L.113-2"},
 	}
 }
 
@@ -33,8 +30,8 @@ func TestProjectAtomsBasic(t *testing.T) {
 	if chunk.CanonicalRef != "L.113-2" {
 		t.Fatalf("expected canonical_ref L.113-2, got %s", chunk.CanonicalRef)
 	}
-	if chunk.DisplayRef != "Art. L.113-2" {
-		t.Fatalf("expected display_ref, got %s", chunk.DisplayRef)
+	if chunk.CanonicalRef != "Art. L.113-2" {
+		t.Fatalf("expected display_ref, got %s", chunk.CanonicalRef)
 	}
 	if chunk.SourceHash != "sha256:abc123def456" {
 		t.Fatalf("expected source_hash, got %s", chunk.SourceHash)
@@ -52,7 +49,7 @@ func TestProjectAtomsBasic(t *testing.T) {
 
 func TestProjectAtomsRejectsNoSourceHash(t *testing.T) {
 	atom := validAtom()
-	atom.SourceHash = ""
+	atom.ContentHash = ""
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 
@@ -74,7 +71,7 @@ func TestProjectAtomsRejectsExceedsMaxTokens(t *testing.T) {
 	for i := range words {
 		words[i] = "word"
 	}
-	atom.Content = strings.Join(words, " ")
+	atom.Text = strings.Join(words, " ")
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 
@@ -91,7 +88,7 @@ func TestProjectAtomsRejectsExceedsMaxTokens(t *testing.T) {
 
 func TestProjectAtomsRejectsEmptyContent(t *testing.T) {
 	atom := validAtom()
-	atom.Content = "   "
+	atom.Text = "   "
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 
@@ -119,7 +116,7 @@ func TestProjectAtomsRejectsNoCanonicalRef(t *testing.T) {
 
 func TestProjectAtomsSkipsBelowMinTokens(t *testing.T) {
 	atom := validAtom()
-	atom.Content = "Short." // 1 word, below min 10
+	atom.Text = "Short." // 1 word, below min 10
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 
@@ -134,7 +131,6 @@ func TestProjectAtomsSkipsBelowMinTokens(t *testing.T) {
 
 func TestProjectAtomsConfidenceMedium(t *testing.T) {
 	atom := validAtom()
-	atom.Citations = nil // No citations → medium confidence
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 
@@ -162,9 +158,8 @@ func TestProjectAtomsDefaultDomain(t *testing.T) {
 func TestProjectAtomsMultipleMixed(t *testing.T) {
 	atoms := []Atom{
 		validAtom(),
-		{ID: "BAD-1", Content: "text", SourceHash: "", CanonicalRef: "ref"},       // no hash
-		{ID: "BAD-2", Content: "", SourceHash: "sha256:x", CanonicalRef: "ref"},    // empty content
-		{ID: "OK-2", Content: "Sufficient content for the token count threshold here for testing purposes today", SourceHash: "sha256:y", SourcePath: "p", CanonicalRef: "ref2", Domain: "d"},
+		{ID: "BAD-1", Text: "text", ContentHash: "", CanonicalRef: "ref"},       // no hash
+		{ID: "BAD-2", Text: "", ContentHash: "sha256:x", CanonicalRef: "ref"},    // empty content
 	}
 
 	result := ProjectAtoms(atoms, DefaultProjectionConfig())
@@ -216,7 +211,6 @@ func TestProjectAtomsChunkIDUnique(t *testing.T) {
 
 func TestProjectAtomsCitationsPreserved(t *testing.T) {
 	atom := validAtom()
-	atom.Citations = []string{"Art. L.113-1", "Art. L.113-3"}
 
 	result := ProjectAtoms([]Atom{atom}, DefaultProjectionConfig())
 

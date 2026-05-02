@@ -1,7 +1,6 @@
 package atomization
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -54,16 +53,6 @@ type TraceMatrix struct {
 	Rows          []TraceRow `json:"rows"`
 }
 
-// Atom is a minimal domain knowledge unit extracted from a parsed document.
-type Atom struct {
-	ID           string
-	Title        string
-	Type         string // rule, term, exception, formula, etc.
-	Domain       string
-	Criticality  string
-	BusinessRule string
-	SourceBlock  Block
-}
 
 // Reference patterns detected in atom text.
 var (
@@ -75,9 +64,9 @@ var (
 
 // ExtractReferences extracts canonical references from atom text.
 func ExtractReferences(atom Atom) []CanonicalRef {
-	text := atom.SourceBlock.Text
+	text := atom.Text
 	if text == "" {
-		text = atom.BusinessRule
+		// BusinessRule not a separate field in Atom
 	}
 
 	var refs []CanonicalRef
@@ -96,17 +85,17 @@ func ExtractReferences(atom Atom) []CanonicalRef {
 			AtomID:   atom.ID,
 			SourceID: sourceID,
 			Locator:  locator,
-			Hash:     atom.SourceBlock.Hash,
+			Hash:     atom.ContentHash,
 		})
 	}
 
 	// If no explicit source ref, create one from block context.
-	if len(refs) == 0 && atom.SourceBlock.ID != "" {
+	if len(refs) == 0 && atom.BlockID != "" {
 		refs = append(refs, CanonicalRef{
 			AtomID:   atom.ID,
 			SourceID: inferSourceID(atom),
-			Locator:  fmt.Sprintf("line:%d", atom.SourceBlock.Span.StartLine),
-			Hash:     atom.SourceBlock.Hash,
+			Locator:  atom.SourceSpan.String(),
+			Hash:     atom.ContentHash,
 		})
 	}
 
@@ -115,9 +104,9 @@ func ExtractReferences(atom Atom) []CanonicalRef {
 
 // ExtractCodeRefs extracts code references from atom text.
 func ExtractCodeRefs(atom Atom) []CodeRef {
-	text := atom.SourceBlock.Text
+	text := atom.Text
 	if text == "" {
-		text = atom.BusinessRule
+		// BusinessRule not a separate field in Atom
 	}
 
 	var refs []CodeRef
@@ -138,9 +127,9 @@ func ExtractCodeRefs(atom Atom) []CodeRef {
 
 // ExtractTestRefs extracts test references from atom text.
 func ExtractTestRefs(atom Atom) []TestRef {
-	text := atom.SourceBlock.Text
+	text := atom.Text
 	if text == "" {
-		text = atom.BusinessRule
+		// BusinessRule not a separate field in Atom
 	}
 
 	var refs []TestRef
@@ -196,10 +185,10 @@ func ProjectTraceMatrix(atoms []Atom, domain string) TraceMatrix {
 		rows = append(rows, TraceRow{
 			AtomID:       atom.ID,
 			AtomTitle:    atom.Title,
-			AtomType:     atom.Type,
+			AtomType:     string(atom.Type),
 			Domain:       d,
-			Criticality:  atom.Criticality,
-			BusinessRule: atom.BusinessRule,
+			Criticality:  "medium",
+			BusinessRule: atom.Text,
 			SourceRefs:   sourceRefs,
 			CodeRefs:     codeRefs,
 			TestRefs:     testRefs,

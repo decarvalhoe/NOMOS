@@ -37,20 +37,6 @@ type RAGChunk struct {
 	Metadata     map[string]string `json:"metadata,omitempty"`
 }
 
-// Atom is the input unit for RAG projection (from atomization pipeline).
-type Atom struct {
-	ID           string   `json:"id"`
-	CanonicalRef string   `json:"canonical_ref"`
-	DisplayRef   string   `json:"display_ref"`
-	Content      string   `json:"content"`
-	SourceHash   string   `json:"source_hash"`
-	SourcePath   string   `json:"source_path"`
-	NodeType     string   `json:"node_type"`
-	Domain       string   `json:"domain"`
-	Depth        int      `json:"depth"`
-	Citations    []string `json:"citations,omitempty"`
-	ParentID     string   `json:"parent_id,omitempty"`
-}
 
 // ProjectionConfig controls RAG chunk projection behavior.
 type ProjectionConfig struct {
@@ -116,13 +102,13 @@ func ProjectAtoms(atoms []Atom, config ProjectionConfig) ProjectionResult {
 
 func projectOne(atom Atom, config ProjectionConfig) (RAGChunk, error) {
 	// Safety gate: content must not be empty.
-	content := strings.TrimSpace(atom.Content)
+	content := strings.TrimSpace(atom.Text)
 	if content == "" {
 		return RAGChunk{}, ErrEmptyContent
 	}
 
 	// Safety gate: source hash required.
-	if atom.SourceHash == "" {
+	if atom.ContentHash == "" {
 		return RAGChunk{}, ErrNoSourceHash
 	}
 
@@ -149,19 +135,19 @@ func projectOne(atom Atom, config ProjectionConfig) (RAGChunk, error) {
 	}
 
 	// Generate chunk ID.
-	chunkID := generateChunkID(atom.ID, atom.SourceHash)
+	chunkID := generateChunkID(atom.ID, atom.ContentHash)
 
 	return RAGChunk{
 		ChunkID:      chunkID,
 		CanonicalRef: atom.CanonicalRef,
-		DisplayRef:   atom.DisplayRef,
+		DisplayRef:   atom.CanonicalRef,
 		Content:      content,
 		TokenCount:   tokenCount,
-		SourceHash:   atom.SourceHash,
-		SourcePath:   atom.SourcePath,
+		SourceHash:   atom.ContentHash,
+		SourcePath:   atom.SourceSpan.File,
 		Confidence:   confidence,
-		Citations:    atom.Citations,
-		NodeType:     atom.NodeType,
+		Citations:    nil, // populated by reference projection
+		NodeType:     string(atom.Type),
 		Domain:       domain,
 		Depth:        atom.Depth,
 	}, nil
@@ -175,10 +161,10 @@ func estimateTokens(content string) int {
 }
 
 func determineConfidence(atom Atom) string {
-	if atom.SourceHash != "" && atom.SourcePath != "" && len(atom.Citations) > 0 {
+	if atom.ContentHash != "" && atom.SourceSpan.File != "" {
 		return "high"
 	}
-	if atom.SourceHash != "" && atom.SourcePath != "" {
+	if atom.ContentHash != "" && atom.SourceSpan.File != "" {
 		return "medium"
 	}
 	return "low"
