@@ -105,8 +105,8 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 
 		node := LawbookNode{
 			NodeID:       nodeID,
-			NodeType:     LawbookNodeType(nodeType),
-			Depth:        level,
+			NodeType:     nodeType,
+			Depth:        nodeType.Depth(),
 			Title:        title,
 			Text:         bodyContent,
 			ParentID:     parentID,
@@ -180,7 +180,7 @@ func buildDisplayRef(nodeType LawbookNodeType, title string) string {
 
 func computeNodeID(canonicalRef string) string {
 	h := sha256.Sum256([]byte(canonicalRef))
-	return "node-" + hex.EncodeToString(h[:8])
+	return "N-" + strings.ToUpper(hex.EncodeToString(h[:8]))
 }
 
 func lawbookSlugify(s string) string {

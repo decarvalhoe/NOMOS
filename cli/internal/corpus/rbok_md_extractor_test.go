@@ -46,8 +46,8 @@ func TestExtractMarkdown_DocumentNode(t *testing.T) {
 	if doc.NodeType != NodeDocument {
 		t.Fatalf("expected document node, got %s", doc.NodeType)
 	}
-	if doc.Depth != 1 {
-		t.Fatalf("expected depth 1, got %d", doc.Depth)
+	if doc.Depth != 0 {
+		t.Fatalf("expected depth 0 (document), got %d", doc.Depth)
 	}
 	if doc.Title != "Reglement General Assurance Auto" {
 		t.Fatalf("unexpected title: %q", doc.Title)
@@ -93,8 +93,8 @@ func TestExtractMarkdown_ChapterParent(t *testing.T) {
 	if chapter.NodeID == "" {
 		t.Fatal("chapter 1 not found")
 	}
-	if chapter.Depth != 2 {
-		t.Fatalf("expected depth 2, got %d", chapter.Depth)
+	if chapter.Depth != 1 {
+		t.Fatalf("expected depth 1 (chapter), got %d", chapter.Depth)
 	}
 	if chapter.ParentID != result.Nodes[0].NodeID {
 		t.Fatalf("chapter parent should be document, got %q", chapter.ParentID)
@@ -124,8 +124,8 @@ func TestExtractMarkdown_SectionParent(t *testing.T) {
 	if section.ParentID != chapter1ID {
 		t.Fatalf("section parent should be chapter 1, got %q", section.ParentID)
 	}
-	if section.Depth != 3 {
-		t.Fatalf("expected depth 3, got %d", section.Depth)
+	if section.Depth != 2 {
+		t.Fatalf("expected depth 2 (section), got %d", section.Depth)
 	}
 }
 
@@ -386,8 +386,8 @@ func TestComputeNodeID_Deterministic(t *testing.T) {
 	if id1 != id2 {
 		t.Fatalf("expected deterministic ID, got %q and %q", id1, id2)
 	}
-	if !strings.HasPrefix(id1, "node-") {
-		t.Fatalf("expected node- prefix, got %q", id1)
+	if !strings.HasPrefix(id1, "N-") {
+		t.Fatalf("expected N- prefix, got %q", id1)
 	}
 }
 
