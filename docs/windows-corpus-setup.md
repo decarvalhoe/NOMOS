@@ -6,7 +6,7 @@ Nomos CLI has two build profiles due to `go-tree-sitter` requiring CGO:
 
 | Profile | CGO | C Compiler | Packages Available |
 |---|---|---|---|
-| **Corpus-only** | `CGO_ENABLED=0` | Not needed | corpus, checks, validate, strict, exceptions, productcheck |
+| **Corpus-only** | `CGO_ENABLED=0` | Not needed | corpus, checks, validate, strict, exceptions, productcheck, compliance |
 | **Full** | `CGO_ENABLED=1` | Required (GCC) | All packages including detect, diagnose, report |
 
 Most corpus workflows (scan, manifest, extract, checks) run without CGO.
@@ -87,6 +87,24 @@ cd cli
 go build ./...
 ```
 
+## CUE Schema Validation
+
+CUE validates `specs/*.cue` schemas. It is required for schema contribution but not for corpus commands.
+
+```powershell
+# Install CUE
+go install cuelang.org/go/cmd/cue@latest
+
+# Validate schemas
+cue vet specs/*.cue
+```
+
+## tree-sitter Grammars
+
+tree-sitter grammars compile automatically with `go build` when CGO is enabled. No separate installation needed — the Go bindings (`github.com/smacker/go-tree-sitter`) bundle grammar C sources for:
+
+- Go, Java, JavaScript, Python, TypeScript
+
 ## Package Dependency Map
 
 ```
@@ -96,10 +114,12 @@ CGO_ENABLED=0 (pure Go, no C compiler):
   strict/         cross-manifest checks
   exceptions/     expiring exceptions
   productcheck/   project manifest checks
+  compliance/     claims governance
   attestation/    in-toto, SLSA, cosign
   output/         JSON, markdown output
   partial/        partial mode
-  corpus/         scan, manifest, extract_parcours (when present)
+  guard/          output + push guards
+  corpus/         scan, manifest, extract, feed, governance, release-gate
 
 CGO_ENABLED=1 (requires GCC, tree-sitter C bindings):
   detect/         tree-sitter AST parsing
