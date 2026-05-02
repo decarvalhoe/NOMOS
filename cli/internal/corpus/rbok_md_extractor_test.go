@@ -162,15 +162,23 @@ func TestExtractMarkdown_AlineaNodes(t *testing.T) {
 			alineas = append(alineas, n)
 		}
 	}
-	// Article 1 has 3 list items.
-	if len(alineas) != 3 {
-		t.Fatalf("expected 3 alinea nodes, got %d", len(alineas))
+	// The fixture has 3 list items plus prose blocks. Prose blocks must also
+	// become atomic alineas.
+	if len(alineas) <= 3 {
+		t.Fatalf("expected prose and list alineas, got %d", len(alineas))
 	}
-	if !strings.Contains(alineas[0].Text, "Personne physique") {
-		t.Fatalf("unexpected alinea content: %q", alineas[0].Text)
+	var listAlinea LawbookNode
+	for _, alinea := range alineas {
+		if strings.Contains(alinea.Text, "Personne physique") {
+			listAlinea = alinea
+			break
+		}
 	}
-	if alineas[0].Depth != 6 {
-		t.Fatalf("expected alinea depth 6, got %d", alineas[0].Depth)
+	if listAlinea.NodeID == "" {
+		t.Fatal("expected list item to become an alinea")
+	}
+	if listAlinea.Depth != 6 {
+		t.Fatalf("expected alinea depth 6, got %d", listAlinea.Depth)
 	}
 }
 
@@ -189,6 +197,66 @@ func TestExtractMarkdown_ParagraphNodes(t *testing.T) {
 	}
 	if paragraphs[0].Depth != 5 {
 		t.Fatalf("expected paragraph depth 5, got %d", paragraphs[0].Depth)
+	}
+}
+
+func TestExtractMarkdown_ProseParagraphBecomesAtomicAlinea(t *testing.T) {
+	src := "# Doc\n\nFirst governed statement.\n\nSecond governed statement."
+	result := ExtractMarkdown(src, "test")
+
+	var paragraphs []LawbookNode
+	var alineas []LawbookNode
+	for _, n := range result.Nodes {
+		switch n.NodeType {
+		case NodeParagraph:
+			paragraphs = append(paragraphs, n)
+		case NodeAlinea:
+			alineas = append(alineas, n)
+		}
+	}
+	if len(paragraphs) != 2 {
+		t.Fatalf("expected 2 paragraph containers, got %d", len(paragraphs))
+	}
+	if len(alineas) != 2 {
+		t.Fatalf("expected 2 atomic alineas, got %d", len(alineas))
+	}
+	for i := range paragraphs {
+		if alineas[i].ParentID != paragraphs[i].NodeID {
+			t.Fatalf("alinea %d parent = %q, want paragraph %q", i, alineas[i].ParentID, paragraphs[i].NodeID)
+		}
+		if alineas[i].Text != paragraphs[i].Text {
+			t.Fatalf("alinea %d text = %q, want %q", i, alineas[i].Text, paragraphs[i].Text)
+		}
+	}
+}
+
+func TestExtractMarkdown_ListBlockHasParagraphContainerAndAlineaItems(t *testing.T) {
+	src := "# Doc\n\n- First item\n- Second item\n1. Numbered item"
+	result := ExtractMarkdown(src, "test")
+
+	var paragraphs []LawbookNode
+	var alineas []LawbookNode
+	for _, n := range result.Nodes {
+		switch n.NodeType {
+		case NodeParagraph:
+			paragraphs = append(paragraphs, n)
+		case NodeAlinea:
+			alineas = append(alineas, n)
+		}
+	}
+	if len(paragraphs) != 1 {
+		t.Fatalf("expected 1 paragraph container, got %d", len(paragraphs))
+	}
+	if len(alineas) != 3 {
+		t.Fatalf("expected 3 list alineas, got %d", len(alineas))
+	}
+	for i, alinea := range alineas {
+		if alinea.ParentID != paragraphs[0].NodeID {
+			t.Fatalf("alinea %d parent = %q, want %q", i, alinea.ParentID, paragraphs[0].NodeID)
+		}
+	}
+	if alineas[2].Text != "Numbered item" {
+		t.Fatalf("expected numbered list text to be stripped, got %q", alineas[2].Text)
 	}
 }
 
