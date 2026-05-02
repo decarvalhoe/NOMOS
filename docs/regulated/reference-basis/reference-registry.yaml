@@ -1,0 +1,98 @@
+schema_version: "0.1.0"
+document_id: NOMOS-REF-REGISTRY-001
+version: "0.1.0"
+status: draft
+claim_boundary: >
+  This registry indexes external references used by the Nomos control
+  matrix. Full reference details are in external-reference-register.yaml.
+  Registration does not constitute compliance.
+
+references:
+  - id: FDA-21CFR11-11.10
+    short_name: "21 CFR Part 11 — Closed Systems"
+    publisher: US FDA
+    scope: data-integrity, access-control
+    content_access: public
+    controls_mapped:
+      - CTL-DI-001
+      - CTL-DI-002
+      - CTL-AC-001
+
+  - id: FDA-DATA-INTEGRITY-CGMP-2018
+    short_name: "FDA Data Integrity CGMP Q&A"
+    publisher: US FDA
+    scope: data-integrity
+    content_access: public
+    controls_mapped:
+      - CTL-DI-003
+      - CTL-DI-004
+      - CTL-DI-005
+
+  - id: FDA-21CFR820-QMSR
+    short_name: "21 CFR Part 820 — QMSR"
+    publisher: US FDA
+    scope: change-control, documentation
+    content_access: public
+    controls_mapped:
+      - CTL-CC-002
+      - CTL-DOC-002
+
+  - id: FDA-CSA-2025
+    short_name: "FDA CSA Final Guidance"
+    publisher: US FDA
+    scope: validation
+    content_access: public
+    controls_mapped:
+      - CTL-VAL-002
+      - CTL-VAL-003
+
+  - id: ISPE-GAMP5-2E-2022
+    short_name: "GAMP 5 Second Edition"
+    publisher: ISPE
+    scope: validation, supply-chain
+    content_access: licensed_local_artifact_required
+    controls_mapped:
+      - CTL-VAL-001
+      - CTL-SC-001
+
+  - id: EU-EUDRALEX-V4-ANNEX11
+    short_name: "EudraLex Vol 4 Annex 11"
+    publisher: European Commission
+    scope: change-control
+    content_access: public
+    controls_mapped:
+      - CTL-CC-001
+
+  - id: ICH-Q9R1
+    short_name: "ICH Q9(R1) Quality Risk Management"
+    publisher: ICH
+    scope: documentation
+    content_access: public
+    controls_mapped:
+      - CTL-DOC-001
+
+  - id: ICH-Q10
+    short_name: "ICH Q10 Pharmaceutical Quality System"
+    publisher: ICH
+    scope: change-control, documentation
+    content_access: public
+    controls_mapped:
+      - CTL-CC-003
+      - CTL-DOC-003
+
+  - id: NIST-SP-800-218
+    short_name: "NIST SSDF v1.1"
+    publisher: NIST
+    scope: supply-chain
+    content_access: public
+    controls_mapped:
+      - CTL-SC-002
+      - CTL-SC-003
+
+  - id: GITHUB-ENVIRONMENTS
+    short_name: "GitHub Deployment Environments"
+    publisher: GitHub
+    scope: access-control
+    content_access: public
+    controls_mapped:
+      - CTL-AC-002

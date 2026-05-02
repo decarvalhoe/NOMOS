@@ -1,0 +1,83 @@
+name: RBOK Lawbook Release Gate
+
+on:
+  issues:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      artifacts_run_id:
+        description: 'Run ID from rbok-lawbook-e2e workflow'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  release-gate:
+    name: Verify RBOK lawbook evidence artifacts
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+       contains(github.event.issue.labels.*.name, 'rbok-lawbook'))
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: cli/go.sum
+
+      - name: Download E2E artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: rbok-lawbook-nodes-*
+          path: /tmp/rbok-artifacts
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Check artifacts directory
+        id: artifacts
+        run: |
+          if [ ! -d /tmp/rbok-artifacts ] || [ -z "$(ls /tmp/rbok-artifacts/*.json 2>/dev/null)" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No RBOK lawbook artifacts found. Run rbok-lawbook-e2e first."
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "Artifacts found:"
+            ls -la /tmp/rbok-artifacts/
+          fi
+
+      - name: Run release gate
+        if: steps.artifacts.outputs.found == 'true'
+        working-directory: cli
+        run: |
+          go run ./internal/corpus/cmd/release-gate \
+            --artifacts /tmp/rbok-artifacts \
+            --profile rbok-lawbook
+
+      - name: Gate failed — block issue closure
+        if: failure() && github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `## Release Gate Failed\n\nThe RBOK lawbook release gate blocked closure of this issue.\n\nRequired evidence artifacts are missing or invalid:\n- Feed with document/article/paragraph/alinea nodes\n- Corpus attestation (in-toto statement)\n- Governance report (no blocking findings)\n\nRe-run the \`RBOK Lawbook E2E\` workflow and resolve any failures before closing.`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'open'
+            });
