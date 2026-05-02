@@ -1,0 +1,79 @@
+schema_version: "0.1.0"
+document_id: IU-NOMOS-001
+status: draft
+owner: product-owner
+
+product:
+  id: nomos
+  name: Nomos
+  version: "0.1.0-dev"
+
+intended_use:
+  summary: >
+    Nomos verifies that domain knowledge flows from authoritative sources
+    through versioned contracts to product surfaces with machine-checkable
+    evidence. It does not make domain decisions or process runtime data.
+
+  primary_functions:
+    - id: IU-FUNC-001
+      function: "Manifest schema validation"
+      risk_level: medium
+      users: ["developers", "CI pipelines"]
+      verification: "go test ./internal/validate/..."
+
+    - id: IU-FUNC-002
+      function: "Source integrity checks"
+      risk_level: medium
+      users: ["developers", "domain owners"]
+      verification: "go test ./internal/checks/..."
+
+    - id: IU-FUNC-003
+      function: "Cross-manifest consistency (strict)"
+      risk_level: high
+      users: ["release managers", "CI pipelines"]
+      verification: "go test ./internal/strict/..."
+
+    - id: IU-FUNC-004
+      function: "Expiring exceptions enforcement"
+      risk_level: high
+      users: ["quality owners", "CI pipelines"]
+      verification: "go test ./internal/exceptions/..."
+
+    - id: IU-FUNC-005
+      function: "Report and attestation generation"
+      risk_level: low
+      users: ["auditors", "release managers"]
+      verification: "go test ./internal/report/... ./internal/attestation/..."
+
+    - id: IU-FUNC-006
+      function: "Corpus scan and feed (read-only)"
+      risk_level: low
+      users: ["corpus managers"]
+      verification: "go test ./internal/corpus/..."
+
+  out_of_scope:
+    - "Clinical, financial, or safety-critical decision-making"
+    - "Runtime enforcement of business rules"
+    - "User-facing product surfaces"
+    - "LLM-based reasoning or decision computation"
+
+  environmental_constraints:
+    - "Requires Go 1.22+ runtime"
+    - "CGO required for tree-sitter detection features"
+    - "Corpus commands run without CGO (pure Go)"
+
+  user_profile:
+    - role: developer
+      access: "CLI local execution"
+      training: "Nomos documentation"
+    - role: ci_pipeline
+      access: "Automated execution via GitHub Actions"
+      training: "Workflow configuration"
+    - role: quality_owner
+      access: "Review reports and attestations"
+      training: "Regulated documentation"
+
+claim_boundary: >
+  This intended-use model describes design intent only. It does not
+  constitute a validated claim. Validation requires execution of
+  the validation master plan with evidence.
