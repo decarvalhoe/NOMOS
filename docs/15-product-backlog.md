@@ -691,3 +691,227 @@ Nomos v1.0 est considere pret si :
 - une execution produit un report, une attestation et une verification reproductible ;
 - la chaine CI peut bloquer une promotion de facon explicable ;
 - le control plane peut afficher le statut d'un portefeuille de projets.
+
+## Track Regulated-Grade
+
+Ce track etend E8/E9. Il ne remplace pas le backlog produit : il ajoute les exigences necessaires pour que Nomos puisse defendre ses propres promesses sur un marche IT regule.
+
+Reference d'implementation : `docs/23-regulated-implementation-plan.md`.
+
+### RG-0 - Baseline Executable
+
+But :
+
+sortir de l'etat `NQ-0/NQ-1` en rendant le produit verifiable avant tout claim regule.
+
+Issues GitHub :
+
+- Nomos #125 : restore CLI build.
+- Nomos #126 : fix CUE schema validation.
+- Nomos #127 : wire real RBOK lawbook CLI.
+- Nomos #136 : release gate for RBOK lawbook profile.
+- Nomos #137 : Nomos-on-Nomos self-compliance.
+
+BLOCKS :
+
+RG-1, RG-2, RG-3, claim governance public.
+
+DoD :
+
+- `go test ./...` et `go vet ./...` verts pour le CLI cible ;
+- `cue vet ./...` vert ;
+- commandes inconnues en sortie non-zero ;
+- pas de fallback dummy produisant une evidence verte ;
+- corpus commands exposees et testees.
+
+### RG-1 - Regulated Control Matrix
+
+But :
+
+gouverner les references externes, controles, claims, evidences et waivers.
+
+Issues GitHub :
+
+- Nomos #138 : parent epic regulated-grade.
+- Nomos #139 : regulated control matrix/reference registry.
+- Nomos #140 : external reference alignment gate.
+- Nomos #145 : public claims governance.
+
+BLOCKS :
+
+RG-2, RG-4, NQ-3.
+
+DoD :
+
+- schema `specs/regulated-control-matrix.cue` ;
+- exemple Nomos valide ;
+- scan des URLs/docs/specs ;
+- echec si reference ou claim non gouverne ;
+- waivers avec owner, risque, mitigation et expiration ;
+- README et roadmap limites au niveau de preuve atteint.
+
+### RG-2 - Nomos Self-Compliance
+
+But :
+
+faire passer Nomos a `NQ-3`.
+
+Issues GitHub :
+
+- Nomos #141 : regulated self-compliance expansion.
+- Nomos #142 : ALCOA+ evidence model.
+- Nomos #143 : validation lifecycle pack.
+- Nomos #146 : AI/RAG risk controls.
+- Nomos #147 : SLSA/in-toto provenance gate.
+
+BLOCKS :
+
+RG-3, RG-4, NQ-4.
+
+DoD :
+
+- `mode: nomos_product` admis ;
+- `nomos compliance self-check` executable ;
+- rapport ALCOA+ avec actor, command, timestamp, repo, commit, hashes ;
+- `docs/validation/` initial ;
+- self-compliance CI fail-closed ;
+- controles critiques non waives ou waives avec expiration et justification.
+
+### RG-3 - RBOK Lawbook Proof
+
+But :
+
+prouver Nomos sur `realisons-business/01_rbok` en lecture seule, comme corpus metier de reference.
+
+Issues GitHub :
+
+- Nomos #124 : RBOK lawbook viability epic.
+- Nomos #128 : real RBOK E2E.
+- Nomos #129 : contract normalization.
+- Nomos #130 : Markdown extraction.
+- Nomos #131 : parcours YAML governance.
+- Nomos #132 : source policy.
+- Nomos #133 : multi-doc feed/RAG/engine.
+- Nomos #134 : read-only hardening.
+- Nomos #135 : Windows confidence.
+
+BLOCKS :
+
+RG-4 evidence chain, Realisons reference demo.
+
+DoD :
+
+- `mode: canonical_corpus` produit `corpus_admissible`, `corpus_partial` ou `corpus_blocked` ;
+- source `01_rbok` jamais modifiee ;
+- manifest, sidecar, chunks lawbook, index, RAG metadata, attestation et lockfile generes hors corpus ;
+- metadata de gouvernance existante preservee ;
+- git status source avant/apres prouve ;
+- Windows smoke vert.
+
+### RG-4 - Nomos/Praxis Evidence Chain
+
+But :
+
+faire passer la chaine combinee a `NQ-4`.
+
+Issues GitHub :
+
+- Nomos #144 : shared evidence contract.
+- Praxis #247 : compatibility epic.
+- Praxis #248 : Nomos project pack.
+- Praxis #249 : Nomos compliance invariants.
+- Praxis #250 : consume shared evidence contract.
+- Praxis #251 : feed Praxis CAPA back into Nomos controls.
+- Praxis #252 : cross-repo compatibility smoke test.
+- Praxis #253 : regulated parity baseline.
+
+BLOCKS :
+
+RG-5 validation pack, claims "evidence-backed regulated-grade candidate".
+
+DoD :
+
+- schema `nomos-praxis-evidence` publie avec exemples valides/invalides ;
+- Nomos produit des claims et controls consommables par Praxis ;
+- Praxis produit runtime evidence, invariant results et CAPA consommables par Nomos ;
+- smoke cross-repo vert ;
+- Nomos release bundle indique le niveau de qualite Praxis utilise.
+
+### RG-5 - Validation Pack And Release Bundle
+
+But :
+
+atteindre `NQ-5` sur un intended use declare.
+
+Issues a convertir depuis `docs/22-nomos-praxis-synergy-market-audit.md` quand RG-1/RG-2 sont acceptes :
+
+- SYN-001 : joint evidence ledger contract.
+- SYN-003 : release evidence bundle format.
+- SYN-008 : e-signature/approval semantics.
+- SYN-009 : independent review/quality-unit roles.
+- SYN-010 : validation inventory/intended-use model.
+- SYN-011 : validated project pack certification status.
+- SYN-014 : runtime evidence retention/trend model.
+
+BLOCKS :
+
+NQ-6 independent audit readiness.
+
+DoD :
+
+- validation inventory item ;
+- URS/SRS/tests/evidence/release decision traceability ;
+- deviation/CAPA log ;
+- release bundle reconstructible ;
+- SLSA/in-toto provenance ;
+- independent review status ;
+- retention and reconstruction procedure.
+
+### RG-6 - Market Interoperability And Claims
+
+But :
+
+positionner Nomos/Praxis face aux outils ALM, validation lifecycle, QMS et test management sans surpromesse.
+
+Issues a convertir depuis `docs/22-nomos-praxis-synergy-market-audit.md` :
+
+- SYN-002 : Praxis consume joint evidence ledger.
+- SYN-006 : source change impact analysis for required Praxis tests.
+- SYN-007 : Praxis scenario selection from impacted Nomos claims.
+- SYN-012 : ReqIF/export/import compatibility decision.
+- SYN-013 : market positioning/non-claim governance.
+- SYN-015 : regulated demo reference architecture.
+
+BLOCKS :
+
+commercialisation regulee, integrations entreprise.
+
+DoD :
+
+- decision ReqIF/import/export ;
+- claims matrix publique ;
+- demo reference architecture ;
+- docs de comparaison marche ;
+- aucune formulation de certification sans preuve externe.
+
+## Dependency Tree Regulated-Grade
+
+```text
+RG-0
+  -> RG-1
+  -> RG-2
+  -> RG-3
+  -> RG-4
+  -> RG-5
+  -> RG-6
+
+NQ-2 = RG-0
+NQ-3 = RG-0 + RG-1 + RG-2
+NQ-4 = NQ-3 + RG-3 + RG-4
+NQ-5 = NQ-4 + RG-5
+NQ-6 = NQ-5 + independent reconstruction
+```
+
+Regle de fermeture :
+
+une issue regulated-grade ne peut pas etre fermee si la documentation associee, les exemples, les schemas et les gates CI ne refletent pas le comportement reel.

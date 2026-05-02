@@ -73,6 +73,9 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/14-product-roadmap.md` : roadmap produit v0.1 -> v1.0 et architecture cible.
 - `docs/15-product-backlog.md` : backlog concret d'epics/issues, dépendances et DoD.
 - `docs/16-versioning-policy.md` : politique de versionning du coeur, des adapters et des schemas.
+- `docs/21-regulated-quality-reference.md` : baseline qualité/compliance pour les marchés IT régulés.
+- `docs/22-nomos-praxis-synergy-market-audit.md` : audit de synergie Nomos/Praxis, angles morts et positionnement marché.
+- `docs/23-regulated-implementation-plan.md` : plan d'implémentation pour aligner Nomos avec ses exigences de conformité.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
@@ -86,6 +89,18 @@ Le dépôt porte maintenant deux couches complémentaires :
 - la couche produit, dans `cli/`, `adapters/`, `policies/`, `attestations/`, `sdk/`, `control-plane/` et `specs/`.
 
 Cette séparation permet de faire évoluer Nomos comme plateforme sans perdre la lisibilité méthodologique.
+
+## Regulated-Grade Track
+
+Nomos ne doit pas annoncer une posture régulée tant qu'il ne peut pas la prouver sur lui-même.
+
+Le track régulé est maintenant gouverné par trois documents :
+
+- `docs/21-regulated-quality-reference.md` définit les niveaux `NQ-0` à `NQ-6`, les familles de contrôles et les règles de non-surpromesse.
+- `docs/22-nomos-praxis-synergy-market-audit.md` compare la thèse Nomos/Praxis aux attentes du marché ALM, validation lifecycle, test management et evidence/CAPA.
+- `docs/23-regulated-implementation-plan.md` transforme l'audit en phases d'implémentation, dépendances GitHub, gates et règles d'alignement documentaire.
+
+Le prochain seuil crédible est `NQ-3` : Nomos build/test green, références externes gouvernées, self-compliance exécutable, métadonnées ALCOA+, validation pack initial et claims publics limités au niveau de preuve réel.
 
 ## Quick Start
 
