@@ -203,13 +203,13 @@ func LoadRegister(path string) (Register, error) {
 func scanFiles(files []string) []CitedRef {
 	var cited []CitedRef
 	for _, file := range files {
-		refs := scanFile(file)
+		refs := scanFileForRefs(file)
 		cited = append(cited, refs...)
 	}
 	return cited
 }
 
-func scanFile(path string) []CitedRef {
+func scanFileForRefs(path string) []CitedRef {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil

@@ -1,6 +1,9 @@
 package nomos
 
-import "strings"
+import (
+	"list"
+	"strings"
+)
 
 // #ALCOAPlusAttribute enumerates the 8 ALCOA+ data integrity attributes.
 // ALCOA: Attributable, Legible, Contemporaneous, Original, Accurate
