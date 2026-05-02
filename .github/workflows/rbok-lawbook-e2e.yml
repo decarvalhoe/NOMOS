@@ -97,27 +97,34 @@ jobs:
       - name: Verify node types present
         run: |
           echo "=== Checking required node types ==="
-          required_types=("document" "article" "paragraph" "alinea")
-          all_ok=true
-          for ntype in "${required_types[@]}"; do
-            count=$(grep -rl "\"type\":\"$ntype\"" /tmp/rbok-output/ 2>/dev/null | wc -l)
-            if [ "$count" -eq 0 ]; then
-              # Try with spaces around colon (pretty-printed JSON)
-              count=$(grep -rl "\"type\": \"$ntype\"" /tmp/rbok-output/ 2>/dev/null | wc -l)
-            fi
-            echo "  $ntype: $count file(s)"
-            if [ "$count" -eq 0 ]; then
-              echo "  FAIL: no $ntype nodes found"
-              all_ok=false
-            fi
-          done
-          if [ "$all_ok" = false ]; then
-            echo "FAIL: missing required node types"
-            exit 1
-          fi
-          echo "All required node types present."
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+          from collections import Counter
+
+          required = {"document", "article", "paragraph", "alinea"}
+          counts = Counter()
+          for path in pathlib.Path("/tmp/rbok-output").glob("*.json"):
+              data = json.loads(path.read_text(encoding="utf-8"))
+              for node in data.get("nodes", []):
+                  node_type = node.get("node_type")
+                  if node_type:
+                      counts[node_type] += 1
+
+          for node_type in sorted(counts):
+              print(f"  {node_type}: {counts[node_type]} node(s)")
+
+          missing = sorted(required - set(counts))
+          if missing:
+              print(f"FAIL: missing required node types: {', '.join(missing)}")
+              sys.exit(1)
+
+          print("All required node types present.")
+          PY
 
       - name: Verify source repo not modified
+        if: always()
         run: |
           echo "=== Read-only guard ==="
           cd "$GITHUB_WORKSPACE/rbok-corpus"
