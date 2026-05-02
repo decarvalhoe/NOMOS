@@ -276,6 +276,7 @@ Goal: reach `NQ-4` by connecting canonical product law to runtime evidence and C
 Blocking issues:
 
 - Nomos #144: shared evidence contract.
+- Nomos #149: joint evidence ledger contract.
 - Praxis #247: compatibility epic.
 - Praxis #248: Nomos project pack.
 - Praxis #249: Nomos compliance invariants.
@@ -329,10 +330,10 @@ Blocking issues:
 
 - Nomos #143: validation lifecycle pack.
 - Nomos #147: SLSA/in-toto provenance gate.
-- Future SYN-003: release evidence bundle format.
-- Future SYN-008: e-signature/approval semantics.
-- Future SYN-009: independent review/quality-unit roles.
-- Future SYN-010: validation inventory/intended-use model.
+- Nomos #150: release evidence bundle format.
+- Nomos #151: validation inventory/intended-use model.
+- Nomos #152: e-signature/approval semantics.
+- Nomos #153: independent review/quality-unit roles.
 
 Implementation work:
 
@@ -371,10 +372,9 @@ Goal: prevent Praxis from weakening the joint regulated chain.
 Blocking issues:
 
 - Praxis #253: regulated parity baseline.
-- Future SYN-004: Praxis regulated parity reference.
-- Future SYN-005: Praxis-on-Praxis self-compliance gate.
-- Future SYN-011: validated project pack certification status.
-- Future SYN-014: runtime evidence retention/trend model.
+- Praxis #254: Praxis-on-Praxis self-compliance gate.
+- Praxis #255: validated project pack certification status.
+- Praxis #256: runtime evidence retention/trend model.
 
 Implementation work:
 
@@ -405,15 +405,15 @@ Expected result:
 
 Goal: position the product against regulated ALM, validation, and test-management ecosystems without overclaiming.
 
-Future issue candidates from `docs/22-nomos-praxis-synergy-market-audit.md`:
+Implementation issues from `docs/22-nomos-praxis-synergy-market-audit.md`:
 
-- SYN-001: joint evidence ledger contract.
-- SYN-002: Praxis consume joint evidence ledger.
-- SYN-006: source change impact analysis for required Praxis tests.
-- SYN-007: Praxis scenario selection from impacted Nomos claims.
-- SYN-012: ReqIF/export/import compatibility decision.
-- SYN-013: market positioning/non-claim governance.
-- SYN-015: regulated demo reference architecture.
+- Nomos #149 / SYN-001: joint evidence ledger contract.
+- Praxis #250 / SYN-002: Praxis consume shared evidence contract.
+- Nomos #154 / SYN-006: source change impact analysis for required Praxis tests.
+- Nomos #155 / SYN-007: Praxis scenario selection from impacted Nomos claims.
+- Nomos #156 / SYN-012: ReqIF/export/import compatibility decision.
+- Nomos #157 / SYN-013: market positioning/non-claim governance.
+- Nomos #158 / SYN-015: regulated demo reference architecture.
 
 Implementation work:
 
@@ -468,15 +468,23 @@ Expected result:
   -> #135
 
 #144
+  -> #149
   -> Praxis #247
   -> Praxis #248 + #249 + #250 + #251
   -> Praxis #252
   -> Praxis #253
+  -> Praxis #254 + #255 + #256
+
+#150 + #151 + #152 + #153
+  -> NQ-5 release evidence bundle
+
+#154 + #155 + #156 + #157 + #158
+  -> RG-6 market interoperability and regulated demo
 
 NQ-2 = #125 + #126 + #127 + #136 green
 NQ-3 = NQ-2 + #137 + #139 + #140 + #141 + #142 + #143 + #145 green
-NQ-4 = NQ-3 + RBOK lawbook proof + #144 + Praxis #247-#252 green
-NQ-5 = NQ-4 + validation lifecycle + release bundle + provenance gate green
+NQ-4 = NQ-3 + RBOK lawbook proof + #144 + #149 + Praxis #247-#252 green
+NQ-5 = NQ-4 + #150 + #151 + #152 + #153 + #147 + Praxis #254-#256 green
 NQ-6 = NQ-5 + independent review reconstruction successful
 ```
 

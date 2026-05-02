@@ -845,13 +845,13 @@ atteindre `NQ-5` sur un intended use declare.
 
 Issues a convertir depuis `docs/22-nomos-praxis-synergy-market-audit.md` quand RG-1/RG-2 sont acceptes :
 
-- SYN-001 : joint evidence ledger contract.
-- SYN-003 : release evidence bundle format.
-- SYN-008 : e-signature/approval semantics.
-- SYN-009 : independent review/quality-unit roles.
-- SYN-010 : validation inventory/intended-use model.
-- SYN-011 : validated project pack certification status.
-- SYN-014 : runtime evidence retention/trend model.
+- Nomos #149 / SYN-001 : joint evidence ledger contract.
+- Nomos #150 / SYN-003 : release evidence bundle format.
+- Nomos #151 / SYN-010 : validation inventory/intended-use model.
+- Nomos #152 / SYN-008 : e-signature/approval semantics.
+- Nomos #153 / SYN-009 : independent review/quality-unit roles.
+- Praxis #255 / SYN-011 : validated project pack certification status.
+- Praxis #256 / SYN-014 : runtime evidence retention/trend model.
 
 BLOCKS :
 
@@ -875,12 +875,13 @@ positionner Nomos/Praxis face aux outils ALM, validation lifecycle, QMS et test 
 
 Issues a convertir depuis `docs/22-nomos-praxis-synergy-market-audit.md` :
 
-- SYN-002 : Praxis consume joint evidence ledger.
-- SYN-006 : source change impact analysis for required Praxis tests.
-- SYN-007 : Praxis scenario selection from impacted Nomos claims.
-- SYN-012 : ReqIF/export/import compatibility decision.
-- SYN-013 : market positioning/non-claim governance.
-- SYN-015 : regulated demo reference architecture.
+- Praxis #250 / SYN-002 : Praxis consume shared evidence contract.
+- Nomos #154 / SYN-006 : source change impact analysis for required Praxis tests.
+- Nomos #155 / SYN-007 : Praxis scenario selection from impacted Nomos claims.
+- Nomos #156 / SYN-012 : ReqIF/export/import compatibility decision.
+- Nomos #157 / SYN-013 : market positioning/non-claim governance.
+- Nomos #158 / SYN-015 : regulated demo reference architecture.
+- Praxis #254 / SYN-005 : Praxis-on-Praxis self-compliance gate.
 
 BLOCKS :
 
@@ -907,8 +908,8 @@ RG-0
 
 NQ-2 = RG-0
 NQ-3 = RG-0 + RG-1 + RG-2
-NQ-4 = NQ-3 + RG-3 + RG-4
-NQ-5 = NQ-4 + RG-5
+NQ-4 = NQ-3 + RG-3 + RG-4 + Nomos #149 + Praxis #247-#252
+NQ-5 = NQ-4 + RG-5 + Nomos #150-#153 + Praxis #254-#256
 NQ-6 = NQ-5 + independent reconstruction
 ```
 

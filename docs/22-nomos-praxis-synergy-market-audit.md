@@ -471,27 +471,27 @@ Without Layer 3, Nomos/Praxis stay developer tools. With Layer 3, they can becom
 
 Do not put all of Layer 3 into Nomos or Praxis prematurely. Define it as a shared contract first, then decide whether it lives in Nomos control plane, Praxis reports, or a separate evidence ledger.
 
-## Actionable Issue Candidates
+## Actionable Issues
 
-These are written so each row can become one GitHub issue.
+These rows were materialized as GitHub issues on 2026-05-02.
 
-| ID | Repo | Priority | Title | Existing issue | Done when |
+| ID | Repo | Priority | Title | Issue | Done when |
 |---|---|---|---|---|---|
-| SYN-001 | Nomos | P0 | Define joint evidence ledger contract | Extend #144 | Schema covers claim/control/unit/scenario/finding/CAPA/release IDs and validates fixtures. |
-| SYN-002 | Praxis | P0 | Consume joint evidence ledger contract | Extend #250 | Praxis validates Nomos evidence fixtures and emits compatible CAPA/runtime evidence. |
-| SYN-003 | Nomos | P0 | Add release evidence bundle format | New under #138 | Bundle includes Nomos report, control matrix, ALCOA report, Praxis evidence link, CAPA status, waivers, provenance, go/no-go. |
-| SYN-004 | Praxis | P1 | Define Praxis regulated parity reference | #253 | Praxis doc defines PQ levels, intended use, parity triggers, controls, artifacts, and non-claims. |
-| SYN-005 | Praxis | P1 | Implement Praxis-on-Praxis self-compliance gate | New under #253 | Praxis can audit itself and produce ALCOA/CAPA/provenance evidence. |
-| SYN-006 | Nomos | P1 | Add impact analysis from source change to required Praxis tests | New under #138 | Source hash change produces impacted units, claims, scenarios, and required re-test set. |
-| SYN-007 | Praxis | P1 | Add scenario selection from Nomos impacted claims | New under #247 | Praxis can run only scenarios linked to changed Nomos claims and report residual gaps. |
-| SYN-008 | Nomos | P1 | Add e-signature and approval semantics to evidence records | New under #138 | Controls define signer identity, meaning, timestamp, locked record, prior-value preservation. |
-| SYN-009 | Both | P1 | Define independent review and quality-unit roles | New cross-repo | Release cannot pass regulated gate without reviewer/quality decision records. |
-| SYN-010 | Nomos | P1 | Build validation inventory/intended-use model | Extend #143 | Each Nomos/Praxis deployment has inventory item, versioned validation entity, risk class, validation status. |
-| SYN-011 | Praxis | P1 | Add validated project pack certification status | New under #253 | Project packs declare draft/validated/retired status, reviewer, version, scope, evidence hash. |
-| SYN-012 | Nomos | P1 | Add ReqIF/export/import compatibility decision | New under #138 | Decide support level for external ALM tools and add fixture/export mapping. |
-| SYN-013 | Nomos | P2 | Add market positioning and non-claim governance page | New under #145 | README/website claims map to evidence levels and explicitly avoid unsupported claims. |
-| SYN-014 | Praxis | P2 | Add runtime evidence retention and trend model | New under #253 | Reports have retention metadata, run lineage, comparison history, and immutable hash chain. |
-| SYN-015 | Both | P2 | Define regulated demo reference architecture | New cross-repo | RBOK demo shows Nomos lawbook -> product -> Praxis runtime evidence -> CAPA -> release gate. |
+| SYN-001 | Nomos | P0 | Define joint evidence ledger contract | Nomos #149 | Schema covers claim/control/unit/scenario/finding/CAPA/release IDs and validates fixtures. |
+| SYN-002 | Praxis | P0 | Consume joint evidence ledger contract | Praxis #250 | Praxis validates Nomos evidence fixtures and emits compatible CAPA/runtime evidence. |
+| SYN-003 | Nomos | P0 | Add release evidence bundle format | Nomos #150 | Bundle includes Nomos report, control matrix, ALCOA report, Praxis evidence link, CAPA status, waivers, provenance, go/no-go. |
+| SYN-004 | Praxis | P1 | Define Praxis regulated parity reference | Praxis #253 | Praxis doc defines PQ levels, intended use, parity triggers, controls, artifacts, and non-claims. |
+| SYN-005 | Praxis | P1 | Implement Praxis-on-Praxis self-compliance gate | Praxis #254 | Praxis can audit itself and produce ALCOA/CAPA/provenance evidence. |
+| SYN-006 | Nomos | P1 | Add impact analysis from source change to required Praxis tests | Nomos #154 | Source hash change produces impacted units, claims, scenarios, and required re-test set. |
+| SYN-007 | Nomos/Praxis | P1 | Add scenario selection from Nomos impacted claims | Nomos #155 | Praxis can run only scenarios linked to changed Nomos claims and report residual gaps. |
+| SYN-008 | Nomos | P1 | Add e-signature and approval semantics to evidence records | Nomos #152 | Controls define signer identity, meaning, timestamp, locked record, prior-value preservation. |
+| SYN-009 | Nomos | P1 | Define independent review and quality-unit roles | Nomos #153 | Release cannot pass regulated gate without reviewer/quality decision records. |
+| SYN-010 | Nomos | P1 | Build validation inventory/intended-use model | Nomos #151 | Each Nomos/Praxis deployment has inventory item, versioned validation entity, risk class, validation status. |
+| SYN-011 | Praxis | P1 | Add validated project pack certification status | Praxis #255 | Project packs declare draft/validated/retired status, reviewer, version, scope, evidence hash. |
+| SYN-012 | Nomos | P1 | Add ReqIF/export/import compatibility decision | Nomos #156 | Decide support level for external ALM tools and add fixture/export mapping. |
+| SYN-013 | Nomos | P2 | Add market positioning and non-claim governance page | Nomos #157 | README/website claims map to evidence levels and explicitly avoid unsupported claims. |
+| SYN-014 | Praxis | P2 | Add runtime evidence retention and trend model | Praxis #256 | Reports have retention metadata, run lineage, comparison history, and immutable hash chain. |
+| SYN-015 | Nomos | P2 | Define regulated demo reference architecture | Nomos #158 | RBOK demo shows Nomos lawbook -> product -> Praxis runtime evidence -> CAPA -> release gate. |
 
 ## Issue Bundle Recommendation
 
@@ -499,31 +499,31 @@ Do not create all issues at once unless the team is ready to execute. The clean 
 
 ### Bundle A - Joint Evidence MVP
 
-- SYN-001
-- SYN-002
-- SYN-003
-- SYN-006
-- SYN-007
+- SYN-001 / Nomos #149
+- SYN-002 / Praxis #250
+- SYN-003 / Nomos #150
+- SYN-006 / Nomos #154
+- SYN-007 / Nomos #155
 
 Goal: make the Nomos/Praxis seam real.
 
 ### Bundle B - Regulated Parity
 
-- SYN-004
-- SYN-005
-- SYN-008
-- SYN-009
-- SYN-010
-- SYN-011
+- SYN-004 / Praxis #253
+- SYN-005 / Praxis #254
+- SYN-008 / Nomos #152
+- SYN-009 / Nomos #153
+- SYN-010 / Nomos #151
+- SYN-011 / Praxis #255
 
 Goal: make the evidence chain defensible in a regulated context.
 
 ### Bundle C - Market And Interop
 
-- SYN-012
-- SYN-013
-- SYN-014
-- SYN-015
+- SYN-012 / Nomos #156
+- SYN-013 / Nomos #157
+- SYN-014 / Praxis #256
+- SYN-015 / Nomos #158
 
 Goal: make the product legible against ALM/QMS/validation competitors.
 
