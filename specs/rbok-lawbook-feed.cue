@@ -1,5 +1,7 @@
 package nomos
 
+import "strings"
+
 // #LawbookNodeType enumerates the structural levels of a lawbook.
 #LawbookNodeType:
 	"document" |

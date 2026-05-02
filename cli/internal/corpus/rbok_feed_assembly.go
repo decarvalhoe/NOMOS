@@ -117,7 +117,7 @@ func AssembleFeed(feed LawbookFeed, opts AssembleOptions) FeedAssembly {
 	index := buildIndex(feed)
 	governance := buildGovernance(feed)
 	citations := buildCitationMap(feed)
-	ragMeta := buildRAGMetadata(feed, citations)
+	ragMeta := buildLawbookRAGMetadata(feed, citations)
 	engineImport := buildEngineImport(feed, generatedAt)
 
 	return FeedAssembly{
@@ -229,7 +229,7 @@ func resolveParentChain(nodeID string, nodeMap map[string]*LawbookNode) []string
 	return chain
 }
 
-func buildRAGMetadata(feed LawbookFeed, citations CitationMap) []RAGChunk {
+func buildLawbookRAGMetadata(feed LawbookFeed, citations CitationMap) []RAGChunk {
 	chunks := make([]RAGChunk, 0, len(feed.Nodes))
 
 	for _, node := range feed.Nodes {
