@@ -22,6 +22,34 @@ La cible n'est pas "fonctionne sur n'importe quel projet". La cible est :
 4. Les preuves doivent etre exportables, signables et verifiables hors de Nomos.
 5. Les integrations stack sont versionnees comme des adapters, pas codees en dur dans le coeur.
 
+## Overlay Regulated-Grade
+
+La roadmap v0.1 -> v1.0 reste la roadmap produit generale. Elle ne suffit pas, seule, a defendre une posture de marche regule.
+
+Le track regulated-grade ajoute une contrainte plus dure : Nomos doit appliquer sa propre methode a Nomos avant de demander a un client regule de lui faire confiance.
+
+References de pilotage :
+
+- `docs/21-regulated-quality-reference.md` : controles, niveaux `NQ-0` a `NQ-6`, sources reglementaires et regles de claim governance.
+- `docs/22-nomos-praxis-synergy-market-audit.md` : analyse de positionnement contre ALM, validation lifecycle, test management, evidence/CAPA et angles morts Nomos/Praxis.
+- `docs/23-regulated-implementation-plan.md` : phases d'implementation, dependency tree, gates et alignement documentaire.
+
+Effet sur la roadmap :
+
+- `v0.1` a `v0.2` doivent d'abord revenir green : build Go, CUE, CLI et erreurs fail-closed.
+- `v0.3` doit inclure `mode: canonical_corpus` et `mode: nomos_product`.
+- `v0.5` doit inclure la matrice de controles regules et le gate de references externes.
+- `v0.8` doit produire des attestations verifiables et pas seulement des schemas d'attestation.
+- `v1.0` peut etre "productized platform", mais pas "regulated-grade" sans le niveau `NQ-5` minimum pour l'intended use declare.
+
+Seuils produit :
+
+- `NQ-2` : outil operationnel, gates de base verts, evidence reelle.
+- `NQ-3` : Nomos-on-Nomos self-compliance verte.
+- `NQ-4` : integration Nomos/Praxis avec evidence runtime et CAPA.
+- `NQ-5` : validation pack et release evidence bundle complets.
+- `NQ-6` : reconstruction independante possible.
+
 ## Architecture Cible
 
 ### 1. Spec Layer
@@ -298,18 +326,22 @@ Nomos opere sur plusieurs projets greenfield et brownfield avec preuves signees 
 
 ## Ordre Exact D'Implementation
 
-1. Figer le meta-modele.
-2. Choisir CUE comme source de verite des schemas.
-3. Construire le CLI minimal.
-4. Construire `diagnose` puis `admit`.
-5. Ajouter Tree-sitter et la detection repo/surfaces.
-6. Livrer trois adapters prioritaires.
-7. Implementer `sources`, `matrix`, `contracts`, `product-check`, `strict`.
-8. Integrer les policies dans CI/CD.
-9. Ajouter le pack brownfield.
-10. Ajouter attestations et signatures.
-11. Construire le control plane.
-12. Stabiliser SDK, adapters, references et compatibilite v1.
+1. Restaurer un baseline credible : Go, CUE, CLI fail-closed et evidence non dummy.
+2. Figer le meta-modele.
+3. Choisir CUE comme source de verite des schemas.
+4. Construire le CLI minimal.
+5. Construire `diagnose` puis `admit`.
+6. Ajouter `mode: canonical_corpus` et `mode: nomos_product`.
+7. Ajouter Tree-sitter et la detection repo/surfaces.
+8. Livrer trois adapters prioritaires.
+9. Implementer `sources`, `matrix`, `contracts`, `product-check`, `strict`.
+10. Implementer `compliance references` et `compliance self-check`.
+11. Integrer les policies dans CI/CD.
+12. Ajouter le pack brownfield.
+13. Ajouter attestations, signatures et release evidence bundle.
+14. Connecter Praxis via le contrat d'evidence partage.
+15. Construire le control plane.
+16. Stabiliser SDK, adapters, references et compatibilite v1.
 
 ## Ce Qu'il Ne Faut Pas Faire
 
@@ -329,3 +361,4 @@ Nomos v1.0 est atteint si :
 - les adapters declarent leurs limites ;
 - les preuves sont exportables et verifiables hors de Nomos ;
 - le statut d'un portefeuille de projets est observable sans inspection manuelle repo par repo.
+- le niveau `NQ` atteint est explicite et les claims publics restent limites au niveau de preuve disponible.

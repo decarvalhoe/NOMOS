@@ -1,0 +1,49 @@
+name: Regulated Gap
+description: Record a missing control, document, evidence item, owner, approval, or applicability decision.
+title: "[REG-GAP]: "
+labels: ["type:backlog", "area:compliance", "area:checks"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when something is missing. Do not invent evidence.
+  - type: input
+    id: gap_id
+    attributes:
+      label: Gap ID
+      placeholder: GAP-...
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical
+        - major
+        - minor
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is missing and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: affected_claims
+    attributes:
+      label: Affected claims or intended uses
+      value: |
+        - regulated_grade
+    validations:
+      required: true
+  - type: textarea
+    id: required_evidence
+    attributes:
+      label: Required evidence
+      value: |
+        - requires_evidence
+    validations:
+      required: true

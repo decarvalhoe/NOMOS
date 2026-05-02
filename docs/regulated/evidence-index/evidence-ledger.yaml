@@ -1,0 +1,101 @@
+schema_version: "0.1.0"
+generated_at: "2026-05-02"
+status: draft
+claim_boundary: "Evidence ledger baseline only. Missing evidence is not assumed."
+evidence_categories:
+  - id: EV-REF-001
+    category: external_reference_register
+    expected_location: "docs/regulated/reference-basis/external-reference-register.yaml"
+    current_status: present_draft
+    claim_allowed: "reference_registered"
+  - id: EV-REF-CANON-001
+    category: nomos_bible_corpus
+    expected_location: ".regulated-doc-gate/reference-canon-report.json"
+    current_status: generated_by_workflow_when_run
+    claim_allowed: "canonical_bible_registry_only"
+  - id: EV-QMS-001
+    category: quality_system_documents
+    expected_location: "docs/regulated/quality-system/"
+    current_status: draft_not_effective
+    claim_allowed: "documentation_baseline_only"
+  - id: EV-SDLC-001
+    category: lifecycle_documents
+    expected_location: "docs/regulated/lifecycle/"
+    current_status: draft_not_effective
+    claim_allowed: "documentation_baseline_only"
+  - id: EV-VAL-001
+    category: validation_evidence
+    expected_location: "docs/regulated/validation-pack/"
+    current_status: requires_evidence
+    claim_allowed: "none"
+  - id: EV-DI-001
+    category: data_integrity_records
+    expected_location: "docs/regulated/data-integrity/"
+    current_status: draft_not_effective
+    claim_allowed: "policy_draft_only"
+  - id: EV-SEC-001
+    category: security_and_supply_chain_evidence
+    expected_location: "docs/regulated/security-privacy/"
+    current_status: draft_not_effective
+    claim_allowed: "policy_draft_only"
+  - id: EV-AI-001
+    category: ai_rag_governance_evidence
+    expected_location: "docs/regulated/ai-rag-governance/"
+    current_status: requires_evidence
+    claim_allowed: "none"
+  - id: EV-REL-001
+    category: release_bundle
+    expected_location: "docs/regulated/release-bundle/"
+    current_status: requires_evidence
+    claim_allowed: "none"
+  - id: EV-GH-QMS-001
+    category: github_regulated_operating_model
+    expected_location: "docs/regulated/github-operating-model/"
+    current_status: draft_not_effective
+    claim_allowed: "github_documentary_qms_candidate"
+  - id: EV-AUTO-001
+    category: regulated_automation_reports
+    expected_location: ".regulated-evidence-pack/"
+    current_status: generated_by_workflow_when_run
+    claim_allowed: "evidence_inventory_only"
+blocking_gaps:
+  - id: GAP-QMS-OWNER
+    description: "Quality owner is not assigned."
+    severity: major
+    status: open
+    blocks_claims:
+      - regulated_grade
+      - effective_qms
+  - id: GAP-APPROVAL-WORKFLOW
+    description: "Controlled approval workflow is not implemented."
+    severity: major
+    status: open
+    blocks_claims:
+      - approved_release_evidence
+      - part_11_like_records
+  - id: GAP-TRAINING
+    description: "Training records and role matrix are absent."
+    severity: major
+    status: open
+    blocks_claims:
+      - effective_sop_use
+  - id: GAP-INDEPENDENT-AUDIT
+    description: "No independent audit record exists."
+    severity: major
+    status: open
+    blocks_claims:
+      - independent_audit_ready
+  - id: GAP-GITHUB-LIVE-CONFIG
+    description: "GitHub branch protection, rulesets, environments, security features, audit-log export, and retention settings require live evidence."
+    severity: major
+    status: open
+    blocks_claims:
+      - github_validated_operating_model
+      - approved_release_evidence
+  - id: GAP-LICENSED-BIBLES
+    description: "Licensed bible references, including GAMP 5 and ISO standards, require licensed local artifacts before full-text atomization and clause-level mapping."
+    severity: major
+    status: open
+    blocks_claims:
+      - clause_level_mapping_against_licensed_references
+      - csv_csa_gxp_claim_against_gamp5

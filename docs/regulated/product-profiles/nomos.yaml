@@ -1,0 +1,94 @@
+schema_version: "0.1.0"
+product:
+  id: nomos
+  name: Nomos
+  repository: https://github.com/RBOKproject/NOMOS
+  role: regulated_baseline_owner
+  execution_priority: 1
+  owner: RBOK Team
+regulated_design:
+  structure_status: installed
+  current_quality_level: "NQ-0/NQ-1 boundary"
+  target_quality_level: "NQ-3 before regulated-grade public claim"
+  public_claim_boundary: "Method/prototype under validation; not certified; regulated-grade claim not allowed yet."
+  regulated_claim_allowed: false
+  rationale:
+    - "Core CLI and CUE gates are still blocked by open build/schema failures."
+    - "Nomos-on-Nomos self-compliance is not yet executable."
+    - "RBOK lawbook feed must be generated read-only with real artifacts."
+owned_evidence:
+  - id: nomos-control-matrix
+    status: planned
+    path: docs/regulated/control-matrix/
+  - id: nomos-validation-pack
+    status: planned
+    path: docs/regulated/validation-pack/
+  - id: nomos-supplier-assurance-pack
+    status: planned
+    path: docs/regulated/supplier-pack/
+  - id: nomos-release-evidence-bundle
+    status: planned
+    path: docs/regulated/release-bundle/
+  - id: nomos-ai-rag-governance
+    status: planned
+    path: docs/regulated/ai-rag-governance/
+  - id: nomos-praxis-evidence-contract
+    status: planned
+    path: docs/regulated/customer-integration/
+critical_path:
+  baseline:
+    - "RBOKproject/NOMOS#125"
+    - "RBOKproject/NOMOS#126"
+    - "RBOKproject/NOMOS#127"
+    - "RBOKproject/NOMOS#136"
+    - "RBOKproject/NOMOS#137"
+  regulated_controls:
+    - "RBOKproject/NOMOS#138"
+    - "RBOKproject/NOMOS#139"
+    - "RBOKproject/NOMOS#140"
+    - "RBOKproject/NOMOS#141"
+    - "RBOKproject/NOMOS#142"
+    - "RBOKproject/NOMOS#143"
+    - "RBOKproject/NOMOS#145"
+    - "RBOKproject/NOMOS#146"
+    - "RBOKproject/NOMOS#147"
+  rbok_lawbook:
+    - "RBOKproject/NOMOS#124"
+    - "RBOKproject/NOMOS#128"
+    - "RBOKproject/NOMOS#129"
+    - "RBOKproject/NOMOS#130"
+    - "RBOKproject/NOMOS#131"
+    - "RBOKproject/NOMOS#132"
+    - "RBOKproject/NOMOS#133"
+    - "RBOKproject/NOMOS#134"
+    - "RBOKproject/NOMOS#135"
+  nomos_praxis_interface:
+    - "RBOKproject/NOMOS#144"
+    - "RBOKproject/NOMOS#149"
+    - "RBOKproject/NOMOS#150"
+    - "RBOKproject/NOMOS#151"
+    - "RBOKproject/NOMOS#152"
+    - "RBOKproject/NOMOS#153"
+    - "RBOKproject/NOMOS#154"
+    - "RBOKproject/NOMOS#155"
+    - "RBOKproject/NOMOS#156"
+    - "RBOKproject/NOMOS#157"
+    - "RBOKproject/NOMOS#158"
+praxis_relationship:
+  relationship: upstream_evidence_producer
+  downstream_product: praxis
+  praxis_status_until_nomos_green: blocked
+  required_export:
+    - canonical_claim_ids
+    - source_manifest_hashes
+    - evidence_ids
+    - control_ids
+    - release_bundle_status
+    - deviation_and_waiver_records
+release_gate:
+  minimum_before_nq3:
+    - "CLI and CUE green."
+    - "Nomos self-compliance report generated deterministically."
+    - "RBOK lawbook corpus feed generated read-only with manifest, units, index, RAG metadata, attestation, and lockfile."
+    - "Control matrix maps external references, controls, tests, evidence, and claims."
+    - "Release bundle declares Praxis evidence absent/not yet qualified until interface is verified."

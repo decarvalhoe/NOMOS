@@ -13,16 +13,11 @@ type MDExtractResult struct {
 	Nodes []LawbookNode `json:"nodes"`
 }
 
-// LawbookNodeType identifies the structural role of a lawbook node.
-
-
-
-
-
 var (
 	headerRe   = regexp.MustCompile(`^(#{1,4})\s+(.+)$`)
 	metaRowRe  = regexp.MustCompile(`^\|\s*(.+?)\s*\|\s*(.+?)\s*\|$`)
 	metaSepRe  = regexp.MustCompile(`^\|[\s:_-]+\|[\s:_-]+\|$`)
+	listItemRe = regexp.MustCompile(`^\s*(?:[-*+]|\d+[.)])\s+(.+\S)\s*$`)
 	metaKeyMap = map[string]string{
 		"reference": "reference",
 		"référence": "reference",
@@ -36,7 +31,7 @@ var (
 
 // ExtractMarkdown parses Markdown content into a flat list of LawbookNodes
 // following the hierarchy: H1→document, H2→chapter, H3→section, H4→article.
-// Body text under headings becomes paragraph nodes; list items become alinea nodes.
+// Body text under headings becomes paragraph containers with atomic alineas.
 func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 	lines := strings.Split(source, "\n")
 	var nodes []LawbookNode
@@ -138,9 +133,6 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 		// Extract paragraph/alinea sub-nodes from body content.
 		if bodyContent != "" {
 			subNodes := extractSubNodes(bodyContent, nodeID, canonicalRef, bodyStart+1, lineEnd)
-			for si := range subNodes {
-				subNodes[si].ParentID = nodeID
-			}
 			nodes = append(nodes, subNodes...)
 		}
 
@@ -255,7 +247,8 @@ func parseMetadataTable(lines []string, start int) (map[string]string, int) {
 	return meta, i - start
 }
 
-// extractSubNodes splits body content into paragraph and alinea nodes.
+// extractSubNodes splits body content into paragraph containers and atomic
+// alinea nodes. Every non-empty paragraph block emits at least one alinea.
 func extractSubNodes(body string, parentID string, parentRef string, lineStart int, lineEnd int) []LawbookNode {
 	var nodes []LawbookNode
 	paragraphs := splitParagraphs(body)
@@ -267,54 +260,58 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 			continue
 		}
 
-		// Check if this is a list block (all lines start with - or *).
-		listLines := strings.Split(text, "\n")
-		isList := true
-		for _, ll := range listLines {
-			trimmed := strings.TrimSpace(ll)
-			if trimmed != "" && !strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "* ") {
-				isList = false
-				break
-			}
+		pCount++
+		paragraphRef := fmt.Sprintf("%s/paragraph/%d", parentRef, pCount)
+		paragraph := LawbookNode{
+			NodeID:       computeNodeID(paragraphRef),
+			NodeType:     NodeParagraph,
+			Depth:        5,
+			Title:        "",
+			Text:         text,
+			ParentID:     parentID,
+			CanonicalRef: paragraphRef,
+			DisplayRef:   fmt.Sprintf("paragraph %d", pCount),
 		}
+		nodes = append(nodes, paragraph)
 
-		if isList {
-			for ai, ll := range listLines {
-				item := strings.TrimSpace(ll)
-				if item == "" {
-					continue
-				}
-				item = strings.TrimPrefix(item, "- ")
-				item = strings.TrimPrefix(item, "* ")
-				item = strings.TrimSpace(item)
-				ref := fmt.Sprintf("%s/alinea/%d", parentRef, ai+1)
-				nodes = append(nodes, LawbookNode{
-					NodeID:           computeNodeID(ref),
-					NodeType:         NodeAlinea,
-					Depth:        6,
-					Title:        "",
-					Text:      item,
-					ParentID:     parentID,
-					CanonicalRef: ref,
-					DisplayRef:   fmt.Sprintf("alinea %d", ai+1),
-				})
-			}
-		} else {
-			pCount++
-			ref := fmt.Sprintf("%s/paragraph/%d", parentRef, pCount)
+		alineas := atomizeAlineas(text)
+		for ai, item := range alineas {
+			ref := fmt.Sprintf("%s/alinea/%d", paragraphRef, ai+1)
 			nodes = append(nodes, LawbookNode{
-				NodeID:           computeNodeID(ref),
-				NodeType:         NodeParagraph,
-				Depth:        5,
+				NodeID:       computeNodeID(ref),
+				NodeType:     NodeAlinea,
+				Depth:        6,
 				Title:        "",
-				Text:      text,
-				ParentID:     parentID,
+				Text:         item,
+				ParentID:     paragraph.NodeID,
 				CanonicalRef: ref,
-				DisplayRef:   fmt.Sprintf("paragraph %d", pCount),
+				DisplayRef:   fmt.Sprintf("alinea %d", ai+1),
 			})
 		}
 	}
 	return nodes
+}
+
+func atomizeAlineas(text string) []string {
+	lines := strings.Split(text, "\n")
+	var items []string
+	allListItems := true
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		match := listItemRe.FindStringSubmatch(trimmed)
+		if match == nil {
+			allListItems = false
+			break
+		}
+		items = append(items, strings.TrimSpace(match[1]))
+	}
+	if allListItems && len(items) > 0 {
+		return items
+	}
+	return []string{strings.TrimSpace(text)}
 }
 
 // splitParagraphs splits text on blank lines.

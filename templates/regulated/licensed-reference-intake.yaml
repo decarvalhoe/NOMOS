@@ -1,0 +1,38 @@
+schema_version: "0.1.0"
+record_type: licensed_reference_intake
+reference_id: requires_reference_id
+title: requires_title
+official_url: requires_official_url
+edition_or_version: requires_version
+license_holder: not_assigned
+allowed_use:
+  internal_processing_by_nomos: requires_decision
+  commit_full_text_to_git: false
+  commit_extracted_chunks_to_git: requires_license_review
+  customer_redistribution: false
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: requires_local_path
+source_integrity:
+  sha256: requires_hash
+  hash_tool: requires_tool
+  hashed_at_utc: requires_timestamp
+review:
+  reviewer: not_assigned
+  approval_status: draft
+  evidence_status: requires_evidence
+nomos_processing:
+  mode: read_only
+  command: requires_command
+  output_location: requires_output_path
+  allowed_outputs:
+    - manifest
+    - sidecar
+    - source_hash
+    - coverage_report
+    - traceability_matrix
+    - validation_evidence
+blocked_claims_until_complete:
+  - clause_level_mapping
+  - validation_claim_against_reference
+  - regulated_grade_release_claim

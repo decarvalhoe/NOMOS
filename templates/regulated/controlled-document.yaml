@@ -1,0 +1,20 @@
+schema_version: "0.1.0"
+document:
+  id: replace_with_document_id
+  title: replace_with_title
+  version: "0.1.0"
+  status: draft
+  effective_status: not_effective
+  product_scope:
+    - nomos
+  intended_use: replace_with_intended_use_or_not_established
+  owner: not_assigned
+  reviewer: not_assigned
+  approver: not_assigned
+  effective_date: not_effective
+  next_review_date: not_scheduled
+  source_references: []
+  evidence_links: []
+  open_gaps:
+    - requires_evidence
+  public_claim_boundary: "No compliance claim from this draft document."

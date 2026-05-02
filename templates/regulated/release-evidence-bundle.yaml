@@ -1,0 +1,48 @@
+schema_version: "0.1.0"
+release:
+  product: replace_with_product_id
+  version: replace_with_version
+  repository: replace_with_repository_url
+  commit: replace_with_commit_sha
+  tag: replace_with_tag_or_not_applicable
+  workflow_run: replace_with_workflow_run_or_not_applicable
+  generated_at: replace_with_iso8601_timestamp
+  generated_by:
+    actor: replace_with_actor
+    tool: replace_with_tool
+    command: replace_with_command
+claim_boundary:
+  current_quality_level: not_qualified
+  allowed_public_claim: replace_with_allowed_wording
+  regulated_grade_claim_allowed: false
+intended_uses:
+  - id: replace_with_intended_use_id
+    status: planned
+control_matrix:
+  version: replace_with_matrix_version
+  hash: replace_with_hash
+validation_pack:
+  version: replace_with_validation_pack_version
+  status: planned
+evidence_artifacts:
+  - id: replace_with_artifact_id
+    path: replace_with_path
+    hash: replace_with_hash
+    status: planned
+deviations:
+  - id: replace_with_deviation_id
+    severity: high
+    status: open
+    release_impact: blocks_regulated_claim
+waivers:
+  - id: not_applicable
+    status: not_applicable
+    owner: not_applicable
+    expiry: not_applicable
+praxis_evidence_status:
+  status: not_qualified
+  reason: "Praxis can support this release only after verified Nomos producer artifacts and the shared evidence contract exist."
+approval:
+  status: not_approved
+  reviewer: not_assigned
+  meaning: not_applicable

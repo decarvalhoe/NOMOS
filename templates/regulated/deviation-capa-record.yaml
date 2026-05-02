@@ -1,0 +1,19 @@
+schema_version: "0.1.0"
+record:
+  id: replace_with_deviation_or_capa_id
+  type: deviation
+  status: open
+  severity: major
+  detected_at: replace_with_iso8601_timestamp
+  detected_by: not_assigned
+  affected_intended_use: replace_with_intended_use
+  description: replace_with_observed_issue
+  containment: requires_evidence
+  root_cause: not_investigated
+  corrective_action: not_defined
+  preventive_action: not_defined
+  effectiveness_check: not_scheduled
+  evidence_refs: []
+  owner: not_assigned
+  due_date: not_scheduled
+  release_impact: blocks_release_until_assessed

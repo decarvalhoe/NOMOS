@@ -1,0 +1,45 @@
+schema_version: "0.1.0"
+evidence:
+  id: replace_with_evidence_id
+  title: replace_with_title
+  type: report_or_manifest_or_attestation_or_test_result
+  status: planned
+alcoa_plus:
+  attributable:
+    actor: replace_with_actor
+    tool: replace_with_tool
+    command: replace_with_command
+  legible:
+    human_readable_path: replace_with_path
+    machine_readable_path: replace_with_path
+  contemporaneous:
+    generated_at: replace_with_iso8601_timestamp
+    source_state_time: replace_with_iso8601_timestamp
+  original_or_true_copy:
+    source_hashes:
+      - source_id: replace_with_source_id
+        hash: replace_with_hash
+    artifact_hash: replace_with_hash
+  accurate:
+    schema: replace_with_schema
+    validation_status: not_validated
+  complete:
+    included_scope:
+      - replace_with_scope
+    exclusions:
+      - replace_with_exclusion_or_not_applicable
+  consistent:
+    stable_id_policy: replace_with_policy
+    ordering_policy: replace_with_policy
+  enduring:
+    retention_location: replace_with_location
+    retention_period: replace_with_period
+  available:
+    retrieval_procedure: replace_with_procedure
+    reconstruction_command: replace_with_command
+lineage:
+  repository: replace_with_repository_url
+  commit: replace_with_commit_sha
+  workflow_run: replace_with_workflow_run_or_not_applicable
+  derived_from:
+    - replace_with_source_or_artifact_id

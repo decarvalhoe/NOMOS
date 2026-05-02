@@ -14,6 +14,7 @@ at the boundary.
 |---------------------|--------------------|--------------------------|
 | RBOKLawDocument     | rbok_documents     | 1:1 per source document  |
 | RBOKLawNode         | rbok_nodes         | 1:1 per structural node  |
+| RBOKLawAtom         | rbok_nodes / atom projection | Fine governed unit under a structural node |
 | Revisions           | rbok_revisions     | 1:N per document         |
 | Citations           | Runtime IA         | Resolved at query time   |
 | Governance metadata | Blocking publish   | Gate before availability |
@@ -107,6 +108,7 @@ Before any imported content becomes available to end users or the IA runtime:
 Citations are **not** persisted in the import tables. Instead:
 
 - Each `rbok_node` carries its `canonical_ref` and `display_ref`.
+- Each atom-level unit carries a `canonical_ref`, source span, text hash, and parent structural reference.
 - At query time, the IA runtime resolves citations by matching `canonical_ref`
   values across the node graph.
 - Cross-document citations use the format `{document_external_id}#{canonical_ref}`.
@@ -132,10 +134,16 @@ The following fields are projected into the vector retrieval index:
 
 ### Embedding Contract
 
-- Only nodes with `structure_only = false` and `content != null` are embedded.
-- Embedding granularity: one vector per node (no sub-node chunking at import).
-- The retrieval index stores `external_id` as the primary key for attribution
-  back to the structured node graph.
+- Only structure nodes or atom projections with `structure_only = false` and
+  `content != null` are eligible for embedding.
+- Target embedding granularity: one vector per governed atom when atomization is
+  certified, plus optional structure-context chunks for retrieval.
+- Temporary compatibility granularity: one vector per structural node is allowed
+  only below the certified atomization threshold and must be labelled as a
+  non-certified corpus candidate.
+- The retrieval index stores `external_id` or `chunk_id` as the primary key for
+  attribution back to the structured node graph, atom IDs, matrix rows, and
+  source span.
 
 ## Import Idempotency
 

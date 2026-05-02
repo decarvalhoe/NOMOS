@@ -1,0 +1,66 @@
+name: Deviation / CAPA
+description: Record a deviation, nonconformity, corrective action, or preventive action.
+title: "[DEVIATION]: "
+labels: ["bug", "area:compliance", "area:checks"]
+body:
+  - type: dropdown
+    id: record_type
+    attributes:
+      label: Record type
+      options:
+        - deviation
+        - nonconformity
+        - capa
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical
+        - major
+        - minor
+    validations:
+      required: true
+  - type: textarea
+    id: observed_issue
+    attributes:
+      label: Observed issue
+      description: State only observed facts.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact assessment
+      value: |
+        Intended use affected:
+        Data integrity impact:
+        Release impact:
+    validations:
+      required: true
+  - type: textarea
+    id: containment
+    attributes:
+      label: Containment
+      value: requires_evidence
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root cause
+      value: not_investigated
+    validations:
+      required: true
+  - type: textarea
+    id: actions
+    attributes:
+      label: Corrective / preventive actions
+      value: |
+        Corrective action: not_defined
+        Preventive action: not_defined
+        Effectiveness check: not_scheduled
+    validations:
+      required: true

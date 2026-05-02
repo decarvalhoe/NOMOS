@@ -9,6 +9,10 @@ dist/
 build/
 coverage/
 *.log
+*.pyc
+__pycache__/
 tmp/
 .cache/
 .tools/
+.regulated-doc-gate/
+.regulated-evidence-pack/

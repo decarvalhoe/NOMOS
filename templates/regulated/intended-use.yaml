@@ -1,0 +1,37 @@
+schema_version: "0.1.0"
+intended_use:
+  id: replace_with_intended_use_id
+  product: nomos_or_praxis
+  title: replace_with_title
+  owner: replace_with_owner
+  status: not_qualified
+  description: replace_with_precise_use
+  out_of_scope:
+    - replace_with_explicit_exclusion
+regulated_impact:
+  gxp_or_equivalent_impact: unknown
+  electronic_record_scope: unknown
+  electronic_signature_scope: not_claimed
+  ai_or_rag_scope: unknown
+  data_classification: internal
+  customer_qms_dependency: unknown
+risk:
+  level: medium
+  rationale: replace_with_risk_rationale
+  critical_functions:
+    - replace_with_function
+controls:
+  applicable:
+    - control_id: replace_with_control_id
+      reason: replace_with_reason
+  not_applicable:
+    - reference: replace_with_reference
+      rationale: replace_with_rationale
+evidence:
+  required:
+    - replace_with_evidence_artifact
+  acceptance_gate: replace_with_gate
+approval:
+  reviewer: not_assigned
+  approval_status: not_approved
+  approval_date: not_applicable

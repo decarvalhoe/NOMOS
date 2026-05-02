@@ -1,0 +1,85 @@
+schema_version: "0.1.0"
+certificate:
+  id: replace_with_certificate_id
+  product: nomos
+  corpus_id: replace_with_corpus_id
+  profile: rbok-lawbook
+  profile_version: replace_with_profile_version
+  generated_at: replace_with_iso8601_timestamp
+  generated_by:
+    actor: replace_with_actor
+    tool: replace_with_tool
+    command: replace_with_command
+quality_level:
+  current: AQ-0
+  target: AQ-4
+  regulated_claim_allowed: false
+source_snapshot:
+  repository: replace_with_repository_url
+  branch: replace_with_branch
+  commit: replace_with_commit
+  source_count: 0
+  source_hash_manifest: replace_with_manifest_path
+parser_inventory:
+  - adapter: markdown
+    parser: replace_with_parser
+    parser_version: replace_with_version
+    status: planned
+coverage:
+  ast_coverage_percent: 0
+  structural_coverage_percent: 0
+  text_coverage_percent: 0
+  atom_coverage_percent: 0
+  governance_metadata_coverage_percent: 0
+  matrix_linkage_coverage_percent: 0
+  chunk_linkage_coverage_percent: 0
+metrics:
+  document_count: 0
+  structure_node_count: 0
+  atom_count: 0
+  matrix_row_count: 0
+  chunk_count: 0
+  unknown_block_count: 0
+  unsupported_block_count: 0
+  dropped_block_count: 0
+  orphan_node_count: 0
+  duplicate_id_count: 0
+  unstable_id_count: 0
+  unresolved_reference_count: 0
+  orphan_chunk_count: 0
+  atoms_without_matrix_count: 0
+  chunks_without_atom_or_structure_count: 0
+review:
+  critical_atom_count: 0
+  reviewed_critical_atom_count: 0
+  approved_critical_atom_count: 0
+  needs_review_count: 0
+semantic_spine:
+  source_ids_reconciled: false
+  structural_ids_reconciled: false
+  atom_ids_reconciled: false
+  canonical_refs_reconciled: false
+  matrix_rows_reconciled: false
+  chunk_ids_reconciled: false
+pilot_profiles:
+  rbok_engine:
+    reference_issue: "RBOKproject/RBOK#2168"
+    status: not_evaluated
+  law_or_regulation:
+    status: not_evaluated
+  knight_and_wizard_rules:
+    status: not_evaluated
+deviations:
+  - id: replace_with_deviation_id_or_not_applicable
+    severity: high
+    status: open
+    impact: blocks_certification
+waivers:
+  - id: not_applicable
+    owner: not_applicable
+    expiry: not_applicable
+decision:
+  status: not_certified
+  reviewer: not_assigned
+  rationale: replace_with_rationale
+  public_claim_boundary: "No certified product-law claim until required gates pass."

@@ -1,0 +1,24 @@
+schema_version: "0.1.0"
+record_type: supporting_reference_intake
+reference_id: SUPPORT-ISO25010-EVSE-ZENODO-2025
+title: "ISO/IEC 25010:2023 characteristics and proposed application to EVSE software"
+official_url: "https://zenodo.org/records/14758339"
+source_type: public_dataset_supporting_reference
+canonical_role: supporting_context_not_regulatory_bible
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: "SUPPORT-ISO25010-EVSE-ZENODO-2025/Table1_EVSESoftware_ISO25010.pdf"
+source_integrity:
+  sha256: BFF3E7DB463DBDDE8BCBD1F7EDD07C12268B21F25DEB7D457717C16022A40BAE
+  size_bytes: 57299
+  hash_tool: "Get-FileHash -Algorithm SHA256"
+  hashed_at_utc: "2026-05-02T21:57:24Z"
+review:
+  reviewer: not_assigned
+  approval_status: draft
+  evidence_status: local_artifact_registered_supporting_use_requires_review
+nomos_processing:
+  mode: read_only
+  command: "nomos corpus feed --profile supporting-reference --corpus %NOMOS_LICENSED_REFERENCE_ROOT%/SUPPORT-ISO25010-EVSE-ZENODO-2025 --out .nomos/generated/supporting-references/SUPPORT-ISO25010-EVSE-ZENODO-2025"
+blocked_claims_until_complete:
+  - evse_quality_model_supporting_claim

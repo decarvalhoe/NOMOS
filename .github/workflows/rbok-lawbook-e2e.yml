@@ -38,11 +38,27 @@ jobs:
         working-directory: cli
         run: go build -o ../nomos-cli .
 
-      - name: Clone source corpus (read-only)
+      - name: Verify corpus read token is configured
+        env:
+          HAS_CORPUS_TOKEN: ${{ secrets.NOMOS_CORPUS_READ_TOKEN != '' }}
         run: |
-          git clone --depth 1 https://github.com/RBOKproject/realisons-business.git /tmp/rbok-corpus
-          cd /tmp/rbok-corpus
-          # Disable push to enforce read-only guard
+          if [ "$HAS_CORPUS_TOKEN" != "true" ]; then
+            echo "::error title=Missing corpus token::NOMOS_CORPUS_READ_TOKEN is required to read RBOKproject/realisons-business from NOMOS CI."
+            exit 1
+          fi
+
+      - name: Checkout source corpus (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: RBOKproject/realisons-business
+          ref: main
+          path: rbok-corpus
+          persist-credentials: false
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
+
+      - name: Disable corpus push remote
+        run: |
+          cd "$GITHUB_WORKSPACE/rbok-corpus"
           git remote set-url --push origin no_push
           echo "::group::Corpus info"
           echo "Commit: $(git rev-parse HEAD)"
@@ -52,14 +68,15 @@ jobs:
       - name: Record corpus fingerprint
         id: fingerprint
         run: |
-          cd /tmp/rbok-corpus
+          cd "$GITHUB_WORKSPACE/rbok-corpus"
           find 01_rbok -type f -exec sha256sum {} \; | sort > /tmp/corpus-before.sha256
-          echo "commit=$(git -C /tmp/rbok-corpus rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          corpus_commit="$(git rev-parse HEAD)"
+          echo "commit=$corpus_commit" >> "$GITHUB_OUTPUT"
 
       - name: Run E2E extraction
         run: |
           bash scripts/rbok-lawbook-e2e.sh \
-            --corpus /tmp/rbok-corpus/01_rbok \
+            --corpus "$GITHUB_WORKSPACE/rbok-corpus/01_rbok" \
             --out /tmp/rbok-output \
             --cli ./nomos-cli
 
@@ -80,30 +97,37 @@ jobs:
       - name: Verify node types present
         run: |
           echo "=== Checking required node types ==="
-          required_types=("document" "article" "paragraph" "alinea")
-          all_ok=true
-          for ntype in "${required_types[@]}"; do
-            count=$(grep -rl "\"type\":\"$ntype\"" /tmp/rbok-output/ 2>/dev/null | wc -l)
-            if [ "$count" -eq 0 ]; then
-              # Try with spaces around colon (pretty-printed JSON)
-              count=$(grep -rl "\"type\": \"$ntype\"" /tmp/rbok-output/ 2>/dev/null | wc -l)
-            fi
-            echo "  $ntype: $count file(s)"
-            if [ "$count" -eq 0 ]; then
-              echo "  FAIL: no $ntype nodes found"
-              all_ok=false
-            fi
-          done
-          if [ "$all_ok" = false ]; then
-            echo "FAIL: missing required node types"
-            exit 1
-          fi
-          echo "All required node types present."
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+          from collections import Counter
+
+          required = {"document", "article", "paragraph", "alinea"}
+          counts = Counter()
+          for path in pathlib.Path("/tmp/rbok-output").glob("*.json"):
+              data = json.loads(path.read_text(encoding="utf-8"))
+              for node in data.get("nodes", []):
+                  node_type = node.get("node_type")
+                  if node_type:
+                      counts[node_type] += 1
+
+          for node_type in sorted(counts):
+              print(f"  {node_type}: {counts[node_type]} node(s)")
+
+          missing = sorted(required - set(counts))
+          if missing:
+              print(f"FAIL: missing required node types: {', '.join(missing)}")
+              sys.exit(1)
+
+          print("All required node types present.")
+          PY
 
       - name: Verify source repo not modified
+        if: always()
         run: |
           echo "=== Read-only guard ==="
-          cd /tmp/rbok-corpus
+          cd "$GITHUB_WORKSPACE/rbok-corpus"
           # Check git status
           if [ -n "$(git status --porcelain)" ]; then
             echo "FAIL: source corpus has been modified"

@@ -125,23 +125,29 @@ if [[ "$artifact_count" -eq 0 ]]; then
 fi
 
 # Check required node types
-required_types=("document" "article" "paragraph" "alinea")
-all_ok=true
-for ntype in "${required_types[@]}"; do
-  count="$(grep -rl "\"type\": \"$ntype\"" "$OUT_DIR/" 2>/dev/null | wc -l || true)"
-  if [[ "$count" -eq 0 ]]; then
-    count="$(grep -rl "\"type\":\"$ntype\"" "$OUT_DIR/" 2>/dev/null | wc -l || true)"
-  fi
-  echo "  $ntype: $count file(s)"
-  if [[ "$count" -eq 0 ]]; then
-    echo "  WARN: no $ntype nodes found (may be expected if corpus lacks this structure)"
-    all_ok=false
-  fi
-done
+python3 - "$OUT_DIR" <<'PY'
+import json
+import pathlib
+import sys
+from collections import Counter
 
-if [[ "$all_ok" = false ]]; then
-  echo "WARNING: Some required node types are missing. Review the corpus structure."
-fi
+out_dir = pathlib.Path(sys.argv[1])
+required = {"document", "article", "paragraph", "alinea"}
+counts = Counter()
+for path in out_dir.glob("*.json"):
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for node in data.get("nodes", []):
+        node_type = node.get("node_type")
+        if node_type:
+            counts[node_type] += 1
+
+for node_type in sorted(counts):
+    print(f"  {node_type}: {counts[node_type]} node(s)")
+
+missing = sorted(required - set(counts))
+if missing:
+    print(f"WARNING: missing expected node types: {', '.join(missing)}")
+PY
 
 # --- Step 6: Read-only verification ---
 echo "=== Post-extraction read-only check ==="

@@ -32,7 +32,9 @@ Canonical-First force la question suivante : quelle est la chaîne de preuve ent
 | Source | Document ou système d'origine : PDF, Markdown, table, HTML scrapé, code legacy, contrat, norme, loi, ticket de décision. |
 | Source active | Source qui doit être prise en compte par le produit. |
 | Source hors scope | Source connue mais explicitement exclue, avec raison. |
+| Structure documentaire | Arbre lisible et citable du corpus : document, partie, chapitre, section, article, paragraphe, alinéa, table, note, annexe. |
 | Unité atomique | Plus petite unité métier traçable : règle, clause, entrée de catalogue, exception, formule, sort, acte, garantie. |
+| Référence canonique | Identifiant stable permettant de citer une structure ou unité sans dépendre d'un chemin de fichier fragile. |
 | Contrat canonique | Représentation structurée et versionnée d'une unité ou collection, souvent YAML/JSON. |
 | Schéma | Validation machine du contrat : Zod, Pydantic, JSON Schema, protobuf, Avro, etc. |
 | Read-model | Modèle relationnel ou document optimisé pour lecture produit, dérivé du contrat. |
@@ -47,7 +49,9 @@ La chaîne standard est :
 
 ```text
 source
+  -> document structure
   -> unit
+  -> canonical reference
   -> canonical contract
   -> schema
   -> read-model
@@ -61,11 +65,12 @@ La base vectorielle est alimentée par les sources et reliée aux unités par me
 
 ```text
 source
+  -> structure + units
   -> chunks + embeddings + metadata
   -> RAG citation/explanation
 ```
 
-Le vector store n'est pas une couche d'autorité. Il ne corrige pas le read-model, ne surcharge pas le contrat et ne décide pas une règle. Il rend le contexte retrouvable et citable.
+Le vector store n'est pas une couche d'autorité. Il ne corrige pas le read-model, ne surcharge pas le contrat et ne décide pas une règle. Il rend le contexte retrouvable et citable. Un chunk conforme est donc une projection traçable d'une structure ou d'une unité, pas une vérité produit indépendante.
 
 ## Niveaux De Maturité
 
@@ -98,7 +103,9 @@ Toute modification de source, contrat, schéma ou comportement déclenche une an
 Un projet est réellement Canonical-First si :
 
 - chaque source active est hashée, typée, priorisée et statutaire ;
+- chaque source active est transformée en structure documentaire vérifiable ou explicitement exclue ;
 - chaque unité atomique a un ID stable et des références sources exactes ;
+- chaque référence canonique résout vers une source, une structure et si applicable une unité ;
 - chaque donnée produit vient d'un contrat validé ;
 - chaque contrat a un schéma ;
 - chaque unité critique a au moins un test ;
@@ -106,4 +113,3 @@ Un projet est réellement Canonical-First si :
 - aucune surface produit ne dépend de données inventées ;
 - les décisions métier non triviales ont un ADR ou un decision record ;
 - les experts peuvent auditer le chemin source -> UI sans lire tout le code.
-

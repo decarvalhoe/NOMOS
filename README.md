@@ -15,15 +15,21 @@ Un projet Canonical-First traite les sources métier comme la première dépenda
 ```mermaid
 flowchart LR
   S["Sources d'autorité"] --> U["Unités atomiques"]
+  S --> DS["Structure documentaire"]
+  DS --> U
+  U --> R["Références canoniques"]
   U --> C["Contrats canoniques YAML/JSON"]
   C --> SC["Schémas typés"]
   SC --> DB["Read-model relationnel"]
-  S --> VS["Base vectorielle avec provenance"]
+  R --> M["Matrice de traçabilité"]
+  M --> C
+  U --> VS["Chunks/RAG avec provenance"]
   DB --> CORE["Core déterministe"]
   VS --> LLM["LLM explicatif/citant"]
   CORE --> API["API"]
   API --> UI["UI produit"]
   U --> T["Tests et golden cases"]
+  M --> T
   C --> T
   CORE --> T
   API --> T
@@ -73,6 +79,14 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/14-product-roadmap.md` : roadmap produit v0.1 -> v1.0 et architecture cible.
 - `docs/15-product-backlog.md` : backlog concret d'epics/issues, dépendances et DoD.
 - `docs/16-versioning-policy.md` : politique de versionning du coeur, des adapters et des schemas.
+- `docs/21-regulated-quality-reference.md` : baseline qualité/compliance pour les marchés IT régulés.
+- `docs/22-nomos-praxis-synergy-market-audit.md` : audit de synergie Nomos/Praxis, angles morts et positionnement marché.
+- `docs/23-regulated-implementation-plan.md` : plan d'implémentation pour aligner Nomos avec ses exigences de conformité.
+- `docs/24-regulated-client-compliance-evidence.md` : recherche et checklist des preuves attendues par les clients régulés.
+- `docs/25-regulated-by-design-structure.md` : structure operationnelle `regulated by design` pour Nomos et Praxis.
+- `docs/26-structure-aware-atomization-process.md` : process et architecture cible pour une atomisation documentaire fiable, certifiable et consciente de la structure.
+- `docs/27-aaa-regulated-it-document-set.md` : document set AAA+ cible, règles de non-invention et limites de claims régulés.
+- `docs/regulated/` : dossiers de profils produit, matrices, validation, supplier pack, release bundle et operations qualite.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
@@ -86,6 +100,23 @@ Le dépôt porte maintenant deux couches complémentaires :
 - la couche produit, dans `cli/`, `adapters/`, `policies/`, `attestations/`, `sdk/`, `control-plane/` et `specs/`.
 
 Cette séparation permet de faire évoluer Nomos comme plateforme sans perdre la lisibilité méthodologique.
+
+## Regulated-Grade Track
+
+Nomos ne doit pas annoncer une posture régulée tant qu'il ne peut pas la prouver sur lui-même.
+
+Le track régulé est maintenant gouverné par trois documents :
+
+- `docs/21-regulated-quality-reference.md` définit les niveaux `NQ-0` à `NQ-6`, les familles de contrôles et les règles de non-surpromesse.
+- `docs/22-nomos-praxis-synergy-market-audit.md` compare la thèse Nomos/Praxis aux attentes du marché ALM, validation lifecycle, test management et evidence/CAPA.
+- `docs/23-regulated-implementation-plan.md` transforme l'audit en phases d'implémentation, dépendances GitHub, gates et règles d'alignement documentaire.
+- `docs/25-regulated-by-design-structure.md` installe la structure partagee Nomos/Praxis : profils produit, matrice de controles, pack fournisseur, validation pack, release bundle, AI/RAG governance et integration client.
+- `docs/26-structure-aware-atomization-process.md` definit l'engine cible d'atomisation structure-aware et son systeme de certification.
+- `docs/27-aaa-regulated-it-document-set.md` definit le set documentaire AAA+ et la règle stricte: un manque devient un gap, jamais une preuve inventee.
+- `docs/regulated/github-operating-model/` definit le modele GitHub-native pour issues, PR, gates, preuves, audit exports et limites Part 11/eQMS.
+- `scripts/regulated_docs_gate.py`, `scripts/regulated_evidence_pack.py` et `scripts/regulated_github_qms_audit.py` automatisent les controles documentaires, le hashage des preuves et l'audit GitHub QMS.
+
+Le prochain seuil crédible est `NQ-3` : Nomos build/test green, références externes gouvernées, self-compliance exécutable, métadonnées ALCOA+, validation pack initial et claims publics limités au niveau de preuve réel.
 
 ## Quick Start
 

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Regulated documentation baseline
+    url: https://github.com/RBOKproject/NOMOS/tree/main/docs/regulated
+    about: Use the controlled issue forms for regulated records.

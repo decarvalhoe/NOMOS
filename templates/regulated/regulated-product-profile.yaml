@@ -1,0 +1,35 @@
+schema_version: "0.1.0"
+product:
+  id: replace_with_product_id
+  name: replace_with_product_name
+  repository: replace_with_repository_url
+  role: baseline_owner_or_downstream_consumer
+  execution_priority: 1
+  owner: replace_with_owner
+regulated_design:
+  structure_status: planned
+  current_quality_level: not_qualified
+  target_quality_level: replace_with_target_level
+  public_claim_boundary: replace_with_allowed_wording
+  regulated_claim_allowed: false
+  rationale:
+    - replace_with_rationale
+owned_evidence:
+  - id: replace_with_evidence_id
+    status: planned
+    path: replace_with_path_or_artifact_uri
+critical_path:
+  issues:
+    - replace_with_issue_reference
+relationships:
+  upstream:
+    - product: replace_with_upstream_product_or_not_applicable
+      required_artifacts:
+        - replace_with_artifact
+  downstream:
+    - product: replace_with_downstream_product_or_not_applicable
+      exported_artifacts:
+        - replace_with_artifact
+release_gate:
+  minimum_before_claim:
+    - replace_with_required_gate

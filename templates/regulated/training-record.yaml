@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+training_record:
+  id: replace_with_training_record_id
+  trainee: not_assigned
+  role: replace_with_role
+  document_id: replace_with_document_id
+  document_version: replace_with_version
+  training_method: self_study_or_instructor_led
+  completed_at: not_completed
+  effectiveness_check:
+    required: true
+    status: not_performed
+  evidence_ref: requires_evidence
+  approver: not_assigned

@@ -1,0 +1,19 @@
+schema_version: "0.1.0"
+matrix_status: draft
+rows:
+  - id: TRACE-001
+    external_reference_id: replace_with_reference_id
+    control_id: replace_with_control_id
+    requirement_id: replace_with_requirement_id
+    intended_use: replace_with_intended_use
+    risk_level: high
+    implementation_refs: []
+    verification_refs: []
+    evidence_refs:
+      - requires_evidence
+    status: missing
+    owner: not_assigned
+    release_gate: blocked
+    non_applicability:
+      status: false
+      rationale: not_applicable_only_if_justified

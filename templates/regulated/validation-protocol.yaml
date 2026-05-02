@@ -1,0 +1,28 @@
+schema_version: "0.1.0"
+protocol:
+  id: replace_with_protocol_id
+  title: replace_with_title
+  version: "0.1.0"
+  status: draft
+  intended_use: replace_with_intended_use
+  risk_level: high
+  owner: not_assigned
+  approver: not_assigned
+  prerequisites:
+    - requirements_approved_or_waived
+    - test_environment_defined
+  test_cases:
+    - id: TC-001
+      requirement_id: replace_with_requirement_id
+      objective: replace_with_test_objective
+      method: scripted
+      steps:
+        - replace_with_step
+      expected_result: replace_with_expected_result
+      actual_result: not_executed
+      evidence_ref: requires_evidence
+      status: not_executed
+  deviations: []
+  approval:
+    status: not_approved
+    approver: not_assigned
