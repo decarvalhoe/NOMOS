@@ -289,12 +289,12 @@ func TestClaimBoundaryOnIncomplete(t *testing.T) {
 	if output.Manifest.Complete {
 		t.Fatal("should be incomplete")
 	}
-	if !contains(output.Manifest.ClaimBoundary, "No regulated-grade claim") {
+	if !bundleContains(output.Manifest.ClaimBoundary, "No regulated-grade claim") {
 		t.Fatalf("claim boundary should block claims, got: %q", output.Manifest.ClaimBoundary)
 	}
 }
 
-func contains(s, sub string) bool {
+func bundleContains(s, sub string) bool {
 	return len(s) >= len(sub) && findSub(s, sub)
 }
 

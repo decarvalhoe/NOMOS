@@ -158,7 +158,7 @@ var validRiskLevels = map[string]bool{
 	"low": true, "medium": true, "high": true, "critical": true,
 }
 
-var validStatuses = map[string]bool{
+var inventoryValidStatuses = map[string]bool{
 	"not_qualified": true, "planned": true, "implemented": true,
 	"verified": true, "approved": true, "waived": true, "blocked": true,
 }
@@ -218,7 +218,7 @@ func checkEntry(v ValidationEntry, seenIDs map[string]bool) []InventoryFinding {
 			Message: "acceptance_gate is required",
 		})
 	}
-	if !validStatuses[v.Status] {
+	if !inventoryValidStatuses[v.Status] {
 		findings = append(findings, InventoryFinding{
 			ValidationID: v.ID, Field: "status", Severity: "high",
 			Message: fmt.Sprintf("invalid status %q", v.Status),

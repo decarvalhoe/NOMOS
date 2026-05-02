@@ -28,7 +28,7 @@ type ArtifactStatus string
 const (
 	StatusPresent      ArtifactStatus = "present"
 	StatusMissing      ArtifactStatus = "missing"
-	StatusPlanned      ArtifactStatus = "planned"
+	ArtifactPlanned    ArtifactStatus = "planned"
 	StatusNotRequired  ArtifactStatus = "not_required"
 )
 
@@ -243,7 +243,7 @@ func resolveArtifact(spec ArtifactSpec, repoRoot string, targetLevel QualityLeve
 		if result.Required {
 			result.Status = StatusMissing
 		} else {
-			result.Status = StatusPlanned
+			result.Status = ArtifactPlanned
 		}
 		return result
 	}
@@ -254,7 +254,7 @@ func resolveArtifact(spec ArtifactSpec, repoRoot string, targetLevel QualityLeve
 		if result.Required {
 			result.Status = StatusMissing
 		} else {
-			result.Status = StatusPlanned
+			result.Status = ArtifactPlanned
 		}
 		return result
 	}
