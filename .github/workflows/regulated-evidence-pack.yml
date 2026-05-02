@@ -1,0 +1,69 @@
+name: Regulated Evidence Pack
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'docs/regulated/**'
+      - 'templates/regulated/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODEOWNERS'
+      - '.github/workflows/regulated-*.yml'
+      - 'scripts/regulated_*.py'
+      - 'tests/test_regulated_automation.py'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/regulated/**'
+      - 'templates/regulated/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODEOWNERS'
+      - '.github/workflows/regulated-*.yml'
+      - 'scripts/regulated_*.py'
+      - 'tests/test_regulated_automation.py'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  regulated-evidence:
+    name: Build regulated evidence pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run regulated automation tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Generate local evidence pack
+        run: |
+          mkdir -p .regulated-evidence-pack
+          python scripts/regulated_evidence_pack.py \
+            --output .regulated-evidence-pack/evidence-pack.json
+
+      - name: Audit GitHub QMS controls
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/regulated_github_qms_audit.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --output .regulated-evidence-pack/github-qms-audit.json
+
+      - name: Upload regulated evidence pack
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regulated-evidence-pack-${{ github.run_id }}
+          path: .regulated-evidence-pack/
+          retention-days: 90

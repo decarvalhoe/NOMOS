@@ -20,6 +20,13 @@ The current execution order is:
 | Directory | Responsibility |
 |---|---|
 | `product-profiles/` | Product role, NQ level, public-claim boundary, critical dependencies, and evidence ownership. |
+| `reference-basis/` | Official external reference register and applicability evidence boundary. |
+| `quality-system/` | Quality manual and SOP baseline for document control, training, risk, CAPA, audit and management review. |
+| `lifecycle/` | SDMP, requirements, validation, configuration, change, release and retirement controls. |
+| `data-integrity/` | ALCOA+, electronic record/signature, retention and auditability policy baseline. |
+| `security-privacy/` | Secure SDLC, access control, audit trail, vulnerability, incident and BCDR controls. |
+| `github-operating-model/` | GitHub-native documentary QMS model, required repo settings, automation and limitations. |
+| `evidence-index/` | Evidence ledger and generated pack index. |
 | `control-matrix/` | External reference to control to requirement to evidence mapping. |
 | `validation-pack/` | Intended use, risk assessment, URS/SRS, validation plan, test protocol, deviations, summary. |
 | `supplier-pack/` | Supplier qualification evidence and customer-facing assurance pack. |
@@ -37,3 +44,15 @@ The structure is installed, but the product is not regulated-grade yet.
 Nomos remains at `NQ-0/NQ-1 boundary` until the build, schema, corpus feed, and self-compliance gates are green.
 
 Praxis remains downstream and cannot be used as regulated support evidence for Nomos until Nomos publishes verified producer artifacts and a shared evidence contract.
+
+## Automation
+
+The current automation is intentionally evidence-oriented:
+
+```bash
+python scripts/regulated_docs_gate.py --report .regulated-doc-gate/regulated-doc-gate-report.json
+python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json
+python scripts/regulated_github_qms_audit.py --repo RBOKproject/NOMOS --output .regulated-evidence-pack/github-qms-audit.json
+```
+
+The GitHub audit may report `requires_live_evidence` when repository settings, audit-log exports, protected environments, retention policy, or security features cannot be verified from repository files alone.

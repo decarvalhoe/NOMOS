@@ -1,0 +1,10 @@
+# CODEOWNERS placeholder for regulated controls.
+#
+# No active owners are declared here because real GitHub users/teams have not
+# been assigned in controlled records. Do not invent owners.
+#
+# Once teams exist, activate rules such as:
+# /docs/regulated/                 @RBOKproject/quality
+# /templates/regulated/            @RBOKproject/quality
+# /.github/workflows/              @RBOKproject/devops @RBOKproject/quality
+# /scripts/regulated_docs_gate.py  @RBOKproject/devops @RBOKproject/quality

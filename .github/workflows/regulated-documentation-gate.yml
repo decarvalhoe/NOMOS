@@ -1,0 +1,61 @@
+name: Regulated Documentation Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'docs/regulated/**'
+      - 'templates/regulated/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODEOWNERS'
+      - '.github/workflows/regulated-*.yml'
+      - 'scripts/regulated_*.py'
+      - 'tests/test_regulated_automation.py'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/regulated/**'
+      - 'templates/regulated/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODEOWNERS'
+      - '.github/workflows/regulated-*.yml'
+      - 'scripts/regulated_*.py'
+      - 'tests/test_regulated_automation.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regulated-docs:
+    name: Validate regulated documentation controls
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validator dependencies
+        run: python -m pip install --quiet pyyaml
+
+      - name: Run regulated automation tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Run regulated documentation gate
+        run: |
+          mkdir -p .regulated-doc-gate
+          python scripts/regulated_docs_gate.py \
+            --report .regulated-doc-gate/regulated-doc-gate-report.json
+
+      - name: Upload regulated documentation gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regulated-documentation-gate-report
+          path: .regulated-doc-gate/regulated-doc-gate-report.json
+          retention-days: 90

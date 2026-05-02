@@ -1,0 +1,304 @@
+schema_version: "0.1.0"
+generated_at: "2026-05-02"
+status: draft
+claim_boundary: "Reference registration only. This file does not certify Nomos compliance."
+references:
+  - id: FDA-21CFR11-11.10
+    title: "21 CFR Part 11 - Controls for closed systems"
+    publisher: "US FDA / eCFR"
+    url: "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11/subpart-B/section-11.10"
+    version_or_date: "current as of 2026-04-30 eCFR"
+    checked_on: "2026-05-02"
+    applicability: "Electronic records, audit trails, access control, authority checks, record protection, validation, documentation controls."
+    nomos_alignment: "Electronic record scope assessment, audit trail design, record export, access control, validation evidence, documentation change control."
+    required_documents:
+      - "docs/regulated/data-integrity/electronic-records-and-signatures-policy.md"
+      - "docs/regulated/security-privacy/access-control-and-audit-trail-sop.md"
+    evidence_status: requires_evidence
+  - id: FDA-21CFR820-QMSR
+    title: "21 CFR Part 820 - Quality Management System Regulation"
+    publisher: "US FDA / eCFR"
+    url: "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-820"
+    version_or_date: "current as of 2026-04-30 eCFR"
+    checked_on: "2026-05-02"
+    applicability: "Quality management system and record control expectations for medical device contexts."
+    nomos_alignment: "QMS structure, document control, records, complaint/deviation/CAPA model, supplier/customer evidence boundaries."
+    required_documents:
+      - "docs/regulated/quality-system/README.md"
+      - "docs/regulated/quality-system/deviation-capa-sop.md"
+    evidence_status: requires_evidence
+  - id: FDA-CSA-2025
+    title: "Computer Software Assurance for Production and Quality System Software"
+    publisher: "US FDA"
+    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software"
+    version_or_date: "Final guidance, September 2025"
+    checked_on: "2026-05-02"
+    applicability: "Risk-based confidence in automation used for production or quality systems."
+    nomos_alignment: "Risk-ranked validation strategy, scripted and unscripted testing, objective evidence by criticality."
+    required_documents:
+      - "docs/regulated/lifecycle/validation-master-plan.md"
+      - "templates/regulated/validation-protocol.yaml"
+    evidence_status: requires_evidence
+  - id: FDA-GPSV-2002
+    title: "General Principles of Software Validation"
+    publisher: "US FDA"
+    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/general-principles-software-validation"
+    version_or_date: "Final guidance, January 2002"
+    checked_on: "2026-05-02"
+    applicability: "General validation principles for medical device software and software used in design, development, or manufacture."
+    nomos_alignment: "Validation planning, requirements traceability, test evidence, deviation handling, summary reporting."
+    required_documents:
+      - "docs/regulated/lifecycle/validation-master-plan.md"
+      - "templates/regulated/validation-summary-report.yaml"
+    evidence_status: requires_evidence
+  - id: FDA-DATA-INTEGRITY-CGMP-2018
+    title: "Data Integrity and Compliance With Drug CGMP"
+    publisher: "US FDA"
+    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/data-integrity-and-compliance-drug-cgmp-questions-and-answers"
+    version_or_date: "Final guidance, December 2018"
+    checked_on: "2026-05-02"
+    applicability: "Reliable and accurate data, risk-based data integrity management."
+    nomos_alignment: "ALCOA+ envelope, source and artifact hashes, actor/tool/timestamp, retention, audit trail, true-copy exports."
+    required_documents:
+      - "docs/regulated/data-integrity/alcoa-data-integrity-policy.md"
+      - "templates/regulated/alcoa-evidence-envelope.yaml"
+    evidence_status: requires_evidence
+  - id: EU-EUDRALEX-V4-ANNEX11
+    title: "EudraLex Volume 4 Annex 11 - Computerised Systems"
+    publisher: "European Commission"
+    url: "https://health.ec.europa.eu/medicinal-products/eudralex/eudralex-volume-4_en"
+    version_or_date: "Annex 11 revision January 2011 listed by European Commission"
+    checked_on: "2026-05-02"
+    applicability: "Computerised systems, risk-based validation, supplier assessment, lifecycle, data integrity."
+    nomos_alignment: "System inventory, URS/SRS, traceability, validation pack, supplier pack, data migration checks."
+    required_documents:
+      - "docs/regulated/lifecycle/software-development-management-plan.md"
+      - "docs/regulated/supplier-pack/README.md"
+    evidence_status: requires_evidence
+  - id: ISO-13485-2016
+    title: "ISO 13485:2016 - Medical devices quality management systems"
+    publisher: "ISO"
+    url: "https://www.iso.org/standard/59752.html"
+    version_or_date: "2016 edition, confirmed current in 2025"
+    checked_on: "2026-05-02"
+    applicability: "QMS requirements for regulatory purposes in medical device contexts."
+    nomos_alignment: "Quality system structure, process validation, risk management, supplier and record controls."
+    required_documents:
+      - "docs/regulated/quality-system/README.md"
+    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+  - id: ISO-IEC-IEEE-12207-2026
+    title: "ISO/IEC/IEEE 12207:2026 - Software life cycle processes"
+    publisher: "ISO/IEC/IEEE"
+    url: "https://www.iso.org/cms/%20render/live/en/sites/isoorg/contents/data/standard/09/02/90219.html"
+    version_or_date: "Edition 2, published 2026-04"
+    checked_on: "2026-05-02"
+    applicability: "Software lifecycle across acquisition, supply, development, operation, maintenance, support, and retirement."
+    nomos_alignment: "SDMP, lifecycle controls, maintenance, retirement, acquisition/supplier controls."
+    required_documents:
+      - "docs/regulated/lifecycle/software-development-management-plan.md"
+      - "docs/regulated/lifecycle/release-and-retirement-sop.md"
+    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+  - id: ISO-IEC-25010-2023
+    title: "ISO/IEC 25010:2023 - Product quality model"
+    publisher: "ISO/IEC"
+    url: "https://www.iso.org/cms/%20render/live/en/sites/isoorg/contents/data/standard/07/81/78176.html"
+    version_or_date: "Edition 2, published 2023-11"
+    checked_on: "2026-05-02"
+    applicability: "Software product quality requirements and evaluation."
+    nomos_alignment: "Quality attributes, acceptance criteria, test strategy, release gates."
+    required_documents:
+      - "docs/regulated/lifecycle/requirements-and-traceability-sop.md"
+    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+  - id: NASA-NPR-7150-2D
+    title: "NASA NPR 7150.2D - Software Engineering Requirements"
+    publisher: "NASA"
+    url: "https://nodis3.gsfc.nasa.gov/displayAll.cfm?Internal_ID=N_PR_7150_0002_&page_name=all"
+    version_or_date: "NPR 7150.2D"
+    checked_on: "2026-05-02"
+    applicability: "High-rigor software planning, documentation, configuration, verification, assurance, IV&V and risk controls."
+    nomos_alignment: "SDMP, tailoring matrix, risk management, software documentation set, independent review readiness."
+    required_documents:
+      - "docs/regulated/lifecycle/software-development-management-plan.md"
+      - "docs/regulated/control-matrix/README.md"
+    evidence_status: requires_evidence
+  - id: NIST-SP-800-218
+    title: "NIST SP 800-218 SSDF Version 1.1"
+    publisher: "NIST"
+    url: "https://csrc.nist.gov/pubs/sp/800/218/final"
+    version_or_date: "Final, February 2022"
+    checked_on: "2026-05-02"
+    applicability: "Secure software development practices and supplier/acquirer communication."
+    nomos_alignment: "Secure SDLC, vulnerability management, supply-chain provenance, release security evidence."
+    required_documents:
+      - "docs/regulated/security-privacy/secure-sdlc-sop.md"
+    evidence_status: requires_evidence
+  - id: NIST-SP-800-53R5
+    title: "NIST SP 800-53 Rev. 5 - Security and Privacy Controls"
+    publisher: "NIST"
+    url: "https://csrc.nist.gov/Pubs/sp/800/53/r5/upd1/Final"
+    version_or_date: "Rev. 5 with updates as of 2020-12-10 and later release data"
+    checked_on: "2026-05-02"
+    applicability: "Security/privacy controls and assurance control catalog."
+    nomos_alignment: "Access control, audit/accountability, configuration management, incident response, system integrity, supply chain."
+    required_documents:
+      - "docs/regulated/security-privacy/README.md"
+    evidence_status: requires_evidence
+  - id: NIST-AI-RMF-1
+    title: "NIST AI Risk Management Framework 1.0 and Generative AI Profile"
+    publisher: "NIST"
+    url: "https://www.nist.gov/itl/ai-risk-management-framework"
+    version_or_date: "AI RMF 1.0 released 2023-01-26; Generative AI Profile released 2024-07-26"
+    checked_on: "2026-05-02"
+    applicability: "AI/RAG risk governance, evaluation, monitoring and human oversight."
+    nomos_alignment: "AI-assisted extraction and RAG governance, citation/refusal evals, prompt-injection controls."
+    required_documents:
+      - "docs/regulated/ai-rag-governance/README.md"
+    evidence_status: requires_evidence
+  - id: ISPE-GAMP5-2E-2022
+    title: "ISPE GAMP 5 Second Edition"
+    publisher: "ISPE"
+    url: "https://ispe.org/publications/guidance-documents/gamp-5"
+    version_or_date: "Second Edition, July 2022"
+    checked_on: "2026-05-02"
+    applicability: "Industry good practice for GxP computerized systems, risk-based lifecycle and supplier leverage."
+    nomos_alignment: "Use as industry guidance only until licensed detailed mapping exists."
+    required_documents:
+      - "docs/regulated/lifecycle/validation-master-plan.md"
+    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+  - id: ICH-Q9R1
+    title: "ICH Q9(R1) Quality Risk Management"
+    publisher: "ICH / FDA guidance portal"
+    url: "https://www.hhs.gov/guidance/document/q9r1-quality-risk-management"
+    version_or_date: "FDA issue date 2023-05-03"
+    checked_on: "2026-05-02"
+    applicability: "Quality risk management principles."
+    nomos_alignment: "Risk assessment, control, communication, review, and risk-based validation rationale."
+    required_documents:
+      - "docs/regulated/quality-system/quality-risk-management-sop.md"
+    evidence_status: requires_evidence
+  - id: ICH-Q10
+    title: "ICH Q10 Pharmaceutical Quality System"
+    publisher: "FDA / ICH"
+    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/q10-pharmaceutical-quality-system"
+    version_or_date: "Final guidance, April 2009"
+    checked_on: "2026-05-02"
+    applicability: "Lifecycle pharmaceutical quality-system model."
+    nomos_alignment: "Quality system governance, management review, CAPA, continual improvement."
+    required_documents:
+      - "docs/regulated/quality-system/management-review-sop.md"
+    evidence_status: requires_evidence
+  - id: GITHUB-ISSUE-FORMS
+    title: "GitHub issue forms syntax"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Structured issue capture for regulated gaps, deviations, CAPA, validation records, audit findings and release readiness."
+    nomos_alignment: "Repository carries YAML issue forms in .github/ISSUE_TEMPLATE and validates them through regulated documentation gates."
+    required_documents:
+      - "docs/regulated/github-operating-model/README.md"
+      - ".github/ISSUE_TEMPLATE/"
+    evidence_status: requires_configuration_evidence
+  - id: GITHUB-BRANCH-PROTECTION
+    title: "GitHub protected branches"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "PR-only change control, required reviews, required checks, force-push restriction and deletion restriction."
+    nomos_alignment: "Live GitHub configuration must prove protected main/develop/release branches before release approval claims."
+    required_documents:
+      - "docs/regulated/github-operating-model/README.md"
+    evidence_status: requires_live_github_evidence
+  - id: GITHUB-RULESETS
+    title: "GitHub rulesets"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Repository or organization policy enforcement across branches and tags."
+    nomos_alignment: "Rulesets are expected for controlled branch/tag governance and restricted bypass evidence."
+    required_documents:
+      - "docs/regulated/github-operating-model/README.md"
+    evidence_status: requires_live_github_evidence
+  - id: GITHUB-CODEOWNERS
+    title: "GitHub CODEOWNERS"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/articles/about-code-owners"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Ownership and review routing for controlled files."
+    nomos_alignment: "CODEOWNERS placeholder exists; real users or teams remain required before code-owner approval can be claimed."
+    required_documents:
+      - ".github/CODEOWNERS"
+      - "docs/regulated/github-operating-model/README.md"
+    evidence_status: requires_named_owner_evidence
+  - id: GITHUB-ENVIRONMENTS
+    title: "GitHub deployment environments"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/actions/reference/deployments-and-environments"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Protected release jobs, required reviewers, deployment branch restrictions and secret access boundaries."
+    nomos_alignment: "A protected regulated-release environment is required before release approval workflow claims."
+    required_documents:
+      - "docs/regulated/github-operating-model/README.md"
+    evidence_status: requires_live_github_evidence
+  - id: GITHUB-WORKFLOW-ARTIFACTS
+    title: "GitHub workflow artifacts"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/actions/guides/storing-workflow-data-as-artifacts"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Retention and sharing of validation, audit and release evidence produced by Actions."
+    nomos_alignment: "Regulated evidence pack workflow uploads reports as artifacts; retention/export still requires governed policy."
+    required_documents:
+      - ".github/workflows/regulated-evidence-pack.yml"
+      - "docs/regulated/evidence-index/README.md"
+    evidence_status: requires_retention_export_evidence
+  - id: GITHUB-ARTIFACT-ATTESTATIONS
+    title: "GitHub artifact attestations"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Build provenance for released artifacts."
+    nomos_alignment: "Candidate control for future release bundle provenance; not enabled by this baseline because plan and repository support must be verified first."
+    required_documents:
+      - "docs/regulated/security-privacy/secure-sdlc-sop.md"
+      - "docs/regulated/release-bundle/README.md"
+    evidence_status: requires_implementation_decision
+  - id: GITHUB-AUDIT-LOG
+    title: "GitHub organization audit log"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Actor, event and configuration-change evidence at organization level."
+    nomos_alignment: "Periodic audit-log export is required if online retention is shorter than customer or regulatory retention needs."
+    required_documents:
+      - "docs/regulated/github-operating-model/README.md"
+      - "docs/regulated/security-privacy/access-control-and-audit-trail-sop.md"
+    evidence_status: requires_export_evidence
+  - id: GITHUB-CODE-SCANNING
+    title: "GitHub code scanning"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/code-security/concepts/code-scanning/about-code-scanning"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Static analysis security findings and triage."
+    nomos_alignment: "Candidate security control for regulated releases; enablement and alert triage evidence must be collected before claims."
+    required_documents:
+      - "docs/regulated/security-privacy/secure-sdlc-sop.md"
+    evidence_status: requires_live_github_evidence
+  - id: GITHUB-SECRET-SCANNING
+    title: "GitHub secret scanning"
+    publisher: "GitHub Docs"
+    url: "https://docs.github.com/en/code-security/concepts/secret-security/about-secret-scanning"
+    version_or_date: "GitHub Docs checked 2026-05-02"
+    checked_on: "2026-05-02"
+    applicability: "Detection and prevention of leaked credentials."
+    nomos_alignment: "Candidate security control for regulated releases; enablement and alert triage evidence must be collected before claims."
+    required_documents:
+      - "docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md"
+    evidence_status: requires_live_github_evidence

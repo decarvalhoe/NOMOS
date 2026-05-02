@@ -1,0 +1,21 @@
+schema_version: "0.1.0"
+validation_summary:
+  id: replace_with_vsr_id
+  protocol_id: replace_with_protocol_id
+  product: nomos
+  version_under_test: replace_with_version
+  commit: replace_with_commit
+  status: draft
+  executed_at: not_executed
+  executed_by: not_assigned
+  summary: replace_with_summary_after_execution
+  requirements_tested: 0
+  tests_passed: 0
+  tests_failed: 0
+  deviations_open: 0
+  deviations_closed: 0
+  residual_risk: not_assessed
+  conclusion: not_validated
+  approval:
+    status: not_approved
+    approver: not_assigned

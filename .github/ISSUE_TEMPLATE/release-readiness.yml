@@ -1,0 +1,46 @@
+name: Release Readiness
+description: Record readiness, waiver, and claim-boundary review for a regulated release.
+title: "[RELEASE-READINESS]: "
+labels: ["area:compliance", "area:attestations", "area:cicd"]
+body:
+  - type: input
+    id: release_version
+    attributes:
+      label: Release version or candidate
+      placeholder: v0.0.0 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: intended_use
+    attributes:
+      label: Intended use
+      value: not_established
+    validations:
+      required: true
+  - type: textarea
+    id: evidence_bundle
+    attributes:
+      label: Evidence bundle links
+      value: |
+        - requires_evidence
+    validations:
+      required: true
+  - type: textarea
+    id: deviations
+    attributes:
+      label: Open deviations and waivers
+      value: |
+        - requires_evidence
+    validations:
+      required: true
+  - type: dropdown
+    id: release_decision
+    attributes:
+      label: Release decision
+      options:
+        - not_ready
+        - ready_with_waiver
+        - ready_for_non_regulated_use
+        - ready_for_regulated_candidate_review
+    validations:
+      required: true

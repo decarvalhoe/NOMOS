@@ -1,0 +1,52 @@
+name: Validation Record
+description: Record a validation protocol, execution, deviation, or validation summary item.
+title: "[VALIDATION]: "
+labels: ["type:backlog", "area:compliance", "area:checks"]
+body:
+  - type: input
+    id: protocol_id
+    attributes:
+      label: Protocol or requirement ID
+      placeholder: NOMOS-VAL-...
+    validations:
+      required: true
+  - type: dropdown
+    id: validation_type
+    attributes:
+      label: Validation type
+      options:
+        - intended-use-assessment
+        - risk-assessment
+        - scripted-test
+        - exploratory-test
+        - challenge-test
+        - validation-summary
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Feature, command, profile, corpus, or control under validation.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      value: |
+        - requires_evidence
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - not_executed
+        - pass
+        - fail
+        - blocked
+        - requires_review
+    validations:
+      required: true

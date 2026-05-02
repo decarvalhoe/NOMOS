@@ -1,0 +1,63 @@
+schema_version: "0.1.0"
+document_id: NOMOS-GH-QMS-BASELINE-001
+version: "0.1.0"
+status: draft
+effective_status: not_effective
+owner: not_assigned
+approver: not_assigned
+claim_boundary: "GitHub QMS control baseline only; no validated eQMS or Part 11 claim."
+required_controls:
+  - id: GH-QMS-LOCAL-001
+    name: regulated_issue_forms
+    evidence_source: ".github/ISSUE_TEMPLATE/*.yml"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: present
+  - id: GH-QMS-LOCAL-002
+    name: regulated_pr_template
+    evidence_source: ".github/PULL_REQUEST_TEMPLATE.md"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: present
+  - id: GH-QMS-LOCAL-003
+    name: codeowners
+    evidence_source: ".github/CODEOWNERS"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: present_with_real_owner
+  - id: GH-QMS-LOCAL-004
+    name: regulated_documentation_gate
+    evidence_source: ".github/workflows/regulated-documentation-gate.yml"
+    automated_by: "scripts/regulated_docs_gate.py"
+    expected_status_before_release: passing
+  - id: GH-QMS-LOCAL-005
+    name: regulated_evidence_pack
+    evidence_source: ".github/workflows/regulated-evidence-pack.yml"
+    automated_by: "scripts/regulated_evidence_pack.py"
+    expected_status_before_release: generated_and_retained
+  - id: GH-QMS-LIVE-001
+    name: branch_protection
+    evidence_source: "GitHub repository branch protection settings"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: verified
+  - id: GH-QMS-LIVE-002
+    name: rulesets
+    evidence_source: "GitHub repository or organization rulesets"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: verified
+  - id: GH-QMS-LIVE-003
+    name: protected_environments
+    evidence_source: "GitHub Actions environment settings"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: verified_with_required_reviewer
+  - id: GH-QMS-LIVE-004
+    name: audit_log_export
+    evidence_source: "GitHub organization audit-log export"
+    automated_by: manual_export_until_api_worker_exists
+    expected_status_before_release: exported_and_retained
+  - id: GH-QMS-LIVE-005
+    name: security_features
+    evidence_source: "GitHub code security settings and alerts"
+    automated_by: "scripts/regulated_github_qms_audit.py"
+    expected_status_before_release: verified_or_risk_accepted
+blocked_claims_until_verified:
+  - github_validated_operating_model
+  - approved_release_evidence
+  - part_11_electronic_signature

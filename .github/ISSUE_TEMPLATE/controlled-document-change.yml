@@ -1,0 +1,50 @@
+name: Controlled Document Change
+description: Request a controlled change to regulated documentation or templates.
+title: "[DOC-CONTROL]: "
+labels: ["documentation", "area:compliance"]
+body:
+  - type: input
+    id: document_id
+    attributes:
+      label: Document ID
+      placeholder: NOMOS-...
+    validations:
+      required: true
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Change type
+      options:
+        - new-document
+        - revision
+        - retirement
+        - correction
+        - non-applicability-record
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Why the change is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact assessment
+      value: |
+        Intended use impact:
+        Training impact:
+        Validation impact:
+        Public claim impact:
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      value: |
+        - requires_evidence
+    validations:
+      required: true

@@ -42,11 +42,27 @@ The regulated structure is split into two tracked areas.
 ```text
 docs/regulated/
   README.md
+  reference-basis/
+    README.md
+    external-reference-register.yaml
   product-profiles/
     nomos.yaml
     praxis.yaml
+  quality-system/
+    README.md
+  lifecycle/
+    README.md
+  data-integrity/
+    README.md
+  security-privacy/
+    README.md
+  github-operating-model/
+    README.md
   control-matrix/
     README.md
+  evidence-index/
+    README.md
+    evidence-ledger.yaml
   validation-pack/
     README.md
   supplier-pack/
@@ -68,14 +84,21 @@ docs/regulated/
 ```text
 templates/regulated/
   README.md
-  regulated-product-profile.yaml
-  intended-use.yaml
+  controlled-document.yaml
   control-matrix.yaml
+  deviation-capa-record.yaml
+  intended-use.yaml
+  regulated-product-profile.yaml
+  traceability-matrix.yaml
+  training-record.yaml
   validation-plan.md
-  supplier-assurance-pack.md
+  validation-protocol.yaml
+  validation-summary-report.yaml
   release-evidence-bundle.yaml
   alcoa-evidence-envelope.yaml
   ai-rag-governance.md
+  atomization-certification-report.yaml
+  supplier-assurance-pack.md
   customer-integration-checklist.md
   periodic-review.md
 ```
@@ -150,6 +173,14 @@ The next implementation wave must wire those templates into schemas and CLI gate
 - `nomos corpus feed --profile rbok-lawbook`;
 - deterministic ALCOA+ report generation;
 - Praxis-compatible evidence export.
+
+The current GitHub-native automation wave adds:
+
+- `regulated-documentation-gate.yml` for controlled-document structure, YAML validity and overclaim blocking;
+- `regulated-evidence-pack.yml` for automated evidence hash inventory and GitHub QMS audit artifact upload;
+- `regulated_docs_gate.py` for repository-local documentation checks;
+- `regulated_evidence_pack.py` for ALCOA+ oriented evidence inventory;
+- `regulated_github_qms_audit.py` for local plus live GitHub settings audit.
 
 ## Non-Overclaim Boundary
 

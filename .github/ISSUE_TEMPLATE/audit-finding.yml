@@ -1,0 +1,51 @@
+name: Audit Finding
+description: Record an internal, external, supplier, or customer audit finding.
+title: "[AUDIT]: "
+labels: ["area:compliance", "area:checks"]
+body:
+  - type: dropdown
+    id: audit_type
+    attributes:
+      label: Audit type
+      options:
+        - internal
+        - external
+        - supplier
+        - customer
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical
+        - major
+        - minor
+        - observation
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding
+      description: State the audit observation and objective evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence sampled
+      value: |
+        - requires_evidence
+    validations:
+      required: true
+  - type: textarea
+    id: follow_up
+    attributes:
+      label: Follow-up required
+      value: |
+        CAPA required: not_assessed
+        Due date: not_scheduled
+    validations:
+      required: true
