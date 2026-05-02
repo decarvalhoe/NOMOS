@@ -1,0 +1,85 @@
+{
+  "schema_version": "0.1.0",
+  "corpus": "legal-text",
+  "description": "Gold annotations for generic legal/regulatory text (civil code style).",
+  "annotations": [
+    {
+      "id": "GOLD-LEGAL-001",
+      "corpus": "legal-text",
+      "source_file": "civil-code/responsabilite.md",
+      "source_span": {
+        "start_line": 1,
+        "end_line": 8,
+        "locator": "Art. 1382",
+        "text": "Tout fait quelconque de l'homme..."
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-CC-1382",
+          "kind": "rule",
+          "title": "Responsabilité du fait personnel",
+          "priority": "critical",
+          "content": "Tout fait quelconque de l'homme, qui cause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer."
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "cites",
+          "target_id": "DOMAT-LOIS-CIVILES",
+          "from_atom": "ATOM-CC-1382"
+        }
+      ],
+      "notes": "Fundamental fault-based liability article."
+    },
+    {
+      "id": "GOLD-LEGAL-002",
+      "corpus": "legal-text",
+      "source_file": "civil-code/responsabilite.md",
+      "source_span": {
+        "start_line": 9,
+        "end_line": 15,
+        "locator": "Art. 1383"
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-CC-1383",
+          "kind": "rule",
+          "title": "Responsabilité par négligence",
+          "priority": "high"
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "depends_on",
+          "target_id": "ATOM-CC-1382",
+          "from_atom": "ATOM-CC-1383"
+        }
+      ]
+    },
+    {
+      "id": "GOLD-LEGAL-003",
+      "corpus": "legal-text",
+      "source_file": "civil-code/responsabilite.md",
+      "source_span": {
+        "start_line": 20,
+        "end_line": 30,
+        "locator": "Art. 1384"
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-CC-1384",
+          "kind": "rule",
+          "title": "Responsabilité du fait d'autrui",
+          "priority": "high"
+        },
+        {
+          "atom_id": "ATOM-CC-1384-ENUM",
+          "kind": "enumeration",
+          "title": "Liste des personnes responsables",
+          "priority": "medium"
+        }
+      ],
+      "expected_refs": []
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.1.0",
+  "corpus": "kw-rules",
+  "description": "Gold annotations for Knowledge & Wisdom style game/business rules.",
+  "annotations": [
+    {
+      "id": "GOLD-KW-001",
+      "corpus": "kw-rules",
+      "source_file": "rules/character-creation.md",
+      "source_span": {
+        "start_line": 5,
+        "end_line": 20,
+        "locator": "Section 2.1 - Ability Scores"
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-KW-ABILITY-SCORES",
+          "kind": "rule",
+          "title": "Ability Score Generation",
+          "priority": "high"
+        },
+        {
+          "atom_id": "ATOM-KW-ABILITY-MODIFIERS",
+          "kind": "formula",
+          "title": "Ability Modifier Calculation",
+          "priority": "high",
+          "content": "modifier = floor((score - 10) / 2)"
+        },
+        {
+          "atom_id": "ATOM-KW-ABILITY-TABLE",
+          "kind": "table",
+          "title": "Ability Score Table",
+          "priority": "medium"
+        }
+      ],
+      "expected_refs": [],
+      "notes": "Core character creation rules with formula and reference table."
+    },
+    {
+      "id": "GOLD-KW-002",
+      "corpus": "kw-rules",
+      "source_file": "rules/combat.md",
+      "source_span": {
+        "start_line": 1,
+        "end_line": 15,
+        "locator": "Section 5.1 - Attack Roll"
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-KW-ATTACK-ROLL",
+          "kind": "rule",
+          "title": "Attack Roll Resolution",
+          "priority": "critical"
+        },
+        {
+          "atom_id": "ATOM-KW-CRITICAL-HIT",
+          "kind": "exception",
+          "title": "Critical Hit (Natural 20)",
+          "priority": "high"
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "depends_on",
+          "target_id": "ATOM-KW-ABILITY-MODIFIERS",
+          "from_atom": "ATOM-KW-ATTACK-ROLL"
+        }
+      ]
+    },
+    {
+      "id": "GOLD-KW-003",
+      "corpus": "kw-rules",
+      "source_file": "rules/combat.md",
+      "source_span": {
+        "start_line": 30,
+        "end_line": 45,
+        "locator": "Section 5.3 - Conditions"
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-KW-CONDITION-STUNNED",
+          "kind": "condition",
+          "title": "Stunned Condition",
+          "priority": "medium"
+        },
+        {
+          "atom_id": "ATOM-KW-CONDITION-PRONE",
+          "kind": "condition",
+          "title": "Prone Condition",
+          "priority": "medium"
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "cross_reference",
+          "target_id": "ATOM-KW-ATTACK-ROLL",
+          "from_atom": "ATOM-KW-CONDITION-PRONE"
+        }
+      ],
+      "notes": "Status conditions that modify combat rules."
+    }
+  ]
+}
