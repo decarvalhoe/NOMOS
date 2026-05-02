@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -14,6 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def write_bytes(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
 
 
 def run_script(script: str, *args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -223,6 +229,60 @@ references:
             self.assertEqual(gamp["content_access_policy"], "licensed_content_required")
             self.assertEqual(gamp["nomos_processing_policy"], "licensed_local_artifact_required")
             self.assertFalse(gamp["full_text_fetch_allowed"])
+
+    def test_reference_canon_verifies_licensed_intake_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            licensed_root = Path(tmp) / "licensed"
+            payload = b"licensed reference content"
+            digest = hashlib.sha256(payload).hexdigest().upper()
+            write_bytes(licensed_root / "ISPE-GAMP5-2E-2022/source.pdf", payload)
+            write(
+                repo / "docs/regulated/reference-basis/external-reference-register.yaml",
+                """
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: ISPE-GAMP5-2E-2022
+    title: ISPE GAMP 5 Guide Second Edition
+    publisher: ISPE
+    url: https://ispe.org/publications/guidance-documents/gamp-5
+    content_access_policy: licensed_content_required
+    evidence_status: local_artifact_registered_license_review_required_before_clause_mapping
+""".lstrip(),
+            )
+            write(
+                repo / "docs/regulated/reference-basis/licensed-intakes/ISPE-GAMP5-2E-2022.yaml",
+                f"""
+schema_version: "0.1.0"
+record_type: licensed_reference_intake
+reference_id: ISPE-GAMP5-2E-2022
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: ISPE-GAMP5-2E-2022/source.pdf
+source_integrity:
+  sha256: {digest}
+""".lstrip(),
+            )
+            output = repo / "out/reference-canon.json"
+
+            result = run_script(
+                "regulated_reference_canon.py",
+                "--root",
+                str(repo),
+                "--licensed-root",
+                str(licensed_root),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "ready_for_processing")
+            self.assertEqual(report["summary"]["licensed_reference_gaps"], 0)
+            self.assertEqual(report["bibles"][0]["licensed_artifact_status"], "verified")
 
 
 if __name__ == "__main__":

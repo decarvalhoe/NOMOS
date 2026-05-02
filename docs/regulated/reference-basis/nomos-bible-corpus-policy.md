@@ -82,3 +82,17 @@ python scripts/regulated_reference_canon.py --report .regulated-doc-gate/referen
 ```
 
 The report may be `requires_evidence` while licensed bibles are absent. That status blocks clause-level claims; it does not block registering the bible itself.
+
+## Current Local Intake Status
+
+As of 2026-05-02, local sidecars exist for:
+
+- `ISPE-GAMP5-2E-2022`
+- `ISO-IEC-25010-2023`
+
+Both records are still `license_review_required`; they prove artifact presence and integrity, not permission to redistribute or claim clause-level validation.
+
+Missing licensed bibles still expected by the register:
+
+- `ISO-13485-2016`
+- `ISO-IEC-IEEE-12207-2026`

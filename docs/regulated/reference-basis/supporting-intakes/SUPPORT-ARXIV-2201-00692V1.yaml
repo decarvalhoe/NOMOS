@@ -1,0 +1,24 @@
+schema_version: "0.1.0"
+record_type: supporting_reference_intake
+reference_id: SUPPORT-ARXIV-2201-00692V1
+title: "Validation and Transparency in AI systems for pharmacovigilance"
+official_url: "https://arxiv.org/abs/2201.00692"
+source_type: public_preprint_supporting_reference
+canonical_role: supporting_context_not_regulatory_bible
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: "SUPPORT-ARXIV-2201-00692V1/2201.00692v1.pdf"
+source_integrity:
+  sha256: 735121F7E7D2CA69516982589544DA649EB89A7C1A750265FEFE74AB44EF0066
+  size_bytes: 320660
+  hash_tool: "Get-FileHash -Algorithm SHA256"
+  hashed_at_utc: "2026-05-02T21:57:24Z"
+review:
+  reviewer: not_assigned
+  approval_status: draft
+  evidence_status: local_artifact_registered_supporting_use_requires_review
+nomos_processing:
+  mode: read_only
+  command: "nomos corpus feed --profile supporting-reference --corpus %NOMOS_LICENSED_REFERENCE_ROOT%/SUPPORT-ARXIV-2201-00692V1 --out .nomos/generated/supporting-references/SUPPORT-ARXIV-2201-00692V1"
+blocked_claims_until_complete:
+  - ai_pharmacovigilance_supporting_claim

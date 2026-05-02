@@ -114,7 +114,8 @@ references:
     nomos_alignment: "Quality attributes, acceptance criteria, test strategy, release gates."
     required_documents:
       - "docs/regulated/lifecycle/requirements-and-traceability-sop.md"
-    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+      - "docs/regulated/reference-basis/licensed-intakes/ISO-IEC-25010-2023.yaml"
+    evidence_status: "local_artifact_registered_license_review_required_before_clause_mapping"
   - id: NASA-NPR-7150-2D
     title: "NASA NPR 7150.2D - Software Engineering Requirements"
     publisher: "NASA"
@@ -173,9 +174,10 @@ references:
     nomos_alignment: "Canonical Nomos bible for CSV/CSA/GxP computerized-system validation. Public metadata and TOC may be registered, but full-text atomization requires a licensed local copy and sidecar intake record."
     required_documents:
       - "docs/regulated/reference-basis/nomos-bible-corpus-policy.md"
+      - "docs/regulated/reference-basis/licensed-intakes/ISPE-GAMP5-2E-2022.yaml"
       - "docs/regulated/lifecycle/validation-master-plan.md"
       - "templates/regulated/licensed-reference-intake.yaml"
-    evidence_status: "licensed_reference_required_before_clause_mapping"
+    evidence_status: "local_artifact_registered_license_review_required_before_clause_mapping"
   - id: ICH-Q9R1
     title: "ICH Q9(R1) Quality Risk Management"
     publisher: "ICH / FDA guidance portal"

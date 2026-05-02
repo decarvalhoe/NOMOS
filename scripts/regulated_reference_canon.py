@@ -9,6 +9,7 @@ evidence or violating licensed-reference boundaries.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -38,6 +39,14 @@ def utc_now() -> str:
 
 def load_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest().upper()
 
 
 def is_licensed_reference(reference: dict[str, Any]) -> bool:
@@ -77,19 +86,105 @@ def classify_reference(reference: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def gap_for(reference: dict[str, Any], bible: dict[str, Any], licensed_root: Path | None) -> dict[str, str] | None:
+def intake_path(root: Path, ref_id: str) -> Path:
+    return root / "docs/regulated/reference-basis/licensed-intakes" / f"{ref_id}.yaml"
+
+
+def verify_licensed_artifact(root: Path, ref_id: str, licensed_root: Path | None) -> tuple[dict[str, Any], dict[str, str] | None]:
+    if licensed_root is None:
+        return (
+            {"licensed_artifact_status": "requires_licensed_root"},
+            {
+                "id": f"GAP-LICENSED-REFERENCE-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": "Licensed canonical bible content is not present in the configured licensed reference root.",
+            },
+        )
+
+    sidecar = intake_path(root, ref_id)
+    if not sidecar.exists():
+        return (
+            {"licensed_artifact_status": "missing_intake_sidecar"},
+            {
+                "id": f"GAP-LICENSED-INTAKE-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": "Licensed canonical bible intake sidecar is missing.",
+            },
+        )
+
+    intake = load_yaml(sidecar)
+    local_relative_path = str((intake.get("storage") or {}).get("local_relative_path") or "").strip()
+    expected_hash = str((intake.get("source_integrity") or {}).get("sha256") or "").upper().strip()
+    artifact = licensed_root / local_relative_path
+
+    if not local_relative_path or not expected_hash:
+        return (
+            {"licensed_artifact_status": "invalid_intake_sidecar", "intake_sidecar": sidecar.as_posix()},
+            {
+                "id": f"GAP-LICENSED-INTAKE-INCOMPLETE-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": "Licensed intake sidecar must include storage.local_relative_path and source_integrity.sha256.",
+            },
+        )
+
+    if not artifact.exists():
+        return (
+            {
+                "licensed_artifact_status": "missing_artifact",
+                "intake_sidecar": sidecar.as_posix(),
+                "expected_artifact": str(artifact),
+            },
+            {
+                "id": f"GAP-LICENSED-ARTIFACT-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": "Licensed canonical bible artifact path from intake sidecar is missing.",
+            },
+        )
+
+    actual_hash = sha256_file(artifact)
+    if actual_hash != expected_hash:
+        return (
+            {
+                "licensed_artifact_status": "hash_mismatch",
+                "intake_sidecar": sidecar.as_posix(),
+                "expected_sha256": expected_hash,
+                "actual_sha256": actual_hash,
+            },
+            {
+                "id": f"GAP-LICENSED-HASH-MISMATCH-{ref_id}",
+                "severity": "critical",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": "Licensed canonical bible artifact hash does not match the intake sidecar.",
+            },
+        )
+
+    return (
+        {
+            "licensed_artifact_status": "verified",
+            "intake_sidecar": sidecar.as_posix(),
+            "artifact_relative_path": local_relative_path,
+            "sha256": actual_hash,
+        },
+        None,
+    )
+
+
+def gap_for(root: Path, reference: dict[str, Any], bible: dict[str, Any], licensed_root: Path | None) -> dict[str, str] | None:
     if bible["content_access_policy"] != "licensed_content_required":
         return None
     ref_id = str(reference.get("id", "unknown"))
-    if licensed_root and (licensed_root / ref_id).exists():
-        return None
-    return {
-        "id": f"GAP-LICENSED-REFERENCE-{ref_id}",
-        "severity": "major",
-        "status": "open",
-        "reference_id": ref_id,
-        "message": "Licensed canonical bible content is not present in the configured licensed reference root.",
-    }
+    verification, gap = verify_licensed_artifact(root, ref_id, licensed_root)
+    bible.update(verification)
+    return gap
 
 
 def build_report(root: Path, licensed_root: Path | None) -> dict[str, Any]:
@@ -127,7 +222,7 @@ def build_report(root: Path, licensed_root: Path | None) -> dict[str, Any]:
     gaps = [
         gap
         for reference, bible in zip(references, bibles, strict=False)
-        if (gap := gap_for(reference, bible, licensed_root)) is not None
+        if (gap := gap_for(root, reference, bible, licensed_root)) is not None
     ]
     policy_counts = Counter(str(bible["content_access_policy"]) for bible in bibles)
 

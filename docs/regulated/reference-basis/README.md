@@ -8,6 +8,8 @@ The register does not certify Nomos. It records which external sources are being
 
 - `external-reference-register.yaml` - source register for regulatory, standards, and high-practice references.
 - `nomos-bible-corpus-policy.md` - policy that makes every registered reference a Nomos canonical bible and defines public vs licensed processing.
+- `licensed-intakes/` - sidecars for licensed bible artifacts present outside Git.
+- `supporting-intakes/` - sidecars for non-bible supporting references present outside Git.
 
 ## Conduct
 
@@ -17,3 +19,4 @@ The register does not certify Nomos. It records which external sources are being
 4. Map each reference to a Nomos control and evidence expectation.
 5. Do not use a reference in public claims if it is not mapped to the control matrix or an explicit non-applicability record.
 6. Process public bibles from official snapshots and licensed bibles from `NOMOS_LICENSED_REFERENCE_ROOT` only.
+7. Never commit licensed PDFs or substantial extracted text; commit only hashes, sidecars, manifests, coverage and permitted evidence.

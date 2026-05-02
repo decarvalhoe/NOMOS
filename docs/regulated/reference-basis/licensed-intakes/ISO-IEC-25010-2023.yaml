@@ -1,0 +1,39 @@
+schema_version: "0.1.0"
+record_type: licensed_reference_intake
+reference_id: ISO-IEC-25010-2023
+title: "ISO/IEC 25010:2023 - Product quality model"
+official_url: "https://www.iso.org/standard/78176.html"
+edition_or_version: "Edition 2, 2023-11"
+license_holder: enterprise_library_copy_reported_by_user
+allowed_use:
+  internal_processing_by_nomos: requires_license_review
+  commit_full_text_to_git: false
+  commit_extracted_chunks_to_git: requires_license_review
+  customer_redistribution: false
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: "ISO-IEC-25010-2023/ISO-IEC-25010-2023.pdf"
+source_integrity:
+  sha256: C1A03CDCF53541C97006D8919007E979FC0C526BAFEEAA4CC2E413DBB8599974
+  size_bytes: 892919
+  hash_tool: "Get-FileHash -Algorithm SHA256"
+  hashed_at_utc: "2026-05-02T21:57:24Z"
+review:
+  reviewer: not_assigned
+  approval_status: draft
+  evidence_status: local_artifact_registered_license_review_required
+nomos_processing:
+  mode: read_only
+  command: "nomos corpus feed --profile licensed-reference --corpus %NOMOS_LICENSED_REFERENCE_ROOT%/ISO-IEC-25010-2023 --out .nomos/generated/reference-bibles/ISO-IEC-25010-2023"
+  output_location: ".nomos/generated/reference-bibles/ISO-IEC-25010-2023"
+  allowed_outputs:
+    - manifest
+    - sidecar
+    - source_hash
+    - coverage_report
+    - traceability_matrix
+    - validation_evidence
+blocked_claims_until_complete:
+  - clause_level_mapping
+  - validation_claim_against_reference
+  - regulated_grade_release_claim
