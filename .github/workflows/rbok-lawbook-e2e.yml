@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   rbok-lawbook-e2e:
-    name: E2E lawbook extraction on 01_rbok
+    name: E2E lawbook corpus feed pipeline
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -72,76 +72,57 @@ jobs:
           find 01_rbok -type f -exec sha256sum {} \; | sort > /tmp/corpus-before.sha256
           corpus_commit="$(git rev-parse HEAD)"
           echo "commit=$corpus_commit" >> "$GITHUB_OUTPUT"
+          echo "Corpus commit: $corpus_commit"
+          echo "Corpus files: $(wc -l < /tmp/corpus-before.sha256)"
 
-      - name: Run E2E extraction
+      - name: Run E2E feed pipeline
         run: |
           bash scripts/rbok-lawbook-e2e.sh \
             --corpus "$GITHUB_WORKSPACE/rbok-corpus/01_rbok" \
             --out /tmp/rbok-output \
-            --cli ./nomos-cli
+            --cli ./nomos-cli \
+            --profile rbok-lawbook \
+            --corpus-id rbok-lawbook \
+            --project-id rbok
 
-      - name: Verify artifacts not empty
+      - name: Verify pipeline artifacts
         run: |
-          echo "=== Checking output artifacts ==="
-          if [ ! -d /tmp/rbok-output ]; then
-            echo "FAIL: output directory does not exist"
-            exit 1
-          fi
-          artifact_count=$(find /tmp/rbok-output -type f -name '*.json' | wc -l)
-          echo "JSON artifacts: $artifact_count"
-          if [ "$artifact_count" -eq 0 ]; then
-            echo "FAIL: no JSON artifacts produced"
-            exit 1
-          fi
+          echo "=== Checking pipeline output ==="
+          for f in snapshot.json source-manifest.yaml feed.json attestation.json; do
+            if [ ! -f "/tmp/rbok-output/$f" ]; then
+              echo "FAIL: missing expected artifact: $f"
+              exit 1
+            fi
+            echo "  ok: $f ($(wc -c < "/tmp/rbok-output/$f") bytes)"
+          done
 
-      - name: Verify node types present
+      - name: Verify attestation format
         run: |
-          echo "=== Checking required node types ==="
-          python3 - <<'PY'
-          import json
-          import pathlib
-          import sys
-          from collections import Counter
-
-          required = {"document", "article", "paragraph", "alinea"}
-          counts = Counter()
-          for path in pathlib.Path("/tmp/rbok-output").glob("*.json"):
-              data = json.loads(path.read_text(encoding="utf-8"))
-              for node in data.get("nodes", []):
-                  node_type = node.get("node_type")
-                  if node_type:
-                      counts[node_type] += 1
-
-          for node_type in sorted(counts):
-              print(f"  {node_type}: {counts[node_type]} node(s)")
-
-          missing = sorted(required - set(counts))
-          if missing:
-              print(f"FAIL: missing required node types: {', '.join(missing)}")
-              sys.exit(1)
-
-          print("All required node types present.")
-          PY
+          python3 -c "
+          import json, sys
+          att = json.loads(open('/tmp/rbok-output/attestation.json').read())
+          assert att.get('_type') == 'https://in-toto.io/Statement/v1', f'bad type: {att.get(\"_type\")}'
+          assert att.get('predicateType') == 'https://nomos.dev/corpus-attestation/v1', f'bad predicate type'
+          assert len(att.get('subject', [])) >= 1, 'missing subject'
+          print('Attestation format: valid in-toto Statement/v1')
+          "
 
       - name: Verify source repo not modified
         if: always()
         run: |
           echo "=== Read-only guard ==="
           cd "$GITHUB_WORKSPACE/rbok-corpus"
-          # Check git status
           if [ -n "$(git status --porcelain)" ]; then
             echo "FAIL: source corpus has been modified"
             git status
             exit 1
           fi
-          # Check file fingerprint
           find 01_rbok -type f -exec sha256sum {} \; | sort > /tmp/corpus-after.sha256
           if ! diff -q /tmp/corpus-before.sha256 /tmp/corpus-after.sha256 > /dev/null 2>&1; then
             echo "FAIL: corpus file checksums changed"
             diff /tmp/corpus-before.sha256 /tmp/corpus-after.sha256
             exit 1
           fi
-          # Check push is disabled
           push_url=$(git remote get-url --push origin 2>/dev/null || true)
           if [ "$push_url" != "no_push" ]; then
             echo "FAIL: push URL not disabled (got: $push_url)"
@@ -153,6 +134,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rbok-lawbook-nodes-${{ steps.fingerprint.outputs.commit }}
+          name: rbok-lawbook-feed-${{ steps.fingerprint.outputs.commit }}
           path: /tmp/rbok-output/
           retention-days: 30
