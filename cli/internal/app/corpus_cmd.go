@@ -50,9 +50,13 @@ func corpusCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	case "diff":
 		return corpusDiffCommand(args[1:], stdout, stderr)
 	case "feed":
-		return corpusFeedCommand(args[1:], stdout, stderr)
+		return corpusFeedDispatch(args[1:], stdout, stderr)
 	case "attest":
 		return corpusAttestCommand(args[1:], stdout, stderr)
+	case "diagnose":
+		return corpusDiagnoseCommand(args[1:], stdout, stderr)
+	case "profiles":
+		return corpusProfilesCommand(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown corpus command %q\n\n", args[0])
 		corpusHelp(stderr)
@@ -70,6 +74,9 @@ func corpusHelp(stdout io.Writer) int {
 	fmt.Fprintln(stdout, "  nomos corpus diff --old <snapshot.json> --new <snapshot.json>")
 	fmt.Fprintln(stdout, "  nomos corpus feed --root <corpus> --snapshot <snapshot.json> --manifest <source-manifest.yaml> [--matrix <canonical-matrix.yaml>] [--lockfile <corpus.lock.json>]")
 	fmt.Fprintln(stdout, "  nomos corpus attest --snapshot <snapshot.json> --corpus-id <id> --project-id <id>")
+	fmt.Fprintln(stdout, "  nomos corpus feed --profile rbok-lawbook --root <corpus> [--outputs index,governance] [--format json|text]")
+	fmt.Fprintln(stdout, "  nomos corpus diagnose --profile rbok-lawbook --root <corpus> [--format json|text]")
+	fmt.Fprintln(stdout, "  nomos corpus profiles")
 	return 0
 }
 
@@ -307,6 +314,16 @@ func corpusDiffCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 2
 	}
 	return writeJSONPath(report, *out, stdout, stderr, "corpus diff")
+}
+
+// corpusFeedDispatch routes to the profile-aware feed or the generic feed.
+func corpusFeedDispatch(args []string, stdout io.Writer, stderr io.Writer) int {
+	for _, arg := range args {
+		if arg == "--profile" || strings.HasPrefix(arg, "--profile=") {
+			return corpusProfileFeedCommand(args, stdout, stderr)
+		}
+	}
+	return corpusFeedCommand(args, stdout, stderr)
 }
 
 func corpusFeedCommand(args []string, stdout io.Writer, stderr io.Writer) int {
