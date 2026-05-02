@@ -386,8 +386,8 @@ func TestComputeNodeID_Deterministic(t *testing.T) {
 	if id1 != id2 {
 		t.Fatalf("expected deterministic ID, got %q and %q", id1, id2)
 	}
-	if !strings.HasPrefix(id1, "node-") {
-		t.Fatalf("expected node- prefix, got %q", id1)
+	if !strings.HasPrefix(id1, "N-") {
+		t.Fatalf("expected N- prefix, got %q", id1)
 	}
 }
 
