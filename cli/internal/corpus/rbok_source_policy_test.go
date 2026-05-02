@@ -32,10 +32,12 @@ func TestClassifyReference99RBOK(t *testing.T) {
 	assertContains(t, r.AllowedUses, "citation_internal")
 }
 
-func TestClassifyReference98Schemas(t *testing.T) {
+func TestClassifySchema98Schemas(t *testing.T) {
 	r := ClassifyRBOKSource("98_schemas/warranty.schema.json")
 	policyAssertEqual(t, "reference", r.Priority)
-	policyAssertEqual(t, RoleReference, r.Role)
+	policyAssertEqual(t, RoleSchema, r.Role)
+	assertContains(t, r.AllowedUses, "structured_contract")
+	assertContains(t, r.AllowedUses, "citation_internal")
 }
 
 func TestClassifyDerivedGermanTranslation(t *testing.T) {
@@ -162,6 +164,89 @@ func TestClassifyDeterminism(t *testing.T) {
 func TestClassifyWindowsBackslash(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta\\glossary.yaml")
 	policyAssertEqual(t, "primary", r.Priority)
+}
+
+// --- 03_parcours as primary ---
+
+func TestClassifyPrimary03Parcours(t *testing.T) {
+	r := ClassifyRBOKSource("03_parcours/assurance-habitation/parcours.yaml")
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, RoleLawbook, r.Role)
+	assertContains(t, r.AllowedUses, "structured_contract")
+	assertContains(t, r.AllowedUses, "vector_index")
+	assertContains(t, r.AllowedUses, "golden_case")
+}
+
+func TestClassifyPrimary03ParcoursSubdir(t *testing.T) {
+	r := ClassifyRBOKSource("03_parcours/sinistres/etapes/declaration.yaml")
+	policyAssertEqual(t, "primary", r.Priority)
+}
+
+// --- 98_schemas distinct from 99_RBOK ---
+
+func TestClassifySchema98SchemaCUE(t *testing.T) {
+	r := ClassifyRBOKSource("98_schemas/source-manifest.cue")
+	policyAssertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, RoleSchema, r.Role)
+}
+
+func TestClassifySchema98SchemaSubdir(t *testing.T) {
+	r := ClassifyRBOKSource("98_schemas/canonical/matrix.schema.json")
+	policyAssertEqual(t, RoleSchema, r.Role)
+}
+
+// --- 99_RBOK_initial_pdf ---
+
+func TestClassifyReference99RBOKInitialPdfExact(t *testing.T) {
+	r := ClassifyRBOKSource("99_RBOK_initial_pdf/conditions-generales-habitation-2026.pdf")
+	policyAssertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, RoleReference, r.Role)
+	assertContains(t, r.AllowedUses, "human_review_only")
+}
+
+func TestClassifyReference99InitialSubdir(t *testing.T) {
+	r := ClassifyRBOKSource("99_initial_sources/regulations/code-assurances.pdf")
+	policyAssertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, RoleReference, r.Role)
+}
+
+// --- Real layout integration test ---
+
+func TestClassifyRealRBOKLayout(t *testing.T) {
+	cases := []struct {
+		path     string
+		priority string
+		role     SourceRole
+	}{
+		{"00_meta/glossaire.yaml", "primary", RoleLawbook},
+		{"00_meta/index/tables-reference.yaml", "primary", RoleLawbook},
+		{"01_referentiel/source-manifest.yaml", "primary", RoleLawbook},
+		{"01_referentiel/normes/norme-construction.md", "primary", RoleLawbook},
+		{"02_domaines/assurance-habitation/garanties.yaml", "primary", RoleLawbook},
+		{"02_domaines/assurance-auto/franchise.yaml", "primary", RoleLawbook},
+		{"03_parcours/assurance-habitation/souscription.yaml", "primary", RoleLawbook},
+		{"03_parcours/assurance-habitation/sinistre.yaml", "primary", RoleLawbook},
+		{"98_schemas/source-manifest.cue", "reference", RoleSchema},
+		{"98_schemas/canonical-matrix.cue", "reference", RoleSchema},
+		{"99_RBOK_initial_pdf/CG-habitation-2026.pdf", "reference", RoleReference},
+		{"99_RBOK_initial_pdf/code-assurances-extract.pdf", "reference", RoleReference},
+		{"scripts/build.sh", "out_of_scope", RoleOutOfScope},
+		{".DS_Store", "out_of_scope", RoleOutOfScope},
+		{"02_domaines/habitation/garanties.de.yaml", "derived", RoleDerived},
+		{"04_archives/old-notes.md", "secondary", RoleLawbook},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			r := ClassifyRBOKSource(tc.path)
+			if r.Priority != tc.priority {
+				t.Errorf("priority: expected %q, got %q (reason: %s)", tc.priority, r.Priority, r.Reason)
+			}
+			if r.Role != tc.role {
+				t.Errorf("role: expected %q, got %q (reason: %s)", tc.role, r.Role, r.Reason)
+			}
+		})
+	}
 }
 
 // --- helper ---

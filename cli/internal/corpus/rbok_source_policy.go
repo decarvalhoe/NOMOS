@@ -59,7 +59,19 @@ func ClassifyRBOKSource(filePath string) RBOKSourceClassification {
 		}
 	}
 
-	// Reference: original PDFs and external schemas.
+	// Schema: CUE/JSON schemas in 98_schemas.
+	if isSchema(parts) {
+		return RBOKSourceClassification{
+			Path:        filePath,
+			Priority:    "reference",
+			Status:      "active",
+			Role:        RoleSchema,
+			AllowedUses: []string{"structured_contract", "citation_internal"},
+			Reason:      "CUE/JSON schema from 98_schemas",
+		}
+	}
+
+	// Reference: original PDFs and initial source documents.
 	if isReference(lower, parts) {
 		return RBOKSourceClassification{
 			Path:        filePath,
@@ -67,11 +79,11 @@ func ClassifyRBOKSource(filePath string) RBOKSourceClassification {
 			Status:      "active",
 			Role:        RoleReference,
 			AllowedUses: []string{"human_review_only", "citation_internal"},
-			Reason:      "original PDF or external schema",
+			Reason:      "original PDF or initial source document",
 		}
 	}
 
-	// Primary: canonical lawbook content.
+	// Primary: canonical lawbook content (00_meta, 01_referentiel, 02_domaines, 03_parcours).
 	if isPrimary(parts) {
 		return RBOKSourceClassification{
 			Path:        filePath,
@@ -106,8 +118,18 @@ func isPrimary(parts []string) bool {
 		return true
 	case strings.HasPrefix(top, "02_domaines"):
 		return true
+	case strings.HasPrefix(top, "03_parcours"):
+		return true
 	}
 	return false
+}
+
+func isSchema(parts []string) bool {
+	if len(parts) == 0 {
+		return false
+	}
+	top := strings.ToLower(parts[0])
+	return strings.HasPrefix(top, "98_schemas") || strings.HasPrefix(top, "98_schema")
 }
 
 func isReference(lower string, parts []string) bool {
@@ -116,9 +138,6 @@ func isReference(lower string, parts []string) bool {
 	}
 	top := strings.ToLower(parts[0])
 	if strings.HasPrefix(top, "99_rbok") || strings.HasPrefix(top, "99_initial") {
-		return true
-	}
-	if strings.HasPrefix(top, "98_schemas") || strings.HasPrefix(top, "98_schema") {
 		return true
 	}
 	if strings.HasSuffix(lower, ".pdf") && strings.Contains(lower, "initial") {

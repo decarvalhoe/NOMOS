@@ -1,0 +1,8 @@
+parcours:
+  id: souscription
+  name: Souscription
+  domain: assurance-habitation
+  version: '1.0'
+  owner: actuarial@example.com
+  status: active
+  etapes: []
