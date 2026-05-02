@@ -38,13 +38,23 @@ jobs:
         working-directory: cli
         run: go build -o ../nomos-cli .
 
+      - name: Verify corpus read token is configured
+        env:
+          HAS_CORPUS_TOKEN: ${{ secrets.NOMOS_CORPUS_READ_TOKEN != '' }}
+        run: |
+          if [ "$HAS_CORPUS_TOKEN" != "true" ]; then
+            echo "::error title=Missing corpus token::NOMOS_CORPUS_READ_TOKEN is required to read RBOKproject/realisons-business from NOMOS CI."
+            exit 1
+          fi
+
       - name: Checkout source corpus (read-only)
         uses: actions/checkout@v4
         with:
           repository: RBOKproject/realisons-business
+          ref: main
           path: rbok-corpus
           persist-credentials: false
-          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN || github.token }}
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
 
       - name: Disable corpus push remote
         run: |
