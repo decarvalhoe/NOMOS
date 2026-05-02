@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 
+	"gopkg.in/yaml.v3"
 )
 
 var rbekRefPattern = regexp.MustCompile(`(?i)(?:rbok|RBOK)[_\-:]([A-Za-z0-9._\-/]+)`)
@@ -14,42 +15,6 @@ const (
 	SeverityError   = "error"
 )
 
-// ParcoursManifest is the top-level structure of an RBOK parcours YAML file.
-type ParcoursManifest struct {
-	Version  string            `yaml:"version" json:"version"`
-	Owner    string            `yaml:"owner" json:"owner"`
-	Status   string            `yaml:"status" json:"status"`
-	Domain   string            `yaml:"domain" json:"domain"`
-	Parcours []ParcoursEntry   `yaml:"parcours" json:"parcours"`
-	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
-}
-
-// ParcoursEntry represents a single parcours (learning path).
-type ParcoursEntry struct {
-	ID               string        `yaml:"id" json:"id"`
-	Name             string        `yaml:"name" json:"name"`
-	SourceRBOK       string        `yaml:"source_rbok" json:"source_rbok"`
-	ContenuReference string        `yaml:"contenu_reference" json:"contenu_reference"`
-	Modules          []ModuleEntry `yaml:"modules" json:"modules"`
-}
-
-// ModuleEntry represents a module within a parcours.
-type ModuleEntry struct {
-	ID               string          `yaml:"id" json:"id"`
-	Name             string          `yaml:"name" json:"name"`
-	SourceRBOK       string          `yaml:"source_rbok" json:"source_rbok"`
-	ContenuReference string          `yaml:"contenu_reference" json:"contenu_reference"`
-	Questions        []QuestionEntry `yaml:"questions" json:"questions"`
-}
-
-// QuestionEntry represents a question within a module.
-type QuestionEntry struct {
-	ID               string `yaml:"id" json:"id"`
-	Text             string `yaml:"text" json:"text"`
-	SourceRBOK       string `yaml:"source_rbok" json:"source_rbok"`
-	ContenuReference string `yaml:"contenu_reference" json:"contenu_reference"`
-}
-
 // ExtractionFinding reports a governance or reference issue.
 type ExtractionFinding struct {
 	Code     string `json:"code"`
@@ -59,16 +24,106 @@ type ExtractionFinding struct {
 	Message  string `json:"message"`
 }
 
-
-// ExtractParcours parses an RBOK parcours YAML file and extracts governance
-// metadata, normalized references, and findings for missing/unresolved data.
-
-
-// ValidateReferences checks that all collected references resolve against a known set.
-
-
-
-
-
 // ErrInvalidParcours is returned when a YAML file cannot be parsed as parcours.
 var ErrInvalidParcours = errors.New("invalid parcours YAML")
+
+// CheckParcoursGovernance evaluates governance completeness of a parcours file
+// and returns corpus_partial findings for missing fields.
+func CheckParcoursGovernance(path string) ([]ExtractionFinding, error) {
+	result, err := ExtractParcours(path)
+	if err != nil {
+		return nil, err
+	}
+	return CheckParcoursGovernanceFromResult(result, path), nil
+}
+
+// CheckParcoursGovernanceFromResult checks governance fields from an already-extracted result.
+func CheckParcoursGovernanceFromResult(result ExtractResult, path string) []ExtractionFinding {
+	var findings []ExtractionFinding
+	p := result
+
+	parcoursID := p.ParcoursID
+	if parcoursID == "" {
+		parcoursID = path
+	}
+
+	// Governance fields are on the raw parcours — we need to re-check against the file.
+	// Since ExtractResult only exposes what was found, use empty-check heuristic:
+	// Domain "rbok" is the default fallback, meaning it was empty.
+	if p.Domain == "" || p.Domain == "rbok" {
+		findings = append(findings, ExtractionFinding{
+			Code:     "corpus_partial",
+			Severity: SeverityWarning,
+			Path:     path,
+			Location: parcoursID,
+			Message:  "missing governance metadata: domain",
+		})
+	}
+
+	return findings
+}
+
+// CheckParcoursGovernanceFromBytes checks governance of raw YAML content.
+func CheckParcoursGovernanceFromBytes(data []byte, path string) ([]ExtractionFinding, error) {
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		return nil, err
+	}
+	// We need the raw data to check fields ExtractResult doesn't expose directly.
+	findings := checkRawGovernance(data, path, result.ParcoursID)
+	return findings, nil
+}
+
+func checkRawGovernance(data []byte, path string, parcoursID string) []ExtractionFinding {
+	// Re-parse to access raw governance fields.
+	var file ParcoursFile
+	if err := unmarshalYAML(data, &file); err != nil {
+		return nil
+	}
+
+	var findings []ExtractionFinding
+	p := file.Parcours
+
+	if p.Version == "" {
+		findings = append(findings, ExtractionFinding{
+			Code:     "corpus_partial",
+			Severity: SeverityWarning,
+			Path:     path,
+			Location: parcoursID,
+			Message:  "missing governance metadata: version",
+		})
+	}
+	if p.Owner == "" {
+		findings = append(findings, ExtractionFinding{
+			Code:     "corpus_partial",
+			Severity: SeverityWarning,
+			Path:     path,
+			Location: parcoursID,
+			Message:  "missing governance metadata: owner",
+		})
+	}
+	if p.Status == "" {
+		findings = append(findings, ExtractionFinding{
+			Code:     "corpus_partial",
+			Severity: SeverityWarning,
+			Path:     path,
+			Location: parcoursID,
+			Message:  "missing governance metadata: status",
+		})
+	}
+	if p.Domain == "" {
+		findings = append(findings, ExtractionFinding{
+			Code:     "corpus_partial",
+			Severity: SeverityWarning,
+			Path:     path,
+			Location: parcoursID,
+			Message:  "missing governance metadata: domain",
+		})
+	}
+
+	return findings
+}
+
+func unmarshalYAML(data []byte, v interface{}) error {
+	return yaml.Unmarshal(data, v)
+}
