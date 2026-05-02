@@ -1,0 +1,163 @@
+schema_version: "0.1.0"
+document_id: VI-NOMOS-001
+status: draft
+owner: quality-owner
+product: nomos
+generated_from: docs/regulated/validation-pack/intended-use-model.yaml
+
+validations:
+  - id: VAL-001
+    intended_use_ref: IU-FUNC-001
+    title: "Manifest schema validation"
+    risk_level: medium
+    validation_type: automated
+    method: "Unit tests + CUE vet"
+    evidence_artifact: "go test ./internal/validate/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/validate/..."
+    last_verified: ""
+
+  - id: VAL-002
+    intended_use_ref: IU-FUNC-002
+    title: "Source integrity checks"
+    risk_level: medium
+    validation_type: automated
+    method: "Unit tests with hash verification fixtures"
+    evidence_artifact: "go test ./internal/checks/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/checks/..."
+    last_verified: ""
+
+  - id: VAL-003
+    intended_use_ref: IU-FUNC-003
+    title: "Cross-manifest consistency (strict)"
+    risk_level: high
+    validation_type: automated
+    method: "Unit tests with cross-reference validation"
+    evidence_artifact: "go test ./internal/strict/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/strict/..."
+    last_verified: ""
+
+  - id: VAL-004
+    intended_use_ref: IU-FUNC-004
+    title: "Expiring exceptions enforcement"
+    risk_level: high
+    validation_type: automated
+    method: "Unit tests with time-based expiration scenarios"
+    evidence_artifact: "go test ./internal/exceptions/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/exceptions/..."
+    last_verified: ""
+
+  - id: VAL-005
+    intended_use_ref: IU-FUNC-005
+    title: "Report and attestation generation"
+    risk_level: low
+    validation_type: automated
+    method: "Unit tests with in-toto/SLSA/cosign envelope validation"
+    evidence_artifact: "go test ./internal/report/... ./internal/attestation/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/report/... ./internal/attestation/..."
+    last_verified: ""
+
+  - id: VAL-006
+    intended_use_ref: IU-FUNC-006
+    title: "Corpus scan and feed (read-only)"
+    risk_level: low
+    validation_type: automated
+    method: "Unit tests + E2E with read-only guards"
+    evidence_artifact: "go test ./internal/corpus/..."
+    acceptance_gate: rbok-lawbook-e2e
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/corpus/..."
+    last_verified: ""
+
+  - id: VAL-007
+    intended_use_ref: ""
+    title: "Read-only source protection"
+    risk_level: high
+    validation_type: automated
+    method: "Push guard + output guard + SHA-256 fingerprint"
+    evidence_artifact: "go test ./internal/guard/..."
+    acceptance_gate: rbok-lawbook-e2e
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/guard/..."
+    last_verified: ""
+
+  - id: VAL-008
+    intended_use_ref: ""
+    title: "Public claims governance"
+    risk_level: high
+    validation_type: automated
+    method: "Regex scan of public docs + evidence registry check"
+    evidence_artifact: "go test ./internal/compliance/..."
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/..."
+    last_verified: ""
+
+  - id: VAL-009
+    intended_use_ref: ""
+    title: "Product manifest validation (productcheck)"
+    risk_level: medium
+    validation_type: automated
+    method: "Unit tests with valid/invalid project manifest fixtures"
+    evidence_artifact: "go test ./internal/productcheck/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/productcheck/..."
+    last_verified: ""
+
+  - id: VAL-010
+    intended_use_ref: ""
+    title: "CUE schema validation"
+    risk_level: medium
+    validation_type: automated
+    method: "cue vet on all specs/*.cue"
+    evidence_artifact: "cue vet specs/*.cue"
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cue vet specs/*.cue"
+    last_verified: ""
+
+  - id: VAL-011
+    intended_use_ref: ""
+    title: "Cross-platform corpus confidence"
+    risk_level: low
+    validation_type: automated
+    method: "CI matrix on ubuntu/macos/windows with CGO_ENABLED=0"
+    evidence_artifact: "corpus-cross-platform CI job"
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: ""
+    last_verified: ""
+
+  - id: VAL-012
+    intended_use_ref: ""
+    title: "Release gate for RBOK lawbook"
+    risk_level: high
+    validation_type: automated
+    method: "Feed + attestation + governance artifact checks"
+    evidence_artifact: "go test ./internal/corpus/... -run ReleaseGate"
+    acceptance_gate: rbok-lawbook-release-gate
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/corpus/... -run ReleaseGate"
+    last_verified: ""
