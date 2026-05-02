@@ -1,0 +1,72 @@
+{
+  "schema_version": "0.1.0",
+  "corpus": "rbok-doctrine",
+  "description": "Gold annotations for RBOK lawbook doctrine (insurance regulation).",
+  "annotations": [
+    {
+      "id": "GOLD-RBOK-001",
+      "corpus": "rbok-doctrine",
+      "source_file": "01_rbok/assurance-vie/garanties.md",
+      "source_span": {
+        "start_line": 10,
+        "end_line": 25,
+        "locator": "Art. L132-1",
+        "text": "Le contrat d'assurance sur la vie..."
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-RBOK-L132-1",
+          "kind": "rule",
+          "title": "Contrat d'assurance sur la vie",
+          "priority": "critical"
+        },
+        {
+          "atom_id": "ATOM-RBOK-L132-1-EXC",
+          "kind": "exception",
+          "title": "Exclusion suicide première année",
+          "priority": "high"
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "implements",
+          "target_id": "DIRECTIVE-EU-2009-138",
+          "from_atom": "ATOM-RBOK-L132-1"
+        }
+      ],
+      "notes": "Core insurance contract article with EU directive implementation."
+    },
+    {
+      "id": "GOLD-RBOK-002",
+      "corpus": "rbok-doctrine",
+      "source_file": "01_rbok/assurance-vie/rachat.md",
+      "source_span": {
+        "start_line": 5,
+        "end_line": 18,
+        "locator": "Art. L132-21",
+        "text": "Le contrat peut prévoir une valeur de rachat..."
+      },
+      "expected_atoms": [
+        {
+          "atom_id": "ATOM-RBOK-L132-21",
+          "kind": "rule",
+          "title": "Valeur de rachat",
+          "priority": "high"
+        },
+        {
+          "atom_id": "ATOM-RBOK-L132-21-COND",
+          "kind": "condition",
+          "title": "Conditions de rachat anticipé",
+          "priority": "medium"
+        }
+      ],
+      "expected_refs": [
+        {
+          "ref_type": "depends_on",
+          "target_id": "ATOM-RBOK-L132-1",
+          "from_atom": "ATOM-RBOK-L132-21"
+        }
+      ]
+    }
+  ]
+}
