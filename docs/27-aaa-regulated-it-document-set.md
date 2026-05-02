@@ -41,6 +41,8 @@ The baseline is built from current official or authoritative references availabl
 
 The machine-readable register is `docs/regulated/reference-basis/external-reference-register.yaml`.
 
+Every reference in that register is a Nomos bible. Public official references can be snapshotted and processed by Nomos. Licensed references such as GAMP 5, ISO standards, or paid industry guides require a licensed local artifact and an intake sidecar before full-text atomization.
+
 ## Controlled Generation Rule
 
 All documents generated from this baseline must carry:

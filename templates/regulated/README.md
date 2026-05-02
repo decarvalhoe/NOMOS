@@ -15,6 +15,7 @@ They do not certify compliance. They make claims, evidence, risks, and release g
 ## Available Templates
 
 - `controlled-document.yaml` - metadata skeleton for controlled documents.
+- `licensed-reference-intake.yaml` - intake record for GAMP 5, ISO and other licensed bible sources processed outside Git.
 - `regulated-product-profile.yaml` - product intended use, claim boundary and evidence ownership.
 - `intended-use.yaml` - intended-use and risk framing record.
 - `control-matrix.yaml` - external reference to control to evidence mapping.

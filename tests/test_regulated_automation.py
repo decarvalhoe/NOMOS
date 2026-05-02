@@ -31,6 +31,8 @@ def make_minimal_regulated_repo(tmp_path: Path) -> Path:
         tmp_path / "docs/regulated/reference-basis/external-reference-register.yaml",
         """
 schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
 references:
   - id: FDA-CSA-2025
     title: Computer Software Assurance
@@ -176,6 +178,51 @@ class RegulatedAutomationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             report = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(report["status"], "passed")
+
+    def test_reference_canon_marks_gamp5_as_licensed_bible(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            register = repo / "docs/regulated/reference-basis/external-reference-register.yaml"
+            write(
+                register,
+                """
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: FDA-CSA-2025
+    title: Computer Software Assurance
+    publisher: US FDA
+    url: https://www.fda.gov/
+    evidence_status: requires_evidence
+  - id: ISPE-GAMP5-2E-2022
+    title: ISPE GAMP 5 Guide Second Edition
+    publisher: ISPE
+    url: https://ispe.org/publications/guidance-documents/gamp-5
+    content_access_policy: licensed_content_required
+    evidence_status: licensed_reference_required_before_clause_mapping
+""".lstrip(),
+            )
+            output = repo / "out/reference-canon.json"
+
+            result = run_script(
+                "regulated_reference_canon.py",
+                "--root",
+                str(repo),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "requires_evidence")
+            self.assertEqual(report["summary"]["canonical_bibles"], 2)
+            gamp = next(item for item in report["bibles"] if item["id"] == "ISPE-GAMP5-2E-2022")
+            self.assertEqual(gamp["canonical_role"], "nomos_bible")
+            self.assertEqual(gamp["content_access_policy"], "licensed_content_required")
+            self.assertEqual(gamp["nomos_processing_policy"], "licensed_local_artifact_required")
+            self.assertFalse(gamp["full_text_fetch_allowed"])
 
 
 if __name__ == "__main__":

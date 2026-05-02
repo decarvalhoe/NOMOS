@@ -8,6 +8,11 @@ evidence_categories:
     expected_location: "docs/regulated/reference-basis/external-reference-register.yaml"
     current_status: present_draft
     claim_allowed: "reference_registered"
+  - id: EV-REF-CANON-001
+    category: nomos_bible_corpus
+    expected_location: ".regulated-doc-gate/reference-canon-report.json"
+    current_status: generated_by_workflow_when_run
+    claim_allowed: "canonical_bible_registry_only"
   - id: EV-QMS-001
     category: quality_system_documents
     expected_location: "docs/regulated/quality-system/"
@@ -87,3 +92,10 @@ blocking_gaps:
     blocks_claims:
       - github_validated_operating_model
       - approved_release_evidence
+  - id: GAP-LICENSED-BIBLES
+    description: "Licensed bible references, including GAMP 5 and ISO standards, require licensed local artifacts before full-text atomization and clause-level mapping."
+    severity: major
+    status: open
+    blocks_claims:
+      - clause_level_mapping_against_licensed_references
+      - csv_csa_gxp_claim_against_gamp5

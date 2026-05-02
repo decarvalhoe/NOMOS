@@ -51,11 +51,13 @@ jobs:
           mkdir -p .regulated-doc-gate
           python scripts/regulated_docs_gate.py \
             --report .regulated-doc-gate/regulated-doc-gate-report.json
+          python scripts/regulated_reference_canon.py \
+            --report .regulated-doc-gate/reference-canon-report.json
 
       - name: Upload regulated documentation gate report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: regulated-documentation-gate-report
-          path: .regulated-doc-gate/regulated-doc-gate-report.json
+          path: .regulated-doc-gate/
           retention-days: 90

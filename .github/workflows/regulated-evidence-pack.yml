@@ -54,6 +54,8 @@ jobs:
           mkdir -p .regulated-evidence-pack
           python scripts/regulated_evidence_pack.py \
             --output .regulated-evidence-pack/evidence-pack.json
+          python scripts/regulated_reference_canon.py \
+            --report .regulated-evidence-pack/reference-canon-report.json
 
       - name: Audit GitHub QMS controls
         env:

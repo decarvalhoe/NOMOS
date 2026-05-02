@@ -2,6 +2,12 @@ schema_version: "0.1.0"
 generated_at: "2026-05-02"
 status: draft
 claim_boundary: "Reference registration only. This file does not certify Nomos compliance."
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+  rule: "Every registered external reference is a Nomos canonical bible prerequisite and must be processed or explicitly blocked before regulated claims advance."
+  public_reference_processing: "Snapshot official source, hash it, atomize it with Nomos, and retain generated evidence."
+  licensed_reference_processing: "Do not fetch or commit full text. Use a licensed local artifact, hash it, create a sidecar intake record, and process it read-only."
+  missing_reference_policy: "Missing source content remains requires_evidence and blocks clause-level claims."
 references:
   - id: FDA-21CFR11-11.10
     title: "21 CFR Part 11 - Controls for closed systems"
@@ -158,13 +164,18 @@ references:
     title: "ISPE GAMP 5 Second Edition"
     publisher: "ISPE"
     url: "https://ispe.org/publications/guidance-documents/gamp-5"
+    public_toc_url: "https://ispe.org/sites/default/files/publications/guidance-documents/2022-TOC/ISPE-GAMP5-Ed2_TOC.pdf"
     version_or_date: "Second Edition, July 2022"
     checked_on: "2026-05-02"
     applicability: "Industry good practice for GxP computerized systems, risk-based lifecycle and supplier leverage."
-    nomos_alignment: "Use as industry guidance only until licensed detailed mapping exists."
+    content_access_policy: licensed_content_required
+    nomos_processing_mode: licensed_local_artifact_required
+    nomos_alignment: "Canonical Nomos bible for CSV/CSA/GxP computerized-system validation. Public metadata and TOC may be registered, but full-text atomization requires a licensed local copy and sidecar intake record."
     required_documents:
+      - "docs/regulated/reference-basis/nomos-bible-corpus-policy.md"
       - "docs/regulated/lifecycle/validation-master-plan.md"
-    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+      - "templates/regulated/licensed-reference-intake.yaml"
+    evidence_status: "licensed_reference_required_before_clause_mapping"
   - id: ICH-Q9R1
     title: "ICH Q9(R1) Quality Risk Management"
     publisher: "ICH / FDA guidance portal"
