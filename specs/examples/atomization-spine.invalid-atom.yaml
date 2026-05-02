@@ -1,0 +1,36 @@
+schema_version: "0.1.0"
+generated_at: "2026-05-02T15:00:00Z"
+domain: "test"
+
+structures: []
+
+atoms:
+  - atom_id: "bad-lowercase-id"
+    kind: "rule"
+    structure_id: "STRUCT-TEST"
+    document_id: "DOC-TEST"
+    domain: "test"
+    title: "Test atom"
+    content: "Content"
+    source_span:
+      source_id: "SRC-001"
+      path: "test.pdf"
+      hash: "sha256:aaaa"
+    hash: "sha256:bbbb"
+    review_state: "approved"
+    created_at: "2026-05-02T00:00:00Z"
+    updated_at: "2026-05-02T00:00:00Z"
+    priority: "medium"
+
+references: []
+matrix: []
+chunks: []
+certificates: []
+
+summary:
+  structure_count: 0
+  atom_count: 1
+  reference_count: 0
+  matrix_row_count: 0
+  chunk_count: 0
+  certificate_count: 0

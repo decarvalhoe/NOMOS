@@ -1,0 +1,138 @@
+schema_version: "0.1.0"
+generated_at: "2026-05-02T15:00:00Z"
+domain: "civil-liability"
+
+structures:
+  - structure_id: "STRUCT-CIVIL-RESP"
+    document_id: "DOC-CIVIL-CODE"
+    title: "Titre IV - De la responsabilité"
+    domain: "civil-liability"
+    source_path: "sources/civil-code.pdf"
+    source_hash: "sha256:aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd"
+    depth: 2
+    ordinal_path: "1.3.4"
+    atom_ids:
+      - "ATOM-ART-1382"
+      - "ATOM-ART-1383"
+
+atoms:
+  - atom_id: "ATOM-ART-1382"
+    kind: "rule"
+    structure_id: "STRUCT-CIVIL-RESP"
+    document_id: "DOC-CIVIL-CODE"
+    domain: "civil-liability"
+    title: "Responsabilité du fait personnel"
+    content: "Tout fait quelconque de l'homme, qui cause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer."
+    source_span:
+      source_id: "SRC-CIVIL-CODE-2026"
+      path: "sources/civil-code.pdf"
+      start_line: 1200
+      end_line: 1205
+      locator: "Art. 1382"
+      hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    review_state: "approved"
+    reviewer: "legal-team"
+    reviewed_at: "2026-04-15T10:00:00Z"
+    created_at: "2026-04-01T09:00:00Z"
+    updated_at: "2026-04-15T10:00:00Z"
+    priority: "critical"
+    criticality: "blocking"
+    ref_ids:
+      - "REF-1382-CITES-DOMAT"
+    tags:
+      - "fault-based-liability"
+      - "general-principle"
+
+  - atom_id: "ATOM-ART-1383"
+    kind: "rule"
+    structure_id: "STRUCT-CIVIL-RESP"
+    document_id: "DOC-CIVIL-CODE"
+    domain: "civil-liability"
+    title: "Responsabilité par négligence"
+    content: "Chacun est responsable du dommage qu'il a causé non seulement par son fait, mais encore par sa négligence ou par son imprudence."
+    source_span:
+      source_id: "SRC-CIVIL-CODE-2026"
+      path: "sources/civil-code.pdf"
+      start_line: 1206
+      end_line: 1210
+      locator: "Art. 1383"
+      hash: "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    review_state: "approved"
+    created_at: "2026-04-01T09:00:00Z"
+    updated_at: "2026-04-15T10:00:00Z"
+    depends_on:
+      - "ATOM-ART-1382"
+    priority: "high"
+
+references:
+  - ref_id: "REF-1382-CITES-DOMAT"
+    atom_id: "ATOM-ART-1382"
+    ref_type: "cites"
+    target_type: "external"
+    target_id: "DOMAT-LOIS-CIVILES-1689"
+    target_locator: "Livre I, Titre I"
+    confidence: "medium"
+    verified: false
+
+matrix:
+  - atom_id: "ATOM-ART-1382"
+    structure_id: "STRUCT-CIVIL-RESP"
+    domain: "civil-liability"
+    source_refs:
+      - "SRC-CIVIL-CODE-2026"
+    contract_path: "data/canonical/liability-rules.yaml"
+    test_refs:
+      - "tests/golden/art-1382.yaml"
+    chunk_ids:
+      - "CHUNK-1382-FULL"
+    coverage: "covered"
+
+  - atom_id: "ATOM-ART-1383"
+    structure_id: "STRUCT-CIVIL-RESP"
+    domain: "civil-liability"
+    source_refs:
+      - "SRC-CIVIL-CODE-2026"
+    coverage: "partial"
+    gaps:
+      - "Missing golden test case for negligence scenario."
+
+chunks:
+  - chunk_id: "CHUNK-1382-FULL"
+    atom_ids:
+      - "ATOM-ART-1382"
+    structure_id: "STRUCT-CIVIL-RESP"
+    document_id: "DOC-CIVIL-CODE"
+    domain: "civil-liability"
+    content: "Art. 1382 - Tout fait quelconque de l'homme, qui cause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer."
+    token_count: 42
+    source_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    parent_chain:
+      - "STRUCT-CIVIL-RESP"
+    governance_status: "active"
+    review_state: "approved"
+    priority: "critical"
+
+certificates:
+  - cert_id: "CERT-RESP-REVIEW-001"
+    atom_ids:
+      - "ATOM-ART-1382"
+      - "ATOM-ART-1383"
+    issued_at: "2026-04-15T10:00:00Z"
+    issuer: "legal-team"
+    cert_type: "review_approval"
+    scope: "Civil liability articles 1382-1383 approved for canonical chain."
+    valid_until: "2027-04-15T10:00:00Z"
+    hash: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    evidence_refs:
+      - "EVIDENCE-LEGAL-REVIEW-2026-04"
+    revoked: false
+
+summary:
+  structure_count: 1
+  atom_count: 2
+  reference_count: 1
+  matrix_row_count: 2
+  chunk_count: 1
+  certificate_count: 1
