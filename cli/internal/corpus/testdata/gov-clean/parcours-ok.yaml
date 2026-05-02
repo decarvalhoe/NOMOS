@@ -1,0 +1,12 @@
+parcours:
+  id: clean-parcours
+  name: "Clean Parcours"
+  version: "1.0"
+  owner: owner@example.com
+  status: active
+  domain: test
+  etapes:
+    - id: step1
+      objectifs:
+        - criteres:
+            - id: crit1
