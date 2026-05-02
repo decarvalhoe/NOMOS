@@ -68,7 +68,7 @@ func corpusHelp(stdout io.Writer) int {
 	fmt.Fprintln(stdout, "  nomos corpus manifest --snapshot <snapshot.json> --out <source-manifest.yaml>")
 	fmt.Fprintln(stdout, "  nomos corpus validate-sidecar --root <corpus> --manifest <source-manifest.yaml>")
 	fmt.Fprintln(stdout, "  nomos corpus diff --old <snapshot.json> --new <snapshot.json>")
-	fmt.Fprintln(stdout, "  nomos corpus feed --matrix <canonical-matrix.yaml> --manifest <source-manifest.yaml>")
+	fmt.Fprintln(stdout, "  nomos corpus feed --root <corpus> --snapshot <snapshot.json> --manifest <source-manifest.yaml> [--matrix <canonical-matrix.yaml>] [--lockfile <corpus.lock.json>]")
 	fmt.Fprintln(stdout, "  nomos corpus attest --snapshot <snapshot.json> --corpus-id <id> --project-id <id>")
 	return 0
 }
@@ -176,6 +176,11 @@ func corpusManifestCommand(args []string, stdout io.Writer, stderr io.Writer) in
 		fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
 		return 2
 	}
+	before, hadSnapshot, err := readOnlyBefore(snapshot.CorpusRoot)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
+		return 2
+	}
 
 	manifest := corpus.GenerateManifest(snapshot, corpus.ManifestOptions{
 		Domain:          *domain,
@@ -189,11 +194,23 @@ func corpusManifestCommand(args []string, stdout io.Writer, stderr io.Writer) in
 			fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
 			return 1
 		}
+		if hadSnapshot {
+			if err := guard.GuardReadOnly(before); err != nil {
+				fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
+				return 1
+			}
+		}
 		return 0
 	}
 	if err := writeFile(*out, func(w io.Writer) error { return corpus.WriteManifestYAML(w, manifest) }); err != nil {
 		fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
 		return 1
+	}
+	if hadSnapshot {
+		if err := guard.GuardReadOnly(before); err != nil {
+			fmt.Fprintf(stderr, "corpus manifest: %v\n", err)
+			return 1
+		}
 	}
 	fmt.Fprintf(stdout, "generated manifest with %d sources into %s\n", len(manifest.Sources), filepath.Clean(*out))
 	return 0
@@ -216,6 +233,11 @@ func corpusValidateSidecarCommand(args []string, stdout io.Writer, stderr io.Wri
 	}
 	if *manifestPath == "" {
 		fmt.Fprintln(stderr, "corpus validate-sidecar: --manifest is required")
+		return 2
+	}
+	before, hadSnapshot, err := readOnlyBefore(*root)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus validate-sidecar: %v\n", err)
 		return 2
 	}
 
@@ -242,6 +264,12 @@ func corpusValidateSidecarCommand(args []string, stdout io.Writer, stderr io.Wri
 	}
 	if !result.Valid {
 		return 1
+	}
+	if hadSnapshot {
+		if err := guard.GuardReadOnly(before); err != nil {
+			fmt.Fprintf(stderr, "corpus validate-sidecar: %v\n", err)
+			return 1
+		}
 	}
 	return 0
 }
@@ -270,6 +298,14 @@ func corpusDiffCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 	report := corpus.Diff(oldSnapshot, newSnapshot)
+	if err := validateOutputPath(oldSnapshot.CorpusRoot, *out); err != nil {
+		fmt.Fprintf(stderr, "corpus diff: %v\n", err)
+		return 2
+	}
+	if err := validateOutputPath(newSnapshot.CorpusRoot, *out); err != nil {
+		fmt.Fprintf(stderr, "corpus diff: %v\n", err)
+		return 2
+	}
 	return writeJSONPath(report, *out, stdout, stderr, "corpus diff")
 }
 
@@ -278,34 +314,90 @@ func corpusFeedCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	matrixPath := flags.String("matrix", "", "canonical matrix YAML path")
 	manifestPath := flags.String("manifest", "", "source manifest YAML path")
+	root := flags.String("root", "", "source corpus root for extraction and read-only guard")
+	snapshotPath := flags.String("snapshot", "", "snapshot JSON path")
+	lockfilePath := flags.String("lockfile", "", "accepted corpus lockfile JSON path")
+	corpusID := flags.String("corpus-id", "", "corpus identifier for embedded attestation")
+	projectID := flags.String("project-id", "", "consumer project identifier for embedded attestation")
 	out := flags.String("out", "", "feed output path")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
-	if *matrixPath == "" || *manifestPath == "" {
-		fmt.Fprintln(stderr, "corpus feed: --matrix and --manifest are required")
+	if *manifestPath == "" {
+		fmt.Fprintln(stderr, "corpus feed: --manifest is required")
 		return 2
 	}
-	matrixYAML, err := os.ReadFile(*matrixPath)
+	if *matrixPath == "" && *root == "" {
+		fmt.Fprintln(stderr, "corpus feed: either --matrix or --root is required")
+		return 2
+	}
+	if err := validateOutputPath(*root, *out); err != nil {
+		fmt.Fprintf(stderr, "corpus feed: %v\n", err)
+		return 2
+	}
+	before, hadSnapshot, err := readOnlyBefore(*root)
 	if err != nil {
-		fmt.Fprintf(stderr, "corpus feed: read matrix: %v\n", err)
-		return 1
+		fmt.Fprintf(stderr, "corpus feed: %v\n", err)
+		return 2
+	}
+
+	var matrixYAML []byte
+	if *matrixPath != "" {
+		matrixYAML, err = os.ReadFile(*matrixPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus feed: read matrix: %v\n", err)
+			return 1
+		}
 	}
 	manifestYAML, err := os.ReadFile(*manifestPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "corpus feed: read manifest: %v\n", err)
 		return 1
 	}
+	var snapshot *corpus.Snapshot
+	if *snapshotPath != "" {
+		loaded, err := readSnapshot(*snapshotPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus feed: %v\n", err)
+			return 1
+		}
+		snapshot = &loaded
+	}
+	var lockfile *corpus.Lockfile
+	if *lockfilePath != "" {
+		loaded, err := corpus.ReadLockfile(*lockfilePath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus feed: read lockfile: %v\n", err)
+			return 1
+		}
+		lockfile = loaded
+	}
 	feed, err := corpus.GenerateFeed(corpus.FeedInput{
-		MatrixYAML:   matrixYAML,
-		ManifestYAML: manifestYAML,
-		GeneratedAt:  time.Now().UTC(),
+		MatrixYAML:     matrixYAML,
+		ManifestYAML:   manifestYAML,
+		Root:           *root,
+		Snapshot:       snapshot,
+		Lockfile:       lockfile,
+		CorpusID:       *corpusID,
+		ProjectID:      *projectID,
+		ScannerVersion: Version,
+		GeneratedAt:    time.Now().UTC(),
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "corpus feed: %v\n", err)
 		return 1
 	}
-	return writeJSONPath(feed, *out, stdout, stderr, "corpus feed")
+	code := writeJSONPath(feed, *out, stdout, stderr, "corpus feed")
+	if code != 0 {
+		return code
+	}
+	if hadSnapshot {
+		if err := guard.GuardReadOnly(before); err != nil {
+			fmt.Fprintf(stderr, "corpus feed: %v\n", err)
+			return 1
+		}
+	}
+	return 0
 }
 
 func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -328,6 +420,15 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	if err != nil {
 		fmt.Fprintf(stderr, "corpus attest: %v\n", err)
 		return 1
+	}
+	if err := validateOutputPath(snapshot.CorpusRoot, *out); err != nil {
+		fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+		return 2
+	}
+	before, hadSnapshot, err := readOnlyBefore(snapshot.CorpusRoot)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+		return 2
 	}
 	files := make([]string, 0, len(snapshot.Sources))
 	for _, source := range snapshot.Sources {
@@ -357,21 +458,39 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 			fmt.Fprintf(stderr, "corpus attest: %v\n", err)
 			return 1
 		}
+		if hadSnapshot {
+			if err := guard.GuardReadOnly(before); err != nil {
+				fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+				return 1
+			}
+		}
 		return 0
 	}
 	if err := writeFile(*out, func(w io.Writer) error { return corpus.WriteAttestation(w, statement) }); err != nil {
 		fmt.Fprintf(stderr, "corpus attest: %v\n", err)
 		return 1
 	}
+	if hadSnapshot {
+		if err := guard.GuardReadOnly(before); err != nil {
+			fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+			return 1
+		}
+	}
 	fmt.Fprintf(stdout, "generated corpus attestation into %s\n", filepath.Clean(*out))
 	return 0
 }
 
 func readOnlyBefore(root string) (guard.Snapshot, bool, error) {
+	if strings.TrimSpace(root) == "" {
+		return guard.Snapshot{}, false, nil
+	}
 	if err := guard.RequireClean(root); err != nil {
 		if errors.Is(err, guard.ErrNotGitRepo) {
 			return guard.Snapshot{}, false, nil
 		}
+		return guard.Snapshot{}, false, err
+	}
+	if err := guard.CheckNoPushRemote(root); err != nil {
 		return guard.Snapshot{}, false, err
 	}
 	snapshot, err := guard.TakeSnapshot(root)

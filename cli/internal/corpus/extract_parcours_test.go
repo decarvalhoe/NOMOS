@@ -197,6 +197,43 @@ parcours:
 	}
 }
 
+func TestExtractParcoursProductionModuleShape(t *testing.T) {
+	data := []byte(`
+parcours:
+  code: PAR_ACC_ADMIN
+  name: Les bases administratives
+  modules:
+    - code: MOD_ADMIN_STATUT
+      name: Statut et structure
+      type: conversational
+      ai_instructions: Verifier le statut juridique.
+      objectives:
+        - key: statut-juridique
+          titre: Statut et inscriptions
+          questions:
+            - key: statut-choisi
+              label: Quel statut juridique avez-vous choisi ?
+              type: select
+              help_text: Raison individuelle, Sarl ou SA.
+`)
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ParcoursID != "PAR_ACC_ADMIN" {
+		t.Fatalf("expected code fallback as parcours id, got %q", result.ParcoursID)
+	}
+	if result.TotalUnits != 2 {
+		t.Fatalf("expected module + question units, got %d", result.TotalUnits)
+	}
+	if result.Units[0].UnitType != "workflow" {
+		t.Fatalf("expected module workflow unit, got %q", result.Units[0].UnitType)
+	}
+	if result.Units[1].UnitType != "rule" {
+		t.Fatalf("expected question rule unit, got %q", result.Units[1].UnitType)
+	}
+}
+
 func TestExtractParcoursMissingID(t *testing.T) {
 	data := []byte(`
 parcours:

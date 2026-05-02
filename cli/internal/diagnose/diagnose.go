@@ -29,10 +29,13 @@ const (
 )
 
 type Options struct {
-	Now         time.Time
-	ToolVersion string
-	Command     []string
-	Mode        string
+	Now                 time.Time
+	ToolVersion         string
+	Command             []string
+	Mode                string
+	ProjectManifestPath string
+	SourceManifestPath  string
+	CanonicalMatrixPath string
 }
 
 type Classification struct {
@@ -77,6 +80,7 @@ func Diagnose(root string, options Options) (output.Report, error) {
 	if err != nil {
 		return output.Report{}, err
 	}
+	applySidecarEvidence(&repoEvidence, options)
 
 	now := options.Now.UTC()
 	if now.IsZero() {
@@ -634,6 +638,19 @@ func scanRepositoryEvidence(root string) (repositoryEvidence, error) {
 	sort.Strings(repo.ci)
 	sort.Strings(repo.decisionRecords)
 	return repo, nil
+}
+
+func applySidecarEvidence(repo *repositoryEvidence, options Options) {
+	if strings.TrimSpace(options.ProjectManifestPath) != "" {
+		repo.projectManifest = options.ProjectManifestPath
+		repo.projectMode = readProjectMode(options.ProjectManifestPath)
+	}
+	if strings.TrimSpace(options.SourceManifestPath) != "" {
+		repo.sourceManifest = options.SourceManifestPath
+	}
+	if strings.TrimSpace(options.CanonicalMatrixPath) != "" {
+		repo.canonicalMatrix = options.CanonicalMatrixPath
+	}
 }
 
 func isProjectManifest(lower string, base string) bool {

@@ -2,6 +2,8 @@ package corpus
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -255,5 +257,84 @@ units:
 	assertNoErr(t, err)
 	if len(feed.Units[0].SourceIDs) != 0 {
 		t.Fatalf("expected 0 source_ids, got %v", feed.Units[0].SourceIDs)
+	}
+}
+
+func TestGenerateFeedRealCorpusArtifactsFromMarkdown(t *testing.T) {
+	root := t.TempDir()
+	writeFeedTestFile(t, root, "docs/rule.md", "# Rule A\nBody A\n\n## Rule B\nBody B\n")
+
+	snapshot := Snapshot{
+		Format:     "nomos.corpus-snapshot.v1",
+		CorpusRoot: root,
+		TotalFiles: 1,
+		Sources: []SourceEntry{{
+			Path:           "docs/rule.md",
+			Hash:           "sha256:abc123",
+			Extension:      ".md",
+			Classification: "text",
+		}},
+	}
+	lf := NewLockfile()
+	if err := lf.Add("docs/rule.md", "sha256:abc123", "alice", "accepted source"); err != nil {
+		t.Fatalf("lockfile add: %v", err)
+	}
+
+	feed, err := GenerateFeed(FeedInput{
+		ManifestYAML: []byte(`
+schema_version: "0.1.0"
+sources:
+  - id: RBOK-RULE
+    path: docs/rule.md
+    type: markdown
+    domain: rbok
+    priority: primary
+    status: active
+    hash: "sha256:abc123"
+    owner: Alice
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+      - vector_index
+`),
+		Root:           root,
+		Snapshot:       &snapshot,
+		Lockfile:       lf,
+		CorpusID:       "rbok",
+		ProjectID:      "nomos-rbok",
+		ScannerVersion: "test",
+		GeneratedAt:    fixedTime,
+	})
+	assertNoErr(t, err)
+
+	if feed.UnitCount != 2 {
+		t.Fatalf("expected 2 extracted units, got %d", feed.UnitCount)
+	}
+	if feed.Snapshot == nil || feed.Snapshot.TotalFiles != 1 {
+		t.Fatalf("expected snapshot summary, got %#v", feed.Snapshot)
+	}
+	if feed.CorpusIndex == nil || feed.CorpusIndex.UnitCount != 2 || feed.CorpusIndex.ChunkCount != 2 {
+		t.Fatalf("expected corpus index with units/chunks, got %#v", feed.CorpusIndex)
+	}
+	if len(feed.RAGMetadata) != 2 {
+		t.Fatalf("expected 2 RAG metadata chunks, got %d", len(feed.RAGMetadata))
+	}
+	if feed.Attestation == nil {
+		t.Fatal("expected embedded corpus attestation")
+	}
+	if feed.Lockfile == nil || !feed.Lockfile.Accepted {
+		t.Fatalf("expected accepted lockfile status, got %#v", feed.Lockfile)
+	}
+}
+
+func writeFeedTestFile(t *testing.T, root string, rel string, content string) {
+	t.Helper()
+	path := filepath.Join(root, filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", rel, err)
 	}
 }

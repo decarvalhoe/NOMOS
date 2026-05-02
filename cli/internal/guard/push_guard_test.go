@@ -77,11 +77,24 @@ func TestCheckNoPushRemote_PushDisabled(t *testing.T) {
 	disablePush(t, repo, "origin")
 
 	err := CheckNoPushRemote(repo)
-	if err == nil {
-		t.Fatal("expected error even with no_push URL (still listed as push remote)")
+	if err != nil {
+		t.Fatalf("expected disabled push URL to pass, got: %v", err)
 	}
-	// no_push is still a push URL entry — the guard flags it.
-	// To fully disable, remove the remote or use a protocol that cannot push.
+}
+
+func TestCheckNoPushRemote_DisabledSentinelPasses(t *testing.T) {
+	repo := t.TempDir()
+	initRepo(t, repo)
+	addRemote(t, repo, "origin", "https://github.com/example/corpus.git")
+	cmd := exec.Command("git", "-C", repo, "remote", "set-url", "--push", "origin", "DISABLED")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git remote set-url --push failed: %v\n%s", err, out)
+	}
+
+	err := CheckNoPushRemote(repo)
+	if err != nil {
+		t.Fatalf("expected DISABLED push URL to pass, got: %v", err)
+	}
 }
 
 func TestCheckNoPushRemote_MultipleRemotes(t *testing.T) {
@@ -158,11 +171,8 @@ func TestParsePushRemotes_NoPushDisabled(t *testing.T) {
 origin	no_push (push)
 `
 	result := parsePushRemotes(input)
-	if len(result) != 1 {
-		t.Fatalf("expected 1 push remote, got %d", len(result))
-	}
-	if result[0].URL != "no_push" {
-		t.Fatalf("expected URL 'no_push', got %q", result[0].URL)
+	if len(result) != 0 {
+		t.Fatalf("expected 0 push remotes for disabled push URL, got %d", len(result))
 	}
 }
 

@@ -197,6 +197,25 @@ func readTestFile(t *testing.T, root string, rel string) string {
 	return string(data)
 }
 
+func readFileAbs(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	return string(data)
+}
+
+func gitStatusText(t *testing.T, root string) string {
+	t.Helper()
+	cmd := exec.Command("git", "-C", root, "status", "--porcelain", "-u")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git status failed: %v\n%s", err, out)
+	}
+	return string(out)
+}
+
 func assertPathExists(t *testing.T, root string, rel string) {
 	t.Helper()
 	if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(rel))); err != nil {
@@ -288,6 +307,65 @@ sources:
 	}
 	if !strings.Contains(report.Verdict.Summary, "corpus_admissible") {
 		t.Fatalf("expected corpus verdict summary, got %#v", report.Verdict)
+	}
+}
+
+func TestRunDiagnoseCanonicalCorpusSidecarManifest(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n")
+	sidecar := t.TempDir()
+	projectManifest := filepath.Join(sidecar, "nomos.project.yaml")
+	sourceManifest := filepath.Join(sidecar, "source-manifest.yaml")
+	if err := os.WriteFile(projectManifest, []byte(`schema_version: "0.1.0"
+mode: canonical_corpus
+project:
+  id: rbok-corpus
+  name: RBOK Corpus
+  domain: rbok
+`), 0o644); err != nil {
+		t.Fatalf("write project sidecar: %v", err)
+	}
+	if err := os.WriteFile(sourceManifest, []byte(`schema_version: "0.1.0"
+sources:
+  - id: RBOK-RULE
+    path: 01_rbok/rule.md
+    type: markdown
+    domain: rbok
+    priority: primary
+    status: active
+    hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    owner: domain-owner@example.com
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+`), 0o644); err != nil {
+		t.Fatalf("write source sidecar: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"diagnose",
+		"--root", root,
+		"--project-manifest", projectManifest,
+		"--source-manifest", sourceManifest,
+		"--format", "json",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d; stderr=%q", code, stderr.String())
+	}
+
+	var report output.Report
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode diagnose json: %v\n%s", err, stdout.String())
+	}
+	raw := report.Metadata["diagnose"].(map[string]any)
+	if raw["preliminary_verdict"] != "corpus_admissible" {
+		t.Fatalf("expected corpus_admissible from sidecar mode, got %#v", raw)
+	}
+	if report.Project.ManifestPath != projectManifest {
+		t.Fatalf("expected project manifest sidecar path, got %q", report.Project.ManifestPath)
 	}
 }
 
@@ -398,6 +476,80 @@ func TestRunCorpusManifestAndValidateSidecar(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), `"valid": true`) {
 		t.Fatalf("expected valid sidecar json, got %s", stdout.String())
+	}
+}
+
+func TestRunCorpusFeedBuildsRealBundleWithoutMutatingCorpus(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\nBody\n")
+	initGitRepo(t, root)
+
+	outDir := t.TempDir()
+	snapshotPath := filepath.Join(outDir, "snapshot.json")
+	manifestPath := filepath.Join(outDir, "source-manifest.yaml")
+	lockfilePath := filepath.Join(outDir, "corpus.lock.json")
+	feedPath := filepath.Join(outDir, "rbok-feed.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"corpus", "scan", "--root", root, "--out", snapshotPath, "--ext", ".md"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("scan failed: code=%d stderr=%q", code, stderr.String())
+	}
+	var snapshot corpus.Snapshot
+	if err := json.Unmarshal([]byte(readFileAbs(t, snapshotPath)), &snapshot); err != nil {
+		t.Fatalf("decode snapshot: %v", err)
+	}
+	lf := corpus.NewLockfile()
+	for _, source := range snapshot.Sources {
+		if err := lf.Add(source.Path, source.Hash, "alice", "accepted"); err != nil {
+			t.Fatalf("lock add: %v", err)
+		}
+	}
+	if err := lf.Write(lockfilePath); err != nil {
+		t.Fatalf("write lockfile: %v", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "manifest",
+		"--snapshot", snapshotPath,
+		"--out", manifestPath,
+		"--domain", "rbok",
+		"--owner", "domain-owner@example.com",
+		"--id-prefix", "RBOK",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("manifest failed: code=%d stderr=%q", code, stderr.String())
+	}
+
+	before := gitStatusText(t, root)
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "feed",
+		"--root", root,
+		"--manifest", manifestPath,
+		"--snapshot", snapshotPath,
+		"--lockfile", lockfilePath,
+		"--corpus-id", "rbok",
+		"--project-id", "nomos-rbok",
+		"--out", feedPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("feed failed: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	after := gitStatusText(t, root)
+	if before != after {
+		t.Fatalf("corpus mutated: before=%q after=%q", before, after)
+	}
+
+	raw := readFileAbs(t, feedPath)
+	for _, expected := range []string{`"unit_count": 1`, `"corpus_index"`, `"rag_metadata"`, `"attestation"`, `"lockfile"`, `"accepted": true`} {
+		if !strings.Contains(raw, expected) {
+			t.Fatalf("expected feed to contain %s, got %s", expected, raw)
+		}
 	}
 }
 
