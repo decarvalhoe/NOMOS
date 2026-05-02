@@ -4,9 +4,9 @@ import "testing"
 
 func TestClassifyPrimary00Meta(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta/glossary.yaml")
-	assertEqual(t, "primary", r.Priority)
-	assertEqual(t, "active", r.Status)
-	assertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, "active", r.Status)
+	policyAssertEqual(t, RoleLawbook, r.Role)
 	assertContains(t, r.AllowedUses, "structured_contract")
 	assertContains(t, r.AllowedUses, "vector_index")
 	assertContains(t, r.AllowedUses, "golden_case")
@@ -14,59 +14,59 @@ func TestClassifyPrimary00Meta(t *testing.T) {
 
 func TestClassifyPrimary01Referentiel(t *testing.T) {
 	r := ClassifyRBOKSource("01_referentiel/source-manifest.yaml")
-	assertEqual(t, "primary", r.Priority)
-	assertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, RoleLawbook, r.Role)
 }
 
 func TestClassifyPrimary02Domaines(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/assurance-habitation/garanties.yaml")
-	assertEqual(t, "primary", r.Priority)
-	assertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, RoleLawbook, r.Role)
 }
 
 func TestClassifyReference99RBOK(t *testing.T) {
 	r := ClassifyRBOKSource("99_RBOK_initial_pdf/contract-home-2026.pdf")
-	assertEqual(t, "reference", r.Priority)
-	assertEqual(t, RoleReference, r.Role)
+	policyAssertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, RoleReference, r.Role)
 	assertContains(t, r.AllowedUses, "human_review_only")
 	assertContains(t, r.AllowedUses, "citation_internal")
 }
 
 func TestClassifyReference98Schemas(t *testing.T) {
 	r := ClassifyRBOKSource("98_schemas/warranty.schema.json")
-	assertEqual(t, "reference", r.Priority)
-	assertEqual(t, RoleReference, r.Role)
+	policyAssertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, RoleReference, r.Role)
 }
 
 func TestClassifyDerivedGermanTranslation(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/habitation/garanties.de.yaml")
-	assertEqual(t, "derived", r.Priority)
-	assertEqual(t, RoleDerived, r.Role)
+	policyAssertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, RoleDerived, r.Role)
 	assertContains(t, r.AllowedUses, "citation_internal")
 }
 
 func TestClassifyDerivedGenerated(t *testing.T) {
 	r := ClassifyRBOKSource("01_referentiel/generated/output.json")
-	assertEqual(t, "derived", r.Priority)
-	assertEqual(t, RoleDerived, r.Role)
+	policyAssertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, RoleDerived, r.Role)
 }
 
 func TestClassifyDerivedTestdata(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/testdata/fixture.yaml")
-	assertEqual(t, "derived", r.Priority)
-	assertEqual(t, RoleDerived, r.Role)
+	policyAssertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, RoleDerived, r.Role)
 }
 
 func TestClassifyDerivedFixtures(t *testing.T) {
 	r := ClassifyRBOKSource("01_referentiel/fixtures/sample.json")
-	assertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, "derived", r.Priority)
 }
 
 func TestClassifyOutOfScopeScript(t *testing.T) {
 	r := ClassifyRBOKSource("scripts/deploy.sh")
-	assertEqual(t, "out_of_scope", r.Priority)
-	assertEqual(t, "out_of_scope", r.Status)
-	assertEqual(t, RoleOutOfScope, r.Role)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Status)
+	policyAssertEqual(t, RoleOutOfScope, r.Role)
 	if len(r.AllowedUses) != 0 {
 		t.Fatalf("expected no allowed_uses, got %v", r.AllowedUses)
 	}
@@ -74,71 +74,71 @@ func TestClassifyOutOfScopeScript(t *testing.T) {
 
 func TestClassifyOutOfScopeDSStore(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/.DS_Store")
-	assertEqual(t, "out_of_scope", r.Priority)
-	assertEqual(t, RoleOutOfScope, r.Role)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, RoleOutOfScope, r.Role)
 }
 
 func TestClassifyOutOfScopeShellFile(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta/setup.sh")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifyOutOfScopeLockFile(t *testing.T) {
 	r := ClassifyRBOKSource("package-lock.json")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifyOutOfScopeGitDir(t *testing.T) {
 	r := ClassifyRBOKSource(".git/config")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifyOutOfScopeNodeModules(t *testing.T) {
 	r := ClassifyRBOKSource("node_modules/react/index.js")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifySecondaryDefault(t *testing.T) {
 	r := ClassifyRBOKSource("03_other/notes.md")
-	assertEqual(t, "secondary", r.Priority)
-	assertEqual(t, "active", r.Status)
-	assertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "secondary", r.Priority)
+	policyAssertEqual(t, "active", r.Status)
+	policyAssertEqual(t, RoleLawbook, r.Role)
 	assertContains(t, r.AllowedUses, "structured_contract")
 }
 
 func TestClassifyDerivedDeYaml(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta/terms.de.yaml")
-	assertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, "derived", r.Priority)
 }
 
 func TestClassifyDerivedDeMd(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/guide.de.md")
-	assertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, "derived", r.Priority)
 }
 
 func TestClassifyDerivedGenFile(t *testing.T) {
 	r := ClassifyRBOKSource("01_referentiel/model_gen.go")
-	assertEqual(t, "derived", r.Priority)
+	policyAssertEqual(t, "derived", r.Priority)
 }
 
 func TestClassifyPrimarySubdirectory(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta/sub/deep/file.yaml")
-	assertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, "primary", r.Priority)
 }
 
 func TestClassifyReferenceInitialPDF(t *testing.T) {
 	r := ClassifyRBOKSource("99_initial_sources/contract_initial.pdf")
-	assertEqual(t, "reference", r.Priority)
+	policyAssertEqual(t, "reference", r.Priority)
 }
 
 func TestClassifyOutOfScopeThumbsDb(t *testing.T) {
 	r := ClassifyRBOKSource("02_domaines/Thumbs.db")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifyOutOfScopeBatFile(t *testing.T) {
 	r := ClassifyRBOKSource("run.bat")
-	assertEqual(t, "out_of_scope", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Priority)
 }
 
 func TestClassifyDeterminism(t *testing.T) {
@@ -152,21 +152,21 @@ func TestClassifyDeterminism(t *testing.T) {
 	for _, p := range paths {
 		r1 := ClassifyRBOKSource(p)
 		r2 := ClassifyRBOKSource(p)
-		assertEqual(t, r1.Priority, r2.Priority)
-		assertEqual(t, r1.Status, r2.Status)
-		assertEqual(t, r1.Role, r2.Role)
-		assertEqual(t, r1.Reason, r2.Reason)
+		policyAssertEqual(t, r1.Priority, r2.Priority)
+		policyAssertEqual(t, r1.Status, r2.Status)
+		policyAssertEqual(t, r1.Role, r2.Role)
+		policyAssertEqual(t, r1.Reason, r2.Reason)
 	}
 }
 
 func TestClassifyWindowsBackslash(t *testing.T) {
 	r := ClassifyRBOKSource("00_meta\\glossary.yaml")
-	assertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, "primary", r.Priority)
 }
 
 // --- helper ---
 
-func assertEqual[T comparable](t *testing.T, expected, actual T) {
+func policyAssertEqual[T comparable](t *testing.T, expected, actual T) {
 	t.Helper()
 	if expected != actual {
 		t.Fatalf("expected %v, got %v", expected, actual)

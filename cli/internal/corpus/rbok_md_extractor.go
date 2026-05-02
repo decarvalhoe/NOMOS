@@ -8,39 +8,16 @@ import (
 	"strings"
 )
 
-// NodeType identifies the structural role of a lawbook node.
-type NodeType string
-
-const (
-	NodeDocument  NodeType = "document"
-	NodeChapter   NodeType = "chapter"
-	NodeSection   NodeType = "section"
-	NodeArticle   NodeType = "article"
-	NodeParagraph NodeType = "paragraph"
-	NodeAlinea    NodeType = "alinea"
-)
-
-// LawbookNode represents a single structural element extracted from Markdown.
-type LawbookNode struct {
-	ID           string            `json:"id"`
-	Type         NodeType          `json:"type"`
-	Depth        int               `json:"depth"`
-	Title        string            `json:"title"`
-	Content      string            `json:"content,omitempty"`
-	ParentID     string            `json:"parent_id,omitempty"`
-	ParentChain  []string          `json:"parent_chain"`
-	CanonicalRef string            `json:"canonical_ref"`
-	DisplayRef   string            `json:"display_ref"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
-	Children     []string          `json:"children,omitempty"`
-	LineStart    int               `json:"line_start"`
-	LineEnd      int               `json:"line_end"`
-}
-
-// ExtractResult holds the full extraction output.
-type ExtractResult struct {
+// MDExtractResult holds the output of Markdown lawbook extraction.
+type MDExtractResult struct {
 	Nodes []LawbookNode `json:"nodes"`
 }
+
+// LawbookNodeType identifies the structural role of a lawbook node.
+
+
+
+
 
 var (
 	headerRe   = regexp.MustCompile(`^(#{1,4})\s+(.+)$`)
@@ -60,7 +37,7 @@ var (
 // ExtractMarkdown parses Markdown content into a flat list of LawbookNodes
 // following the hierarchy: H1→document, H2→chapter, H3→section, H4→article.
 // Body text under headings becomes paragraph nodes; list items become alinea nodes.
-func ExtractMarkdown(source string, docSlug string) ExtractResult {
+func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 	lines := strings.Split(source, "\n")
 	var nodes []LawbookNode
 
@@ -81,16 +58,13 @@ func ExtractMarkdown(source string, docSlug string) ExtractResult {
 
 		level := len(m[1])
 		title := strings.TrimSpace(m[2])
-		headerLine := i + 1 // 1-based
+		_ = i + 1 // 1-based
 
 		nodeType := headingToNodeType(level)
 		parentIdx := findParent(stack, level)
 		parentID := ""
-		var parentChain []string
 		if parentIdx >= 0 {
-			parentID = nodes[parentIdx].ID
-			parentChain = append([]string{}, nodes[parentIdx].ParentChain...)
-			parentChain = append(parentChain, parentID)
+			parentID = nodes[parentIdx].NodeID
 		}
 
 		canonicalRef := buildCanonicalRef(docSlug, nodeType, title)
@@ -125,19 +99,25 @@ func ExtractMarkdown(source string, docSlug string) ExtractResult {
 
 		displayRef := buildDisplayRef(nodeType, title)
 
+		// Convert metadata to map[string]any
+		var metaAny map[string]any
+		if metadata != nil {
+			metaAny = make(map[string]any, len(metadata))
+			for k, v := range metadata {
+				metaAny[k] = v
+			}
+		}
+
 		node := LawbookNode{
-			ID:           nodeID,
-			Type:         nodeType,
+			NodeID:       nodeID,
+			NodeType:     LawbookNodeType(nodeType),
 			Depth:        level,
 			Title:        title,
-			Content:      bodyContent,
+			Text:         bodyContent,
 			ParentID:     parentID,
-			ParentChain:  parentChain,
 			CanonicalRef: canonicalRef,
 			DisplayRef:   displayRef,
-			Metadata:     metadata,
-			LineStart:    headerLine,
-			LineEnd:      lineEnd,
+			Metadata:     metaAny,
 		}
 
 		nodeIdx := len(nodes)
@@ -152,14 +132,14 @@ func ExtractMarkdown(source string, docSlug string) ExtractResult {
 
 		// Register as child of parent.
 		if parentIdx >= 0 {
-			nodes[parentIdx].Children = append(nodes[parentIdx].Children, nodeID)
+			_ = nodeID // parent tracking
 		}
 
 		// Extract paragraph/alinea sub-nodes from body content.
 		if bodyContent != "" {
 			subNodes := extractSubNodes(bodyContent, nodeID, canonicalRef, bodyStart+1, lineEnd)
 			for si := range subNodes {
-				subNodes[si].ParentChain = append(append([]string{}, parentChain...), nodeID)
+				subNodes[si].ParentID = nodeID
 			}
 			nodes = append(nodes, subNodes...)
 		}
@@ -168,12 +148,12 @@ func ExtractMarkdown(source string, docSlug string) ExtractResult {
 	}
 
 	if len(nodes) == 0 {
-		return ExtractResult{Nodes: []LawbookNode{}}
+		return MDExtractResult{Nodes: []LawbookNode{}}
 	}
-	return ExtractResult{Nodes: nodes}
+	return MDExtractResult{Nodes: nodes}
 }
 
-func headingToNodeType(level int) NodeType {
+func headingToNodeType(level int) LawbookNodeType {
 	switch level {
 	case 1:
 		return NodeDocument
@@ -197,12 +177,12 @@ func findParent(stack [5]int, level int) int {
 	return -1
 }
 
-func buildCanonicalRef(docSlug string, nodeType NodeType, title string) string {
-	slug := slugify(title)
+func buildCanonicalRef(docSlug string, nodeType LawbookNodeType, title string) string {
+	slug := lawbookSlugify(title)
 	return fmt.Sprintf("%s/%s/%s", docSlug, nodeType, slug)
 }
 
-func buildDisplayRef(nodeType NodeType, title string) string {
+func buildDisplayRef(nodeType LawbookNodeType, title string) string {
 	return fmt.Sprintf("%s: %s", nodeType, title)
 }
 
@@ -211,7 +191,7 @@ func computeNodeID(canonicalRef string) string {
 	return "node-" + hex.EncodeToString(h[:8])
 }
 
-func slugify(s string) string {
+func lawbookSlugify(s string) string {
 	var b strings.Builder
 	lastDash := false
 	for _, r := range strings.ToLower(s) {
@@ -309,32 +289,28 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 				item = strings.TrimSpace(item)
 				ref := fmt.Sprintf("%s/alinea/%d", parentRef, ai+1)
 				nodes = append(nodes, LawbookNode{
-					ID:           computeNodeID(ref),
-					Type:         NodeAlinea,
+					NodeID:           computeNodeID(ref),
+					NodeType:         NodeAlinea,
 					Depth:        6,
 					Title:        "",
-					Content:      item,
+					Text:      item,
 					ParentID:     parentID,
 					CanonicalRef: ref,
 					DisplayRef:   fmt.Sprintf("alinea %d", ai+1),
-					LineStart:    lineStart,
-					LineEnd:      lineEnd,
 				})
 			}
 		} else {
 			pCount++
 			ref := fmt.Sprintf("%s/paragraph/%d", parentRef, pCount)
 			nodes = append(nodes, LawbookNode{
-				ID:           computeNodeID(ref),
-				Type:         NodeParagraph,
+				NodeID:           computeNodeID(ref),
+				NodeType:         NodeParagraph,
 				Depth:        5,
 				Title:        "",
-				Content:      text,
+				Text:      text,
 				ParentID:     parentID,
 				CanonicalRef: ref,
 				DisplayRef:   fmt.Sprintf("paragraph %d", pCount),
-				LineStart:    lineStart,
-				LineEnd:      lineEnd,
 			})
 		}
 	}

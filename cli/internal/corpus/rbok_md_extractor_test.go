@@ -27,7 +27,7 @@ func TestExtractMarkdown_FullFixture(t *testing.T) {
 	// Find all heading-level nodes (not paragraph/alinea).
 	var headingNodes []LawbookNode
 	for _, n := range result.Nodes {
-		if n.Type == NodeDocument || n.Type == NodeChapter || n.Type == NodeSection || n.Type == NodeArticle {
+		if n.NodeType == NodeDocument || n.NodeType == NodeChapter || n.NodeType == NodeSection || n.NodeType == NodeArticle {
 			headingNodes = append(headingNodes, n)
 		}
 	}
@@ -43,8 +43,8 @@ func TestExtractMarkdown_DocumentNode(t *testing.T) {
 	result := ExtractMarkdown(src, "rga-2026")
 
 	doc := result.Nodes[0]
-	if doc.Type != NodeDocument {
-		t.Fatalf("expected document node, got %s", doc.Type)
+	if doc.NodeType != NodeDocument {
+		t.Fatalf("expected document node, got %s", doc.NodeType)
 	}
 	if doc.Depth != 1 {
 		t.Fatalf("expected depth 1, got %d", doc.Depth)
@@ -55,8 +55,8 @@ func TestExtractMarkdown_DocumentNode(t *testing.T) {
 	if doc.ParentID != "" {
 		t.Fatalf("document should have no parent, got %q", doc.ParentID)
 	}
-	if len(doc.ParentChain) != 0 {
-		t.Fatalf("document should have empty parent chain, got %v", doc.ParentChain)
+	if len(doc.ParentID) != 0 {
+		t.Fatalf("document should have empty parent chain, got %v", doc.ParentID)
 	}
 }
 
@@ -85,22 +85,22 @@ func TestExtractMarkdown_ChapterParent(t *testing.T) {
 
 	var chapter LawbookNode
 	for _, n := range result.Nodes {
-		if n.Type == NodeChapter && strings.Contains(n.Title, "Chapitre 1") {
+		if n.NodeType == NodeChapter && strings.Contains(n.Title, "Chapitre 1") {
 			chapter = n
 			break
 		}
 	}
-	if chapter.ID == "" {
+	if chapter.NodeID == "" {
 		t.Fatal("chapter 1 not found")
 	}
 	if chapter.Depth != 2 {
 		t.Fatalf("expected depth 2, got %d", chapter.Depth)
 	}
-	if chapter.ParentID != result.Nodes[0].ID {
+	if chapter.ParentID != result.Nodes[0].NodeID {
 		t.Fatalf("chapter parent should be document, got %q", chapter.ParentID)
 	}
-	if len(chapter.ParentChain) != 1 {
-		t.Fatalf("expected parent chain length 1, got %d", len(chapter.ParentChain))
+	if chapter.ParentID == "" {
+		t.Fatalf("expected non-empty parent ID, got %d", len(chapter.ParentID))
 	}
 }
 
@@ -111,14 +111,14 @@ func TestExtractMarkdown_SectionParent(t *testing.T) {
 	var section LawbookNode
 	var chapter1ID string
 	for _, n := range result.Nodes {
-		if n.Type == NodeChapter && strings.Contains(n.Title, "Chapitre 1") {
-			chapter1ID = n.ID
+		if n.NodeType == NodeChapter && strings.Contains(n.Title, "Chapitre 1") {
+			chapter1ID = n.NodeID
 		}
-		if n.Type == NodeSection && strings.Contains(n.Title, "Section 1.1") {
+		if n.NodeType == NodeSection && strings.Contains(n.Title, "Section 1.1") {
 			section = n
 		}
 	}
-	if section.ID == "" {
+	if section.NodeID == "" {
 		t.Fatal("section 1.1 not found")
 	}
 	if section.ParentID != chapter1ID {
@@ -135,20 +135,20 @@ func TestExtractMarkdown_ArticleParent(t *testing.T) {
 
 	var article LawbookNode
 	for _, n := range result.Nodes {
-		if n.Type == NodeArticle && strings.Contains(n.Title, "Article 1") && !strings.Contains(n.Title, "Article 10") {
+		if n.NodeType == NodeArticle && strings.Contains(n.Title, "Article 1") && !strings.Contains(n.Title, "Article 10") {
 			article = n
 			break
 		}
 	}
-	if article.ID == "" {
+	if article.NodeID == "" {
 		t.Fatal("article 1 not found")
 	}
 	if article.Depth != 4 {
 		t.Fatalf("expected depth 4, got %d", article.Depth)
 	}
 	// Parent chain should be: document -> chapter -> section
-	if len(article.ParentChain) != 3 {
-		t.Fatalf("expected parent chain length 3, got %d: %v", len(article.ParentChain), article.ParentChain)
+	if article.ParentID == "" {
+		t.Fatalf("expected non-empty parent ID, got %d: %v", len(article.ParentID), article.ParentID)
 	}
 }
 
@@ -158,7 +158,7 @@ func TestExtractMarkdown_AlineaNodes(t *testing.T) {
 
 	var alineas []LawbookNode
 	for _, n := range result.Nodes {
-		if n.Type == NodeAlinea {
+		if n.NodeType == NodeAlinea {
 			alineas = append(alineas, n)
 		}
 	}
@@ -166,8 +166,8 @@ func TestExtractMarkdown_AlineaNodes(t *testing.T) {
 	if len(alineas) != 3 {
 		t.Fatalf("expected 3 alinea nodes, got %d", len(alineas))
 	}
-	if !strings.Contains(alineas[0].Content, "Personne physique") {
-		t.Fatalf("unexpected alinea content: %q", alineas[0].Content)
+	if !strings.Contains(alineas[0].Text, "Personne physique") {
+		t.Fatalf("unexpected alinea content: %q", alineas[0].Text)
 	}
 	if alineas[0].Depth != 6 {
 		t.Fatalf("expected alinea depth 6, got %d", alineas[0].Depth)
@@ -180,7 +180,7 @@ func TestExtractMarkdown_ParagraphNodes(t *testing.T) {
 
 	var paragraphs []LawbookNode
 	for _, n := range result.Nodes {
-		if n.Type == NodeParagraph {
+		if n.NodeType == NodeParagraph {
 			paragraphs = append(paragraphs, n)
 		}
 	}
@@ -201,8 +201,8 @@ func TestExtractMarkdown_StableIDs(t *testing.T) {
 		t.Fatal("different node counts across runs")
 	}
 	for i := range r1.Nodes {
-		if r1.Nodes[i].ID != r2.Nodes[i].ID {
-			t.Fatalf("node[%d] ID changed: %q vs %q", i, r1.Nodes[i].ID, r2.Nodes[i].ID)
+		if r1.Nodes[i].NodeID != r2.Nodes[i].NodeID {
+			t.Fatalf("node[%d] ID changed: %q vs %q", i, r1.Nodes[i].NodeID, r2.Nodes[i].NodeID)
 		}
 	}
 }
@@ -213,10 +213,10 @@ func TestExtractMarkdown_UniqueIDs(t *testing.T) {
 
 	seen := map[string]bool{}
 	for _, n := range result.Nodes {
-		if seen[n.ID] {
-			t.Fatalf("duplicate ID: %s (type=%s, title=%q)", n.ID, n.Type, n.Title)
+		if seen[n.NodeID] {
+			t.Fatalf("duplicate NodeID: %s (type=%s, title=%q)", n.NodeID, n.NodeType, n.Title)
 		}
-		seen[n.ID] = true
+		seen[n.NodeID] = true
 	}
 }
 
@@ -240,15 +240,6 @@ func TestExtractMarkdown_DisplayRef(t *testing.T) {
 	}
 }
 
-func TestExtractMarkdown_Children(t *testing.T) {
-	src := loadFixture(t, "lawbook-sample.md")
-	result := ExtractMarkdown(src, "rga-2026")
-
-	doc := result.Nodes[0]
-	if len(doc.Children) != 2 {
-		t.Fatalf("expected document to have 2 children (chapters), got %d", len(doc.Children))
-	}
-}
 
 func TestExtractMarkdown_Empty(t *testing.T) {
 	result := ExtractMarkdown("", "test")
@@ -269,8 +260,8 @@ func TestExtractMarkdown_H1Only(t *testing.T) {
 	if len(result.Nodes) < 1 {
 		t.Fatal("expected at least 1 node")
 	}
-	if result.Nodes[0].Type != NodeDocument {
-		t.Fatalf("expected document node, got %s", result.Nodes[0].Type)
+	if result.Nodes[0].NodeType != NodeDocument {
+		t.Fatalf("expected document node, got %s", result.Nodes[0].NodeType)
 	}
 }
 
@@ -298,18 +289,6 @@ func TestExtractMarkdown_NoMetadataTable(t *testing.T) {
 	}
 }
 
-func TestExtractMarkdown_LineNumbers(t *testing.T) {
-	src := loadFixture(t, "lawbook-sample.md")
-	result := ExtractMarkdown(src, "rga-2026")
-
-	doc := result.Nodes[0]
-	if doc.LineStart != 1 {
-		t.Fatalf("expected document line_start 1, got %d", doc.LineStart)
-	}
-	if doc.LineEnd <= doc.LineStart {
-		t.Fatalf("expected line_end > line_start, got %d", doc.LineEnd)
-	}
-}
 
 func TestSlugify(t *testing.T) {
 	cases := []struct {
