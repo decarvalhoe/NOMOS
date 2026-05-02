@@ -1,0 +1,64 @@
+schema_version: "0.1.0"
+product:
+  id: praxis
+  name: Praxis
+  repository: https://github.com/RBOKproject/PRAXIS
+  role: downstream_runtime_evidence_and_capa
+  execution_priority: 2
+  owner: RBOK Team
+regulated_design:
+  structure_status: mirrored_target
+  current_quality_level: "not qualified through Nomos yet"
+  target_quality_level: "compatible with Nomos NQ-4 evidence integration"
+  public_claim_boundary: "Runtime assurance counterpart; not usable as Nomos regulated evidence until Nomos producer artifacts are verified."
+  regulated_claim_allowed: false
+  blocked_by:
+    - "Verified Nomos control matrix."
+    - "Verified Nomos ALCOA+ evidence envelope."
+    - "Verified Nomos release evidence bundle."
+    - "Stable Nomos-to-Praxis evidence contract."
+owned_evidence:
+  - id: praxis-project-pack
+    status: blocked
+    dependency: nomos-praxis-evidence-contract
+  - id: praxis-runtime-scenarios
+    status: blocked
+    dependency: verified-nomos-claims
+  - id: praxis-invariant-results
+    status: blocked
+    dependency: verified-nomos-claims
+  - id: praxis-runtime-evidence-retention
+    status: planned
+    dependency: praxis-evidence-model
+  - id: praxis-capa-feedback
+    status: planned
+    dependency: praxis-nomos-feedback-contract
+critical_path:
+  praxis_existing:
+    - "RBOKproject/PRAXIS#247"
+  praxis_regulated_followup:
+    - "RBOKproject/PRAXIS#254"
+    - "RBOKproject/PRAXIS#255"
+    - "RBOKproject/PRAXIS#256"
+nomos_relationship:
+  relationship: downstream_consumer
+  upstream_product: nomos
+  required_input:
+    - canonical_claim_ids
+    - control_ids
+    - source_hashes
+    - release_evidence_bundle
+    - deviation_and_waiver_records
+    - accepted_runtime_scenario_manifest
+  feedback_output:
+    - runtime_evidence_ids
+    - invariant_results
+    - nonconformities
+    - capa_records
+    - periodic_review_findings
+release_gate:
+  minimum_before_regulated_claim:
+    - "Praxis consumes verified Nomos artifacts without schema drift."
+    - "Runtime evidence references Nomos claim IDs and control IDs."
+    - "CAPA records can feed back into Nomos control/evidence updates."
+    - "Retention and reconstruction procedures are documented and tested."

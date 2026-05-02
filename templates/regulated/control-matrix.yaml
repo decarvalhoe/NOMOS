@@ -1,0 +1,39 @@
+schema_version: "0.1.0"
+matrix:
+  id: regulated-control-matrix
+  owner: replace_with_owner
+  status: planned
+  version: "0.1.0"
+controls:
+  - control_id: RQ-01
+    title: Intended Use And Predicate Scope
+    status: planned
+    external_references:
+      - reference_id: replace_with_reference_id
+        url: replace_with_reference_url
+        applicability: applicable
+        version_or_date_checked: replace_with_date
+    requirement: "Each regulated claim maps to a declared intended use and claim boundary."
+    intended_use_ids:
+      - replace_with_intended_use_id
+    risk_level: high
+    implementation:
+      status: planned
+      references:
+        - replace_with_code_or_doc_reference
+    verification:
+      status: planned
+      tests:
+        - replace_with_test_or_gate
+    evidence:
+      status: planned
+      artifacts:
+        - replace_with_artifact_path
+    release_gate:
+      required: true
+      gate_name: replace_with_gate_name
+    waiver:
+      status: not_applicable
+      expiry: not_applicable
+      mitigation: not_applicable
+    public_claim_boundary: "No regulated-grade claim until this control is verified."

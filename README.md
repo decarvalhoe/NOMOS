@@ -77,6 +77,8 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/22-nomos-praxis-synergy-market-audit.md` : audit de synergie Nomos/Praxis, angles morts et positionnement marché.
 - `docs/23-regulated-implementation-plan.md` : plan d'implémentation pour aligner Nomos avec ses exigences de conformité.
 - `docs/24-regulated-client-compliance-evidence.md` : recherche et checklist des preuves attendues par les clients régulés.
+- `docs/25-regulated-by-design-structure.md` : structure operationnelle `regulated by design` pour Nomos et Praxis.
+- `docs/regulated/` : dossiers de profils produit, matrices, validation, supplier pack, release bundle et operations qualite.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
@@ -100,6 +102,7 @@ Le track régulé est maintenant gouverné par trois documents :
 - `docs/21-regulated-quality-reference.md` définit les niveaux `NQ-0` à `NQ-6`, les familles de contrôles et les règles de non-surpromesse.
 - `docs/22-nomos-praxis-synergy-market-audit.md` compare la thèse Nomos/Praxis aux attentes du marché ALM, validation lifecycle, test management et evidence/CAPA.
 - `docs/23-regulated-implementation-plan.md` transforme l'audit en phases d'implémentation, dépendances GitHub, gates et règles d'alignement documentaire.
+- `docs/25-regulated-by-design-structure.md` installe la structure partagee Nomos/Praxis : profils produit, matrice de controles, pack fournisseur, validation pack, release bundle, AI/RAG governance et integration client.
 
 Le prochain seuil crédible est `NQ-3` : Nomos build/test green, références externes gouvernées, self-compliance exécutable, métadonnées ALCOA+, validation pack initial et claims publics limités au niveau de preuve réel.
 

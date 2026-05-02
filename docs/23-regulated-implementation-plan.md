@@ -8,6 +8,8 @@ This document turns the hard audit in `docs/21-regulated-quality-reference.md` a
 
 It should be read together with `docs/24-regulated-client-compliance-evidence.md`, which defines what regulated clients typically expect during supplier qualification, validation, and operational integration.
 
+It should also be read with `docs/25-regulated-by-design-structure.md`, which installs the shared Nomos/Praxis folder structure, product profiles, evidence templates, and status model used by this plan.
+
 The objective is not to make a stronger claim. The objective is to build enough implementation, evidence, documentation, and governance that the claim becomes defensible:
 
 ```text
@@ -61,6 +63,8 @@ Praxis cannot consume what Nomos cannot yet produce. Therefore the first impleme
 - RBOK lawbook feed is generated read-only;
 - Nomos/Praxis schema fixtures exist and validate;
 - Nomos release evidence bundle can carry an explicit "Praxis evidence absent/not yet qualified" status.
+
+The regulated-by-design structure is already installed under `docs/regulated/` and `templates/regulated/`. Those files are the operating frame for all remaining issues: every issue that changes claim scope, validation scope, evidence, corpus handling, release behavior, or Praxis integration must update the relevant profile, control, validation, supplier, release, AI/RAG, operations, customer-integration, or decision record.
 
 ## Target Architecture
 
