@@ -221,6 +221,74 @@ Nomos Attestation
 
 Nomos proves "what the law is". Praxis proves "what the product does". A regulated story needs both.
 
+### RQ-09A Nomos/Praxis Synergy And Boundary
+
+Nomos and Praxis are complementary products, not interchangeable products.
+
+Nomos is the authority conversion system:
+
+- inventories authoritative sources;
+- atomizes business law into canonical units;
+- validates source policies, manifests, sidecars, schemas, feeds, provenance, and attestations;
+- protects source corpora from mutation;
+- governs claims and release evidence.
+
+Praxis is the execution evidence system:
+
+- reconstructs product surface from code and runtime;
+- compiles and executes UAT/API/UI scenarios;
+- captures runtime evidence;
+- checks invariants;
+- computes evidence-backed coverage;
+- produces CAPA findings and regression history.
+
+The synergy is the closed loop:
+
+```text
+Nomos source law
+  -> Nomos canonical units and claims
+  -> product implementation
+  -> Praxis runtime evidence and invariants
+  -> Praxis CAPA findings
+  -> Nomos control matrix and release decision
+```
+
+This means:
+
+- Nomos without Praxis can prove source-to-artifact traceability, but not that the running product obeys the law.
+- Praxis without Nomos can prove product behavior, but not that the expected behavior is the authoritative business law.
+- Together, they can defend both halves of the regulated claim: source authority and runtime conformance.
+
+### RQ-09B Praxis Regulatory Parity Note
+
+Praxis regulatory parity is not the direct implementation scope of this Nomos reference PR, but it is a mandatory future control boundary.
+
+If Praxis is used only as an internal exploratory testing tool, Praxis may remain outside the regulated release boundary for a given deployment.
+
+If Praxis output is used as any of the following, Praxis must meet the same regulated-grade baseline as Nomos:
+
+- release go/no-go evidence;
+- CAPA source record;
+- validation evidence;
+- audit response evidence;
+- product-law conformance evidence;
+- electronic record retained for regulated decision making.
+
+In that case, Praxis must have its own equivalent of:
+
+- intended-use statement;
+- risk assessment;
+- requirements and traceability matrix;
+- ALCOA+ data integrity metadata;
+- audit trail and immutable evidence records;
+- source/build/test provenance;
+- validated project packs and invariants;
+- waiver and deviation control;
+- claims governance;
+- self-compliance gate on `RBOKproject/praxis`.
+
+The Nomos/Praxis compatibility work must therefore avoid a one-way dependency where Nomos becomes regulated while Praxis remains an unqualified evidence generator. A connected regulated toolchain is only as defensible as its weakest evidence-producing tool.
+
 ### RQ-10 Claims Governance
 
 Every README, roadmap, website, issue body, and release note claim must be controlled.
@@ -323,6 +391,7 @@ A regulated-grade Nomos release cannot ship unless:
 - `main` is green;
 - Nomos self-compliance is green;
 - Praxis can audit Nomos documentation and produce a CAPA report;
+- any Praxis artifact used as release, CAPA, validation, or audit evidence has declared its Praxis quality level and parity status;
 - external references registry has no unresolved placeholders;
 - every active reference has at least one control and one evidence artifact;
 - RBOK lawbook E2E is green when RBOK is the declared reference corpus;

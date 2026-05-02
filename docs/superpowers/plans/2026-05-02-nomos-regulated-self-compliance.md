@@ -324,6 +324,42 @@ pytest tests/test_project_pack_nomos.py -v
 
 Expected: PASS.
 
+## Task 6A: Record Praxis Regulatory Parity Boundary
+
+**Files:**
+- Modify: `docs/21-regulated-quality-reference.md`
+- Modify in Praxis repo: `docs/ARCHITECTURE.md` or a new `docs/REGULATED_PARITY.md`
+- Track: `RBOKproject/praxis` issue for deferred Praxis self-compliance parity
+
+- [ ] **Step 1: State the boundary**
+
+Document that Praxis is outside the immediate Nomos implementation scope while it is only an exploratory/support testing tool.
+
+- [ ] **Step 2: State the escalation rule**
+
+Document that Praxis enters the same regulated quality boundary as Nomos when its output is used for release go/no-go, CAPA, validation evidence, audit response evidence, or product-law conformance evidence.
+
+- [ ] **Step 3: Define required parity controls**
+
+Praxis parity must include:
+
+```text
+intended use
+risk assessment
+requirements traceability
+ALCOA+ evidence metadata
+audit trail
+source/build/test provenance
+validated project packs and invariants
+waiver/deviation control
+claims governance
+Praxis-on-Praxis self-compliance
+```
+
+- [ ] **Step 4: Verify tracking**
+
+Expected: the Nomos regulated epic links to a Praxis deferred parity issue, and the Praxis compatibility epic records that parity is not optional once Praxis evidence becomes regulated evidence.
+
 ## Task 7: Add CI Gates
 
 **Files:**
@@ -428,7 +464,7 @@ Release go/no-go: pass
 - [ ] External reference alignment has zero unmapped active references.
 - [ ] No unresolved placeholder URLs in active docs.
 - [ ] Praxis Nomos pack passes.
+- [ ] Praxis regulatory parity boundary is documented and tracked outside this immediate Nomos scope.
 - [ ] RBOK lawbook E2E passes on real `01_rbok`.
 - [ ] All critical/major findings closed or waived with expiry.
 - [ ] Release notes state the exact quality level: NQ-3, NQ-4, NQ-5, or NQ-6.
-
