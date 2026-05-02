@@ -698,6 +698,13 @@ Ce track etend E8/E9. Il ne remplace pas le backlog produit : il ajoute les exig
 
 Reference d'implementation : `docs/23-regulated-implementation-plan.md`.
 
+Ordre d'execution :
+
+1. Nomos d'abord : RG-0, RG-1, RG-2, RG-3 et les issues Nomos #144, #149-#158.
+2. Praxis ensuite : Praxis #247-#256 seulement quand Nomos produit des schemas, fixtures, feeds et evidence bundles valides.
+
+Praxis peut rester dans le dependency tree, mais il ne doit pas bloquer le premier sprint de recovery Nomos. Une evidence Praxis manquante doit etre representee comme `absent/not_yet_qualified`, pas masquee.
+
 ### RG-0 - Baseline Executable
 
 But :
@@ -814,6 +821,10 @@ But :
 
 faire passer la chaine combinee a `NQ-4`.
 
+Priorite :
+
+Nomos implemente d'abord le cote producteur : schema, fixtures, ledger, impact report et selection contract. Praxis consomme ensuite, une fois que les artefacts Nomos existent.
+
 Issues GitHub :
 
 - Nomos #144 : shared evidence contract.
@@ -852,6 +863,10 @@ Issues a convertir depuis `docs/22-nomos-praxis-synergy-market-audit.md` quand R
 - Nomos #153 / SYN-009 : independent review/quality-unit roles.
 - Praxis #255 / SYN-011 : validated project pack certification status.
 - Praxis #256 / SYN-014 : runtime evidence retention/trend model.
+
+Priorite :
+
+les issues Nomos #150-#153 sont a traiter avant Praxis #255-#256. Le bundle Nomos doit supporter un statut explicite `praxis_evidence: absent` ou `not_yet_qualified` tant que Praxis n'est pas pret.
 
 BLOCKS :
 
@@ -902,15 +917,25 @@ RG-0
   -> RG-1
   -> RG-2
   -> RG-3
-  -> RG-4
-  -> RG-5
-  -> RG-6
+  -> RG-4 Nomos-side
+  -> RG-5 Nomos-side
+  -> RG-6 Nomos-side
+  -> Praxis #247-#256
 
 NQ-2 = RG-0
 NQ-3 = RG-0 + RG-1 + RG-2
 NQ-4 = NQ-3 + RG-3 + RG-4 + Nomos #149 + Praxis #247-#252
 NQ-5 = NQ-4 + RG-5 + Nomos #150-#153 + Praxis #254-#256
 NQ-6 = NQ-5 + independent reconstruction
+```
+
+Pour l'execution immediate :
+
+```text
+Nomos #125-#147
+  -> Nomos #124 + #128-#135
+  -> Nomos #144 + #149-#158
+  -> Praxis #247-#256
 ```
 
 Regle de fermeture :

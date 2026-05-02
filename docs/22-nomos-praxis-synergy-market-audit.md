@@ -495,34 +495,66 @@ These rows were materialized as GitHub issues on 2026-05-02.
 
 ## Issue Bundle Recommendation
 
-Do not create all issues at once unless the team is ready to execute. The clean backlog split is:
+The issues now exist, but execution must be sequenced. Nomos goes first because Praxis cannot consume evidence that Nomos cannot yet produce.
 
-### Bundle A - Joint Evidence MVP
+### Bundle 0 - Nomos Recovery And Self-Compliance
+
+- Nomos #125
+- Nomos #126
+- Nomos #127
+- Nomos #136
+- Nomos #137
+- Nomos #139
+- Nomos #140
+- Nomos #141
+- Nomos #142
+- Nomos #143
+- Nomos #145
+- Nomos #146
+- Nomos #147
+
+Goal: make Nomos executable, self-checking, and honest about its claims.
+
+### Bundle 1 - Nomos RBOK Lawbook Proof
+
+- Nomos #124
+- Nomos #128
+- Nomos #129
+- Nomos #130
+- Nomos #131
+- Nomos #132
+- Nomos #133
+- Nomos #134
+- Nomos #135
+
+Goal: prove the corpus-to-law path on `realisons-business/01_rbok` in read-only mode.
+
+### Bundle 2 - Nomos-Side Joint Evidence Interface
 
 - SYN-001 / Nomos #149
-- SYN-002 / Praxis #250
 - SYN-003 / Nomos #150
 - SYN-006 / Nomos #154
 - SYN-007 / Nomos #155
-
-Goal: make the Nomos/Praxis seam real.
-
-### Bundle B - Regulated Parity
-
-- SYN-004 / Praxis #253
-- SYN-005 / Praxis #254
 - SYN-008 / Nomos #152
 - SYN-009 / Nomos #153
 - SYN-010 / Nomos #151
+
+Goal: make Nomos a valid producer before Praxis starts consuming.
+
+### Bundle 3 - Praxis Consumption And Parity
+
+- SYN-002 / Praxis #250
+- SYN-004 / Praxis #253
+- SYN-005 / Praxis #254
 - SYN-011 / Praxis #255
+- SYN-014 / Praxis #256
 
-Goal: make the evidence chain defensible in a regulated context.
+Goal: make Praxis consume Nomos evidence and become qualified enough for release-grade use.
 
-### Bundle C - Market And Interop
+### Bundle 4 - Market And Interop
 
 - SYN-012 / Nomos #156
 - SYN-013 / Nomos #157
-- SYN-014 / Praxis #256
 - SYN-015 / Nomos #158
 
 Goal: make the product legible against ALM/QMS/validation competitors.

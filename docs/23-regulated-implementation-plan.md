@@ -38,6 +38,28 @@ Until the plan below reaches at least `NQ-3`, public wording must stay at "metho
 6. Praxis evidence can support Nomos only after the shared contract and Praxis parity controls are defined.
 7. Documentation is part of the product: each implementation issue must update the relevant docs, examples, and validation pack.
 
+## Execution Order
+
+Nomos is the critical path.
+
+Praxis work is intentionally downstream. Praxis issues may stay open as interface targets, but they must not be treated as implementation blockers for the first Nomos recovery sprint.
+
+Execution order:
+
+1. **Nomos baseline**: #125, #126, #127, #136, #137.
+2. **Nomos regulated self-compliance**: #139, #140, #141, #142, #143, #145, #146, #147.
+3. **Nomos RBOK lawbook proof**: #124, #128, #129, #130, #131, #132, #133, #134, #135.
+4. **Nomos evidence interface**: #144, #149, #150, #151, #152, #153, #154, #155, #156, #157, #158.
+5. **Praxis implementation**: RBOKproject/PRAXIS#247 through #256, only after Nomos has green producer artifacts and schemas.
+
+Praxis cannot consume what Nomos cannot yet produce. Therefore the first implementation wave must stay in Nomos until:
+
+- CLI and CUE are green;
+- Nomos-on-Nomos self-compliance runs;
+- RBOK lawbook feed is generated read-only;
+- Nomos/Praxis schema fixtures exist and validate;
+- Nomos release evidence bundle can carry an explicit "Praxis evidence absent/not yet qualified" status.
+
 ## Target Architecture
 
 ```mermaid
@@ -271,7 +293,13 @@ Expected result:
 
 ## Phase 4 - Nomos/Praxis Evidence Contract
 
-Goal: reach `NQ-4` by connecting canonical product law to runtime evidence and CAPA.
+Goal: define the Nomos-side evidence interface first, then reach `NQ-4` later by connecting canonical product law to Praxis runtime evidence and CAPA.
+
+Execution rule:
+
+- Nomos #144, #149, #154, #155 must be implemented first as producer-side schemas, fixtures, and reports.
+- Praxis #247-#252 remain downstream until Nomos emits valid artifacts.
+- NQ-4 is not claimable until the Praxis side later consumes those artifacts and returns valid evidence.
 
 Blocking issues:
 
@@ -368,6 +396,10 @@ Expected result:
 ## Phase 6 - Praxis Regulatory Parity
 
 Goal: prevent Praxis from weakening the joint regulated chain.
+
+Execution rule:
+
+Do not start Praxis parity implementation until Nomos has reached at least NQ-3 and has validated the Nomos-side evidence interface. Praxis parity is required before release-grade use of Praxis evidence, but it is not the first recovery priority.
 
 Blocking issues:
 
@@ -488,6 +520,20 @@ NQ-5 = NQ-4 + #150 + #151 + #152 + #153 + #147 + Praxis #254-#256 green
 NQ-6 = NQ-5 + independent review reconstruction successful
 ```
 
+Immediate Nomos-only chain:
+
+```text
+#125 + #126
+  -> #127
+  -> #136
+  -> #137
+  -> #139 + #140
+  -> #141 + #142 + #143 + #145 + #146 + #147
+  -> #124 + #128-#135
+  -> #144 + #149-#158
+  -> Praxis #247-#256
+```
+
 ## Documentation Alignment Rules
 
 Each implementation PR must update documentation in the same PR when behavior or claims change.
@@ -526,7 +572,7 @@ Unless the corresponding gate is green.
 
 ## First Execution Sprint
 
-The first sprint should not open more conceptual work. It should make the system executable:
+The first sprint is Nomos-only. It should not implement Praxis yet. It should make Nomos executable and able to emit valid artifacts for Praxis to consume later:
 
 1. Fix current CLI/CUE build blockers.
 2. Implement compliance matrix schema and example.
@@ -535,7 +581,8 @@ The first sprint should not open more conceptual work. It should make the system
 5. Add `docs/validation/` skeleton and link it to generated evidence.
 6. Add the first self-compliance CI workflow.
 7. Run RBOK lawbook feed in read-only mode and archive the evidence outside `realisons-business`.
-8. Run Praxis compatibility smoke once the shared contract has a valid example.
+8. Create Nomos-side evidence fixtures for the future Praxis contract.
+9. Record Praxis evidence as absent/not-yet-qualified in release bundle fixtures until Praxis implementation starts.
 
 Definition of done:
 
