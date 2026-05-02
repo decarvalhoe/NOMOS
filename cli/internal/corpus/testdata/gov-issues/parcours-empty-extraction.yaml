@@ -1,0 +1,11 @@
+parcours:
+  id: empty-extract
+  name: "Empty Extraction"
+  version: "1.0"
+  owner: owner@example.com
+  status: active
+  domain: test
+  etapes:
+    - id: empty-step
+      objectifs:
+        - criteres: []
