@@ -6,6 +6,8 @@ Date: 2026-05-02
 
 This document turns the hard audit in `docs/21-regulated-quality-reference.md` and the Nomos/Praxis synergy audit in `docs/22-nomos-praxis-synergy-market-audit.md` into an implementation plan.
 
+It should be read together with `docs/24-regulated-client-compliance-evidence.md`, which defines what regulated clients typically expect during supplier qualification, validation, and operational integration.
+
 The objective is not to make a stronger claim. The objective is to build enough implementation, evidence, documentation, and governance that the claim becomes defensible:
 
 ```text
@@ -544,6 +546,7 @@ Required documentation updates by work type:
 |---|---|
 | CLI command or verdict behavior | `README.md`, `docs/14-product-roadmap.md`, command reference when added |
 | Regulated control or external reference | `docs/21-regulated-quality-reference.md`, control matrix example |
+| Client qualification or validation deliverable | `docs/24-regulated-client-compliance-evidence.md`, validation pack docs |
 | Nomos/Praxis evidence link | `docs/22-nomos-praxis-synergy-market-audit.md`, schema examples |
 | Implementation sequencing or issue dependency | `docs/23-regulated-implementation-plan.md`, `docs/15-product-backlog.md` |
 | Validation lifecycle artifact | `docs/validation/*`, regulated release checklist |

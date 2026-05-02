@@ -76,6 +76,7 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/21-regulated-quality-reference.md` : baseline qualité/compliance pour les marchés IT régulés.
 - `docs/22-nomos-praxis-synergy-market-audit.md` : audit de synergie Nomos/Praxis, angles morts et positionnement marché.
 - `docs/23-regulated-implementation-plan.md` : plan d'implémentation pour aligner Nomos avec ses exigences de conformité.
+- `docs/24-regulated-client-compliance-evidence.md` : recherche et checklist des preuves attendues par les clients régulés.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
 - `templates/` : fichiers copiables dans un projet.
