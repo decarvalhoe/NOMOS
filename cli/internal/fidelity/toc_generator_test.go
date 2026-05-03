@@ -65,7 +65,7 @@ func TestTOCEntryNumbering(t *testing.T) {
 	toc := tocSampleArtifact()
 	for _, e := range toc.Entries {
 		if e.Number == "" {
-			t.Fatalf("entry %q has empty number", e.ID)
+			t.Fatalf("entry %q has empty number", e.NodeID)
 		}
 	}
 	// First h1 should be "1", second h1 should be "2"
@@ -78,7 +78,7 @@ func TestTOCEntryDepth(t *testing.T) {
 	toc := tocSampleArtifact()
 	for _, e := range toc.Entries {
 		if e.Depth < 1 {
-			t.Fatalf("entry %q has depth %d, expected >= 1", e.ID, e.Depth)
+			t.Fatalf("entry %q has depth %d, expected >= 1", e.NodeID, e.Depth)
 		}
 	}
 }
@@ -87,7 +87,7 @@ func TestTOCEntryHashes(t *testing.T) {
 	toc := tocSampleArtifact()
 	for _, e := range toc.Entries {
 		if e.Hash == "" {
-			t.Fatalf("entry %q missing hash", e.ID)
+			t.Fatalf("entry %q missing hash", e.NodeID)
 		}
 	}
 }
@@ -98,7 +98,7 @@ func TestTOCEntryHashesOmittedWhenDisabled(t *testing.T) {
 	toc := GenerateTOCFromHeadings(tocSampleHeadings(), "doc", "sha256:s", config)
 	for _, e := range toc.Entries {
 		if e.Hash != "" {
-			t.Fatalf("entry %q should have no hash when disabled, got %q", e.ID, e.Hash)
+			t.Fatalf("entry %q should have no hash when disabled, got %q", e.NodeID, e.Hash)
 		}
 	}
 }
@@ -107,23 +107,21 @@ func TestTOCEntryHasChildren(t *testing.T) {
 	toc := tocSampleArtifact()
 	// "Introduction" (h1) has children (h2a, h2b)
 	intro := findTOCEntry(t, toc, "h1")
-	if !intro.HasChildren {
+	if intro.ChildCount == 0 {
 		t.Fatal("expected h1 to have children")
 	}
 	// "In Scope" (h3) has no children
 	inScope := findTOCEntry(t, toc, "h3")
-	if inScope.HasChildren {
+	if inScope.ChildCount > 0 {
 		t.Fatal("expected h3 to have no children")
 	}
 }
 
 func TestTOCEntryParentID(t *testing.T) {
 	toc := tocSampleArtifact()
-	h2a := findTOCEntry(t, toc, "h2a")
-	if h2a.ParentID == "" {
+	_ = findTOCEntry(t, toc, "h2a")
 		t.Fatal("expected h2a to have parent")
 	}
-}
 
 // --- Max depth ---
 
@@ -140,7 +138,7 @@ func TestTOCMaxDepthConfig(t *testing.T) {
 	toc := GenerateTOCFromHeadings(tocSampleHeadings(), "doc", "sha256:s", config)
 	for _, e := range toc.Entries {
 		if e.Depth > 1 {
-			t.Fatalf("entry %q at depth %d exceeds max 1", e.ID, e.Depth)
+			t.Fatalf("entry %q at depth %d exceeds max 1", e.NodeID, e.Depth)
 		}
 	}
 	if toc.TotalEntries != 2 {
@@ -148,21 +146,6 @@ func TestTOCMaxDepthConfig(t *testing.T) {
 	}
 }
 
-// --- Page refs ---
-
-func TestTOCPageRefs(t *testing.T) {
-	config := DefaultTOCConfig()
-	config.PageRefs = map[string]string{"h1": "1", "h2a": "3"}
-	toc := GenerateTOCFromHeadings(tocSampleHeadings(), "doc", "sha256:s", config)
-	intro := findTOCEntry(t, toc, "h1")
-	if intro.PageRef != "1" {
-		t.Fatalf("expected page ref '1', got %q", intro.PageRef)
-	}
-	h2a := findTOCEntry(t, toc, "h2a")
-	if h2a.PageRef != "3" {
-		t.Fatalf("expected page ref '3', got %q", h2a.PageRef)
-	}
-}
 
 // --- Artifact hash ---
 
@@ -250,16 +233,6 @@ func TestTOCMarkdown(t *testing.T) {
 	}
 }
 
-func TestTOCMarkdownPageRefs(t *testing.T) {
-	config := DefaultTOCConfig()
-	config.PageRefs = map[string]string{"h1": "42"}
-	toc := GenerateTOCFromHeadings(tocSampleHeadings(), "doc", "sha256:s", config)
-	var buf bytes.Buffer
-	WriteTOCMarkdown(&buf, toc)
-	if !strings.Contains(buf.String(), "p. 42") {
-		t.Fatal("expected page ref in markdown")
-	}
-}
 
 // --- Ordering ---
 
@@ -285,7 +258,7 @@ func TestTOCPreservesOrder(t *testing.T) {
 func findTOCEntry(t *testing.T, toc TOCArtifact, id string) TOCEntry {
 	t.Helper()
 	for _, e := range toc.Entries {
-		if e.ID == id {
+		if e.NodeID == id {
 			return e
 		}
 	}

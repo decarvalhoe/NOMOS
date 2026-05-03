@@ -41,7 +41,7 @@ type TOCCompareResult struct {
 // CompareTOC compares a source TOC against a Nomos-generated TOC.
 // Source TOC is the ground truth extracted directly from the document.
 // Nomos TOC is what the pipeline produced.
-func CompareTOC(source, nomos []TOCEntry) TOCCompareResult {
+func CompareTOCLegacy(source, nomos []TOCEntry) TOCCompareResult {
 	result := TOCCompareResult{
 		SourceCount: len(source),
 		NomosCount:  len(nomos),
@@ -126,7 +126,7 @@ func CompareTOC(source, nomos []TOCEntry) TOCCompareResult {
 // CompareTOCFromTree compares a source TOC against a StructureTree.
 func CompareTOCFromTree(source []TOCEntry, tree StructureTree) TOCCompareResult {
 	nomos := flattenTreeToEntries(tree)
-	return CompareTOC(source, nomos)
+	return CompareTOCLegacy(source, nomos)
 }
 
 func flattenTreeToEntries(tree StructureTree) []TOCEntry {
@@ -134,7 +134,7 @@ func flattenTreeToEntries(tree StructureTree) []TOCEntry {
 	entries := make([]TOCEntry, 0, len(flat))
 	for _, node := range flat {
 		entries = append(entries, TOCEntry{
-			ID:    node.ID,
+			NodeID:    node.ID,
 			Title: node.Title,
 			Depth: node.Depth,
 		})
