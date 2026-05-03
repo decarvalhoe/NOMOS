@@ -166,6 +166,68 @@ func TestClassifyWindowsBackslash(t *testing.T) {
 	policyAssertEqual(t, "primary", r.Priority)
 }
 
+func TestClassifyRealisonsBusinessCanonicalCore(t *testing.T) {
+	r := ClassifyRBOKSource("01_rbok/00_meta/RBOK_structure_v1.md")
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, "active", r.Status)
+	policyAssertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "canonical_corpus", r.SourceClass)
+	policyAssertEqual(t, "canonical_core", r.CorpusLayer)
+	policyAssertEqual(t, "primary", r.Authority)
+	assertContains(t, r.AllowedUses, "vector_index")
+}
+
+func TestClassifyRealisonsBusinessRuntimeBinding(t *testing.T) {
+	r := ClassifyRBOKSource("01_rbok/03_parcours/PAR_ACC_ADMIN.yaml")
+	policyAssertEqual(t, "primary", r.Priority)
+	policyAssertEqual(t, RoleLawbook, r.Role)
+	policyAssertEqual(t, "runtime_binding", r.SourceClass)
+	policyAssertEqual(t, "runtime_binding", r.CorpusLayer)
+	policyAssertEqual(t, "primary", r.Authority)
+	assertContains(t, r.AllowedUses, "runtime_binding")
+}
+
+func TestClassifyRealisonsBusinessSupportingLayers(t *testing.T) {
+	cases := []struct {
+		path        string
+		role        SourceRole
+		sourceClass string
+		layer       string
+		authority   string
+	}{
+		{"02_organisation/equipe.md", RoleSupporting, "supporting_context", "organisation", "supporting"},
+		{"03_catalogue_services/catalogue.md", RoleSupporting, "supporting_context", "service_catalog", "supporting"},
+		{"04_marketing/cas-client.md", RoleEvidence, "experience_evidence", "market_context", "evidence"},
+		{"05_pilotage/kpi.md", RoleOperational, "operational_context", "pilotage", "operational"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			r := ClassifyRBOKSource(tc.path)
+			policyAssertEqual(t, "secondary", r.Priority)
+			policyAssertEqual(t, "active", r.Status)
+			policyAssertEqual(t, tc.role, r.Role)
+			policyAssertEqual(t, tc.sourceClass, r.SourceClass)
+			policyAssertEqual(t, tc.layer, r.CorpusLayer)
+			policyAssertEqual(t, tc.authority, r.Authority)
+			assertContains(t, r.AllowedUses, "citation_internal")
+		})
+	}
+}
+
+func TestClassifyRealisonsBusinessArchiveExcludedByDefault(t *testing.T) {
+	r := ClassifyRBOKSource("99_archive/old/RBOK_structure_v0.md")
+	policyAssertEqual(t, "archive", r.Priority)
+	policyAssertEqual(t, "out_of_scope", r.Status)
+	policyAssertEqual(t, RoleArchive, r.Role)
+	policyAssertEqual(t, "archive", r.SourceClass)
+	policyAssertEqual(t, "archive", r.CorpusLayer)
+	policyAssertEqual(t, "none", r.Authority)
+	if len(r.AllowedUses) != 0 {
+		t.Fatalf("expected no allowed uses for archive by default, got %v", r.AllowedUses)
+	}
+}
+
 // --- 03_parcours as primary ---
 
 func TestClassifyPrimary03Parcours(t *testing.T) {

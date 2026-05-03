@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -16,8 +17,8 @@ func TestLookupProfileRBOKLawbook(t *testing.T) {
 		t.Fatalf("lookup: %v", err)
 	}
 	assertEqual(t, ProfileRBOKLawbook, p.Name)
-	if len(p.Outputs) != 4 {
-		t.Fatalf("expected 4 outputs, got %d", len(p.Outputs))
+	if len(p.Outputs) != 8 {
+		t.Fatalf("expected 8 outputs, got %d", len(p.Outputs))
 	}
 }
 
@@ -67,13 +68,141 @@ func TestRunProfileFeedRBOKLawbook(t *testing.T) {
 	if result.SourceCount == 0 {
 		t.Fatal("expected sources")
 	}
-	if len(result.Sections) != 4 {
-		t.Fatalf("expected 4 sections, got %d", len(result.Sections))
+	if result.UnitCount == 0 {
+		t.Fatal("expected atomized units")
+	}
+	if len(result.Sections) != len(allOutputFlags) {
+		t.Fatalf("expected %d sections, got %d", len(allOutputFlags), len(result.Sections))
 	}
 	for _, flag := range allOutputFlags {
 		if _, ok := result.Sections[flag]; !ok {
 			t.Fatalf("missing section %q", flag)
 		}
+	}
+}
+
+func TestRunProfileFeedBuildsLawbookArtifacts(t *testing.T) {
+	dir := makeRealisonsBusinessFixture(t)
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputFeed, OutputRAGMetadata, OutputAtomizationReport},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+	if len(result.Errors) != 0 {
+		t.Fatalf("expected no errors, got %v", result.Errors)
+	}
+	if result.UnitCount == 0 {
+		t.Fatal("expected atomized units")
+	}
+
+	var assembly MultiFeedAssembly
+	if err := json.Unmarshal(result.Sections[OutputFeed], &assembly); err != nil {
+		t.Fatalf("unmarshal feed assembly: %v", err)
+	}
+	if assembly.TotalNodes != result.UnitCount {
+		t.Fatalf("assembly total_nodes=%d, result unit_count=%d", assembly.TotalNodes, result.UnitCount)
+	}
+	if assembly.DocumentCount < 2 {
+		t.Fatalf("expected markdown and parcours documents, got %d", assembly.DocumentCount)
+	}
+	if len(assembly.RAGMetadata) != result.UnitCount {
+		t.Fatalf("expected one RAG chunk per node, got chunks=%d units=%d", len(assembly.RAGMetadata), result.UnitCount)
+	}
+
+	hasCanonical := false
+	hasRuntime := false
+	for _, feed := range assembly.Feeds {
+		for _, node := range feed.Nodes {
+			if node.SourceHash == "" || !strings.HasPrefix(node.SourceHash, "sha256:") {
+				t.Fatalf("node %s missing source hash", node.NodeID)
+			}
+			if node.Locator == "" {
+				t.Fatalf("node %s missing locator", node.NodeID)
+			}
+			switch node.SourceClass {
+			case "canonical_corpus":
+				hasCanonical = true
+			case "runtime_binding":
+				hasRuntime = true
+			}
+		}
+	}
+	if !hasCanonical {
+		t.Fatal("expected canonical corpus nodes")
+	}
+	if !hasRuntime {
+		t.Fatal("expected runtime binding nodes")
+	}
+
+	var report ProfileAtomizationReport
+	if err := json.Unmarshal(result.Sections[OutputAtomizationReport], &report); err != nil {
+		t.Fatalf("unmarshal atomization report: %v", err)
+	}
+	if report.TotalNodes != result.UnitCount {
+		t.Fatalf("report total_nodes=%d, result unit_count=%d", report.TotalNodes, result.UnitCount)
+	}
+	if report.MissingSourceHash != 0 || report.MissingLocator != 0 {
+		t.Fatalf("expected complete traceability, got missing_hash=%d missing_locator=%d", report.MissingSourceHash, report.MissingLocator)
+	}
+}
+
+func TestRunProfileFeedTraceabilityMatrixCoversEveryNode(t *testing.T) {
+	dir := makeRealisonsBusinessFixture(t)
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputTraceabilityMatrix},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+
+	var matrix []TraceabilityEntry
+	if err := json.Unmarshal(result.Sections[OutputTraceabilityMatrix], &matrix); err != nil {
+		t.Fatalf("unmarshal traceability matrix: %v", err)
+	}
+	if len(matrix) != result.UnitCount {
+		t.Fatalf("expected %d traceability rows, got %d", result.UnitCount, len(matrix))
+	}
+	for _, row := range matrix {
+		if row.NodeID == "" || row.CanonicalRef == "" || row.SourcePath == "" {
+			t.Fatalf("incomplete traceability row: %+v", row)
+		}
+		if !strings.HasPrefix(row.SourceHash, "sha256:") {
+			t.Fatalf("row %s has invalid source hash %q", row.NodeID, row.SourceHash)
+		}
+		if row.SourceClass == "" || row.CorpusLayer == "" || row.Authority == "" {
+			t.Fatalf("row %s missing governance classification: %+v", row.NodeID, row)
+		}
+	}
+}
+
+func TestRunProfileFeedTraceabilityOrderIsDeterministic(t *testing.T) {
+	dir := makeRealisonsBusinessFixture(t)
+
+	first, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputTraceabilityMatrix},
+	})
+	if err != nil {
+		t.Fatalf("first run: %v", err)
+	}
+	second, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputTraceabilityMatrix},
+	})
+	if err != nil {
+		t.Fatalf("second run: %v", err)
+	}
+	if !bytes.Equal(first.Sections[OutputTraceabilityMatrix], second.Sections[OutputTraceabilityMatrix]) {
+		t.Fatal("traceability matrix changed between identical runs")
 	}
 }
 
@@ -90,6 +219,33 @@ func TestRunProfileFeedSelectedOutputs(t *testing.T) {
 	}
 	if len(result.Sections) != 2 {
 		t.Fatalf("expected 2 sections, got %d", len(result.Sections))
+	}
+}
+
+func TestRunProfileFeedAdmittedBinariesAreWarnings(t *testing.T) {
+	dir := makeTestCorpus(t)
+	bin := make([]byte, 64)
+	bin[0] = 0x00
+	writeTestCorpusFile(t, dir, "01_rbok/99_RBOK_initial_pdf/source.docx", bin)
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+	if len(result.Errors) != 0 {
+		t.Fatalf("expected no blocking errors, got %v", result.Errors)
+	}
+	found := false
+	for _, warning := range result.Warnings {
+		if strings.Contains(warning, "non-atomized binary") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected non-atomized binary warning, got %v", result.Warnings)
 	}
 }
 
@@ -214,7 +370,7 @@ func TestDiagnoseProfileInScope(t *testing.T) {
 		t.Fatalf("diagnose: %v", err)
 	}
 	assertEqual(t, ProfileRBOKLawbook, v.Profile)
-	assertEqual(t, "in_scope", v.Verdict)
+	assertEqual(t, "corpus_admissible", v.Verdict)
 	assertEqual(t, "high", v.Confidence)
 	if len(v.Blockers) != 0 {
 		t.Fatalf("expected no blockers, got %v", v.Blockers)
@@ -229,7 +385,7 @@ func TestDiagnoseProfileBlockedNoPrimary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("diagnose: %v", err)
 	}
-	assertEqual(t, "blocked", v.Verdict)
+	assertEqual(t, "corpus_blocked", v.Verdict)
 	if len(v.Blockers) == 0 {
 		t.Fatal("expected blockers for missing primary")
 	}
@@ -245,7 +401,27 @@ func TestDiagnoseProfileBlockedBinary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("diagnose: %v", err)
 	}
-	assertEqual(t, "blocked", v.Verdict)
+	assertEqual(t, "corpus_blocked", v.Verdict)
+}
+
+func TestDiagnoseProfileDoesNotBlockAdmittedReferenceBinaries(t *testing.T) {
+	dir := makeTestCorpus(t)
+	bin := make([]byte, 64)
+	bin[0] = 0x00
+	writeTestCorpusFile(t, dir, "01_rbok/99_RBOK_initial_pdf/source.docx", bin)
+	writeTestCorpusFile(t, dir, "04_marketing/logo/logo.png", bin)
+	writeTestCorpusFile(t, dir, "99_archive/old/source.docx", bin)
+
+	v, err := DiagnoseProfile(ProfileRBOKLawbook, dir)
+	if err != nil {
+		t.Fatalf("diagnose: %v", err)
+	}
+	assertEqual(t, "corpus_admissible", v.Verdict)
+	for _, blocker := range v.Blockers {
+		if strings.Contains(blocker, "source.docx") || strings.Contains(blocker, "logo.png") {
+			t.Fatalf("expected admitted/reference binaries not to block, got blockers %v", v.Blockers)
+		}
+	}
 }
 
 func TestDiagnoseProfilePartialNoReference(t *testing.T) {
@@ -257,7 +433,7 @@ func TestDiagnoseProfilePartialNoReference(t *testing.T) {
 	if err != nil {
 		t.Fatalf("diagnose: %v", err)
 	}
-	assertEqual(t, "partial", v.Verdict)
+	assertEqual(t, "corpus_partial", v.Verdict)
 }
 
 func TestDiagnoseProfilePartialPrimaryOnly(t *testing.T) {
@@ -268,7 +444,7 @@ func TestDiagnoseProfilePartialPrimaryOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("diagnose: %v", err)
 	}
-	assertEqual(t, "partial", v.Verdict)
+	assertEqual(t, "corpus_partial", v.Verdict)
 	assertEqual(t, "medium", v.Confidence)
 }
 
@@ -277,7 +453,7 @@ func TestDiagnoseProfileEmptyCorpus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("diagnose: %v", err)
 	}
-	assertEqual(t, "blocked", v.Verdict)
+	assertEqual(t, "corpus_blocked", v.Verdict)
 }
 
 func TestDiagnoseProfileUnknown(t *testing.T) {
@@ -306,15 +482,84 @@ func TestDiagnoseProfileOutOfScopeWarning(t *testing.T) {
 	}
 }
 
+func TestDiagnoseProfileRealisonsBusinessRootLayout(t *testing.T) {
+	dir := t.TempDir()
+	writeTestCorpusFile(t, dir, "01_rbok/00_meta/RBOK_structure_v1.md", []byte("# RBOK\n\nCore doctrine.\n"))
+	writeTestCorpusFile(t, dir, "01_rbok/03_parcours/PAR_ACC_ADMIN.yaml", []byte("id: PAR_ACC_ADMIN\nmodules: []\n"))
+	writeTestCorpusFile(t, dir, "01_rbok/99_RBOK_initial_pdf/source.pdf", []byte("%PDF-1.4 original"))
+	writeTestCorpusFile(t, dir, "02_organisation/equipe.md", []byte("# Equipe\n\nSupport.\n"))
+	writeTestCorpusFile(t, dir, "99_archive/old.md", []byte("# Old\n\nArchived.\n"))
+
+	v, err := DiagnoseProfile(ProfileRBOKLawbook, dir)
+	if err != nil {
+		t.Fatalf("diagnose: %v", err)
+	}
+	assertEqual(t, "corpus_admissible", v.Verdict)
+	assertEqual(t, "high", v.Confidence)
+	if len(v.Blockers) != 0 {
+		t.Fatalf("expected no blockers, got %v", v.Blockers)
+	}
+	if !strings.Contains(v.Summary, "runtime") {
+		t.Fatalf("expected runtime binding summary, got %q", v.Summary)
+	}
+}
+
 // --- helpers ---
 
 func makeTestCorpus(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	writeTestCorpusFile(t, dir, "00_meta/glossary.yaml", []byte("terms:\n  - id: T1\n    label: Term One\n"))
+	writeTestCorpusFile(t, dir, "00_meta/glossary.md", []byte("# Glossary\n\nTerm One governs the corpus.\n"))
 	writeTestCorpusFile(t, dir, "01_referentiel/manifest.yaml", []byte("sources: []\n"))
 	writeTestCorpusFile(t, dir, "02_domaines/habitation/garanties.yaml", []byte("garanties:\n  - water_damage\n"))
 	writeTestCorpusFile(t, dir, "99_RBOK_initial_pdf/contract.pdf", []byte("%PDF-1.4 original"))
+	return dir
+}
+
+func makeRealisonsBusinessFixture(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	writeTestCorpusFile(t, dir, "01_rbok/00_meta/RBOK_structure_v1.md", []byte(`# RBOK Structure
+
+| Champ | Valeur |
+|---|---|
+| Reference | RBOK-STRUCT-001 |
+| Status | active |
+| Version | 1.0 |
+| Domaine | rbok |
+
+Core doctrine.
+
+## Principes
+
+- Git est la source canonique.
+- Nomos produit le feed vivant.
+`))
+	writeTestCorpusFile(t, dir, "01_rbok/03_parcours/PAR_ACC_ADMIN.yaml", []byte(`
+parcours:
+  code: PAR_ACC_ADMIN
+  name: Les bases administratives
+  domain: rbok
+  version: "1.0"
+  owner: rbok@example.com
+  status: active
+  modules:
+    - code: MOD_ADMIN_STATUT
+      name: Statut et structure
+      type: conversational
+      ai_instructions: Poser uniquement la question du step courant.
+      source_rbok: RBOK-STRUCT-001
+      objectives:
+        - key: statut-juridique
+          titre: Statut et inscriptions
+          questions:
+            - key: statut-choisi
+              label: Quel statut juridique avez-vous choisi ?
+              type: select
+              help_text: Question concise du step courant.
+`))
+	writeTestCorpusFile(t, dir, "01_rbok/99_RBOK_initial_pdf/source.pdf", []byte("%PDF-1.4 original"))
+	writeTestCorpusFile(t, dir, "02_organisation/equipe.md", []byte("# Equipe\n\nSupport context.\n"))
 	return dir
 }
 

@@ -38,6 +38,11 @@ import "strings"
 	ordinal_path:  =~"^[0-9]+(\\.[0-9]+)*$"
 	source_path:   string
 	source_hash:   =~"^(sha256|sha384|sha512):[A-Fa-f0-9]+$"
+	source_class?: string
+	corpus_layer?: string
+	authority?:    string
+	allowed_uses?: [...string]
+	locator?:      string
 	status:        #LawbookNodeStatus
 	priority:      #LawbookPriority
 	domain:        string & strings.MinRunes(1)

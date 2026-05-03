@@ -20,6 +20,15 @@ func TestDetectFullStackCorpus(t *testing.T) {
 	assertHasLanguage(t, report, "Go")
 	assertHasLanguage(t, report, "TypeScript")
 	assertHasLanguage(t, report, "Python")
+	if !treeSitterSupported() {
+		if report.TreeSitter.Enabled {
+			t.Fatal("expected tree-sitter to be disabled in non-cgo build")
+		}
+		for _, surface := range []string{"api", "ui", "worker", "data", "infra", "docs"} {
+			assertHasSurface(t, report, surface)
+		}
+		return
+	}
 	assertHasTreeSitterLanguage(t, report, "Go")
 	assertHasTreeSitterLanguage(t, report, "Java")
 	assertHasTreeSitterLanguage(t, report, "Python")
@@ -47,6 +56,15 @@ func TestDetectNodeTypeScriptOfficialFixture(t *testing.T) {
 	}
 
 	assertHasLanguage(t, report, "TypeScript")
+	if !treeSitterSupported() {
+		if report.TreeSitter.Enabled {
+			t.Fatal("expected tree-sitter to be disabled in non-cgo build")
+		}
+		assertHasSurface(t, report, "api")
+		assertHasSurface(t, report, "ui")
+		assertHasSurface(t, report, "data")
+		return
+	}
 	assertHasTreeSitterLanguage(t, report, "TypeScript")
 	assertHasTreeSitterLanguage(t, report, "TSX")
 	if len(report.TreeSitter.ParseErrors) != 0 {
@@ -93,6 +111,9 @@ func TestDetectSkipsDependencyAndBuildDirectories(t *testing.T) {
 }
 
 func TestDetectReportsClearMissingTreeSitterGrammar(t *testing.T) {
+	if !treeSitterSupported() {
+		t.Skip("tree-sitter grammar diagnostics require cgo build")
+	}
 	root := t.TempDir()
 	writeTestFile(t, root, "src/Program.cs", "namespace Demo { class Program {} }\n")
 
@@ -119,6 +140,9 @@ func TestDetectReportsClearMissingTreeSitterGrammar(t *testing.T) {
 }
 
 func TestDetectTreeSitterMediumRepoPerformance(t *testing.T) {
+	if !treeSitterSupported() {
+		t.Skip("tree-sitter performance test requires cgo build")
+	}
 	root := t.TempDir()
 	const filesPerLanguage = 80
 	for i := 0; i < filesPerLanguage; i++ {

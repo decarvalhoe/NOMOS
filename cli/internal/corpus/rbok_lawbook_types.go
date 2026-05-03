@@ -58,10 +58,10 @@ func (t LawbookNodeType) IsValid() bool {
 type LawbookNodeStatus string
 
 const (
-	StatusActive   LawbookNodeStatus = "active"
-	StatusAmended  LawbookNodeStatus = "amended"
-	StatusRepealed LawbookNodeStatus = "repealed"
-	StatusPending  LawbookNodeStatus = "pending"
+	StatusActive    LawbookNodeStatus = "active"
+	StatusAmended   LawbookNodeStatus = "amended"
+	StatusRepealed  LawbookNodeStatus = "repealed"
+	StatusPending   LawbookNodeStatus = "pending"
 	StatusNodeDraft LawbookNodeStatus = "draft"
 )
 
@@ -106,6 +106,11 @@ type LawbookNode struct {
 	OrdinalPath   string            `json:"ordinal_path" yaml:"ordinal_path"`
 	SourcePath    string            `json:"source_path" yaml:"source_path"`
 	SourceHash    string            `json:"source_hash" yaml:"source_hash"`
+	SourceClass   string            `json:"source_class,omitempty" yaml:"source_class,omitempty"`
+	CorpusLayer   string            `json:"corpus_layer,omitempty" yaml:"corpus_layer,omitempty"`
+	Authority     string            `json:"authority,omitempty" yaml:"authority,omitempty"`
+	AllowedUses   []string          `json:"allowed_uses,omitempty" yaml:"allowed_uses,omitempty"`
+	Locator       string            `json:"locator,omitempty" yaml:"locator,omitempty"`
 	Status        LawbookNodeStatus `json:"status" yaml:"status"`
 	Priority      LawbookPriority   `json:"priority" yaml:"priority"`
 	Domain        string            `json:"domain" yaml:"domain"`
@@ -130,10 +135,10 @@ type LawbookFeed struct {
 }
 
 var (
-	nodeIDPattern    = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._-]*$`)
-	feedIDPattern    = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
-	ordinalPattern   = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*$`)
-	hashPattern      = regexp.MustCompile(`^(sha256|sha384|sha512):[A-Fa-f0-9]+$`)
+	nodeIDPattern  = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._-]*$`)
+	feedIDPattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
+	ordinalPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*$`)
+	hashPattern    = regexp.MustCompile(`^(sha256|sha384|sha512):[A-Fa-f0-9]+$`)
 )
 
 // ValidateNode checks a LawbookNode for schema conformance.

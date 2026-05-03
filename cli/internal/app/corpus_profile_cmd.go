@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
@@ -121,7 +122,7 @@ func corpusDiagnoseCommand(args []string, stdout io.Writer, stderr io.Writer) in
 		}
 	}
 
-	if verdict.Verdict == "blocked" {
+	if verdict.Verdict == "blocked" || verdict.Verdict == "corpus_blocked" {
 		return 1
 	}
 	return 0
@@ -139,11 +140,16 @@ func corpusProfilesCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 func writeProfileFeedText(w io.Writer, result corpus.ProfileFeedResult) {
 	fmt.Fprintf(w, "profile:  %s\n", result.Profile)
 	fmt.Fprintf(w, "sources:  %d\n", result.SourceCount)
+	fmt.Fprintf(w, "units:    %d\n", result.UnitCount)
 	fmt.Fprintf(w, "sections: %d\n", len(result.Sections))
-	for flag, data := range result.Sections {
-		var entries []json.RawMessage
-		_ = json.Unmarshal(data, &entries)
-		fmt.Fprintf(w, "  %-15s %d entries\n", flag, len(entries))
+	flags := make([]string, 0, len(result.Sections))
+	for flag := range result.Sections {
+		flags = append(flags, string(flag))
+	}
+	sort.Strings(flags)
+	for _, flag := range flags {
+		data := result.Sections[corpus.OutputFlag(flag)]
+		fmt.Fprintf(w, "  %-20s %d entries\n", flag, profileSectionEntryCount(corpus.OutputFlag(flag), data))
 	}
 	if len(result.Errors) > 0 {
 		fmt.Fprintln(w, "\nerrors:")
@@ -151,6 +157,34 @@ func writeProfileFeedText(w io.Writer, result corpus.ProfileFeedResult) {
 			fmt.Fprintf(w, "  - %s\n", e)
 		}
 	}
+	if len(result.Warnings) > 0 {
+		fmt.Fprintln(w, "\nwarnings:")
+		for _, warning := range result.Warnings {
+			fmt.Fprintf(w, "  - %s\n", warning)
+		}
+	}
+}
+
+func profileSectionEntryCount(flag corpus.OutputFlag, data json.RawMessage) int {
+	switch flag {
+	case corpus.OutputFeed:
+		var assembly corpus.MultiFeedAssembly
+		if json.Unmarshal(data, &assembly) == nil {
+			return assembly.TotalNodes
+		}
+	case corpus.OutputAtomizationReport:
+		var report corpus.ProfileAtomizationReport
+		if json.Unmarshal(data, &report) == nil {
+			return report.TotalNodes
+		}
+	case corpus.OutputRAGMetadata, corpus.OutputTraceabilityMatrix,
+		corpus.OutputIndex, corpus.OutputGovernance, corpus.OutputCitation, corpus.OutputImport:
+		var entries []json.RawMessage
+		if json.Unmarshal(data, &entries) == nil {
+			return len(entries)
+		}
+	}
+	return 0
 }
 
 func writeProfileDiagnoseText(w io.Writer, v corpus.DiagnoseVerdict) {

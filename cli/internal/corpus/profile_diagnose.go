@@ -30,7 +30,8 @@ func DiagnoseProfile(profileName string, corpusRoot string) (DiagnoseVerdict, er
 	}
 
 	// Collect governance signals.
-	var primaryCount, referenceCount, derivedCount, outOfScopeCount, blockedCount int
+	var primaryCount, referenceCount, derivedCount, outOfScopeCount, archiveCount, blockedCount int
+	var runtimeCount, supportingCount, evidenceCount, operationalCount int
 	for _, c := range classifications {
 		switch c.Priority {
 		case "primary":
@@ -39,8 +40,20 @@ func DiagnoseProfile(profileName string, corpusRoot string) (DiagnoseVerdict, er
 			referenceCount++
 		case "derived":
 			derivedCount++
+		case "archive":
+			archiveCount++
 		case "out_of_scope":
 			outOfScopeCount++
+		}
+		switch c.SourceClass {
+		case "runtime_binding":
+			runtimeCount++
+		case "supporting_context":
+			supportingCount++
+		case "experience_evidence":
+			evidenceCount++
+		case "operational_context":
+			operationalCount++
 		}
 	}
 
@@ -56,7 +69,7 @@ func DiagnoseProfile(profileName string, corpusRoot string) (DiagnoseVerdict, er
 
 	// Empty corpus.
 	if len(classifications) == 0 {
-		result.Verdict = "blocked"
+		result.Verdict = "corpus_blocked"
 		result.Confidence = "low"
 		result.Summary = "No files found in corpus."
 		if len(scanErrors) > 0 {
@@ -68,44 +81,48 @@ func DiagnoseProfile(profileName string, corpusRoot string) (DiagnoseVerdict, er
 	// Determine verdict from governance report.
 	switch {
 	case blockedCount > 0:
-		result.Verdict = "blocked"
+		result.Verdict = "corpus_blocked"
 		result.Confidence = "low"
 		result.Summary = fmt.Sprintf(
 			"Corpus has %d blocked binary file(s). Remove or declare them before admission.",
 			blockedCount,
 		)
 	case primaryCount == 0:
-		result.Verdict = "blocked"
+		result.Verdict = "corpus_blocked"
 		result.Confidence = "low"
-		result.Blockers = append(result.Blockers, "no primary sources found (expected 00_meta, 01_referentiel, or 02_domaines)")
+		result.Blockers = append(result.Blockers, "no primary sources found (expected 01_rbok/00_meta, 01_rbok/01_referentiel, 01_rbok/02_domaines, 01_rbok/03_parcours, or legacy equivalent)")
 		result.Summary = "No primary lawbook sources detected."
 	case derivedCount > 0 && referenceCount == 0:
-		result.Verdict = "partial"
+		result.Verdict = "corpus_partial"
 		result.Confidence = "medium"
 		result.Warnings = append(result.Warnings, "corpus has derived files but no reference originals")
 		result.Summary = fmt.Sprintf(
-			"Corpus has %d primary and %d derived sources but no reference originals.",
-			primaryCount, derivedCount,
+			"Corpus has %d primary, %d runtime, and %d derived sources but no reference originals.",
+			primaryCount, runtimeCount, derivedCount,
 		)
 	case primaryCount > 0 && referenceCount > 0:
-		result.Verdict = "in_scope"
+		result.Verdict = "corpus_admissible"
 		result.Confidence = "high"
 		result.Summary = fmt.Sprintf(
-			"Corpus has %d primary, %d reference, %d derived sources. Ready for canonical processing.",
-			primaryCount, referenceCount, derivedCount,
+			"Corpus has %d primary, %d runtime, %d reference, %d supporting, %d evidence, %d operational, %d derived sources. Ready for canonical processing.",
+			primaryCount, runtimeCount, referenceCount, supportingCount, evidenceCount, operationalCount, derivedCount,
 		)
 	default:
-		result.Verdict = "partial"
+		result.Verdict = "corpus_partial"
 		result.Confidence = "medium"
 		result.Summary = fmt.Sprintf(
-			"Corpus has %d primary sources. Consider adding reference originals.",
-			primaryCount,
+			"Corpus has %d primary and %d runtime sources. Consider adding reference originals.",
+			primaryCount, runtimeCount,
 		)
 	}
 
 	if outOfScopeCount > 0 {
 		result.Warnings = append(result.Warnings,
 			fmt.Sprintf("%d out-of-scope file(s) detected (scripts, OS artifacts)", outOfScopeCount))
+	}
+	if archiveCount > 0 {
+		result.Warnings = append(result.Warnings,
+			fmt.Sprintf("%d archive file(s) excluded by default", archiveCount))
 	}
 
 	return result, nil

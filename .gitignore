@@ -5,6 +5,7 @@ Thumbs.db
 !.env.example
 node_modules/
 .venv/
+bin/
 dist/
 build/
 coverage/

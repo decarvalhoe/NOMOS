@@ -308,7 +308,6 @@ func TestExtractMarkdown_DisplayRef(t *testing.T) {
 	}
 }
 
-
 func TestExtractMarkdown_Empty(t *testing.T) {
 	result := ExtractMarkdown("", "test")
 	if len(result.Nodes) != 0 {
@@ -348,6 +347,29 @@ func TestExtractMarkdown_MetadataKeyNormalization(t *testing.T) {
 	}
 }
 
+func TestExtractMarkdown_CRLFMetadataAndSeparatorsAreStructural(t *testing.T) {
+	src := "# Doc\r\n\r\n| Champ | Valeur |\r\n|-------|--------|\r\n| Référence | REF-001 |\r\n| Statut | Actif |\r\n| Auteur | Team A |\r\n\r\n---\r\n\r\nBody doctrine.\r\n"
+	result := ExtractMarkdown(src, "test")
+	if len(result.Nodes) == 0 {
+		t.Fatal("expected nodes")
+	}
+	doc := result.Nodes[0]
+	if doc.Metadata["reference"] != "REF-001" {
+		t.Fatalf("expected CRLF metadata reference, got %v", doc.Metadata["reference"])
+	}
+	if doc.Metadata["author"] != "Team A" {
+		t.Fatalf("expected author metadata, got %v", doc.Metadata["author"])
+	}
+	for _, node := range result.Nodes {
+		if strings.TrimSpace(node.Text) == "---" {
+			t.Fatalf("horizontal rule should not be atomized as text: %+v", node)
+		}
+		if strings.Contains(node.Text, "| Référence |") {
+			t.Fatalf("metadata table should not be atomized as body text: %+v", node)
+		}
+	}
+}
+
 func TestExtractMarkdown_NoMetadataTable(t *testing.T) {
 	src := "# Doc\n\nJust text, no table.\n"
 	result := ExtractMarkdown(src, "test")
@@ -356,7 +378,6 @@ func TestExtractMarkdown_NoMetadataTable(t *testing.T) {
 		t.Fatalf("expected nil metadata, got %v", doc.Metadata)
 	}
 }
-
 
 func TestSlugify(t *testing.T) {
 	cases := []struct {

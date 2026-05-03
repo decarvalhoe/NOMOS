@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -18,6 +19,31 @@ func writeFeedArtifact(t *testing.T, dir string, name string, nodes []LawbookNod
 	}
 	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
 		t.Fatalf("write feed: %v", err)
+	}
+}
+
+func writeMultiFeedArtifact(t *testing.T, dir string, name string, nodes []LawbookNode) {
+	t.Helper()
+	assembly := MultiFeedAssembly{
+		Format:        FeedFormatVersion,
+		DocumentCount: 1,
+		TotalNodes:    len(nodes),
+		Feeds: []LawbookFeed{
+			{
+				SchemaVersion: "0.1.0",
+				FeedID:        "rbok-feed",
+				DocumentID:    "RBOK-DOC",
+				NodeCount:     len(nodes),
+				Nodes:         nodes,
+			},
+		},
+	}
+	data, err := json.MarshalIndent(assembly, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal multi feed: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		t.Fatalf("write multi feed: %v", err)
 	}
 }
 
@@ -46,6 +72,17 @@ func writeGovernanceArtifact(t *testing.T, dir string, name string, result Gover
 	}
 	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
 		t.Fatalf("write governance: %v", err)
+	}
+}
+
+func writeDiagnoseGovernanceArtifact(t *testing.T, dir string, name string, verdict DiagnoseVerdict) {
+	t.Helper()
+	data, err := json.Marshal(verdict)
+	if err != nil {
+		t.Fatalf("marshal diagnose: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		t.Fatalf("write diagnose: %v", err)
 	}
 }
 
@@ -81,6 +118,138 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 	}
 	if len(result.Checks) != 4 {
 		t.Fatalf("expected 4 checks, got %d", len(result.Checks))
+	}
+}
+
+func TestEvaluateReleaseGate_AcceptsMultiFeedAssembly(t *testing.T) {
+	dir := t.TempDir()
+	writeMultiFeedArtifact(t, dir, "rbok-lawbook-feed.json", sampleNodes())
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+
+	config := DefaultRBOKLawbookGateConfig(dir)
+	result, err := EvaluateReleaseGate(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GatePass {
+		t.Fatalf("expected pass for multi-feed assembly, got %s: %+v", result.Verdict, result.Checks)
+	}
+}
+
+func TestEvaluateReleaseGate_AcceptsProfileDiagnoseGovernance(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", sampleNodes())
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeDiagnoseGovernanceArtifact(t, dir, "rbok-governance.json", DiagnoseVerdict{
+		Profile:    ProfileRBOKLawbook,
+		Verdict:    VerdictAdmissible,
+		Confidence: "high",
+		Summary:    "ready",
+	})
+
+	config := DefaultRBOKLawbookGateConfig(dir)
+	result, err := EvaluateReleaseGate(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GatePass {
+		t.Fatalf("expected pass for profile diagnose governance, got %s: %+v", result.Verdict, result.Checks)
+	}
+	for _, check := range result.Checks {
+		if check.Name == "governance" && !strings.Contains(check.Detail, VerdictAdmissible) {
+			t.Fatalf("expected governance detail to include diagnose verdict, got %q", check.Detail)
+		}
+	}
+}
+
+func TestEvaluateReleaseGate_NodeTypesIgnoreNonFeedArtifacts(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", sampleNodes())
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+	traceabilityRows := []TraceabilityEntry{
+		{NodeID: "DOC-001", NodeType: string(NodeDocument)},
+		{NodeID: "ART-001", NodeType: string(NodeArticle)},
+	}
+	data, err := json.Marshal(traceabilityRows)
+	if err != nil {
+		t.Fatalf("marshal traceability: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "rbok-traceability-matrix.json"), data, 0o644); err != nil {
+		t.Fatalf("write traceability: %v", err)
+	}
+	engineImport := struct {
+		Nodes []LawbookNode `json:"nodes"`
+	}{Nodes: sampleNodes()}
+	data, err = json.Marshal(engineImport)
+	if err != nil {
+		t.Fatalf("marshal engine import: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "rbok-engine-import.json"), data, 0o644); err != nil {
+		t.Fatalf("write engine import: %v", err)
+	}
+	profileOutput := struct {
+		Sections map[string]any `json:"sections"`
+	}{
+		Sections: map[string]any{
+			string(OutputFeed): struct {
+				Feeds []struct {
+					Nodes []LawbookNode `json:"nodes"`
+				} `json:"feeds"`
+			}{
+				Feeds: []struct {
+					Nodes []LawbookNode `json:"nodes"`
+				}{{Nodes: sampleNodes()}},
+			},
+		},
+	}
+	data, err = json.Marshal(profileOutput)
+	if err != nil {
+		t.Fatalf("marshal profile output: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "profile-output.json"), data, 0o644); err != nil {
+		t.Fatalf("write profile output: %v", err)
+	}
+
+	config := DefaultRBOKLawbookGateConfig(dir)
+	result, err := EvaluateReleaseGate(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, check := range result.Checks {
+		if check.Name == "node_types" && !strings.Contains(check.Detail, "document=1") {
+			t.Fatalf("expected node type counts from feed only, got %q", check.Detail)
+		}
+	}
+}
+
+func TestEvaluateReleaseGate_ProfileDiagnoseBlockersFail(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", sampleNodes())
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeDiagnoseGovernanceArtifact(t, dir, "rbok-governance.json", DiagnoseVerdict{
+		Profile:  ProfileRBOKLawbook,
+		Verdict:  VerdictBlocked,
+		Blockers: []string{"blocked binary", "missing primary"},
+		Summary:  "blocked",
+	})
+
+	config := DefaultRBOKLawbookGateConfig(dir)
+	result, err := EvaluateReleaseGate(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GateFail {
+		t.Fatalf("expected fail for profile diagnose blockers, got %s: %+v", result.Verdict, result.Checks)
 	}
 }
 

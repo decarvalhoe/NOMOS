@@ -8,10 +8,12 @@
 #   1. Read-only guard: disable push, record fingerprint.
 #   2. Scan corpus: nomos corpus scan → snapshot.json
 #   3. Generate manifest: nomos corpus manifest → source-manifest.yaml
-#   4. Generate feed: nomos corpus feed --profile rbok-lawbook → feed.json
-#   5. Generate attestation: nomos corpus attest → attestation.json
-#   6. Validate artifacts: check node types, counts.
-#   7. Post-extraction read-only verification.
+#   4. Diagnose corpus: nomos corpus diagnose --profile rbok-lawbook → rbok-governance.json
+#   5. Generate profile feed: nomos corpus feed --profile rbok-lawbook → profile-output.json
+#   6. Split profile artifacts: feed, RAG metadata, atomization report, traceability matrix.
+#   7. Generate attestation: nomos corpus attest → attestation.json
+#   8. Validate artifacts: check node types, counts, traceability.
+#   9. Post-extraction read-only verification.
 
 set -euo pipefail
 
@@ -65,7 +67,8 @@ echo "=== Step 1: Read-only guard ==="
 if git -C "$CORPUS_DIR" rev-parse --show-toplevel > /dev/null 2>&1; then
   CORPUS_GIT_ROOT="$(git -C "$CORPUS_DIR" rev-parse --show-toplevel)"
   push_url="$(git -C "$CORPUS_GIT_ROOT" remote get-url --push origin 2>/dev/null || true)"
-  if [[ -n "$push_url" && "$push_url" != "no_push" ]]; then
+  push_url_lc="$(printf '%s' "$push_url" | tr '[:upper:]' '[:lower:]')"
+  if [[ -n "$push_url" && "$push_url_lc" != "no_push" && "$push_url_lc" != "no-push" && "$push_url_lc" != "disabled" && "$push_url_lc" != "none" ]]; then
     echo "WARNING: Source corpus has push-capable remote: $push_url"
     echo "  Disable with: git -C $CORPUS_GIT_ROOT remote set-url --push origin no_push"
   fi
@@ -93,9 +96,7 @@ echo "=== Step 3: Scan corpus ==="
 SNAPSHOT="$OUT_DIR/snapshot.json"
 "$CLI_BIN" corpus scan \
   --root "$CORPUS_DIR" \
-  --out "$SNAPSHOT" \
-  --ext .md \
-  --allow "**/*.md"
+  --out "$SNAPSHOT"
 
 echo "Snapshot: $SNAPSHOT"
 
@@ -111,21 +112,56 @@ MANIFEST="$OUT_DIR/source-manifest.yaml"
 
 echo "Manifest: $MANIFEST"
 
-# --- Step 5: Generate feed ---
-echo "=== Step 5: Generate feed (profile: $PROFILE) ==="
-FEED="$OUT_DIR/feed.json"
-"$CLI_BIN" corpus feed \
+# --- Step 5: Diagnose corpus ---
+echo "=== Step 5: Diagnose corpus (profile: $PROFILE) ==="
+GOVERNANCE="$OUT_DIR/rbok-governance.json"
+"$CLI_BIN" corpus diagnose \
+  --profile "$PROFILE" \
   --root "$CORPUS_DIR" \
-  --snapshot "$SNAPSHOT" \
-  --manifest "$MANIFEST" \
-  --corpus-id "$CORPUS_ID" \
-  --project-id "$PROJECT_ID" \
-  --out "$FEED"
+  --format json > "$GOVERNANCE"
+
+echo "Governance: $GOVERNANCE"
+
+# --- Step 6: Generate profile feed ---
+echo "=== Step 6: Generate feed (profile: $PROFILE) ==="
+PROFILE_FEED="$OUT_DIR/profile-output.json"
+"$CLI_BIN" corpus feed \
+  --profile "$PROFILE" \
+  --root "$CORPUS_DIR" \
+  --outputs feed,rag_metadata,atomization_report,traceability_matrix \
+  --out "$PROFILE_FEED"
+
+FEED="$OUT_DIR/rbok-lawbook-feed.json"
+RAG="$OUT_DIR/rbok-rag-metadata.json"
+ATOMIZATION="$OUT_DIR/rbok-atomization-report.json"
+TRACEABILITY="$OUT_DIR/rbok-traceability-matrix.json"
+ENGINE_IMPORT="$OUT_DIR/rbok-engine-import.json"
+
+python3 - "$PROFILE_FEED" "$FEED" "$RAG" "$ATOMIZATION" "$TRACEABILITY" "$ENGINE_IMPORT" <<'PY'
+import json, pathlib, sys
+profile_path, feed_path, rag_path, atom_path, trace_path, engine_path = map(pathlib.Path, sys.argv[1:])
+profile = json.loads(profile_path.read_text(encoding="utf-8"))
+sections = profile.get("sections", {})
+required = ["feed", "rag_metadata", "atomization_report", "traceability_matrix"]
+missing = [name for name in required if name not in sections]
+if missing:
+    raise SystemExit(f"missing profile section(s): {', '.join(missing)}")
+feed = sections["feed"]
+feed_path.write_text(json.dumps(feed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+rag_path.write_text(json.dumps(sections["rag_metadata"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+atom_path.write_text(json.dumps(sections["atomization_report"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+trace_path.write_text(json.dumps(sections["traceability_matrix"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+engine_path.write_text(json.dumps(feed.get("engine_import", {}), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
 
 echo "Feed: $FEED"
+echo "RAG: $RAG"
+echo "Atomization: $ATOMIZATION"
+echo "Traceability: $TRACEABILITY"
+echo "Engine import: $ENGINE_IMPORT"
 
-# --- Step 6: Generate attestation ---
-echo "=== Step 6: Generate attestation ==="
+# --- Step 7: Generate attestation ---
+echo "=== Step 7: Generate attestation ==="
 ATTESTATION="$OUT_DIR/attestation.json"
 "$CLI_BIN" corpus attest \
   --snapshot "$SNAPSHOT" \
@@ -137,45 +173,52 @@ ATTESTATION="$OUT_DIR/attestation.json"
 
 echo "Attestation: $ATTESTATION"
 
-# --- Step 7: Validate artifacts ---
-echo "=== Step 7: Validate artifacts ==="
-artifact_count="$(find "$OUT_DIR" -type f -name '*.json' -o -name '*.yaml' | wc -l)"
+# --- Step 8: Validate artifacts ---
+echo "=== Step 8: Validate artifacts ==="
+artifact_count="$(find "$OUT_DIR" -type f \( -name '*.json' -o -name '*.yaml' \) | wc -l)"
 echo "Total artifacts: $artifact_count"
 
-if [[ "$artifact_count" -lt 3 ]]; then
-  echo "FAIL: Expected at least 3 artifacts (snapshot, feed, attestation), got $artifact_count"
+if [[ "$artifact_count" -lt 8 ]]; then
+  echo "FAIL: Expected at least 8 artifacts, got $artifact_count"
   exit 1
 fi
 
-# Validate feed has nodes
-python3 - "$FEED" <<'PY'
+# Validate feed, RAG and traceability.
+python3 - "$FEED" "$RAG" "$ATOMIZATION" "$TRACEABILITY" <<'PY'
 import json, sys, pathlib
-feed_path = sys.argv[1]
+feed_path, rag_path, atom_path, trace_path = map(pathlib.Path, sys.argv[1:])
 data = json.loads(pathlib.Path(feed_path).read_text(encoding="utf-8"))
+rag = json.loads(rag_path.read_text(encoding="utf-8"))
+atom = json.loads(atom_path.read_text(encoding="utf-8"))
+trace = json.loads(trace_path.read_text(encoding="utf-8"))
 
-# Accept both flat feed format and assembly format
 nodes = data.get("nodes", [])
 if not nodes and "feed" in data:
     nodes = data["feed"].get("nodes", [])
-if not nodes and "units" in data:
-    nodes = data["units"]
+if not nodes and "feeds" in data:
+    for feed in data["feeds"]:
+        nodes.extend(feed.get("nodes", []))
 
 print(f"Feed nodes: {len(nodes)}")
 if len(nodes) == 0:
-    # Non-fatal for empty corpus; warn but don't fail
-    print("WARNING: Feed contains no nodes (corpus may be empty or not yet populated)")
-else:
-    from collections import Counter
-    counts = Counter()
-    for node in nodes:
-        node_type = node.get("node_type", node.get("type", "unknown"))
-        counts[node_type] += 1
-    for t in sorted(counts):
-        print(f"  {t}: {counts[t]}")
+    raise SystemExit("feed contains no nodes")
+if len(rag) != len(nodes):
+    raise SystemExit(f"RAG chunk count {len(rag)} does not match node count {len(nodes)}")
+if len(trace) != len(nodes):
+    raise SystemExit(f"traceability row count {len(trace)} does not match node count {len(nodes)}")
+if atom.get("missing_source_hash") != 0 or atom.get("missing_locator") != 0:
+    raise SystemExit("atomization report has missing source hash or locator")
+from collections import Counter
+counts = Counter(node.get("node_type", "unknown") for node in nodes)
+for required in ["document", "article", "paragraph", "alinea"]:
+    if counts[required] == 0:
+        raise SystemExit(f"missing required node type: {required}")
+for t in sorted(counts):
+    print(f"  {t}: {counts[t]}")
 PY
 
-# --- Step 8: Post-extraction read-only check ---
-echo "=== Step 8: Read-only verification ==="
+# --- Step 9: Post-extraction read-only check ---
+echo "=== Step 9: Read-only verification ==="
 
 FINGERPRINT_AFTER="$(mktemp)"
 find "$CORPUS_DIR" -type f -exec sha256sum {} \; | sort > "$FINGERPRINT_AFTER"
@@ -197,5 +240,11 @@ echo "Output:       $OUT_DIR"
 echo "Artifacts:    $artifact_count"
 echo "  snapshot:     $(basename "$SNAPSHOT")"
 echo "  manifest:     $(basename "$MANIFEST")"
+echo "  governance:   $(basename "$GOVERNANCE")"
+echo "  profile:      $(basename "$PROFILE_FEED")"
 echo "  feed:         $(basename "$FEED")"
+echo "  rag:          $(basename "$RAG")"
+echo "  atomization:  $(basename "$ATOMIZATION")"
+echo "  traceability: $(basename "$TRACEABILITY")"
+echo "  engine:       $(basename "$ENGINE_IMPORT")"
 echo "  attestation:  $(basename "$ATTESTATION")"

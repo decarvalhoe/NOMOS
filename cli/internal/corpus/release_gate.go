@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -12,9 +13,9 @@ import (
 type ReleaseGateVerdict string
 
 const (
-	GatePass   ReleaseGateVerdict = "pass"
-	GateFail   ReleaseGateVerdict = "fail"
-	GateWarn   ReleaseGateVerdict = "warn"
+	GatePass ReleaseGateVerdict = "pass"
+	GateFail ReleaseGateVerdict = "fail"
+	GateWarn ReleaseGateVerdict = "warn"
 )
 
 // ReleaseGateCheck is a single pass/fail check within the gate.
@@ -26,21 +27,21 @@ type ReleaseGateCheck struct {
 
 // ReleaseGateResult holds the full release gate evaluation.
 type ReleaseGateResult struct {
-	Profile  string              `json:"profile"`
-	Verdict  ReleaseGateVerdict  `json:"verdict"`
-	Checks   []ReleaseGateCheck  `json:"checks"`
-	Blocking int                 `json:"blocking"`
-	Warnings int                 `json:"warnings"`
+	Profile  string             `json:"profile"`
+	Verdict  ReleaseGateVerdict `json:"verdict"`
+	Checks   []ReleaseGateCheck `json:"checks"`
+	Blocking int                `json:"blocking"`
+	Warnings int                `json:"warnings"`
 }
 
 // ReleaseGateConfig specifies what the gate expects to find.
 type ReleaseGateConfig struct {
-	Profile            string
-	ArtifactsDir       string
-	RequiredNodeTypes  []LawbookNodeType
-	RequireFeed        bool
-	RequireAttestation bool
-	RequireGovernance  bool
+	Profile             string
+	ArtifactsDir        string
+	RequiredNodeTypes   []LawbookNodeType
+	RequireFeed         bool
+	RequireAttestation  bool
+	RequireGovernance   bool
 	MaxBlockingFindings int
 }
 
@@ -126,14 +127,7 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 }
 
 func checkFeedArtifacts(dir string) ReleaseGateCheck {
-	feedFiles, _ := filepath.Glob(filepath.Join(dir, "*-feed.json"))
-	if len(feedFiles) == 0 {
-		feedFiles, _ = filepath.Glob(filepath.Join(dir, "*.feed.json"))
-	}
-	if len(feedFiles) == 0 {
-		// Also try plain JSON files that contain feed data.
-		feedFiles = findJSONFilesWithKey(dir, "nodes")
-	}
+	feedFiles := findFeedArtifactFiles(dir)
 
 	if len(feedFiles) == 0 {
 		return ReleaseGateCheck{
@@ -167,9 +161,8 @@ func checkFeedArtifacts(dir string) ReleaseGateCheck {
 
 func checkNodeTypes(dir string, required []LawbookNodeType) ReleaseGateCheck {
 	found := map[LawbookNodeType]int{}
-	jsonFiles, _ := filepath.Glob(filepath.Join(dir, "*.json"))
 
-	for _, f := range jsonFiles {
+	for _, f := range findFeedArtifactFiles(dir) {
 		types := extractNodeTypes(f)
 		for t, n := range types {
 			found[t] += n
@@ -275,6 +268,19 @@ func checkGovernance(dir string, maxBlocking int) ReleaseGateCheck {
 
 // --- helpers ---
 
+func findFeedArtifactFiles(dir string) []string {
+	feedFiles, _ := filepath.Glob(filepath.Join(dir, "*-feed.json"))
+	if len(feedFiles) == 0 {
+		feedFiles, _ = filepath.Glob(filepath.Join(dir, "*.feed.json"))
+	}
+	if len(feedFiles) == 0 {
+		// Legacy fallback for flat feed files with top-level nodes.
+		feedFiles = findJSONFilesWithKey(dir, "nodes")
+	}
+	sort.Strings(feedFiles)
+	return feedFiles
+}
+
 func findJSONFilesWithKey(dir string, key string) []string {
 	allJSON, _ := filepath.Glob(filepath.Join(dir, "*.json"))
 	var result []string
@@ -299,13 +305,7 @@ func countNodesInFile(path string) int {
 	if err != nil {
 		return 0
 	}
-	var doc struct {
-		Nodes []json.RawMessage `json:"nodes"`
-	}
-	if err := json.Unmarshal(data, &doc); err != nil {
-		return 0
-	}
-	return len(doc.Nodes)
+	return len(readGateNodes(data))
 }
 
 func extractNodeTypes(path string) map[LawbookNodeType]int {
@@ -313,21 +313,61 @@ func extractNodeTypes(path string) map[LawbookNodeType]int {
 	if err != nil {
 		return nil
 	}
-	var doc struct {
-		Nodes []struct {
-			NodeType string `json:"node_type"`
-		} `json:"nodes"`
-	}
-	if err := json.Unmarshal(data, &doc); err != nil {
-		return nil
-	}
 	counts := map[LawbookNodeType]int{}
-	for _, n := range doc.Nodes {
+	for _, n := range readGateNodes(data) {
 		if n.NodeType != "" {
 			counts[LawbookNodeType(n.NodeType)]++
 		}
 	}
 	return counts
+}
+
+type gateNode struct {
+	NodeType string `json:"node_type"`
+}
+
+func readGateNodes(data []byte) []gateNode {
+	var flat struct {
+		Nodes []gateNode `json:"nodes"`
+	}
+	if json.Unmarshal(data, &flat) == nil && len(flat.Nodes) > 0 {
+		return flat.Nodes
+	}
+
+	var single struct {
+		Feed struct {
+			Nodes []gateNode `json:"nodes"`
+		} `json:"feed"`
+	}
+	if json.Unmarshal(data, &single) == nil && len(single.Feed.Nodes) > 0 {
+		return single.Feed.Nodes
+	}
+
+	var multi struct {
+		Feeds []struct {
+			Nodes []gateNode `json:"nodes"`
+		} `json:"feeds"`
+	}
+	if json.Unmarshal(data, &multi) == nil && len(multi.Feeds) > 0 {
+		var nodes []gateNode
+		for _, feed := range multi.Feeds {
+			nodes = append(nodes, feed.Nodes...)
+		}
+		if len(nodes) > 0 {
+			return nodes
+		}
+	}
+
+	var profiled struct {
+		Sections map[string]json.RawMessage `json:"sections"`
+	}
+	if json.Unmarshal(data, &profiled) == nil && len(profiled.Sections) > 0 {
+		if raw := profiled.Sections[string(OutputFeed)]; len(raw) > 0 {
+			return readGateNodes(raw)
+		}
+	}
+
+	return nil
 }
 
 func isValidAttestation(path string) bool {
@@ -349,6 +389,18 @@ func parseGovernanceFile(path string) (GovernanceResult, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return GovernanceResult{}, err
+	}
+	var diagnose DiagnoseVerdict
+	if err := json.Unmarshal(data, &diagnose); err == nil && (diagnose.Profile != "" || diagnose.Confidence != "" || diagnose.Summary != "") {
+		blocking := len(diagnose.Blockers)
+		if diagnose.Verdict == VerdictBlocked && blocking == 0 {
+			blocking = 1
+		}
+		return GovernanceResult{
+			Verdict:       diagnose.Verdict,
+			TotalFindings: blocking + len(diagnose.Warnings),
+			Blocking:      blocking,
+		}, nil
 	}
 	var result GovernanceResult
 	if err := json.Unmarshal(data, &result); err != nil {

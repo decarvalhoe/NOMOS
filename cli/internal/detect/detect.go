@@ -979,7 +979,7 @@ func addEvidence(target *[]Evidence, rel string, reason string) {
 
 func newTreeSitterAggregate() *treeSitterAggregate {
 	return &treeSitterAggregate{
-		enabled:   true,
+		enabled:   treeSitterSupported(),
 		languages: map[string]*languageAggregate{},
 		registry:  newTreeSitterRegistry(),
 	}

@@ -19,24 +19,37 @@ var (
 	metaSepRe  = regexp.MustCompile(`^\|[\s:_-]+\|[\s:_-]+\|$`)
 	listItemRe = regexp.MustCompile(`^\s*(?:[-*+]|\d+[.)])\s+(.+\S)\s*$`)
 	metaKeyMap = map[string]string{
-		"reference":          "reference",
-		"référence":          "reference",
-		"ref":                "reference",
-		"statut":             "statut",
-		"status":             "statut",
-		"emetteur":           "emetteur",
-		"émetteur":           "emetteur",
-		"issuer":             "emetteur",
-		"derniere revision":  "derniere_revision",
-		"dernière révision":  "derniere_revision",
-		"last revision":      "derniere_revision",
-		"date":               "date",
-		"version":            "version",
-		"domaine":            "domaine",
-		"domain":             "domaine",
-		"portee":             "portee",
-		"portée":             "portee",
-		"scope":              "portee",
+		"reference":         "reference",
+		"référence":         "reference",
+		"ref":               "reference",
+		"statut":            "statut",
+		"status":            "statut",
+		"emetteur":          "emetteur",
+		"émetteur":          "emetteur",
+		"issuer":            "emetteur",
+		"auteur":            "author",
+		"author":            "author",
+		"droits":            "rights",
+		"rights":            "rights",
+		"confidentialite":   "confidentiality",
+		"confidentialité":   "confidentiality",
+		"confidentiality":   "confidentiality",
+		"derniere revision": "derniere_revision",
+		"dernière révision": "derniere_revision",
+		"last revision":     "derniere_revision",
+		"date de creation":  "date_creation",
+		"date de création":  "date_creation",
+		"created":           "date_creation",
+		"revise par":        "revise_par",
+		"révisé par":        "revise_par",
+		"revised by":        "revise_par",
+		"date":              "date",
+		"version":           "version",
+		"domaine":           "domaine",
+		"domain":            "domaine",
+		"portee":            "portee",
+		"portée":            "portee",
+		"scope":             "portee",
 	}
 )
 
@@ -44,6 +57,7 @@ var (
 // following the hierarchy: H1→document, H2→chapter, H3→section, H4→article.
 // Body text under headings becomes paragraph containers with atomic alineas.
 func ExtractMarkdown(source string, docSlug string) MDExtractResult {
+	source = normalizeLineEndings(source)
 	lines := strings.Split(source, "\n")
 	var nodes []LawbookNode
 
@@ -94,7 +108,9 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 			if headerRe.MatchString(lines[i]) {
 				break
 			}
-			bodyLines = append(bodyLines, lines[i])
+			if !isMarkdownStructuralSeparator(lines[i]) {
+				bodyLines = append(bodyLines, lines[i])
+			}
 			i++
 		}
 
@@ -152,6 +168,12 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 		return MDExtractResult{Nodes: []LawbookNode{}}
 	}
 	return MDExtractResult{Nodes: nodes}
+}
+
+func normalizeLineEndings(source string) string {
+	source = strings.ReplaceAll(source, "\r\n", "\n")
+	source = strings.ReplaceAll(source, "\r", "\n")
+	return source
 }
 
 func headingToNodeType(level int) LawbookNodeType {
@@ -328,6 +350,13 @@ func splitParagraphs(text string) []string {
 	var result []string
 	var current strings.Builder
 	for _, line := range strings.Split(text, "\n") {
+		if isMarkdownStructuralSeparator(line) {
+			if current.Len() > 0 {
+				result = append(result, current.String())
+				current.Reset()
+			}
+			continue
+		}
 		if strings.TrimSpace(line) == "" {
 			if current.Len() > 0 {
 				result = append(result, current.String())
@@ -344,4 +373,24 @@ func splitParagraphs(text string) []string {
 		result = append(result, current.String())
 	}
 	return result
+}
+
+func isMarkdownStructuralSeparator(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	if len(trimmed) < 3 {
+		return false
+	}
+	for _, marker := range []rune{'-', '*', '_'} {
+		matches := true
+		for _, r := range trimmed {
+			if r != marker {
+				matches = false
+				break
+			}
+		}
+		if matches {
+			return true
+		}
+	}
+	return false
 }

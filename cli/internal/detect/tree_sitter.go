@@ -1,3 +1,5 @@
+//go:build cgo
+
 package detect
 
 import (
@@ -57,6 +59,10 @@ func newTreeSitterRegistry() *treeSitterRegistry {
 	registry.register("TSX", tsx.GetLanguage())
 	registry.register("TypeScript", typescript.GetLanguage())
 	return registry
+}
+
+func treeSitterSupported() bool {
+	return true
 }
 
 func (r *treeSitterRegistry) register(name string, language *sitter.Language) {

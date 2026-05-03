@@ -12,54 +12,59 @@ const FeedFormatVersion = "nomos.rbok-lawbook-feed.v1"
 
 // FeedAssembly is the complete assembled output of a lawbook feed pipeline.
 type FeedAssembly struct {
-	Format       string            `json:"format"`
-	Version      string            `json:"version"`
-	GeneratedAt  string            `json:"generated_at"`
-	Feed         LawbookFeed       `json:"feed"`
-	Index        LawbookIndex      `json:"index"`
-	Governance   GovernanceReport  `json:"governance"`
-	CitationMap  CitationMap       `json:"citation_map"`
-	RAGMetadata  []RAGChunk        `json:"rag_metadata"`
-	EngineImport EngineImport      `json:"engine_import"`
+	Format       string           `json:"format"`
+	Version      string           `json:"version"`
+	GeneratedAt  string           `json:"generated_at"`
+	Feed         LawbookFeed      `json:"feed"`
+	Index        LawbookIndex     `json:"index"`
+	Governance   GovernanceReport `json:"governance"`
+	CitationMap  CitationMap      `json:"citation_map"`
+	RAGMetadata  []RAGChunk       `json:"rag_metadata"`
+	EngineImport EngineImport     `json:"engine_import"`
 }
 
 // LawbookIndex provides fast lookup structures for the feed.
 type LawbookIndex struct {
-	NodesByID   map[string]int    `json:"nodes_by_id"`
+	NodesByID   map[string]int      `json:"nodes_by_id"`
 	NodesByType map[string][]string `json:"nodes_by_type"`
-	RootNodes   []string          `json:"root_nodes"`
-	Depth       map[string]int    `json:"depth"`
+	RootNodes   []string            `json:"root_nodes"`
+	Depth       map[string]int      `json:"depth"`
 }
 
 // GovernanceReport summarizes the governance status of the feed.
 type GovernanceReport struct {
-	TotalNodes    int               `json:"total_nodes"`
-	ByStatus      map[string]int    `json:"by_status"`
-	ByPriority    map[string]int    `json:"by_priority"`
-	ActiveRatio   float64           `json:"active_ratio"`
-	StaleNodes    []string          `json:"stale_nodes,omitempty"`
+	TotalNodes  int            `json:"total_nodes"`
+	ByStatus    map[string]int `json:"by_status"`
+	ByPriority  map[string]int `json:"by_priority"`
+	ActiveRatio float64        `json:"active_ratio"`
+	StaleNodes  []string       `json:"stale_nodes,omitempty"`
 }
 
 // CitationMap maps canonical refs to their node IDs for cross-referencing.
 type CitationMap struct {
-	ByCanonicalRef map[string]string `json:"by_canonical_ref"`
-	ByDisplayRef   map[string]string `json:"by_display_ref"`
+	ByCanonicalRef map[string]string   `json:"by_canonical_ref"`
+	ByDisplayRef   map[string]string   `json:"by_display_ref"`
 	ParentChains   map[string][]string `json:"parent_chains"`
 }
 
 // RAGChunk represents metadata for a single vector-store chunk.
 type RAGChunk struct {
-	ChunkID        string   `json:"chunk_id"`
-	NodeID         string   `json:"node_id"`
-	CanonicalRef   string   `json:"canonical_ref"`
-	DisplayRef     string   `json:"display_ref"`
-	NodeType       string   `json:"node_type"`
-	ParentChain    []string `json:"parent_chain"`
-	SourceHash     string   `json:"source_hash"`
-	GovernanceStatus string `json:"governance_status"`
-	Domain         string   `json:"domain"`
-	Priority       string   `json:"priority"`
-	Depth          int      `json:"depth"`
+	ChunkID          string   `json:"chunk_id"`
+	NodeID           string   `json:"node_id"`
+	CanonicalRef     string   `json:"canonical_ref"`
+	DisplayRef       string   `json:"display_ref"`
+	NodeType         string   `json:"node_type"`
+	ParentChain      []string `json:"parent_chain"`
+	SourcePath       string   `json:"source_path,omitempty"`
+	SourceHash       string   `json:"source_hash"`
+	SourceClass      string   `json:"source_class,omitempty"`
+	CorpusLayer      string   `json:"corpus_layer,omitempty"`
+	Authority        string   `json:"authority,omitempty"`
+	Locator          string   `json:"locator,omitempty"`
+	GovernanceStatus string   `json:"governance_status"`
+	Domain           string   `json:"domain"`
+	Priority         string   `json:"priority"`
+	Depth            int      `json:"depth"`
 }
 
 // EngineImport is the projection for the RBOK engine database import.
@@ -240,7 +245,12 @@ func buildLawbookRAGMetadata(feed LawbookFeed, citations CitationMap) []RAGChunk
 			DisplayRef:       node.DisplayRef,
 			NodeType:         string(node.NodeType),
 			ParentChain:      citations.ParentChains[node.NodeID],
+			SourcePath:       node.SourcePath,
 			SourceHash:       node.SourceHash,
+			SourceClass:      node.SourceClass,
+			CorpusLayer:      node.CorpusLayer,
+			Authority:        node.Authority,
+			Locator:          node.Locator,
 			GovernanceStatus: string(node.Status),
 			Domain:           node.Domain,
 			Priority:         string(node.Priority),

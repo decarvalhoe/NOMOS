@@ -12,17 +12,17 @@ import (
 
 // MultiFeedAssembly is the assembled output for N documents.
 type MultiFeedAssembly struct {
-	Format       string           `json:"format"`
-	Version      string           `json:"version"`
-	GeneratedAt  string           `json:"generated_at"`
-	DocumentCount int             `json:"document_count"`
-	TotalNodes   int              `json:"total_nodes"`
-	Feeds        []LawbookFeed    `json:"feeds"`
-	Index        LawbookIndex     `json:"index"`
-	Governance   GovernanceReport `json:"governance"`
-	CitationMap  CitationMap      `json:"citation_map"`
-	RAGMetadata  []RAGChunk       `json:"rag_metadata"`
-	EngineImport EngineImport     `json:"engine_import"`
+	Format        string           `json:"format"`
+	Version       string           `json:"version"`
+	GeneratedAt   string           `json:"generated_at"`
+	DocumentCount int              `json:"document_count"`
+	TotalNodes    int              `json:"total_nodes"`
+	Feeds         []LawbookFeed    `json:"feeds"`
+	Index         LawbookIndex     `json:"index"`
+	Governance    GovernanceReport `json:"governance"`
+	CitationMap   CitationMap      `json:"citation_map"`
+	RAGMetadata   []RAGChunk       `json:"rag_metadata"`
+	EngineImport  EngineImport     `json:"engine_import"`
 }
 
 // MultiAssembleOptions configures multi-document feed assembly.
@@ -88,10 +88,10 @@ func WriteMultiFeedArtifacts(assembly MultiFeedAssembly, outDir string) error {
 	}
 
 	artifacts := map[string]any{
-		"rbok-lawbook-feed.json":   assembly,
-		"rbok-lawbook-index.json":  assembly.Index,
-		"rbok-rag-metadata.json":   assembly.RAGMetadata,
-		"rbok-engine-import.json":  assembly.EngineImport,
+		"rbok-lawbook-feed.json":  assembly,
+		"rbok-lawbook-index.json": assembly.Index,
+		"rbok-rag-metadata.json":  assembly.RAGMetadata,
+		"rbok-engine-import.json": assembly.EngineImport,
 	}
 
 	for name, value := range artifacts {
@@ -180,7 +180,12 @@ func buildRAGFromNodes(nodes []LawbookNode, citations CitationMap) []RAGChunk {
 			DisplayRef:       node.DisplayRef,
 			NodeType:         string(node.NodeType),
 			ParentChain:      citations.ParentChains[node.NodeID],
+			SourcePath:       node.SourcePath,
 			SourceHash:       node.SourceHash,
+			SourceClass:      node.SourceClass,
+			CorpusLayer:      node.CorpusLayer,
+			Authority:        node.Authority,
+			Locator:          node.Locator,
 			GovernanceStatus: string(node.Status),
 			Domain:           node.Domain,
 			Priority:         string(node.Priority),
