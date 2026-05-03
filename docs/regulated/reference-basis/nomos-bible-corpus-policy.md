@@ -81,6 +81,18 @@ Before Nomos processes a licensed bible:
 5. Commit only permitted sidecars, manifests, hashes, coverage, traceability and validation evidence.
 6. Do not commit full text or substantial extracted chunks unless the license explicitly permits it.
 
+Artifact integrity is not sufficient by itself. A licensed bible is processable
+only when the intake sidecar records all of the following:
+
+- `review.reviewer` is assigned to a real reviewer;
+- `review.approval_status` is `approved` or `approved_for_internal_nomos_processing`;
+- `allowed_use.internal_processing_by_nomos` explicitly authorizes internal Nomos processing;
+- `allowed_use.commit_full_text_to_git` is `false`;
+- `allowed_use.customer_redistribution` is `false`.
+
+If any of these fields remain draft, missing, or unsafe, the reference canon must
+report `requires_evidence` even when the local PDF hash matches.
+
 ## Self-Processing Requirement
 
 Nomos must process its own bibles with the same corpus rules it applies to customer sources:
