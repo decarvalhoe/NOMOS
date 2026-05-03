@@ -22,51 +22,51 @@ var (
 	ErrArtifactMissing  = errors.New("required artifact missing")
 )
 
-// ArtifactStatus tracks resolution state.
-type ArtifactStatus string
+// RCPArtifactStatus tracks resolution state.
+type RCPArtifactStatus string
 
 const (
-	ArtPresent     ArtifactStatus = "present"
-	ArtMissing     ArtifactStatus = "missing"
-	ArtPlanned     ArtifactStatus = "planned"
-	ArtNotRequired ArtifactStatus = "not_required"
+	ArtPresent     RCPArtifactStatus = "present"
+	ArtMissing     RCPArtifactStatus = "missing"
+	ArtPlanned     RCPArtifactStatus = "planned"
+	ArtNotRequired RCPArtifactStatus = "not_required"
 )
 
-// EvidenceCategory groups artifacts by regulated domain.
-type EvidenceCategory string
+// RCPCategory groups artifacts by regulated domain.
+type RCPCategory string
 
 const (
-	CatControlMatrix  EvidenceCategory = "control_matrix"
-	CatValidation     EvidenceCategory = "validation"
-	CatTraining       EvidenceCategory = "training"
-	CatAuditLog       EvidenceCategory = "audit_log"
-	CatAttestation    EvidenceCategory = "attestation"
-	CatQualitySystem  EvidenceCategory = "quality_system"
-	CatSupplyChain    EvidenceCategory = "supply_chain"
-	CatSecurity       EvidenceCategory = "security"
-	CatDataIntegrity  EvidenceCategory = "data_integrity"
-	CatLifecycle      EvidenceCategory = "lifecycle"
-	CatGitHubOps      EvidenceCategory = "github_ops"
-	CatAIGovernance   EvidenceCategory = "ai_governance"
-	CatEvidenceIndex  EvidenceCategory = "evidence_index"
+	CatControlMatrix  RCPCategory = "control_matrix"
+	CatValidation     RCPCategory = "validation"
+	CatTraining       RCPCategory = "training"
+	CatAuditLog       RCPCategory = "audit_log"
+	CatAttestation    RCPCategory = "attestation"
+	CatQualitySystem  RCPCategory = "quality_system"
+	CatSupplyChain    RCPCategory = "supply_chain"
+	CatSecurity       RCPCategory = "security"
+	CatDataIntegrity  RCPCategory = "data_integrity"
+	CatLifecycle      RCPCategory = "lifecycle"
+	CatGitHubOps      RCPCategory = "github_ops"
+	CatAIGovernance   RCPCategory = "ai_governance"
+	CatEvidenceIndex  RCPCategory = "evidence_index"
 )
 
-// ArtifactSpec declares a required or optional evidence artifact.
-type ArtifactSpec struct {
+// RCPArtifactSpec declares a required or optional evidence artifact.
+type RCPArtifactSpec struct {
 	ID          string           `json:"id"`
-	Category    EvidenceCategory `json:"category"`
+	Category    RCPCategory `json:"category"`
 	Path        string           `json:"path"`
 	Required    bool             `json:"required"`
 	Description string           `json:"description"`
 	ControlRefs []string         `json:"control_refs,omitempty"`
 }
 
-// ArtifactResult is the resolved state of an artifact.
-type ArtifactResult struct {
+// RCPArtifactResult is the resolved state of an artifact.
+type RCPArtifactResult struct {
 	ID          string           `json:"id"`
-	Category    EvidenceCategory `json:"category"`
+	Category    RCPCategory `json:"category"`
 	Path        string           `json:"path"`
-	Status      ArtifactStatus   `json:"status"`
+	Status      RCPArtifactStatus   `json:"status"`
 	Hash        string           `json:"hash,omitempty"`
 	Size        int64            `json:"size,omitempty"`
 	Required    bool             `json:"required"`
@@ -85,14 +85,14 @@ type RCPBundleManifest struct {
 	TotalArtifacts int             `json:"total_artifacts"`
 	PresentCount  int              `json:"present_count"`
 	MissingCount  int              `json:"missing_count"`
-	Artifacts     []ArtifactResult `json:"artifacts"`
+	Artifacts     []RCPArtifactResult `json:"artifacts"`
 	Missing       []string         `json:"missing,omitempty"`
-	GateResult    GateResult       `json:"gate_result"`
+	RCPGateResult    RCPGateResult       `json:"gate_result"`
 	ClaimBoundary string           `json:"claim_boundary"`
 }
 
-// GateResult summarises the completeness gate.
-type GateResult struct {
+// RCPGateResult summarises the completeness gate.
+type RCPGateResult struct {
 	Pass     bool     `json:"pass"`
 	Blockers []string `json:"blockers,omitempty"`
 	Warnings []string `json:"warnings,omitempty"`
@@ -104,7 +104,7 @@ type RCPBundleInput struct {
 	Version     string
 	Commit      string
 	RepoRoot    string
-	Artifacts   []ArtifactSpec
+	Artifacts   []RCPArtifactSpec
 	GeneratedBy string
 	Now         time.Time
 }
@@ -115,8 +115,8 @@ type RCPBundleOutput struct {
 }
 
 // RCPArtifacts returns the standard regulated evidence artifacts.
-func RCPArtifacts() []ArtifactSpec {
-	return []ArtifactSpec{
+func RCPArtifacts() []RCPArtifactSpec {
+	return []RCPArtifactSpec{
 		// Control matrix
 		{ID: "control-matrix", Category: CatControlMatrix, Path: "docs/regulated/control-matrix/nomos-control-matrix.yaml", Required: true, Description: "Regulated control matrix", ControlRefs: []string{"ALL"}},
 		{ID: "ref-to-control-map", Category: CatControlMatrix, Path: "docs/regulated/control-matrix/reference-to-control-map.yaml", Required: true, Description: "Reference-to-control cross-map", ControlRefs: []string{"ALL"}},
@@ -187,12 +187,12 @@ func AssembleRCPBundle(input RCPBundleInput) RCPBundleOutput {
 		specs = RCPArtifacts()
 	}
 
-	results := make([]ArtifactResult, 0, len(specs))
+	results := make([]RCPArtifactResult, 0, len(specs))
 	var missing []string
 	presentCount := 0
 
 	for _, spec := range specs {
-		r := resolveArtifact(spec, input.RepoRoot)
+		r := rcpResolveArtifact(spec, input.RepoRoot)
 		results = append(results, r)
 		if r.Status == ArtPresent {
 			presentCount++
@@ -231,7 +231,7 @@ func AssembleRCPBundle(input RCPBundleInput) RCPBundleOutput {
 		MissingCount:   len(missing),
 		Artifacts:      results,
 		Missing:        missing,
-		GateResult:     gate,
+		RCPGateResult:     gate,
 		ClaimBoundary:  claimBoundary,
 	}
 
@@ -292,8 +292,8 @@ func ValidateRCPCompleteness(manifest RCPBundleManifest) error {
 	return fmt.Errorf("%w: missing %s", ErrBundleIncomplete, strings.Join(manifest.Missing, ", "))
 }
 
-func resolveArtifact(spec ArtifactSpec, repoRoot string) ArtifactResult {
-	r := ArtifactResult{
+func rcpResolveArtifact(spec RCPArtifactSpec, repoRoot string) RCPArtifactResult {
+	r := RCPArtifactResult{
 		ID:          spec.ID,
 		Category:    spec.Category,
 		Path:        spec.Path,
@@ -331,8 +331,8 @@ func resolveArtifact(spec ArtifactSpec, repoRoot string) ArtifactResult {
 	return r
 }
 
-func evaluateGate(results []ArtifactResult, missing []string) GateResult {
-	gate := GateResult{Pass: len(missing) == 0}
+func evaluateGate(results []RCPArtifactResult, missing []string) RCPGateResult {
+	gate := RCPGateResult{Pass: len(missing) == 0}
 
 	for _, m := range missing {
 		gate.Blockers = append(gate.Blockers, fmt.Sprintf("required artifact %q is missing", m))

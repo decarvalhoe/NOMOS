@@ -53,8 +53,8 @@ func TestAssembleRCPBundleComplete(t *testing.T) {
 	if !m.Complete {
 		t.Fatalf("expected complete, missing: %v", m.Missing)
 	}
-	if !m.GateResult.Pass {
-		t.Fatalf("gate should pass, blockers: %v", m.GateResult.Blockers)
+	if !m.RCPGateResult.Pass {
+		t.Fatalf("gate should pass, blockers: %v", m.RCPGateResult.Blockers)
 	}
 	if m.MissingCount != 0 {
 		t.Fatalf("expected 0 missing, got %d", m.MissingCount)
@@ -78,13 +78,13 @@ func TestAssembleRCPBundleIncomplete(t *testing.T) {
 	if output.Manifest.Complete {
 		t.Fatal("expected incomplete")
 	}
-	if output.Manifest.GateResult.Pass {
+	if output.Manifest.RCPGateResult.Pass {
 		t.Fatal("gate should fail")
 	}
 	if len(output.Manifest.Missing) == 0 {
 		t.Fatal("expected missing list")
 	}
-	if len(output.Manifest.GateResult.Blockers) == 0 {
+	if len(output.Manifest.RCPGateResult.Blockers) == 0 {
 		t.Fatal("expected blockers")
 	}
 }
@@ -146,7 +146,7 @@ func TestAssembleRCPBundleOptionalWarnings(t *testing.T) {
 		GeneratedBy: "test", Now: rcpTestTime,
 	})
 
-	if len(output.Manifest.GateResult.Warnings) == 0 {
+	if len(output.Manifest.RCPGateResult.Warnings) == 0 {
 		t.Fatal("expected warnings for missing optional artifacts")
 	}
 }
@@ -258,13 +258,13 @@ func TestRCPArtifactsSpec(t *testing.T) {
 
 func TestRCPBundleCategories(t *testing.T) {
 	specs := RCPArtifacts()
-	categories := map[EvidenceCategory]int{}
+	categories := map[RCPCategory]int{}
 	for _, s := range specs {
 		categories[s.Category]++
 	}
 
 	// Should cover all major categories.
-	required := []EvidenceCategory{
+	required := []RCPCategory{
 		CatControlMatrix, CatValidation, CatTraining, CatAuditLog,
 		CatAttestation, CatQualitySystem, CatSupplyChain, CatSecurity,
 		CatDataIntegrity, CatLifecycle, CatGitHubOps, CatAIGovernance,
