@@ -1,12 +1,52 @@
 # RBOK Engine Import Handoff Contract
 
-> Related: RBOK #2168
+> Related: RBOK #2168, Nomos #210, #215
 
 This contract defines the mapping between the Nomos corpus extraction output
 (RBOKLawDocument, RBOKLawNode) and the RBOK Engine persistence layer. It
 governs how parsed legal/regulatory content is projected into the engine's
 import tables and how governance, citations, and RAG metadata are handled
 at the boundary.
+
+## Multi-Layer Extension (v2)
+
+The CUE schema at `specs/rbok-runtime-import-contract.cue` defines the
+multi-layer handoff contract. A valid fixture is at
+`specs/examples/rbok-runtime-import.valid.yaml`.
+
+### Layer Model
+
+Nomos assembles feeds from multiple source layers, each with a priority:
+
+| Layer Kind | Priority | Purpose |
+|---|---|---|
+| `override` | 0 | Explicit overrides that always win |
+| `referentiel` | 1 | Primary regulatory references |
+| `domaine` | 2 | Domain-specific rules |
+| `meta` | 3 | Glossaries, metadata |
+
+### Merge Rules
+
+1. Same `canonical_ref` in multiple layers → lowest priority wins.
+2. Conflicts are recorded with `layer_ids`, `resolution`, `winner_layer`.
+3. Missing layers are silently skipped.
+
+### Additional Tables
+
+| Corpus Model | Engine Table | Relationship |
+|---|---|---|
+| LayerProvenance | rbok_layers | 1:1 per source layer |
+| RuntimeFeedNode.layer_id | rbok_nodes.layer_id | FK to rbok_layers |
+| EngineImportRevision.layer_id | rbok_revisions.layer_id | FK to rbok_layers |
+
+### Validation
+
+```bash
+source scripts/nomos-env.sh
+cue vet specs/*.cue specs/examples/rbok-runtime-import.valid.yaml -d '#EngineImportBatch'
+```
+
+---
 
 ## Entity Mapping
 
