@@ -40,7 +40,7 @@ jobs:
 
       - name: Build CLI
         working-directory: cli
-        run: go build -o ../nomos-cli .
+        run: go build -o /tmp/nomos-cli .
 
       - name: Create test corpus fixture
         run: |
@@ -60,7 +60,7 @@ jobs:
           bash scripts/rbok-runtime-e2e.sh \
             --corpus /tmp/test-corpus \
             --out /tmp/e2e-output \
-            --cli ./nomos-cli \
+            --cli /tmp/nomos-cli \
             --corpus-id "${{ inputs.corpus_id || 'realisons-business' }}" \
             --project-id "${{ inputs.project_id || 'rbok' }}"
 
