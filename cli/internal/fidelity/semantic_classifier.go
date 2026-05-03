@@ -161,7 +161,7 @@ func ClassifyBlocks(cast CAST) ClassifierResult {
 
 		role := roleOf[n.ID]
 		conf := roleConfidence(n, role)
-		depth := nodeDepth(n.ID, nodeIdx)
+		depth := classifierNodeDepth(n.ID, nodeIdx)
 
 		cn := ClassifiedNode{
 			NodeID:     n.ID,
@@ -319,7 +319,7 @@ func containsStr(text string, substrs ...string) bool {
 	return false
 }
 
-func nodeDepth(id string, idx map[string]CNode) int {
+func classifierNodeDepth(id string, idx map[string]CNode) int {
 	d := 0
 	cur := id
 	seen := map[string]bool{}
