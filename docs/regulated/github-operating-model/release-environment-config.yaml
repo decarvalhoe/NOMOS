@@ -1,8 +1,11 @@
 schema_version: "0.1.0"
 document_id: NOMOS-GH-ENV-001
-status: draft
-owner: devops-owner
-claim_boundary: "Declarative configuration only. Enforcement requires applying via GitHub API or UI."
+status: partially_applied
+owner: realisonsdotcom
+approver: yhalt
+claim_boundary: >-
+  Declarative configuration only. Enforcement requires applying via GitHub API
+  or UI.
 
 repository:
   owner: RBOKproject
@@ -13,12 +16,12 @@ environments:
     description: "Protected environment for regulated release evidence bundles."
     protection:
       required_reviewers:
-        # Populate with real GitHub usernames/team slugs when assigned.
-        # Empty list means the gate is declared but not yet enforced.
-        users: []
+        users:
+          - yhalt
+          - realisonsdotcom
         teams: []
       prevent_self_review: true
-      wait_timer_minutes: 10
+      wait_timer_minutes: 0
     deployment_branch_policy:
       protected_branches_only: true
       custom_branch_policies: []
@@ -29,6 +32,13 @@ environments:
         value: "2555"  # ~7 years for regulated retention
       - name: QUALITY_LEVEL_GATE
         value: "NQ-1"  # minimum quality level for release
+    live_limitations:
+      - >-
+        GitHub API returned HTTP 422 for wait_timer and required_reviewers on
+        2026-05-03: current billing plan does not support those environment
+        protection rules.
+      - >-
+        Only deployment_branch_policy.protected_branches=true was applied live.
 
   - name: staging
     description: "Pre-release validation environment."

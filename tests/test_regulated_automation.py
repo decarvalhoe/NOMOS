@@ -284,6 +284,71 @@ source_integrity:
             self.assertEqual(report["summary"]["licensed_reference_gaps"], 0)
             self.assertEqual(report["bibles"][0]["licensed_artifact_status"], "verified")
 
+    def test_reference_canon_allows_public_surrogate_for_missing_licensed_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            licensed_root = Path(tmp) / "licensed"
+            write(
+                repo / "docs/regulated/reference-basis/external-reference-register.yaml",
+                """
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: ISO-13485-2016
+    title: ISO 13485
+    publisher: ISO
+    url: https://www.iso.org/standard/59752.html
+    content_access_policy: licensed_content_required
+    evidence_status: summary_reference_only_until_licensed_clause_mapping
+""".lstrip(),
+            )
+            write(
+                repo / "docs/regulated/reference-basis/public-surrogate-annexes/ISO-13485-2016.yaml",
+                """
+schema_version: "0.1.0"
+record_type: public_surrogate_annex
+reference_id: ISO-13485-2016
+surrogate_for: ISO-13485-2016
+status: temporary_surrogate_until_official_document_acquired
+claim_boundary: "Public surrogate only; no ISO clause-level mapping or certification claim."
+sources:
+  - id: FDA-QMSR-FAQ
+    url: https://www.fda.gov/medical-devices/quality-management-system-regulation-qmsr/quality-management-system-regulation-frequently-asked-questions
+    authority: official_public_regulator_source
+blocked_claims:
+  - iso_clause_level_mapping
+  - iso_certification_claim
+  - licensed_full_text_processing_claim
+""".lstrip(),
+            )
+            output = repo / "out/reference-canon.json"
+
+            result = run_script(
+                "regulated_reference_canon.py",
+                "--root",
+                str(repo),
+                "--licensed-root",
+                str(licensed_root),
+                "--allow-public-surrogates",
+                "--strict",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "surrogate_ready_for_processing")
+            self.assertEqual(report["summary"]["licensed_reference_gaps"], 1)
+            self.assertEqual(report["summary"]["surrogate_mitigations"], 1)
+            self.assertEqual(report["summary"]["unmitigated_licensed_reference_gaps"], 0)
+            iso = report["bibles"][0]
+            self.assertEqual(iso["public_surrogate_status"], "available")
+            self.assertTrue(iso["surrogate_processing_allowed"])
+            self.assertFalse(iso["full_text_fetch_allowed"])
+            self.assertEqual(report["gaps"][0]["status"], "temporarily_mitigated")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,356 @@
+package fidelity
+
+import (
+	"fmt"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+)
+
+// ParseResult is the output of an adapter's Parse method.
+type ParseResult struct {
+	Format    string     `json:"format"`
+	NodeCount int        `json:"node_count"`
+	Spans     []SpanInfo `json:"spans"`
+	Errors    []string   `json:"errors,omitempty"`
+}
+
+// SpanInfo describes a source span produced by parsing.
+type SpanInfo struct {
+	ID        string `json:"id"`
+	NodeType  string `json:"node_type"`
+	StartLine int    `json:"start_line"`
+	EndLine   int    `json:"end_line"`
+	ByteOff   int    `json:"byte_offset"`
+	ByteLen   int    `json:"byte_length"`
+}
+
+// ValidationResult is the output of an adapter's Validate method.
+type ValidationResult struct {
+	Valid    bool     `json:"valid"`
+	Findings []string `json:"findings,omitempty"`
+}
+
+// Adapter is the interface every format parser must implement.
+type Adapter interface {
+	// Name returns the adapter's unique identifier.
+	Name() string
+	// Extensions returns file extensions this adapter handles (e.g. ".md").
+	Extensions() []string
+	// Parse parses raw source content and returns structural nodes with spans.
+	Parse(source []byte, filename string) (ParseResult, error)
+	// Validate checks the source for structural correctness.
+	Validate(source []byte, filename string) ValidationResult
+	// Spans extracts source spans without full parsing (fast path).
+	Spans(source []byte, filename string) ([]SpanInfo, error)
+}
+
+// Registry holds registered adapters and resolves them by extension.
+type Registry struct {
+	mu       sync.RWMutex
+	adapters map[string]Adapter // name → adapter
+	extMap   map[string]string  // ".ext" → adapter name
+}
+
+// NewRegistry creates an empty adapter registry.
+func NewRegistry() *Registry {
+	return &Registry{
+		adapters: make(map[string]Adapter),
+		extMap:   make(map[string]string),
+	}
+}
+
+// Register adds an adapter to the registry. Returns error if the name
+// or any extension is already claimed.
+func (r *Registry) Register(a Adapter) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	name := a.Name()
+	if name == "" {
+		return fmt.Errorf("adapter name is empty")
+	}
+	if _, exists := r.adapters[name]; exists {
+		return fmt.Errorf("adapter %q already registered", name)
+	}
+
+	for _, ext := range a.Extensions() {
+		ext = normalizeExt(ext)
+		if owner, claimed := r.extMap[ext]; claimed {
+			return fmt.Errorf("extension %q already claimed by %q", ext, owner)
+		}
+	}
+
+	r.adapters[name] = a
+	for _, ext := range a.Extensions() {
+		r.extMap[normalizeExt(ext)] = name
+	}
+	return nil
+}
+
+// Lookup returns the adapter for a given name.
+func (r *Registry) Lookup(name string) (Adapter, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	a, ok := r.adapters[name]
+	return a, ok
+}
+
+// ForFile returns the adapter that handles the given filename's extension.
+func (r *Registry) ForFile(filename string) (Adapter, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	ext := normalizeExt(filepath.Ext(filename))
+	name, ok := r.extMap[ext]
+	if !ok {
+		return nil, false
+	}
+	return r.adapters[name], true
+}
+
+// Names returns all registered adapter names, sorted.
+func (r *Registry) Names() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	names := make([]string, 0, len(r.adapters))
+	for n := range r.adapters {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
+}
+
+// SupportedExtensions returns all registered extensions, sorted.
+func (r *Registry) SupportedExtensions() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	exts := make([]string, 0, len(r.extMap))
+	for e := range r.extMap {
+		exts = append(exts, e)
+	}
+	sort.Strings(exts)
+	return exts
+}
+
+// Count returns the number of registered adapters.
+func (r *Registry) Count() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.adapters)
+}
+
+func normalizeExt(ext string) string {
+	ext = strings.ToLower(strings.TrimSpace(ext))
+	if ext != "" && ext[0] != '.' {
+		ext = "." + ext
+	}
+	return ext
+}
+
+// --- Built-in adapters ---
+
+// MarkdownAdapter parses Markdown files.
+type MarkdownAdapter struct{}
+
+func (MarkdownAdapter) Name() string           { return "markdown" }
+func (MarkdownAdapter) Extensions() []string   { return []string{".md", ".mdx"} }
+
+func (m MarkdownAdapter) Parse(source []byte, filename string) (ParseResult, error) {
+	spans, err := m.Spans(source, filename)
+	if err != nil {
+		return ParseResult{}, err
+	}
+	return ParseResult{
+		Format:    "markdown",
+		NodeCount: len(spans),
+		Spans:     spans,
+	}, nil
+}
+
+func (MarkdownAdapter) Validate(source []byte, filename string) ValidationResult {
+	if len(source) == 0 {
+		return ValidationResult{Valid: true}
+	}
+	// Basic structural check: at least one heading.
+	hasHeading := false
+	for _, line := range strings.Split(string(source), "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			hasHeading = true
+			break
+		}
+	}
+	if !hasHeading {
+		return ValidationResult{Valid: false, Findings: []string{"no heading found"}}
+	}
+	return ValidationResult{Valid: true}
+}
+
+func (MarkdownAdapter) Spans(source []byte, filename string) ([]SpanInfo, error) {
+	lines := strings.Split(string(source), "\n")
+	var spans []SpanInfo
+	offset := 0
+	for i, line := range lines {
+		lineLen := len(line)
+		if i < len(lines)-1 {
+			lineLen++ // \n
+		}
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			offset += lineLen
+			continue
+		}
+		nodeType := "paragraph"
+		if strings.HasPrefix(trimmed, "#") {
+			nodeType = "heading"
+		} else if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "1.") {
+			nodeType = "list_item"
+		} else if strings.HasPrefix(trimmed, "```") {
+			nodeType = "code_fence"
+		} else if strings.HasPrefix(trimmed, "|") {
+			nodeType = "table_row"
+		}
+		spans = append(spans, SpanInfo{
+			ID:        fmt.Sprintf("md:%d", i+1),
+			NodeType:  nodeType,
+			StartLine: i + 1,
+			EndLine:   i + 1,
+			ByteOff:   offset,
+			ByteLen:   len(line),
+		})
+		offset += lineLen
+	}
+	return spans, nil
+}
+
+// YAMLAdapter parses YAML files.
+type YAMLAdapter struct{}
+
+func (YAMLAdapter) Name() string           { return "yaml" }
+func (YAMLAdapter) Extensions() []string   { return []string{".yaml", ".yml"} }
+
+func (y YAMLAdapter) Parse(source []byte, filename string) (ParseResult, error) {
+	spans, err := y.Spans(source, filename)
+	if err != nil {
+		return ParseResult{}, err
+	}
+	return ParseResult{Format: "yaml", NodeCount: len(spans), Spans: spans}, nil
+}
+
+func (YAMLAdapter) Validate(source []byte, filename string) ValidationResult {
+	s := strings.TrimSpace(string(source))
+	if s == "" {
+		return ValidationResult{Valid: true}
+	}
+	if strings.Contains(s, "\t") {
+		return ValidationResult{Valid: false, Findings: []string{"YAML should not contain tabs"}}
+	}
+	return ValidationResult{Valid: true}
+}
+
+func (YAMLAdapter) Spans(source []byte, filename string) ([]SpanInfo, error) {
+	lines := strings.Split(string(source), "\n")
+	var spans []SpanInfo
+	offset := 0
+	for i, line := range lines {
+		lineLen := len(line)
+		if i < len(lines)-1 {
+			lineLen++
+		}
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			offset += lineLen
+			continue
+		}
+		nodeType := "mapping"
+		if strings.HasPrefix(trimmed, "- ") {
+			nodeType = "sequence_item"
+		}
+		spans = append(spans, SpanInfo{
+			ID: fmt.Sprintf("yaml:%d", i+1), NodeType: nodeType,
+			StartLine: i + 1, EndLine: i + 1, ByteOff: offset, ByteLen: len(line),
+		})
+		offset += lineLen
+	}
+	return spans, nil
+}
+
+// JSONAdapter parses JSON files.
+type JSONAdapter struct{}
+
+func (JSONAdapter) Name() string           { return "json" }
+func (JSONAdapter) Extensions() []string   { return []string{".json"} }
+
+func (j JSONAdapter) Parse(source []byte, filename string) (ParseResult, error) {
+	spans, err := j.Spans(source, filename)
+	if err != nil {
+		return ParseResult{}, err
+	}
+	return ParseResult{Format: "json", NodeCount: len(spans), Spans: spans}, nil
+}
+
+func (JSONAdapter) Validate(source []byte, filename string) ValidationResult {
+	s := strings.TrimSpace(string(source))
+	if s == "" {
+		return ValidationResult{Valid: true}
+	}
+	if (s[0] != '{' && s[0] != '[') {
+		return ValidationResult{Valid: false, Findings: []string{"JSON must start with { or ["}}
+	}
+	return ValidationResult{Valid: true}
+}
+
+func (JSONAdapter) Spans(source []byte, filename string) ([]SpanInfo, error) {
+	lines := strings.Split(string(source), "\n")
+	var spans []SpanInfo
+	offset := 0
+	for i, line := range lines {
+		lineLen := len(line)
+		if i < len(lines)-1 {
+			lineLen++
+		}
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			offset += lineLen
+			continue
+		}
+		spans = append(spans, SpanInfo{
+			ID: fmt.Sprintf("json:%d", i+1), NodeType: "value",
+			StartLine: i + 1, EndLine: i + 1, ByteOff: offset, ByteLen: len(line),
+		})
+		offset += lineLen
+	}
+	return spans, nil
+}
+
+// PlaceholderAdapter is a stub for formats not yet implemented (DOCX, PDF).
+type PlaceholderAdapter struct {
+	AdapterName string
+	Exts        []string
+}
+
+func (p PlaceholderAdapter) Name() string         { return p.AdapterName }
+func (p PlaceholderAdapter) Extensions() []string { return p.Exts }
+
+func (p PlaceholderAdapter) Parse(_ []byte, _ string) (ParseResult, error) {
+	return ParseResult{}, fmt.Errorf("adapter %q is not yet implemented", p.AdapterName)
+}
+
+func (p PlaceholderAdapter) Validate(_ []byte, _ string) ValidationResult {
+	return ValidationResult{Valid: false, Findings: []string{fmt.Sprintf("adapter %q not implemented", p.AdapterName)}}
+}
+
+func (p PlaceholderAdapter) Spans(_ []byte, _ string) ([]SpanInfo, error) {
+	return nil, fmt.Errorf("adapter %q is not yet implemented", p.AdapterName)
+}
+
+// DefaultRegistry returns a registry with all built-in adapters.
+func DefaultRegistry() *Registry {
+	r := NewRegistry()
+	r.Register(MarkdownAdapter{})
+	r.Register(YAMLAdapter{})
+	r.Register(JSONAdapter{})
+	r.Register(PlaceholderAdapter{AdapterName: "docx", Exts: []string{".docx"}})
+	r.Register(PlaceholderAdapter{AdapterName: "pdf", Exts: []string{".pdf"}})
+	return r
+}
