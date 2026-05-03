@@ -103,8 +103,6 @@ func TestTOCEntryHashesOmittedWhenDisabled(t *testing.T) {
 	}
 }
 
-
-
 func TestTOCMaxDepthConfig(t *testing.T) {
 	config := DefaultTOCConfig()
 	config.MaxDepth = 1
@@ -118,7 +116,6 @@ func TestTOCMaxDepthConfig(t *testing.T) {
 		t.Fatalf("expected 2 entries at depth 1, got %d", toc.TotalEntries)
 	}
 }
-
 
 // --- Artifact hash ---
 
@@ -153,6 +150,30 @@ func TestVerifyTOCArtifactTampered(t *testing.T) {
 	toc.Entries[0].Title = "TAMPERED"
 	if VerifyTOCArtifact(toc) {
 		t.Fatal("expected verification to fail on tampered entry")
+	}
+}
+
+func TestTOCArtifactFromCertifiedVerifies(t *testing.T) {
+	certified := BuildCertifiedTOC(TOCInput{
+		DocumentRef: "test-doc",
+		Headings: []TOCHeading{
+			{Title: "Root", Level: 1, Line: 1, NodeID: "h1"},
+			{Title: "Scope", Level: 2, Line: 3, NodeID: "h2"},
+		},
+	})
+
+	toc := TOCArtifactFromCertified(certified)
+	if !toc.Certified {
+		t.Fatal("expected converted certified TOC to be certified")
+	}
+	if !VerifyTOCArtifact(toc) {
+		t.Fatal("expected converted certified TOC hash to verify")
+	}
+	if toc.DocumentID != "test-doc" {
+		t.Fatalf("expected document id test-doc, got %q", toc.DocumentID)
+	}
+	if toc.TotalEntries != 2 {
+		t.Fatalf("expected 2 entries, got %d", toc.TotalEntries)
 	}
 }
 
@@ -205,7 +226,6 @@ func TestTOCMarkdown(t *testing.T) {
 		t.Fatal("expected artifact hash footer")
 	}
 }
-
 
 // --- Ordering ---
 

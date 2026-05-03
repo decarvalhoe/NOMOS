@@ -2,6 +2,7 @@ package corpus
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -77,8 +78,8 @@ func buildCASTFromFeedNodes(assembly MultiFeedAssembly) *fidelity.CAST {
 			if n.Metadata != nil {
 				node.Props = make(map[string]string)
 				for k, v := range n.Metadata {
-					if s, ok := v.(string); ok {
-						node.Props[k] = s
+					if v != nil {
+						node.Props[k] = fmt.Sprint(v)
 					}
 				}
 			}
@@ -121,6 +122,20 @@ func loadTOCArtifact(path string) (*fidelity.TOCArtifact, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, err
+	}
+	if _, ok := raw["format"]; ok {
+		var certified fidelity.CertifiedTOC
+		if err := json.Unmarshal(data, &certified); err != nil {
+			return nil, err
+		}
+		toc := fidelity.TOCArtifactFromCertified(certified)
+		return &toc, nil
+	}
+
 	var toc fidelity.TOCArtifact
 	if err := json.Unmarshal(data, &toc); err != nil {
 		return nil, err

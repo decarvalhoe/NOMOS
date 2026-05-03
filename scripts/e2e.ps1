@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $RootDir = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 
 # 1. Verify toolchain
-Write-Host "=== 1/3 — Verify toolchain ==="
+Write-Host "=== 1/3 - Verify toolchain ==="
 foreach ($cmd in @('go', 'cue')) {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
         Write-Error "FATAL: $cmd not found in PATH"
@@ -15,7 +15,7 @@ foreach ($cmd in @('go', 'cue')) {
 
 # 2. Go vet + test
 Write-Host ""
-Write-Host "=== 2/3 — Go vet & test (cli/) ==="
+Write-Host "=== 2/3 - Go vet & test (cli/) ==="
 Push-Location (Join-Path $RootDir 'cli')
 & go vet ./...;   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & go test ./...;  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -32,7 +32,7 @@ Get-ChildItem -Path (Join-Path $RootDir 'control-plane') -Filter 'go.mod' -Recur
 
 # 3. CUE validation
 Write-Host ""
-Write-Host "=== 3/3 — CUE schema validation ==="
+Write-Host "=== 3/3 - CUE schema validation ==="
 Push-Location $RootDir
 $cueFiles = Get-ChildItem -Path 'specs' -Filter '*.cue' | ForEach-Object { $_.FullName }
 & cue vet @cueFiles; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

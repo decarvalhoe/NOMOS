@@ -62,6 +62,26 @@ func TestEmitTypedNodesFromExtractionCodeBlock(t *testing.T) {
 	}
 }
 
+func TestEmitTypedNodesFromExtractionCodeBlockWithoutLanguageIsPlainText(t *testing.T) {
+	source := "# Doc\n\n```\nraw example\n```\n"
+	result := ExtractMarkdown(source, "test-doc")
+	EmitTypedNodesFromExtraction(&result)
+
+	for _, n := range result.Nodes {
+		if n.NodeType != NodeCodeBlock {
+			continue
+		}
+		if n.Metadata["language"] != "plain_text" {
+			t.Fatalf("expected plain_text fallback, got %v", n.Metadata["language"])
+		}
+		if n.Metadata["language_declared"] != false {
+			t.Fatalf("expected language_declared=false, got %v", n.Metadata["language_declared"])
+		}
+		return
+	}
+	t.Fatal("expected code block node")
+}
+
 func TestEmitTypedNodesFromExtractionCallout(t *testing.T) {
 	source := "# Doc\n\n> [!WARNING]\n> This is important.\n> Second line.\n"
 	result := ExtractMarkdown(source, "test-doc")
@@ -94,6 +114,23 @@ func TestEmitTypedNodesFromExtractionTable(t *testing.T) {
 	if tables < 1 {
 		t.Fatalf("expected at least 1 table node, got %d", tables)
 	}
+
+	for _, n := range result.Nodes {
+		if n.NodeType != NodeTable {
+			continue
+		}
+		if n.Metadata == nil {
+			t.Fatalf("table node %s missing metadata", n.NodeID)
+		}
+		if n.Metadata["col_count"] != "2" {
+			t.Fatalf("expected col_count=2, got %v", n.Metadata["col_count"])
+		}
+		if n.Metadata["row_count"] != "2" {
+			t.Fatalf("expected row_count=2, got %v", n.Metadata["row_count"])
+		}
+		return
+	}
+	t.Fatal("expected table node metadata to be checked")
 }
 
 func TestEmitTypedNodesFromExtractionMixed(t *testing.T) {
