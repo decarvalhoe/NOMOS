@@ -112,6 +112,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 			defaults.DocumentID = "DOC-RBOK"
 		}
 		NormalizeExtractResult(&extracted, defaults)
+		EmitTypedNodesFromExtraction(&extracted)
 		feedID := docSlug + "-feed"
 		feeds = append(feeds, BuildNormalizedFeed(extracted, feedID, defaults, generatedAt))
 	}

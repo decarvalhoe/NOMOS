@@ -17,6 +17,13 @@ const (
 	NodeArticle    LawbookNodeType = "article"
 	NodeParagraph  LawbookNodeType = "paragraph"
 	NodeAlinea     LawbookNodeType = "alinea"
+
+	// Semantic typed nodes (AQ-326).
+	NodeTable     LawbookNodeType = "table"
+	NodeCodeBlock LawbookNodeType = "code_block"
+	NodeCallout   LawbookNodeType = "callout"
+	NodeLink      LawbookNodeType = "link"
+	NodeImage     LawbookNodeType = "image"
 )
 
 // AllNodeTypes returns all valid lawbook node types in depth order.
@@ -49,9 +56,19 @@ func (t LawbookNodeType) Depth() int {
 	}
 }
 
+// IsSemanticType returns true for typed semantic nodes (no structural depth).
+func (t LawbookNodeType) IsSemanticType() bool {
+	switch t {
+	case NodeTable, NodeCodeBlock, NodeCallout, NodeLink, NodeImage:
+		return true
+	default:
+		return false
+	}
+}
+
 // IsValid returns true if the node type is recognized.
 func (t LawbookNodeType) IsValid() bool {
-	return t.Depth() >= 0
+	return t.Depth() >= 0 || t.IsSemanticType()
 }
 
 // LawbookNodeStatus tracks the lifecycle of a node.
@@ -215,7 +232,7 @@ func ValidateNode(n LawbookNode) []string {
 	if n.Depth < 0 || n.Depth > 7 {
 		errs = append(errs, fmt.Sprintf("depth %d must be 0-7", n.Depth))
 	}
-	if n.NodeType.IsValid() && n.Depth != n.NodeType.Depth() {
+	if n.NodeType.IsValid() && !n.NodeType.IsSemanticType() && n.Depth != n.NodeType.Depth() {
 		errs = append(errs, fmt.Sprintf("depth %d does not match node_type %s (expected %d)", n.Depth, n.NodeType, n.NodeType.Depth()))
 	}
 	if !ordinalPattern.MatchString(n.OrdinalPath) {
