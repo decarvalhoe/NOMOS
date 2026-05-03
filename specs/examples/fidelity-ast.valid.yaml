@@ -1,0 +1,151 @@
+schema_version: "0.1.0"
+format: "nomos.fidelity-ast.v1"
+source_file: "sources/reglement-habitation.md"
+source_hash: "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+source_bytes: 2048
+node_count: 8
+nodes:
+  - id: "B-A1B2C3D4E5F6"
+    kind: block
+    block_type: document
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 1
+      start_col: 1
+      end_line: 50
+      end_col: 1
+      byte_offset: 0
+      byte_length: 2048
+    hash: "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    children:
+      - "B-1111AAAA2222"
+      - "B-3333BBBB4444"
+    raw_text: ""
+
+  - id: "B-1111AAAA2222"
+    kind: block
+    block_type: heading
+    level: 1
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 1
+      start_col: 1
+      end_line: 1
+      end_col: 40
+      byte_offset: 0
+      byte_length: 39
+    hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    parent_id: "B-A1B2C3D4E5F6"
+    children:
+      - "B-AABB11223344"
+      - "I-CC1122334455"
+    text: "Reglement General Habitation"
+    raw_text: "# Reglement General Habitation"
+
+  - id: "B-AABB11223344"
+    kind: block
+    block_type: metadata
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 3
+      start_col: 1
+      end_line: 6
+      end_col: 30
+      byte_offset: 41
+      byte_length: 120
+    hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    parent_id: "B-1111AAAA2222"
+    raw_text: "| Référence | RGA-2026-001 |\n| --- | --- |\n| Statut | En vigueur |"
+    props:
+      "référence": "RGA-2026-001"
+      statut: "En vigueur"
+
+  - id: "I-CC1122334455"
+    kind: inline
+    inline_type: text
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 1
+      start_col: 3
+      end_line: 1
+      end_col: 40
+      byte_offset: 2
+      byte_length: 37
+    hash: "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    parent_id: "B-1111AAAA2222"
+    text: "Reglement General Habitation"
+    raw_text: "Reglement General Habitation"
+
+  - id: "B-3333BBBB4444"
+    kind: block
+    block_type: heading
+    level: 2
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 8
+      start_col: 1
+      end_line: 8
+      end_col: 25
+      byte_offset: 162
+      byte_length: 24
+    hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    parent_id: "B-A1B2C3D4E5F6"
+    children:
+      - "B-5555CCCC6666"
+      - "B-7777DDDD8888"
+    text: "Chapitre 1 - Garanties"
+    raw_text: "## Chapitre 1 - Garanties"
+
+  - id: "B-5555CCCC6666"
+    kind: block
+    block_type: paragraph
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 10
+      start_col: 1
+      end_line: 11
+      end_col: 45
+      byte_offset: 188
+      byte_length: 90
+    hash: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    parent_id: "B-3333BBBB4444"
+    text: "Les garanties couvrent les dommages selon les conditions generales du contrat."
+    raw_text: "Les garanties couvrent les dommages selon\nles conditions generales du contrat."
+
+  - id: "S-AAEE11223344"
+    kind: span
+    span_type: comment
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 13
+      start_col: 1
+      end_line: 13
+      end_col: 30
+      byte_offset: 280
+      byte_length: 29
+    hash: "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+    parent_id: "B-3333BBBB4444"
+    raw_text: "<!-- TODO: ajouter exclusions -->"
+
+  - id: "B-7777DDDD8888"
+    kind: block
+    block_type: list
+    span:
+      file: "sources/reglement-habitation.md"
+      start_line: 15
+      start_col: 1
+      end_line: 17
+      end_col: 20
+      byte_offset: 310
+      byte_length: 65
+    hash: "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    parent_id: "B-3333BBBB4444"
+    text: "- Dommages des eaux\n- Incendie\n- Vol"
+    raw_text: "- Dommages des eaux\n- Incendie\n- Vol"
+
+coverage:
+  total_bytes: 2048
+  covered_bytes: 2048
+  lost_bytes: 0
+  loss_ratio: 0
+  is_lossless: true
