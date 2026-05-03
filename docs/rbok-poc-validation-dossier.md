@@ -1,13 +1,13 @@
 # RBOK 01_rbok POC Validation Dossier
 
 Document ID: POC-RBOK-001
-Status: executed
+Status: executed - RBOK lawbook POC gate pass, AQ/regulatory validation still bounded
 Date: 2026-05-03
 Owner: Nomos core team
 
 ## Claim Boundary
 
-This dossier validates the Nomos POC pipeline against the 01_rbok corpus from realisons-business. It does not claim production readiness, regulatory compliance, or validated status. Current quality level is NQ-0/NQ-1 boundary.
+This dossier records the Nomos POC pipeline against the `01_rbok` corpus from `realisons-business`. It does not claim production readiness, regulatory compliance, validated system status, or full semantic fidelity for every Markdown/PDF/DOCX/YAML/JSON construct. The current claim is narrower: the full `rbok-lawbook` profile admission is intentional, gate-compatible lawbook artifacts are produced outside the source corpus, and the RBOK lawbook release gate passes for the current artifact contract.
 
 ## POC Objective
 
@@ -18,6 +18,99 @@ Demonstrate that Nomos can:
 3. Generate RAG chunks with authority levels and provenance chains.
 4. Produce evidence artifacts verifiable by an independent reviewer.
 5. Enforce read-only source protection throughout the pipeline.
+
+## Current Execution Update
+
+Execution timestamp: 2026-05-03
+Nomos branch: `codex/rbok-poc-update-20260503`
+RBOK corpus commit: `ea003e8fe3c35993731c3708a3787df6a3a690df`
+Local evidence pack: `C:\Dev\nomos-rbok-poc-run-20260503-dynamic-depth`
+
+### Commands Executed
+
+```powershell
+.\nomos-cli.exe corpus diagnose `
+  --profile rbok-lawbook `
+  --root C:\Dev\realisons-business\01_rbok `
+  --format json
+
+.\nomos-cli.exe corpus feed `
+  --profile rbok-lawbook `
+  --root C:\Dev\realisons-business\01_rbok `
+  --artifacts-dir C:\Dev\nomos-rbok-poc-run-20260503-dynamic-depth `
+  --corpus-id rbok-lawbook `
+  --project-id airbook `
+  --format json
+
+.\release-gate.exe `
+  --artifacts C:\Dev\nomos-rbok-poc-run-20260503-dynamic-depth `
+  --profile rbok-lawbook
+```
+
+### Current Results
+
+| Check | Current Result |
+|-------|----------------|
+| Read-only fingerprint before/after | PASS |
+| Full profile diagnosis | PASS: `in_scope`, confidence `high` |
+| Full corpus inventory | 240 files under `01_rbok`: 66 primary, 7 reference, 157 derived, 10 out-of-scope warnings |
+| Lawbook artifact pack | PASS: 43 documents, 7,022 lawbook nodes |
+| Gate-compatible artifacts | PASS: `rbok-lawbook-feed.json`, index, RAG metadata, engine import, governance, attestation |
+| Attestation boundary | PASS: predicate scope `full_profile`, diagnosis embedded |
+| Release gate | PASS: 0 blocking checks |
+
+### Release Gate Result
+
+The RBOK lawbook release gate passes against the current evidence pack:
+
+```json
+{
+  "profile": "rbok-lawbook",
+  "verdict": "pass",
+  "blocking": 0,
+  "warnings": 0
+}
+```
+
+The gate now validates nested multi-feed lawbook nodes and computes the corpus' actual structural depth from parent chains. Current RBOK depth is `max:2` with `chapter` and `section` levels under `document`; the gate no longer hard-codes `article`, but it still fails if heading nodes are orphaned, cyclic, or cannot be traced back to a document.
+
+### Corpus Admission Result
+
+The `rbok-lawbook` profile diagnosis currently returns:
+
+```json
+{
+  "verdict": "in_scope",
+  "confidence": "high",
+  "summary": "Corpus has 66 primary, 7 reference, 157 derived sources. Ready for canonical processing."
+}
+```
+
+The binary blockers were resolved by declaring generated, archived, original/reference, and OS artifact files according to source policy instead of treating every binary as a canonical source.
+
+### POC Interpretation
+
+The updated POC validates the current full `rbok-lawbook` gate lane:
+
+```text
+all 01_rbok sources
+  -> declared corpus policy
+  -> lawbook nodes with dynamic document/heading/paragraph/alinea structure
+  -> governance report
+  -> RAG/import artifacts
+  -> scoped in-toto attestation
+  -> RBOK lawbook release gate pass
+```
+
+The updated POC still does not claim complete regulatory-grade document fidelity. Tables outside metadata, callouts, code blocks, images, links, exact line/column/byte spans, H5/H6 legal levels, and complete lexicon/TOC certification remain governed by the structure fidelity roadmap.
+
+### Implemented Corrections
+
+1. Full `01_rbok` source policy admission now distinguishes canonical, reference, generated, derived, schema, archived, ignored, and blocked files.
+2. `corpus feed --profile rbok-lawbook --artifacts-dir <dir>` produces gate-compatible RBOK lawbook artifacts outside the source corpus.
+3. `corpus attest` and generated feed attestations carry explicit scope and embedded diagnosis.
+4. Attestation generation rejects `corpus_admissible` when the bound profile diagnosis is blocked or partial.
+5. The release gate validates nested multi-feed nodes and dynamic structural depth from `parent_id` chains, which is the basis for a certified index/table of contents.
 
 ## Pipeline Under Test
 
@@ -33,7 +126,9 @@ Demonstrate that Nomos can:
   → Evidence artifacts (JSON)
 ```
 
-## E2E Results
+## Historical Baseline Results
+
+The following checks document the earlier fixture-backed and restricted-lane baseline. They are retained for traceability, but they are superseded for current release readiness by the 2026-05-03 execution update above.
 
 ### Extraction Pipeline
 
@@ -87,7 +182,7 @@ Demonstrate that Nomos can:
 | Check | Result |
 |-------|--------|
 | Feed artifacts present and non-empty | PASS |
-| Required node types (document, article, paragraph, alinea) | PASS |
+| Required node types and dynamic structural depth | PASS |
 | Attestation artifact valid (in-toto) | PASS |
 | Governance report: 0 blocking findings | PASS |
 
@@ -180,13 +275,37 @@ go vet: clean
 **Description**: The Nomos-to-Praxis atom mapping (docs/regulated/customer-integration/praxis-atom-mapping.md) is defined but not activated. Praxis remains blocked until Nomos reaches verified status.
 **Remediation**: Complete Nomos verification, then execute the activation checklist.
 
+### GAP-006: Full `01_rbok` profile admission blocked
+
+**Severity**: high
+**Status**: resolved in PR #313 update
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/310
+**Description**: `nomos corpus diagnose --profile rbok-lawbook --root 01_rbok` previously returned `blocked` because all binary files were treated as blockers, including generated workbooks, OS artifacts, archived files, and reference originals.
+**Resolution**: The profile policy now classifies canonical, reference, generated, derived, schema, archived, out-of-scope, and blocked files. Current diagnosis returns `in_scope/high`.
+
+### GAP-007: RBOK lawbook release gate artifact mismatch
+
+**Severity**: high
+**Status**: resolved in PR #313 update
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/311
+**Description**: The prior CLI POC lane emitted `nomos.corpus-feed.v1` with `units`, while `release-gate --profile rbok-lawbook` expected lawbook node artifacts and a separate governance report.
+**Resolution**: `corpus feed --profile rbok-lawbook --artifacts-dir <dir>` now emits gate-compatible lawbook feed, index, RAG metadata, engine import, governance, and attestation artifacts. The gate reads nested multi-feed nodes and validates dynamic structural depth from parent chains.
+
+### GAP-008: Attestation verdict can overclaim the full corpus state
+
+**Severity**: high
+**Status**: resolved in PR #313 update
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/312
+**Description**: The local POC command could generate `corpus_admissible` attestation for a restricted Markdown snapshot even when the full `rbok-lawbook` profile diagnosis was blocked.
+**Resolution**: Corpus attestations now include explicit `scope` and embedded diagnosis. Generation rejects `corpus_admissible` if the bound diagnosis is blocked or partial.
+
 ## Verdict
 
-The RBOK 01_rbok POC demonstrates a functional end-to-end pipeline from Markdown extraction through governed feed assembly to RAG metadata generation with authority and provenance. All automated tests pass (21 packages). Self-compliance evaluates to compliant. The pipeline enforces read-only source protection.
+The RBOK `01_rbok` POC now demonstrates a full `rbok-lawbook` gate lane from profile admission through gate-compatible lawbook artifacts, scoped attestation, dynamic structural-depth validation, and read-only source protection.
 
-**POC outcome: PASS with documented gaps.**
+**Current POC outcome: RBOK LAWBOOK POC PASS / FULL REGULATORY-GRADE FIDELITY NOT CLAIMED.**
 
-The gaps are documentation and process maturity items (test protocols, signatures), not functional defects. The pipeline is ready for incremental hardening toward NQ-3.
+The remaining limitation is not the RBOK POC gate: it is the broader AQ claim for complete document fidelity, including tables beyond metadata, callouts, code blocks, links, images, exact spans, H5/H6 legal levels, certified table of contents, and governed lexicon coverage.
 
 ## Approval
 

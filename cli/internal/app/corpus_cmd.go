@@ -425,12 +425,19 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	projectID := flags.String("project-id", "", "consumer project identifier")
 	verdict := flags.String("verdict", "corpus_admissible", "corpus verdict")
 	confidence := flags.String("confidence", "high", "corpus confidence")
+	scope := flags.String("scope", "snapshot", "claim scope (snapshot, restricted_snapshot, full_profile)")
+	profile := flags.String("profile", "", "diagnose profile to bind into the attestation")
+	root := flags.String("root", "", "corpus root for profile diagnosis")
 	out := flags.String("out", "", "attestation output path")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if *snapshotPath == "" || *corpusID == "" || *projectID == "" {
 		fmt.Fprintln(stderr, "corpus attest: --snapshot, --corpus-id, and --project-id are required")
+		return 2
+	}
+	if (*profile == "") != (*root == "") {
+		fmt.Fprintln(stderr, "corpus attest: --profile and --root must be provided together")
 		return 2
 	}
 	snapshot, err := readSnapshot(*snapshotPath)
@@ -451,14 +458,28 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	for _, source := range snapshot.Sources {
 		files = append(files, source.Path+" "+source.Hash)
 	}
+	var diagnosis *corpus.DiagnoseVerdict
+	if *profile != "" {
+		diagnosed, err := corpus.DiagnoseProfile(*profile, *root)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+			return 1
+		}
+		diagnosis = &diagnosed
+		if *scope == "snapshot" {
+			*scope = "full_profile"
+		}
+	}
 	statement, err := corpus.GenerateCorpusAttestation(corpus.CorpusAttestationOptions{
 		CorpusID:       *corpusID,
 		ProjectID:      *projectID,
 		ScannerVersion: Version,
+		Scope:          *scope,
 		Verdict:        *verdict,
 		Confidence:     *confidence,
 		FilesScanned:   snapshot.TotalFiles,
 		ScannedFiles:   files,
+		Diagnosis:      diagnosis,
 		Now:            time.Now().UTC(),
 		Metadata: map[string]any{
 			"commit":     snapshot.Commit,

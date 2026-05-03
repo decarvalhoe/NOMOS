@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -52,9 +53,9 @@ func writeGovernanceArtifact(t *testing.T, dir string, name string, result Gover
 func sampleNodes() []LawbookNode {
 	return []LawbookNode{
 		{NodeID: "DOC-001", NodeType: NodeDocument, Text: "doc"},
-		{NodeID: "ART-001", NodeType: NodeArticle, Text: "art"},
-		{NodeID: "PAR-001", NodeType: NodeParagraph, Text: "para"},
-		{NodeID: "ALI-001", NodeType: NodeAlinea, Text: "alinea"},
+		{NodeID: "ART-001", NodeType: NodeArticle, ParentID: "DOC-001", Text: "art"},
+		{NodeID: "PAR-001", NodeType: NodeParagraph, ParentID: "ART-001", Text: "para"},
+		{NodeID: "ALI-001", NodeType: NodeAlinea, ParentID: "PAR-001", Text: "alinea"},
 	}
 }
 
@@ -81,6 +82,121 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 	}
 	if len(result.Checks) != 4 {
 		t.Fatalf("expected 4 checks, got %d", len(result.Checks))
+	}
+}
+
+func TestEvaluateReleaseGateReadsNestedMultiFeedNodes(t *testing.T) {
+	dir := t.TempDir()
+	feed := LawbookFeed{
+		SchemaVersion: "0.1.0",
+		FeedID:        "rbok-lawbook-feed",
+		DocumentID:    "DOC-RBOK",
+		Domain:        "rbok",
+		SourcePath:    "01_referentiel/ref.md",
+		SourceHash:    "sha256:aaaa",
+		NodeCount:     len(sampleNodes()),
+		Nodes:         sampleNodes(),
+	}
+	assembly := AssembleMultiFeed([]LawbookFeed{feed}, MultiAssembleOptions{})
+	if err := WriteMultiFeedArtifacts(assembly, dir); err != nil {
+		t.Fatalf("write multi feed: %v", err)
+	}
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+
+	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GatePass {
+		t.Fatalf("expected nested multi-feed nodes to pass release gate, got %s: %+v", result.Verdict, result.Checks)
+	}
+}
+
+func TestEvaluateReleaseGateAcceptsSectionAsNormativeHeading(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", []LawbookNode{
+		{NodeID: "DOC-001", NodeType: NodeDocument, Text: "doc"},
+		{NodeID: "SEC-001", NodeType: NodeSection, ParentID: "DOC-001", Text: "section"},
+		{NodeID: "PAR-001", NodeType: NodeParagraph, ParentID: "SEC-001", Text: "para"},
+		{NodeID: "ALI-001", NodeType: NodeAlinea, ParentID: "PAR-001", Text: "alinea"},
+	})
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+
+	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GatePass {
+		t.Fatalf("expected section-level normative heading to pass, got %s: %+v", result.Verdict, result.Checks)
+	}
+}
+
+func TestEvaluateReleaseGateValidatesDynamicStructuralDepth(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", []LawbookNode{
+		{NodeID: "DOC-001", NodeType: NodeDocument, Text: "doc"},
+		{NodeID: "CH-001", NodeType: NodeChapter, ParentID: "DOC-001", Text: "chapter"},
+		{NodeID: "SEC-001", NodeType: NodeSection, ParentID: "CH-001", Text: "section"},
+		{NodeID: "ART-001", NodeType: NodeArticle, ParentID: "SEC-001", Text: "article"},
+		{NodeID: "PAR-001", NodeType: NodeParagraph, ParentID: "ART-001", Text: "para"},
+		{NodeID: "ALI-001", NodeType: NodeAlinea, ParentID: "PAR-001", Text: "alinea"},
+	})
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+
+	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GatePass {
+		t.Fatalf("expected dynamic depth pass, got %s: %+v", result.Verdict, result.Checks)
+	}
+	found := false
+	for _, check := range result.Checks {
+		if check.Name == "node_types" && strings.Contains(check.Detail, "structural_depth=max:3") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected structural max depth in gate detail: %+v", result.Checks)
+	}
+}
+
+func TestEvaluateReleaseGateFailsBrokenStructuralParentChain(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", []LawbookNode{
+		{NodeID: "DOC-001", NodeType: NodeDocument, Text: "doc"},
+		{NodeID: "SEC-001", NodeType: NodeSection, ParentID: "MISSING", Text: "section"},
+		{NodeID: "PAR-001", NodeType: NodeParagraph, ParentID: "SEC-001", Text: "para"},
+		{NodeID: "ALI-001", NodeType: NodeAlinea, ParentID: "PAR-001", Text: "alinea"},
+	})
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict:       VerdictAdmissible,
+		TotalFindings: 0,
+		Blocking:      0,
+	})
+
+	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GateFail {
+		t.Fatalf("expected broken structural parent chain to fail, got %s", result.Verdict)
 	}
 }
 
@@ -266,8 +382,11 @@ func TestEvaluateReleaseGate_Profile(t *testing.T) {
 
 func TestDefaultRBOKLawbookGateConfig(t *testing.T) {
 	config := DefaultRBOKLawbookGateConfig("/tmp/test")
-	if len(config.RequiredNodeTypes) != 4 {
-		t.Fatalf("expected 4 required node types, got %d", len(config.RequiredNodeTypes))
+	if len(config.RequiredNodeTypes) != 3 {
+		t.Fatalf("expected 3 required node types, got %d", len(config.RequiredNodeTypes))
+	}
+	if !config.RequireStructuralDepth {
+		t.Fatal("expected RequireStructuralDepth to be true")
 	}
 	if !config.RequireFeed {
 		t.Fatal("expected RequireFeed to be true")

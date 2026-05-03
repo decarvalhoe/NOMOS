@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
+	"github.com/RBOKproject/Nomos/cli/internal/guard"
 )
 
 // corpusProfileFeedCommand implements "nomos corpus feed --profile <name>".
@@ -20,6 +21,9 @@ func corpusProfileFeedCommand(args []string, stdout io.Writer, stderr io.Writer)
 	root := flags.String("root", ".", "corpus root directory")
 	format := flags.String("format", "json", "output format: json or text")
 	out := flags.String("out", "", "write result to file (default: stdout)")
+	artifactsDir := flags.String("artifacts-dir", "", "write release-gate artifacts to this directory")
+	corpusID := flags.String("corpus-id", corpus.ProfileRBOKLawbook, "corpus identifier for generated artifact attestation")
+	projectID := flags.String("project-id", "nomos", "project identifier for generated artifact attestation")
 	outputsRaw := flags.String("outputs", "", "comma-separated output sections (default: all profile outputs)")
 	if err := flags.Parse(args); err != nil {
 		return 2
@@ -43,6 +47,67 @@ func corpusProfileFeedCommand(args []string, stdout io.Writer, stderr io.Writer)
 				outputs = append(outputs, corpus.OutputFlag(s))
 			}
 		}
+	}
+
+	if *artifactsDir != "" {
+		if *profile != corpus.ProfileRBOKLawbook {
+			fmt.Fprintf(stderr, "corpus feed --profile: --artifacts-dir is only supported for %s\n", corpus.ProfileRBOKLawbook)
+			return 2
+		}
+		if err := validateOutputPath(*root, *artifactsDir); err != nil {
+			fmt.Fprintf(stderr, "corpus feed --profile: %v\n", err)
+			return 2
+		}
+		before, hadSnapshot, err := readOnlyBefore(*root)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus feed --profile: %v\n", err)
+			return 2
+		}
+		pack, err := corpus.WriteRBOKLawbookArtifactPack(*root, *artifactsDir, corpus.RBOKLawbookArtifactPackOptions{
+			CorpusID:       *corpusID,
+			ProjectID:      *projectID,
+			ScannerVersion: Version,
+		})
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus feed --profile: %v\n", err)
+			return 1
+		}
+		if hadSnapshot {
+			if err := guard.GuardReadOnly(before); err != nil {
+				fmt.Fprintf(stderr, "corpus feed --profile: %v\n", err)
+				return 1
+			}
+		}
+		w := stdout
+		if *out != "" {
+			f, err := os.Create(*out)
+			if err != nil {
+				fmt.Fprintf(stderr, "corpus feed --profile: create output: %v\n", err)
+				return 1
+			}
+			defer f.Close()
+			w = f
+		}
+		switch strings.ToLower(*format) {
+		case "text":
+			fmt.Fprintf(w, "profile:       %s\n", pack.Profile)
+			fmt.Fprintf(w, "artifacts_dir: %s\n", pack.ArtifactsDir)
+			fmt.Fprintf(w, "documents:     %d\n", pack.DocumentCount)
+			fmt.Fprintf(w, "nodes:         %d\n", pack.TotalNodes)
+			fmt.Fprintf(w, "diagnosis:     %s/%s\n", pack.Diagnosis.Verdict, pack.Diagnosis.Confidence)
+			fmt.Fprintln(w, "artifacts:")
+			for _, artifact := range pack.Artifacts {
+				fmt.Fprintf(w, "  - %s\n", artifact)
+			}
+		default:
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			if err := enc.Encode(pack); err != nil {
+				fmt.Fprintf(stderr, "corpus feed --profile: write: %v\n", err)
+				return 1
+			}
+		}
+		return 0
 	}
 
 	result, err := corpus.RunProfileFeed(corpus.ProfileFeedInput{

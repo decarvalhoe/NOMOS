@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	InTotoStatementType       = "https://in-toto.io/Statement/v1"
-	CorpusPredicateType       = "https://nomos.dev/corpus-attestation/v1"
-	CorpusAttestationVersion  = "0.1.0"
+	InTotoStatementType      = "https://in-toto.io/Statement/v1"
+	CorpusPredicateType      = "https://nomos.dev/corpus-attestation/v1"
+	CorpusAttestationVersion = "0.1.0"
 )
 
 // CorpusSubject identifies the corpus snapshot artifact.
@@ -32,18 +32,20 @@ type CorpusAttestationStatement struct {
 
 // CorpusPredicate is the Nomos corpus-specific predicate.
 type CorpusPredicate struct {
-	Version        string          `json:"version"`
-	CorpusID       string          `json:"corpusId"`
-	ProjectID      string          `json:"projectId"`
-	SnapshotHash   string          `json:"snapshotHash"`
-	Timestamp      time.Time       `json:"timestamp"`
-	ScannerVersion string          `json:"scannerVersion"`
-	Verdict        string          `json:"verdict"`
-	Confidence     string          `json:"confidence,omitempty"`
-	FilesScanned   int             `json:"filesScanned"`
-	UnitsExtracted int             `json:"unitsExtracted,omitempty"`
-	Policy         *AttestPolicy   `json:"policy,omitempty"`
-	Metadata       map[string]any  `json:"metadata,omitempty"`
+	Version        string           `json:"version"`
+	CorpusID       string           `json:"corpusId"`
+	ProjectID      string           `json:"projectId"`
+	SnapshotHash   string           `json:"snapshotHash"`
+	Timestamp      time.Time        `json:"timestamp"`
+	ScannerVersion string           `json:"scannerVersion"`
+	Scope          string           `json:"scope,omitempty"`
+	Verdict        string           `json:"verdict"`
+	Confidence     string           `json:"confidence,omitempty"`
+	FilesScanned   int              `json:"filesScanned"`
+	UnitsExtracted int              `json:"unitsExtracted,omitempty"`
+	Diagnosis      *DiagnoseVerdict `json:"diagnosis,omitempty"`
+	Policy         *AttestPolicy    `json:"policy,omitempty"`
+	Metadata       map[string]any   `json:"metadata,omitempty"`
 }
 
 // AttestPolicy captures which glob policy was active during the scan.
@@ -57,11 +59,13 @@ type CorpusAttestationOptions struct {
 	CorpusID       string
 	ProjectID      string
 	ScannerVersion string
+	Scope          string
 	Verdict        string
 	Confidence     string
 	FilesScanned   int
 	UnitsExtracted int
 	ScannedFiles   []string
+	Diagnosis      *DiagnoseVerdict
 	Policy         *Policy
 	Metadata       map[string]any
 	Now            time.Time
@@ -80,6 +84,9 @@ func GenerateCorpusAttestation(opts CorpusAttestationOptions) (CorpusAttestation
 	}
 	if opts.ScannerVersion == "" {
 		opts.ScannerVersion = "unknown"
+	}
+	if err := validateAttestationClaim(opts.Verdict, opts.Diagnosis); err != nil {
+		return CorpusAttestationStatement{}, err
 	}
 
 	now := opts.Now
@@ -104,10 +111,12 @@ func GenerateCorpusAttestation(opts CorpusAttestationOptions) (CorpusAttestation
 		SnapshotHash:   snapshotHash,
 		Timestamp:      now,
 		ScannerVersion: opts.ScannerVersion,
+		Scope:          opts.Scope,
 		Verdict:        opts.Verdict,
 		Confidence:     opts.Confidence,
 		FilesScanned:   opts.FilesScanned,
 		UnitsExtracted: opts.UnitsExtracted,
+		Diagnosis:      opts.Diagnosis,
 		Policy:         attestPolicy,
 		Metadata:       opts.Metadata,
 	}
@@ -130,6 +139,37 @@ func GenerateCorpusAttestation(opts CorpusAttestationOptions) (CorpusAttestation
 		PredicateType: CorpusPredicateType,
 		Predicate:     predicateJSON,
 	}, nil
+}
+
+func validateAttestationClaim(verdict string, diagnosis *DiagnoseVerdict) error {
+	if diagnosis == nil {
+		return nil
+	}
+	diagnosisVerdict := diagnosisVerdictToCorpusVerdict(diagnosis.Verdict)
+	switch verdict {
+	case VerdictAdmissible:
+		if diagnosisVerdict != VerdictAdmissible {
+			return fmt.Errorf("attestation verdict %s overclaims blocked or partial diagnosis %s", verdict, diagnosis.Verdict)
+		}
+	case VerdictPartial:
+		if diagnosisVerdict == VerdictBlocked {
+			return fmt.Errorf("attestation verdict %s overclaims blocked diagnosis %s", verdict, diagnosis.Verdict)
+		}
+	}
+	return nil
+}
+
+func diagnosisVerdictToCorpusVerdict(verdict string) string {
+	switch verdict {
+	case "in_scope", VerdictAdmissible:
+		return VerdictAdmissible
+	case "partial", VerdictPartial:
+		return VerdictPartial
+	case "blocked", VerdictBlocked:
+		return VerdictBlocked
+	default:
+		return verdict
+	}
 }
 
 // WriteAttestation writes the attestation statement as indented JSON.

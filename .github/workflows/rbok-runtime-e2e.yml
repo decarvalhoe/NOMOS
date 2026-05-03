@@ -29,7 +29,7 @@ jobs:
     name: RBOK Runtime E2E
     runs-on: ubuntu-latest
     env:
-      CGO_ENABLED: "0"
+      CGO_ENABLED: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +40,7 @@ jobs:
 
       - name: Build CLI
         working-directory: cli
-        run: go build -o ../nomos-cli .
+        run: go build -o /tmp/nomos-cli .
 
       - name: Create test corpus fixture
         run: |
@@ -60,7 +60,7 @@ jobs:
           bash scripts/rbok-runtime-e2e.sh \
             --corpus /tmp/test-corpus \
             --out /tmp/e2e-output \
-            --cli ./nomos-cli \
+            --cli /tmp/nomos-cli \
             --corpus-id "${{ inputs.corpus_id || 'realisons-business' }}" \
             --project-id "${{ inputs.project_id || 'rbok' }}"
 
@@ -85,7 +85,7 @@ jobs:
     name: Corpus unit tests
     runs-on: ubuntu-latest
     env:
-      CGO_ENABLED: "0"
+      CGO_ENABLED: "1"
     defaults:
       run:
         working-directory: cli

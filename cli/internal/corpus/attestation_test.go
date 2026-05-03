@@ -128,6 +128,63 @@ func TestGenerateCorpusAttestationWithPolicy(t *testing.T) {
 	}
 }
 
+func TestGenerateCorpusAttestationRecordsScopeAndDiagnosis(t *testing.T) {
+	diagnosis := &DiagnoseVerdict{
+		Profile:    ProfileRBOKLawbook,
+		Verdict:    "in_scope",
+		Confidence: "high",
+		Summary:    "admitted",
+	}
+	stmt, err := GenerateCorpusAttestation(CorpusAttestationOptions{
+		CorpusID:       "rbok",
+		ProjectID:      "airbook",
+		ScannerVersion: "0.1.0",
+		Verdict:        VerdictAdmissible,
+		Confidence:     "high",
+		Scope:          "full_profile",
+		Diagnosis:      diagnosis,
+		FilesScanned:   3,
+		ScannedFiles:   []string{"a.md"},
+		Now:            attestNow,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var pred CorpusPredicate
+	if err := json.Unmarshal(stmt.Predicate, &pred); err != nil {
+		t.Fatalf("unmarshal predicate: %v", err)
+	}
+	if pred.Scope != "full_profile" {
+		t.Fatalf("expected full_profile scope, got %q", pred.Scope)
+	}
+	if pred.Diagnosis == nil || pred.Diagnosis.Verdict != "in_scope" {
+		t.Fatalf("expected embedded diagnosis, got %+v", pred.Diagnosis)
+	}
+}
+
+func TestGenerateCorpusAttestationRejectsAdmissibleWhenDiagnosisBlocked(t *testing.T) {
+	_, err := GenerateCorpusAttestation(CorpusAttestationOptions{
+		CorpusID:     "rbok",
+		ProjectID:    "airbook",
+		Verdict:      VerdictAdmissible,
+		Confidence:   "high",
+		Scope:        "full_profile",
+		FilesScanned: 3,
+		ScannedFiles: []string{"a.md"},
+		Diagnosis: &DiagnoseVerdict{
+			Profile:    ProfileRBOKLawbook,
+			Verdict:    "blocked",
+			Confidence: "low",
+			Blockers:   []string{"blocked binary: 00_meta/firmware.bin"},
+		},
+		Now: attestNow,
+	})
+	if err == nil {
+		t.Fatal("expected admissible attestation to be rejected for blocked diagnosis")
+	}
+}
+
 func TestGenerateCorpusAttestationDeterministicHash(t *testing.T) {
 	opts := CorpusAttestationOptions{
 		CorpusID:       "hash-test",

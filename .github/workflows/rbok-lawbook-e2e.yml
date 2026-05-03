@@ -88,7 +88,7 @@ jobs:
       - name: Verify pipeline artifacts
         run: |
           echo "=== Checking pipeline output ==="
-          for f in snapshot.json source-manifest.yaml feed.json attestation.json; do
+          for f in diagnosis.json artifact-pack.json rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json; do
             if [ ! -f "/tmp/rbok-output/$f" ]; then
               echo "FAIL: missing expected artifact: $f"
               exit 1
@@ -100,10 +100,13 @@ jobs:
         run: |
           python3 -c "
           import json, sys
-          att = json.loads(open('/tmp/rbok-output/attestation.json').read())
+          att = json.loads(open('/tmp/rbok-output/rbok-attestation.json').read())
           assert att.get('_type') == 'https://in-toto.io/Statement/v1', f'bad type: {att.get(\"_type\")}'
           assert att.get('predicateType') == 'https://nomos.dev/corpus-attestation/v1', f'bad predicate type'
           assert len(att.get('subject', [])) >= 1, 'missing subject'
+          pred = att.get('predicate', {})
+          assert pred.get('scope') == 'full_profile', f'bad scope: {pred.get(\"scope\")}'
+          assert pred.get('diagnosis', {}).get('verdict') == 'in_scope', f'bad diagnosis: {pred.get(\"diagnosis\")}'
           print('Attestation format: valid in-toto Statement/v1')
           "
 
@@ -134,6 +137,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rbok-lawbook-feed-${{ steps.fingerprint.outputs.commit }}
+          name: rbok-lawbook-artifacts-${{ steps.fingerprint.outputs.commit }}
           path: /tmp/rbok-output/
           retention-days: 30

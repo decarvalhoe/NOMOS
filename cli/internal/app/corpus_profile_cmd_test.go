@@ -79,6 +79,56 @@ func TestCorpusFeedProfileToFile(t *testing.T) {
 	}
 }
 
+func TestCorpusFeedProfileArtifactsDirWritesReleaseGatePack(t *testing.T) {
+	root := t.TempDir()
+	writeAppTestFile(t, root, "01_referentiel/rules.md", []byte(`# Rules
+
+## Chapter
+
+### Section
+
+#### Article
+
+The agent asks one concise question.
+
+- First controlled alinea.
+- Second controlled alinea.
+`))
+	writeAppTestFile(t, root, "99_RBOK_initial_pdf/RBOK.pdf", []byte("%PDF-1.4"))
+
+	out := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := corpusProfileFeedCommand([]string{
+		"--profile", "rbok-lawbook",
+		"--root", root,
+		"--artifacts-dir", out,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected 0, got %d; stderr=%q stdout=%q", code, stderr.String(), stdout.String())
+	}
+
+	for _, name := range []string{
+		"rbok-lawbook-feed.json",
+		"rbok-lawbook-index.json",
+		"rbok-rag-metadata.json",
+		"rbok-engine-import.json",
+		"rbok-governance.json",
+		"rbok-attestation.json",
+	} {
+		if _, err := os.Stat(filepath.Join(out, name)); err != nil {
+			t.Fatalf("expected artifact %s: %v", name, err)
+		}
+	}
+
+	result, err := corpus.EvaluateReleaseGate(corpus.DefaultRBOKLawbookGateConfig(out))
+	if err != nil {
+		t.Fatalf("release gate: %v", err)
+	}
+	if result.Verdict != corpus.GatePass {
+		t.Fatalf("expected release gate pass, got %s: %+v", result.Verdict, result.Checks)
+	}
+}
+
 func TestCorpusFeedProfileFilterOutputs(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := corpusProfileFeedCommand([]string{
@@ -229,5 +279,16 @@ func TestRunCorpusDiagnose(t *testing.T) {
 	code := Run([]string{"corpus", "diagnose", "--profile", "rbok-lawbook", "--root", rbokFixture()}, &stdout, &stderr)
 	if code != 0 && code != 1 {
 		t.Fatalf("expected 0 or 1, got %d; stderr=%q", code, stderr.String())
+	}
+}
+
+func writeAppTestFile(t *testing.T, root, rel string, content []byte) {
+	t.Helper()
+	path := filepath.Join(root, filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, content, 0o644); err != nil {
+		t.Fatal(err)
 	}
 }

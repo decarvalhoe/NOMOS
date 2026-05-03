@@ -62,20 +62,20 @@ func KnownProfiles() []string {
 
 // ProfileFeedInput configures a profiled feed run.
 type ProfileFeedInput struct {
-	Profile     string     `json:"profile"`
-	CorpusRoot  string     `json:"corpus_root"`
-	MatrixPath  string     `json:"matrix_path"`
-	ManifestPath string    `json:"manifest_path"`
-	Outputs     []OutputFlag `json:"outputs"`
+	Profile      string       `json:"profile"`
+	CorpusRoot   string       `json:"corpus_root"`
+	MatrixPath   string       `json:"matrix_path"`
+	ManifestPath string       `json:"manifest_path"`
+	Outputs      []OutputFlag `json:"outputs"`
 }
 
 // ProfileFeedResult holds the profiled feed output sections.
 type ProfileFeedResult struct {
-	Profile     string                    `json:"profile"`
+	Profile     string                         `json:"profile"`
 	Sections    map[OutputFlag]json.RawMessage `json:"sections"`
-	SourceCount int                        `json:"source_count"`
-	UnitCount   int                        `json:"unit_count"`
-	Errors      []string                   `json:"errors,omitempty"`
+	SourceCount int                            `json:"source_count"`
+	UnitCount   int                            `json:"unit_count"`
+	Errors      []string                       `json:"errors,omitempty"`
 }
 
 // RunProfileFeed executes a profiled corpus feed generation.
@@ -138,7 +138,7 @@ func classifyCorpusSources(corpusRoot string) ([]RBOKSourceClassification, []str
 		classifications = append(classifications, c)
 
 		// Detect binary files by checking for null bytes in the first 512 bytes.
-		if isBinaryFile(filePath) {
+		if isBinaryFile(filePath) && blocksBinaryAdmission(c) {
 			errors = append(errors, fmt.Sprintf("blocked binary: %s", rel))
 		}
 
@@ -168,6 +168,10 @@ func isBinaryFile(filePath string) bool {
 		}
 	}
 	return false
+}
+
+func blocksBinaryAdmission(c RBOKSourceClassification) bool {
+	return c.Role == RoleLawbook || c.Role == RoleSchema
 }
 
 // IndexEntry is a single entry in the index section.
