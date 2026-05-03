@@ -1,0 +1,111 @@
+schema_version: "0.1.0"
+register_id: "fidelity-source-register"
+domain: "markdown-fidelity"
+owner: "Nomos Core Team"
+generated_at: "2026-05-03"
+status: active
+
+sources:
+  - id: SRC-FID-COMMONMARK
+    title: "CommonMark Specification"
+    authority: "CommonMark contributors"
+    version: "0.31.2"
+    url: "https://spec.commonmark.org/0.31.2/"
+    format: html
+    category: normative_specification
+    priority: critical
+    status: active
+    hash_policy: url_snapshot
+    notes: "Canonical grammar for Markdown parsing. Defines block/inline structure, precedence, and edge cases."
+    relevance: "Primary reference for fidelity engine parse correctness."
+
+  - id: SRC-FID-MDAST
+    title: "mdast — Markdown Abstract Syntax Tree"
+    authority: "unified collective"
+    version: "4.0.0"
+    url: "https://github.com/syntax-tree/mdast"
+    format: markdown
+    category: reference_implementation
+    priority: high
+    status: active
+    hash_policy: git_commit
+    notes: "AST specification for Markdown. Defines node types, fields, and parent-child relations."
+    relevance: "Reference AST model for structure-preserving roundtrip and lossless parse."
+
+  - id: SRC-FID-UNIST
+    title: "unist — Universal Syntax Tree"
+    authority: "unified collective"
+    version: "3.0.0"
+    url: "https://github.com/syntax-tree/unist"
+    format: markdown
+    category: reference_implementation
+    priority: medium
+    status: active
+    hash_policy: git_commit
+    notes: "Base interface for syntax trees. Defines Node, Parent, Literal, Position."
+    relevance: "Foundation types that mdast extends."
+
+  - id: SRC-FID-PANDOC
+    title: "Pandoc User's Guide — AST and Readers"
+    authority: "John MacFarlane"
+    version: "3.x"
+    url: "https://pandoc.org/MANUAL.html"
+    format: html
+    category: reference_implementation
+    priority: medium
+    status: active
+    hash_policy: url_snapshot
+    notes: "Pandoc AST model and Markdown reader. Alternative structural reference for complex documents."
+    relevance: "Cross-validation of parse behavior on tables, definition lists, metadata blocks."
+
+  - id: SRC-FID-TREESITTER-MD
+    title: "tree-sitter-markdown grammar"
+    authority: "tree-sitter community"
+    version: "0.2.3"
+    url: "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    format: source_code
+    category: parser_grammar
+    priority: high
+    status: active
+    hash_policy: git_commit
+    notes: "Incremental Markdown parser grammar for tree-sitter. Produces concrete syntax tree."
+    relevance: "Used by Nomos detect and atomization for AST-backed extraction."
+
+  - id: SRC-FID-GFM
+    title: "GitHub Flavored Markdown Specification"
+    authority: "GitHub"
+    version: "0.29-gfm"
+    url: "https://github.github.com/gfm/"
+    format: html
+    category: normative_extension
+    priority: high
+    status: active
+    hash_policy: url_snapshot
+    notes: "GFM extends CommonMark with tables, task lists, strikethrough, autolinks."
+    relevance: "Most corpus documents use GFM features that must be preserved."
+
+  - id: SRC-FID-GOLDMARK
+    title: "goldmark — Markdown parser for Go"
+    authority: "Yusuke Inuzuka"
+    version: "1.7.x"
+    url: "https://github.com/yuin/goldmark"
+    format: source_code
+    category: reference_implementation
+    priority: medium
+    status: active
+    hash_policy: git_commit
+    notes: "CommonMark-compliant Go parser. Extensible with GFM, footnotes, etc."
+    relevance: "Candidate library for Nomos Markdown parsing backend."
+
+  - id: SRC-FID-REMARK
+    title: "remark — Markdown processor (unified ecosystem)"
+    authority: "unified collective"
+    version: "15.x"
+    url: "https://github.com/remarkjs/remark"
+    format: source_code
+    category: reference_implementation
+    priority: low
+    status: active
+    hash_policy: git_commit
+    notes: "JavaScript Markdown processor built on mdast. Rich plugin ecosystem."
+    relevance: "Reference for plugin-based AST transformation patterns."
