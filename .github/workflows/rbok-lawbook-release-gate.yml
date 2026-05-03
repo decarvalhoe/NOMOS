@@ -38,7 +38,7 @@ jobs:
       - name: Download E2E artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: rbok-lawbook-nodes-*
+          pattern: rbok-lawbook-artifacts-*
           path: /tmp/rbok-artifacts
           merge-multiple: true
         continue-on-error: true
@@ -73,7 +73,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              body: `## Release Gate Failed\n\nThe RBOK lawbook release gate blocked closure of this issue.\n\nRequired evidence artifacts are missing or invalid:\n- Feed with document/article/paragraph/alinea nodes\n- Corpus attestation (in-toto statement)\n- Governance report (no blocking findings)\n\nRe-run the \`RBOK Lawbook E2E\` workflow and resolve any failures before closing.`
+              body: `## Release Gate Failed\n\nThe RBOK lawbook release gate blocked closure of this issue.\n\nRequired evidence artifacts are missing or invalid:\n- Feed with document, paragraph, alinea, and dynamically validated heading depth from parent chains\n- Corpus attestation (in-toto statement)\n- Governance report (no blocking findings)\n\nRe-run the \`RBOK Lawbook E2E\` workflow and resolve any failures before closing.`
             });
             await github.rest.issues.update({
               owner: context.repo.owner,

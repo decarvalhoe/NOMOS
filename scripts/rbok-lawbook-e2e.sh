@@ -6,12 +6,11 @@
 #
 # Pipeline steps (using real CLI commands):
 #   1. Read-only guard: disable push, record fingerprint.
-#   2. Scan corpus: nomos corpus scan → snapshot.json
-#   3. Generate manifest: nomos corpus manifest → source-manifest.yaml
-#   4. Generate feed: nomos corpus feed --profile rbok-lawbook → feed.json
-#   5. Generate attestation: nomos corpus attest → attestation.json
-#   6. Validate artifacts: check node types, counts.
-#   7. Post-extraction read-only verification.
+#   2. Diagnose full rbok-lawbook profile.
+#   3. Generate gate-compatible lawbook artifact pack.
+#   4. Run RBOK lawbook release gate.
+#   5. Validate artifacts: check node types, counts, attestation.
+#   6. Post-extraction read-only verification.
 
 set -euo pipefail
 
@@ -88,82 +87,65 @@ if [[ ! -x "$CLI_BIN" ]]; then
   exit 1
 fi
 
-# --- Step 3: Scan corpus ---
-echo "=== Step 3: Scan corpus ==="
-SNAPSHOT="$OUT_DIR/snapshot.json"
-"$CLI_BIN" corpus scan \
+# --- Step 3: Diagnose full profile ---
+echo "=== Step 3: Diagnose corpus profile ==="
+DIAGNOSIS="$OUT_DIR/diagnosis.json"
+"$CLI_BIN" corpus diagnose \
+  --profile "$PROFILE" \
   --root "$CORPUS_DIR" \
-  --out "$SNAPSHOT" \
-  --ext .md \
-  --allow "**/*.md"
+  --format json > "$DIAGNOSIS"
 
-echo "Snapshot: $SNAPSHOT"
+echo "Diagnosis: $DIAGNOSIS"
 
-# --- Step 4: Generate manifest ---
-echo "=== Step 4: Generate manifest ==="
-MANIFEST="$OUT_DIR/source-manifest.yaml"
-"$CLI_BIN" corpus manifest \
-  --snapshot "$SNAPSHOT" \
-  --out "$MANIFEST" \
-  --domain "lawbook" \
-  --owner "RBOK Corpus Team" \
-  --id-prefix "RBOK"
-
-echo "Manifest: $MANIFEST"
-
-# --- Step 5: Generate feed ---
-echo "=== Step 5: Generate feed (profile: $PROFILE) ==="
-FEED="$OUT_DIR/feed.json"
+# --- Step 4: Generate lawbook artifact pack ---
+echo "=== Step 4: Generate lawbook artifact pack (profile: $PROFILE) ==="
+PACK="$OUT_DIR/artifact-pack.json"
 "$CLI_BIN" corpus feed \
+  --profile "$PROFILE" \
   --root "$CORPUS_DIR" \
-  --snapshot "$SNAPSHOT" \
-  --manifest "$MANIFEST" \
+  --artifacts-dir "$OUT_DIR" \
   --corpus-id "$CORPUS_ID" \
   --project-id "$PROJECT_ID" \
-  --out "$FEED"
+  --out "$PACK"
 
-echo "Feed: $FEED"
+echo "Artifact pack: $PACK"
 
-# --- Step 6: Generate attestation ---
-echo "=== Step 6: Generate attestation ==="
-ATTESTATION="$OUT_DIR/attestation.json"
-"$CLI_BIN" corpus attest \
-  --snapshot "$SNAPSHOT" \
-  --corpus-id "$CORPUS_ID" \
-  --project-id "$PROJECT_ID" \
-  --verdict "corpus_admissible" \
-  --confidence "high" \
-  --out "$ATTESTATION"
+# --- Step 5: Run release gate ---
+echo "=== Step 5: Run release gate ==="
+(cd "$ROOT_DIR/cli" && go run ./internal/corpus/cmd/release-gate --artifacts "$OUT_DIR" --profile "$PROFILE")
 
-echo "Attestation: $ATTESTATION"
-
-# --- Step 7: Validate artifacts ---
-echo "=== Step 7: Validate artifacts ==="
-artifact_count="$(find "$OUT_DIR" -type f -name '*.json' -o -name '*.yaml' | wc -l)"
+# --- Step 6: Validate artifacts ---
+echo "=== Step 6: Validate artifacts ==="
+artifact_count="$(find "$OUT_DIR" -type f \( -name '*.json' -o -name '*.yaml' \) | wc -l)"
 echo "Total artifacts: $artifact_count"
 
-if [[ "$artifact_count" -lt 3 ]]; then
-  echo "FAIL: Expected at least 3 artifacts (snapshot, feed, attestation), got $artifact_count"
+if [[ "$artifact_count" -lt 6 ]]; then
+  echo "FAIL: Expected at least 6 artifacts, got $artifact_count"
   exit 1
 fi
 
-# Validate feed has nodes
-python3 - "$FEED" <<'PY'
+for f in rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json; do
+  if [[ ! -f "$OUT_DIR/$f" ]]; then
+    echo "FAIL: missing expected artifact: $f"
+    exit 1
+  fi
+  echo "  ok: $f ($(wc -c < "$OUT_DIR/$f") bytes)"
+done
+
+# Validate lawbook feed has nodes.
+python3 - "$OUT_DIR/rbok-lawbook-feed.json" <<'PY'
 import json, sys, pathlib
 feed_path = sys.argv[1]
 data = json.loads(pathlib.Path(feed_path).read_text(encoding="utf-8"))
 
-# Accept both flat feed format and assembly format
-nodes = data.get("nodes", [])
-if not nodes and "feed" in data:
-    nodes = data["feed"].get("nodes", [])
-if not nodes and "units" in data:
-    nodes = data["units"]
+nodes = list(data.get("nodes", []))
+for feed in data.get("feeds", []):
+    nodes.extend(feed.get("nodes", []))
 
 print(f"Feed nodes: {len(nodes)}")
 if len(nodes) == 0:
-    # Non-fatal for empty corpus; warn but don't fail
-    print("WARNING: Feed contains no nodes (corpus may be empty or not yet populated)")
+    print("FAIL: Feed contains no nodes")
+    sys.exit(1)
 else:
     from collections import Counter
     counts = Counter()
@@ -174,8 +156,8 @@ else:
         print(f"  {t}: {counts[t]}")
 PY
 
-# --- Step 8: Post-extraction read-only check ---
-echo "=== Step 8: Read-only verification ==="
+# --- Step 7: Post-extraction read-only check ---
+echo "=== Step 7: Read-only verification ==="
 
 FINGERPRINT_AFTER="$(mktemp)"
 find "$CORPUS_DIR" -type f -exec sha256sum {} \; | sort > "$FINGERPRINT_AFTER"
@@ -195,7 +177,7 @@ echo "=== E2E pipeline complete ==="
 echo "Profile:      $PROFILE"
 echo "Output:       $OUT_DIR"
 echo "Artifacts:    $artifact_count"
-echo "  snapshot:     $(basename "$SNAPSHOT")"
-echo "  manifest:     $(basename "$MANIFEST")"
-echo "  feed:         $(basename "$FEED")"
-echo "  attestation:  $(basename "$ATTESTATION")"
+echo "  diagnosis:    $(basename "$DIAGNOSIS")"
+echo "  pack:         $(basename "$PACK")"
+echo "  feed:         rbok-lawbook-feed.json"
+echo "  attestation:  rbok-attestation.json"

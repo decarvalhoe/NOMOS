@@ -12,9 +12,9 @@ import (
 type ReleaseGateVerdict string
 
 const (
-	GatePass   ReleaseGateVerdict = "pass"
-	GateFail   ReleaseGateVerdict = "fail"
-	GateWarn   ReleaseGateVerdict = "warn"
+	GatePass ReleaseGateVerdict = "pass"
+	GateFail ReleaseGateVerdict = "fail"
+	GateWarn ReleaseGateVerdict = "warn"
 )
 
 // ReleaseGateCheck is a single pass/fail check within the gate.
@@ -26,22 +26,23 @@ type ReleaseGateCheck struct {
 
 // ReleaseGateResult holds the full release gate evaluation.
 type ReleaseGateResult struct {
-	Profile  string              `json:"profile"`
-	Verdict  ReleaseGateVerdict  `json:"verdict"`
-	Checks   []ReleaseGateCheck  `json:"checks"`
-	Blocking int                 `json:"blocking"`
-	Warnings int                 `json:"warnings"`
+	Profile  string             `json:"profile"`
+	Verdict  ReleaseGateVerdict `json:"verdict"`
+	Checks   []ReleaseGateCheck `json:"checks"`
+	Blocking int                `json:"blocking"`
+	Warnings int                `json:"warnings"`
 }
 
 // ReleaseGateConfig specifies what the gate expects to find.
 type ReleaseGateConfig struct {
-	Profile            string
-	ArtifactsDir       string
-	RequiredNodeTypes  []LawbookNodeType
-	RequireFeed        bool
-	RequireAttestation bool
-	RequireGovernance  bool
-	MaxBlockingFindings int
+	Profile                string
+	ArtifactsDir           string
+	RequiredNodeTypes      []LawbookNodeType
+	RequireStructuralDepth bool
+	RequireFeed            bool
+	RequireAttestation     bool
+	RequireGovernance      bool
+	MaxBlockingFindings    int
 }
 
 // DefaultRBOKLawbookGateConfig returns the default gate config for the
@@ -52,14 +53,14 @@ func DefaultRBOKLawbookGateConfig(artifactsDir string) ReleaseGateConfig {
 		ArtifactsDir: artifactsDir,
 		RequiredNodeTypes: []LawbookNodeType{
 			NodeDocument,
-			NodeArticle,
 			NodeParagraph,
 			NodeAlinea,
 		},
-		RequireFeed:         true,
-		RequireAttestation:  true,
-		RequireGovernance:   true,
-		MaxBlockingFindings: 0,
+		RequireStructuralDepth: true,
+		RequireFeed:            true,
+		RequireAttestation:     true,
+		RequireGovernance:      true,
+		MaxBlockingFindings:    0,
 	}
 }
 
@@ -85,8 +86,8 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 	}
 
 	// Check 2: Required node types present in feed files.
-	if len(config.RequiredNodeTypes) > 0 {
-		checks = append(checks, checkNodeTypes(absDir, config.RequiredNodeTypes))
+	if len(config.RequiredNodeTypes) > 0 || config.RequireStructuralDepth {
+		checks = append(checks, checkNodeTypes(absDir, config.RequiredNodeTypes, config.RequireStructuralDepth))
 	}
 
 	// Check 3: Attestation present.
@@ -126,14 +127,7 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 }
 
 func checkFeedArtifacts(dir string) ReleaseGateCheck {
-	feedFiles, _ := filepath.Glob(filepath.Join(dir, "*-feed.json"))
-	if len(feedFiles) == 0 {
-		feedFiles, _ = filepath.Glob(filepath.Join(dir, "*.feed.json"))
-	}
-	if len(feedFiles) == 0 {
-		// Also try plain JSON files that contain feed data.
-		feedFiles = findJSONFilesWithKey(dir, "nodes")
-	}
+	feedFiles := findFeedArtifactFiles(dir)
 
 	if len(feedFiles) == 0 {
 		return ReleaseGateCheck{
@@ -165,11 +159,13 @@ func checkFeedArtifacts(dir string) ReleaseGateCheck {
 	}
 }
 
-func checkNodeTypes(dir string, required []LawbookNodeType) ReleaseGateCheck {
+func checkNodeTypes(dir string, required []LawbookNodeType, requireStructuralDepth bool) ReleaseGateCheck {
 	found := map[LawbookNodeType]int{}
-	jsonFiles, _ := filepath.Glob(filepath.Join(dir, "*.json"))
+	feedFiles := findFeedArtifactFiles(dir)
+	var nodes []releaseGateNode
 
-	for _, f := range jsonFiles {
+	for _, f := range feedFiles {
+		nodes = append(nodes, extractReleaseGateNodes(f)...)
 		types := extractNodeTypes(f)
 		for t, n := range types {
 			found[t] += n
@@ -181,6 +177,12 @@ func checkNodeTypes(dir string, required []LawbookNodeType) ReleaseGateCheck {
 		if found[req] == 0 {
 			missing = append(missing, string(req))
 		}
+	}
+	structuralDetail := ""
+	if requireStructuralDepth {
+		var structuralMissing []string
+		structuralDetail, structuralMissing = validateStructuralDepth(nodes)
+		missing = append(missing, structuralMissing...)
 	}
 
 	if len(missing) > 0 {
@@ -194,6 +196,9 @@ func checkNodeTypes(dir string, required []LawbookNodeType) ReleaseGateCheck {
 	var parts []string
 	for _, req := range required {
 		parts = append(parts, fmt.Sprintf("%s=%d", req, found[req]))
+	}
+	if structuralDetail != "" {
+		parts = append(parts, structuralDetail)
 	}
 	return ReleaseGateCheck{
 		Name:    "node_types",
@@ -275,6 +280,26 @@ func checkGovernance(dir string, maxBlocking int) ReleaseGateCheck {
 
 // --- helpers ---
 
+type releaseGateNode struct {
+	NodeID     string          `json:"node_id"`
+	DocumentID string          `json:"document_id"`
+	NodeType   LawbookNodeType `json:"node_type"`
+	ParentID   string          `json:"parent_id"`
+	Depth      int             `json:"depth"`
+}
+
+func findFeedArtifactFiles(dir string) []string {
+	feedFiles, _ := filepath.Glob(filepath.Join(dir, "*-feed.json"))
+	if len(feedFiles) == 0 {
+		feedFiles, _ = filepath.Glob(filepath.Join(dir, "*.feed.json"))
+	}
+	if len(feedFiles) == 0 {
+		// Also try plain JSON files that contain feed data.
+		feedFiles = findJSONFilesWithKey(dir, "nodes")
+	}
+	return feedFiles
+}
+
 func findJSONFilesWithKey(dir string, key string) []string {
 	allJSON, _ := filepath.Glob(filepath.Join(dir, "*.json"))
 	var result []string
@@ -295,39 +320,122 @@ func findJSONFilesWithKey(dir string, key string) []string {
 }
 
 func countNodesInFile(path string) int {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return 0
-	}
-	var doc struct {
-		Nodes []json.RawMessage `json:"nodes"`
-	}
-	if err := json.Unmarshal(data, &doc); err != nil {
-		return 0
-	}
-	return len(doc.Nodes)
+	return len(extractReleaseGateNodes(path))
 }
 
 func extractNodeTypes(path string) map[LawbookNodeType]int {
+	counts := map[LawbookNodeType]int{}
+	for _, n := range extractReleaseGateNodes(path) {
+		if n.NodeType != "" {
+			counts[n.NodeType]++
+		}
+	}
+	return counts
+}
+
+func extractReleaseGateNodes(path string) []releaseGateNode {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
 	var doc struct {
-		Nodes []struct {
-			NodeType string `json:"node_type"`
-		} `json:"nodes"`
+		Nodes []releaseGateNode `json:"nodes"`
+		Feeds []struct {
+			Nodes []releaseGateNode `json:"nodes"`
+		} `json:"feeds"`
 	}
 	if err := json.Unmarshal(data, &doc); err != nil {
 		return nil
 	}
-	counts := map[LawbookNodeType]int{}
-	for _, n := range doc.Nodes {
-		if n.NodeType != "" {
-			counts[LawbookNodeType(n.NodeType)]++
+	nodes := append([]releaseGateNode{}, doc.Nodes...)
+	for _, feed := range doc.Feeds {
+		nodes = append(nodes, feed.Nodes...)
+	}
+	return nodes
+}
+
+func validateStructuralDepth(nodes []releaseGateNode) (string, []string) {
+	byID := map[string]releaseGateNode{}
+	for _, n := range nodes {
+		if n.NodeID != "" {
+			byID[n.NodeID] = n
 		}
 	}
-	return counts
+
+	depthCounts := map[int]int{}
+	structuralCount := 0
+	var failures []string
+	for _, n := range nodes {
+		if !isStructuralNodeType(n.NodeType) {
+			continue
+		}
+		structuralCount++
+		depth, err := parentChainDepth(n, byID)
+		if err != nil {
+			failures = append(failures, err.Error())
+			continue
+		}
+		depthCounts[depth]++
+	}
+
+	if structuralCount == 0 {
+		return "", []string{"no structural heading nodes found"}
+	}
+
+	maxDepth := 0
+	for depth := range depthCounts {
+		if depth > maxDepth {
+			maxDepth = depth
+		}
+	}
+	if maxDepth == 0 {
+		failures = append(failures, "structural heading depth could not be resolved")
+	}
+	for depth := 1; depth <= maxDepth; depth++ {
+		if depthCounts[depth] == 0 {
+			failures = append(failures, fmt.Sprintf("missing structural level depth %d before max depth %d", depth, maxDepth))
+		}
+	}
+
+	var parts []string
+	for depth := 1; depth <= maxDepth; depth++ {
+		parts = append(parts, fmt.Sprintf("d%d=%d", depth, depthCounts[depth]))
+	}
+	return fmt.Sprintf("structural_depth=max:%d %s", maxDepth, strings.Join(parts, ", ")), failures
+}
+
+func parentChainDepth(node releaseGateNode, byID map[string]releaseGateNode) (int, error) {
+	if node.ParentID == "" {
+		return 0, fmt.Errorf("structural node %s has no parent", node.NodeID)
+	}
+	depth := 0
+	seen := map[string]bool{node.NodeID: true}
+	current := node
+	for current.ParentID != "" {
+		parent, ok := byID[current.ParentID]
+		if !ok {
+			return 0, fmt.Errorf("structural node %s references missing parent %s", node.NodeID, current.ParentID)
+		}
+		if seen[parent.NodeID] {
+			return 0, fmt.Errorf("structural node %s has a parent cycle at %s", node.NodeID, parent.NodeID)
+		}
+		seen[parent.NodeID] = true
+		depth++
+		if parent.NodeType == NodeDocument {
+			return depth, nil
+		}
+		current = parent
+	}
+	return 0, fmt.Errorf("structural node %s parent chain does not reach a document", node.NodeID)
+}
+
+func isStructuralNodeType(t LawbookNodeType) bool {
+	switch t {
+	case NodeChapter, NodeSection, NodeSubsection, NodeArticle:
+		return true
+	default:
+		return false
+	}
 }
 
 func isValidAttestation(path string) bool {

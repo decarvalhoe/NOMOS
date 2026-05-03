@@ -248,6 +248,29 @@ func TestDiagnoseProfileBlockedBinary(t *testing.T) {
 	assertEqual(t, "blocked", v.Verdict)
 }
 
+func TestDiagnoseProfileAllowsDeclaredReferenceDerivedAndOutOfScopeBinaries(t *testing.T) {
+	dir := makeTestCorpus(t)
+	bin := make([]byte, 64)
+	bin[0] = 0x00
+	writeTestCorpusFile(t, dir, "99_RBOK_initial_pdf/RBOK.docx", bin)
+	writeTestCorpusFile(t, dir, "03_parcours/generated/workbooks/parcours.docx", bin)
+	writeTestCorpusFile(t, dir, "98_schémas/Archive/realisons-architecture-parcours.docx", bin)
+	writeTestCorpusFile(t, dir, ".DS_Store", bin)
+
+	v, err := DiagnoseProfile(ProfileRBOKLawbook, dir)
+	if err != nil {
+		t.Fatalf("diagnose: %v", err)
+	}
+	if v.Verdict == "blocked" {
+		t.Fatalf("declared non-lawbook binaries must not block admission: %+v", v)
+	}
+	for _, blocker := range v.Blockers {
+		if contains(blocker, "blocked binary") {
+			t.Fatalf("unexpected binary blocker for declared non-lawbook binary: %v", v.Blockers)
+		}
+	}
+}
+
 func TestDiagnoseProfilePartialNoReference(t *testing.T) {
 	dir := t.TempDir()
 	writeTestCorpusFile(t, dir, "00_meta/glossary.yaml", []byte("terms: []\n"))

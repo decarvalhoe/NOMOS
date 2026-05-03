@@ -9,21 +9,21 @@ import (
 type SourceRole string
 
 const (
-	RoleLawbook      SourceRole = "lawbook"
-	RoleSchema       SourceRole = "schema"
-	RoleReference    SourceRole = "reference"
-	RoleDerived      SourceRole = "derived"
-	RoleOutOfScope   SourceRole = "out_of_scope"
+	RoleLawbook    SourceRole = "lawbook"
+	RoleSchema     SourceRole = "schema"
+	RoleReference  SourceRole = "reference"
+	RoleDerived    SourceRole = "derived"
+	RoleOutOfScope SourceRole = "out_of_scope"
 )
 
 // RBOKSourceClassification is the policy result for a single RBOK source file.
 type RBOKSourceClassification struct {
-	Path        string   `json:"path"`
-	Priority    string   `json:"priority"`
-	Status      string   `json:"status"`
+	Path        string     `json:"path"`
+	Priority    string     `json:"priority"`
+	Status      string     `json:"status"`
 	Role        SourceRole `json:"role"`
-	AllowedUses []string `json:"allowed_uses"`
-	Reason      string   `json:"reason"`
+	AllowedUses []string   `json:"allowed_uses"`
+	Reason      string     `json:"reason"`
 }
 
 // ClassifyRBOKSource applies the RBOK lawbook source policy to a file path.
@@ -59,6 +59,18 @@ func ClassifyRBOKSource(filePath string) RBOKSourceClassification {
 		}
 	}
 
+	// Reference: archived and initial source documents.
+	if isReference(lower, parts) {
+		return RBOKSourceClassification{
+			Path:        filePath,
+			Priority:    "reference",
+			Status:      "active",
+			Role:        RoleReference,
+			AllowedUses: []string{"human_review_only", "citation_internal"},
+			Reason:      "archived, original, or initial source document",
+		}
+	}
+
 	// Schema: CUE/JSON schemas in 98_schemas.
 	if isSchema(parts) {
 		return RBOKSourceClassification{
@@ -68,18 +80,6 @@ func ClassifyRBOKSource(filePath string) RBOKSourceClassification {
 			Role:        RoleSchema,
 			AllowedUses: []string{"structured_contract", "citation_internal"},
 			Reason:      "CUE/JSON schema from 98_schemas",
-		}
-	}
-
-	// Reference: original PDFs and initial source documents.
-	if isReference(lower, parts) {
-		return RBOKSourceClassification{
-			Path:        filePath,
-			Priority:    "reference",
-			Status:      "active",
-			Role:        RoleReference,
-			AllowedUses: []string{"human_review_only", "citation_internal"},
-			Reason:      "original PDF or initial source document",
 		}
 	}
 
@@ -129,12 +129,19 @@ func isSchema(parts []string) bool {
 		return false
 	}
 	top := strings.ToLower(parts[0])
-	return strings.HasPrefix(top, "98_schemas") || strings.HasPrefix(top, "98_schema")
+	return strings.HasPrefix(top, "98_schemas") || strings.HasPrefix(top, "98_schema") ||
+		strings.HasPrefix(top, "98_schémas") || strings.HasPrefix(top, "98_schéma")
 }
 
 func isReference(lower string, parts []string) bool {
 	if len(parts) == 0 {
 		return false
+	}
+	for _, p := range parts {
+		switch strings.ToLower(p) {
+		case "archive", "archives", "archived":
+			return true
+		}
 	}
 	top := strings.ToLower(parts[0])
 	if strings.HasPrefix(top, "99_rbok") || strings.HasPrefix(top, "99_initial") {

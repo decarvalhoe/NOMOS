@@ -106,16 +106,20 @@ type Feed struct {
 
 // FeedInput provides the raw data for feed generation.
 type FeedInput struct {
-	MatrixYAML     []byte
-	ManifestYAML   []byte
-	Root           string
-	Snapshot       *Snapshot
-	Lockfile       *Lockfile
-	CorpusID       string
-	ProjectID      string
-	ScannerVersion string
-	Policy         *Policy
-	GeneratedAt    time.Time
+	MatrixYAML            []byte
+	ManifestYAML          []byte
+	Root                  string
+	Snapshot              *Snapshot
+	Lockfile              *Lockfile
+	CorpusID              string
+	ProjectID             string
+	ScannerVersion        string
+	AttestationScope      string
+	AttestationVerdict    string
+	AttestationConfidence string
+	AttestationDiagnosis  *DiagnoseVerdict
+	Policy                *Policy
+	GeneratedAt           time.Time
 }
 
 // matrixFile mirrors the canonical-matrix YAML for parsing.
@@ -245,15 +249,20 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 			for _, source := range input.Snapshot.Sources {
 				files = append(files, source.Path+" "+source.Hash)
 			}
+			attestationVerdict := firstNonEmpty(input.AttestationVerdict, VerdictAdmissible)
+			attestationConfidence := firstNonEmpty(input.AttestationConfidence, "high")
+			attestationScope := firstNonEmpty(input.AttestationScope, "restricted_snapshot")
 			statement, err := GenerateCorpusAttestation(CorpusAttestationOptions{
 				CorpusID:       input.CorpusID,
 				ProjectID:      input.ProjectID,
 				ScannerVersion: input.ScannerVersion,
-				Verdict:        "corpus_admissible",
-				Confidence:     "high",
+				Scope:          attestationScope,
+				Verdict:        attestationVerdict,
+				Confidence:     attestationConfidence,
 				FilesScanned:   input.Snapshot.TotalFiles,
 				UnitsExtracted: len(units),
 				ScannedFiles:   files,
+				Diagnosis:      input.AttestationDiagnosis,
 				Policy:         input.Policy,
 				Now:            ts,
 				Metadata: map[string]any{
