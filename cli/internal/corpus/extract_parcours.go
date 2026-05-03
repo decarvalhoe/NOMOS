@@ -3,6 +3,7 @@ package corpus
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -118,8 +119,8 @@ func ExtractParcours(path string) (ExtractResult, error) {
 
 // ExtractParcoursFromBytes extracts canonical units from parcours YAML bytes.
 func ExtractParcoursFromBytes(data []byte) (ExtractResult, error) {
-	var file ParcoursFile
-	if err := yaml.Unmarshal(data, &file); err != nil {
+	file, err := decodeParcoursYAML(data)
+	if err != nil {
 		return ExtractResult{}, fmt.Errorf("parse parcours: %w", err)
 	}
 
@@ -204,6 +205,85 @@ func ExtractParcoursFromBytes(data []byte) (ExtractResult, error) {
 		TotalUnits:   len(units),
 		Units:        units,
 	}, nil
+}
+
+func decodeParcoursYAML(data []byte) (ParcoursFile, error) {
+	var root yaml.Node
+	if err := yaml.Unmarshal(data, &root); err != nil {
+		normalized := quoteBracketJoinedTemplateScalars(data)
+		if string(normalized) == string(data) {
+			return ParcoursFile{}, err
+		}
+		if retryErr := yaml.Unmarshal(normalized, &root); retryErr != nil {
+			return ParcoursFile{}, err
+		}
+	}
+	normalizeSingleScalarSequences(&root)
+
+	var file ParcoursFile
+	if err := root.Decode(&file); err != nil {
+		return ParcoursFile{}, err
+	}
+	return file, nil
+}
+
+func quoteBracketJoinedTemplateScalars(data []byte) []byte {
+	lines := strings.Split(string(data), "\n")
+	changed := false
+	for i, line := range lines {
+		colon := strings.Index(line, ":")
+		if colon < 0 {
+			continue
+		}
+		afterColon := line[colon+1:]
+		trimmedLeft := strings.TrimLeft(afterColon, " \t")
+		if !strings.HasPrefix(trimmedLeft, "[") {
+			continue
+		}
+
+		value, comment := splitInlineComment(trimmedLeft)
+		closeBracket := strings.Index(value, "]")
+		if closeBracket < 0 {
+			continue
+		}
+		if strings.TrimSpace(value[closeBracket+1:]) == "" {
+			continue
+		}
+
+		padding := afterColon[:len(afterColon)-len(trimmedLeft)]
+		lines[i] = line[:colon+1] + padding + strconv.Quote(strings.TrimSpace(value)) + comment
+		changed = true
+	}
+	if !changed {
+		return data
+	}
+	return []byte(strings.Join(lines, "\n"))
+}
+
+func splitInlineComment(value string) (string, string) {
+	index := strings.Index(value, " #")
+	if index < 0 {
+		return value, ""
+	}
+	return strings.TrimRight(value[:index], " \t"), value[index:]
+}
+
+func normalizeSingleScalarSequences(node *yaml.Node) {
+	if node == nil {
+		return
+	}
+	if node.Kind == yaml.SequenceNode && len(node.Content) == 1 && node.Content[0].Kind == yaml.ScalarNode {
+		child := node.Content[0]
+		node.Kind = yaml.ScalarNode
+		node.Tag = child.Tag
+		node.Value = child.Value
+		node.Style = child.Style
+		node.Content = nil
+		return
+	}
+	for _, child := range node.Content {
+		normalizeSingleScalarSequences(child)
+	}
 }
 
 func makeParcoursUnitID(parcoursID string, etapeID string, critereID string) string {

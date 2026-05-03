@@ -182,6 +182,106 @@ func TestRunProfileFeedTraceabilityMatrixCoversEveryNode(t *testing.T) {
 	}
 }
 
+func TestRunProfileFeedAtomizesParcoursTemplatesOutsideRuntimeBinding(t *testing.T) {
+	dir := t.TempDir()
+	writeTestCorpusFile(t, dir, "00_meta/parcours-template-leger.yaml", []byte(`
+parcours:
+  code: PAR_TEMPLATE_LEGER
+  name: Template parcours leger
+  modules:
+    - code: MOD_TEMPLATE_01
+      name: Module template
+      type: conversational
+      ai_instructions: Poser uniquement la question du step courant.
+      objectives:
+        - key: objectif-template
+          titre: Objectif template
+          questions:
+            - key: question-template
+              label: Quelle est la prochaine action ?
+              type: text
+              help_text: Une seule question, concise.
+`))
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputFeed},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+	for _, warning := range result.Warnings {
+		if strings.Contains(warning, "parcours-template-leger.yaml") {
+			t.Fatalf("template should be atomized, got warning: %s", warning)
+		}
+	}
+
+	var assembly MultiFeedAssembly
+	if err := json.Unmarshal(result.Sections[OutputFeed], &assembly); err != nil {
+		t.Fatalf("unmarshal feed assembly: %v", err)
+	}
+	if countNodesBySource(assembly, "00_meta/parcours-template-leger.yaml") < 2 {
+		t.Fatalf("expected template document and runtime units, got assembly %+v", assembly)
+	}
+}
+
+func TestRunProfileFeedAtomizesAIBehaviorConfigJSON(t *testing.T) {
+	dir := t.TempDir()
+	writeTestCorpusFile(t, dir, "03_parcours/ai-config/ai-behavior-config-strict.json", []byte(`{
+  "schemaVersion": 1,
+  "scope": "global",
+  "version": 2,
+  "fields": {
+    "responseFormatOverride": {
+      "value": "MAXIMUM 60 MOTS. UNE SEULE question par message.",
+      "isOverride": false,
+      "source": "default"
+    },
+    "maxResponseWords": {
+      "value": "60",
+      "isOverride": false,
+      "source": "default"
+    }
+  }
+}`))
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputFeed},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+	for _, warning := range result.Warnings {
+		if strings.Contains(warning, "ai-behavior-config-strict.json") {
+			t.Fatalf("AI behavior config should be atomized, got warning: %s", warning)
+		}
+	}
+
+	var assembly MultiFeedAssembly
+	if err := json.Unmarshal(result.Sections[OutputFeed], &assembly); err != nil {
+		t.Fatalf("unmarshal feed assembly: %v", err)
+	}
+	nodes := nodesBySource(assembly, "03_parcours/ai-config/ai-behavior-config-strict.json")
+	if len(nodes) != 3 {
+		t.Fatalf("expected document plus two AI behavior fields, got %d", len(nodes))
+	}
+	foundResponseFormat := false
+	for _, node := range nodes {
+		if node.Metadata["ai_behavior_field"] == "responseFormatOverride" {
+			foundResponseFormat = true
+			if !strings.Contains(node.Text, "MAXIMUM 60 MOTS") {
+				t.Fatalf("expected response format text in node, got %q", node.Text)
+			}
+		}
+	}
+	if !foundResponseFormat {
+		t.Fatal("expected responseFormatOverride node")
+	}
+}
+
 func TestRunProfileFeedTraceabilityOrderIsDeterministic(t *testing.T) {
 	dir := makeRealisonsBusinessFixture(t)
 
@@ -204,6 +304,22 @@ func TestRunProfileFeedTraceabilityOrderIsDeterministic(t *testing.T) {
 	if !bytes.Equal(first.Sections[OutputTraceabilityMatrix], second.Sections[OutputTraceabilityMatrix]) {
 		t.Fatal("traceability matrix changed between identical runs")
 	}
+}
+
+func countNodesBySource(assembly MultiFeedAssembly, sourcePath string) int {
+	return len(nodesBySource(assembly, sourcePath))
+}
+
+func nodesBySource(assembly MultiFeedAssembly, sourcePath string) []LawbookNode {
+	var nodes []LawbookNode
+	for _, feed := range assembly.Feeds {
+		for _, node := range feed.Nodes {
+			if node.SourcePath == sourcePath {
+				nodes = append(nodes, node)
+			}
+		}
+	}
+	return nodes
 }
 
 func TestRunProfileFeedSelectedOutputs(t *testing.T) {

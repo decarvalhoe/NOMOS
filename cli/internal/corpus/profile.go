@@ -407,10 +407,10 @@ func buildProfileArtifacts(profileName string, corpusRoot string, classification
 			}
 			feeds = append(feeds, feed)
 
-		case (ext == ".yaml" || ext == ".yml") && c.SourceClass == "runtime_binding":
+		case ext == ".yaml" || ext == ".yml":
 			feed, err := buildParcoursProfileFeed(corpusRoot, c, generatedAt)
 			if err != nil {
-				messages = append(messages, fmt.Sprintf("atomize parcours %s: %v", c.Path, err))
+				messages = append(messages, fmt.Sprintf("structured source not atomized by rbok-lawbook profile yet: %s", c.Path))
 				continue
 			}
 			if feed.NodeCount == 0 {
@@ -419,7 +419,19 @@ func buildProfileArtifacts(profileName string, corpusRoot string, classification
 			}
 			feeds = append(feeds, feed)
 
-		case ext == ".yaml" || ext == ".yml" || ext == ".json" || ext == ".cue":
+		case ext == ".json" && isAIBehaviorConfigPath(c.Path):
+			feed, err := buildAIBehaviorConfigProfileFeed(corpusRoot, c, generatedAt)
+			if err != nil {
+				messages = append(messages, fmt.Sprintf("atomize AI behavior config %s: %v", c.Path, err))
+				continue
+			}
+			if feed.NodeCount == 0 {
+				messages = append(messages, fmt.Sprintf("non-atomized AI behavior config: %s", c.Path))
+				continue
+			}
+			feeds = append(feeds, feed)
+
+		case ext == ".json" || ext == ".cue":
 			messages = append(messages, fmt.Sprintf("structured source not atomized by rbok-lawbook profile yet: %s", c.Path))
 		}
 	}
@@ -577,6 +589,153 @@ func buildParcoursProfileFeed(corpusRoot string, c RBOKSourceClassification, gen
 		return LawbookFeed{}, fmt.Errorf("validate feed: %s", strings.Join(errs, "; "))
 	}
 	return feed, nil
+}
+
+type aiBehaviorConfig struct {
+	SchemaVersion int                        `json:"schemaVersion"`
+	ExportedAt    string                     `json:"exportedAt"`
+	Scope         string                     `json:"scope"`
+	Version       int                        `json:"version"`
+	Fields        map[string]aiBehaviorField `json:"fields"`
+}
+
+type aiBehaviorField struct {
+	Value      any    `json:"value"`
+	IsOverride bool   `json:"isOverride"`
+	Source     string `json:"source"`
+}
+
+func buildAIBehaviorConfigProfileFeed(corpusRoot string, c RBOKSourceClassification, generatedAt string) (LawbookFeed, error) {
+	absPath := filepath.Join(corpusRoot, filepath.FromSlash(c.Path))
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return LawbookFeed{}, err
+	}
+	var config aiBehaviorConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return LawbookFeed{}, err
+	}
+	if len(config.Fields) == 0 {
+		return LawbookFeed{}, fmt.Errorf("missing fields")
+	}
+	hash, _, err := hashFile(absPath)
+	if err != nil {
+		return LawbookFeed{}, err
+	}
+
+	sourceHash := "sha256:" + hash
+	docID := documentIDForPath(c.Path)
+	slug := documentSlugForPath(c.Path)
+	nodes := []LawbookNode{
+		{
+			NodeID:       docID,
+			DocumentID:   docID,
+			NodeType:     NodeDocument,
+			CanonicalRef: "rbok/ai-behavior/" + slug,
+			DisplayRef:   "AI behavior config: " + filepath.Base(c.Path),
+			Depth:        NodeDocument.Depth(),
+			OrdinalPath:  "1",
+			SourcePath:   c.Path,
+			SourceHash:   sourceHash,
+			Status:       statusForClassification(c),
+			Priority:     priorityForClassification(c),
+			Domain:       domainForClassification(c),
+			Title:        filepath.Base(c.Path),
+			Text:         fmt.Sprintf("AI behavior configuration scope=%s version=%d", firstNonEmpty(config.Scope, "unspecified"), config.Version),
+			Metadata: map[string]any{
+				"schema_version": config.SchemaVersion,
+				"exported_at":    config.ExportedAt,
+				"scope":          config.Scope,
+				"version":        config.Version,
+			},
+		},
+	}
+	applySourceClassification(&nodes[0], c)
+	nodes[0].Locator = locatorForNode(c.Path, nodes[0])
+
+	keys := make([]string, 0, len(config.Fields))
+	for key := range config.Fields {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for i, key := range keys {
+		field := config.Fields[key]
+		ordinal := fmt.Sprintf("1.%d", i+1)
+		node := LawbookNode{
+			NodeID:       uniqueNodeID(docID+"-FIELD-"+key, i),
+			DocumentID:   docID,
+			NodeType:     NodeArticle,
+			CanonicalRef: fmt.Sprintf("rbok/ai-behavior/%s/field/%s", slug, lawbookSlugify(key)),
+			DisplayRef:   "AI behavior field: " + key,
+			Depth:        NodeArticle.Depth(),
+			OrdinalPath:  ordinal,
+			SourcePath:   c.Path,
+			SourceHash:   sourceHash,
+			Status:       statusForClassification(c),
+			Priority:     priorityForClassification(c),
+			Domain:       domainForClassification(c),
+			Title:        key,
+			Text:         aiBehaviorFieldText(field.Value),
+			ParentID:     docID,
+			Metadata: map[string]any{
+				"ai_behavior_field": key,
+				"is_override":       field.IsOverride,
+				"source":            field.Source,
+				"scope":             config.Scope,
+				"version":           config.Version,
+			},
+		}
+		if strings.TrimSpace(node.Text) == "" {
+			node.Text = key
+		}
+		applySourceClassification(&node, c)
+		node.Locator = locatorForNode(c.Path, node)
+		if errs := ValidateNode(node); len(errs) > 0 {
+			return LawbookFeed{}, fmt.Errorf("validate AI behavior node %s: %s", node.NodeID, strings.Join(errs, "; "))
+		}
+		nodes = append(nodes, node)
+	}
+
+	feed := LawbookFeed{
+		SchemaVersion: "0.1.0",
+		FeedID:        feedIDForPath(c.Path),
+		DocumentID:    docID,
+		Domain:        domainForClassification(c),
+		GeneratedAt:   generatedAt,
+		SourcePath:    c.Path,
+		SourceHash:    sourceHash,
+		NodeCount:     len(nodes),
+		Nodes:         nodes,
+	}
+	if errs := ValidateFeed(feed); len(errs) > 0 {
+		return LawbookFeed{}, fmt.Errorf("validate feed: %s", strings.Join(errs, "; "))
+	}
+	return feed, nil
+}
+
+func isAIBehaviorConfigPath(rel string) bool {
+	lower := strings.ToLower(filepath.ToSlash(rel))
+	return strings.Contains(lower, "ai-config/") && strings.Contains(pathBaseSlash(lower), "ai-behavior-config")
+}
+
+func pathBaseSlash(rel string) string {
+	parts := strings.Split(filepath.ToSlash(rel), "/")
+	return parts[len(parts)-1]
+}
+
+func aiBehaviorFieldText(value any) string {
+	switch typed := value.(type) {
+	case nil:
+		return ""
+	case string:
+		return typed
+	default:
+		data, err := json.Marshal(typed)
+		if err != nil {
+			return fmt.Sprint(typed)
+		}
+		return string(data)
+	}
 }
 
 func applySourceClassification(node *LawbookNode, c RBOKSourceClassification) {
