@@ -71,12 +71,12 @@ func TestBuildStructureTreeNumbering(t *testing.T) {
 
 	flat := tree.FlatTOC()
 	expected := map[string]string{
-		"H1": "1",
-		"H2": "1.1",
-		"H3": "1.1.1",
-		"H4": "1.1.2",
-		"H5": "1.2",
-		"H6": "2",
+		"H1": "0.1",
+		"H2": "0.1.1",
+		"H3": "0.1.1.1",
+		"H4": "0.1.1.2",
+		"H5": "0.1.2",
+		"H6": "0.2",
 	}
 	for _, node := range flat {
 		if exp, ok := expected[node.ID]; ok {

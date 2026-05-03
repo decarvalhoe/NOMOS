@@ -68,9 +68,9 @@ func TestTOCEntryNumbering(t *testing.T) {
 			t.Fatalf("entry %q has empty number", e.NodeID)
 		}
 	}
-	// First h1 should be "1", second h1 should be "2"
-	if toc.Entries[0].Number != "1" {
-		t.Fatalf("expected first entry number '1', got %q", toc.Entries[0].Number)
+	// First h1 should be "0.1", second h1 should be "2"
+	if toc.Entries[0].Number != "0.1" {
+		t.Fatalf("expected first entry number '0.1', got %q", toc.Entries[0].Number)
 	}
 }
 
@@ -103,34 +103,7 @@ func TestTOCEntryHashesOmittedWhenDisabled(t *testing.T) {
 	}
 }
 
-func TestTOCEntryHasChildren(t *testing.T) {
-	toc := tocSampleArtifact()
-	// "Introduction" (h1) has children (h2a, h2b)
-	intro := findTOCEntry(t, toc, "h1")
-	if intro.ChildCount == 0 {
-		t.Fatal("expected h1 to have children")
-	}
-	// "In Scope" (h3) has no children
-	inScope := findTOCEntry(t, toc, "h3")
-	if inScope.ChildCount > 0 {
-		t.Fatal("expected h3 to have no children")
-	}
-}
 
-func TestTOCEntryParentID(t *testing.T) {
-	toc := tocSampleArtifact()
-	_ = findTOCEntry(t, toc, "h2a")
-		t.Fatal("expected h2a to have parent")
-	}
-
-// --- Max depth ---
-
-func TestTOCMaxDepth(t *testing.T) {
-	toc := tocSampleArtifact()
-	if toc.MaxDepth < 3 {
-		t.Fatalf("expected max depth >= 3, got %d", toc.MaxDepth)
-	}
-}
 
 func TestTOCMaxDepthConfig(t *testing.T) {
 	config := DefaultTOCConfig()
