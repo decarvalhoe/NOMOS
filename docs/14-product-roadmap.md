@@ -1,364 +1,122 @@
-# 14 - Product Roadmap Nomos v0.1 -> v1.0
+# 14 - Nomos Product Roadmap
 
-## Positionnement
+Date: 2026-05-03
+Current release: `v0.1.0-ALPHA`
 
-Nomos ne doit pas rester un corpus de doctrine et de templates. Le produit cible est une plateforme de verification Canonical-First capable :
+## Positioning
 
-- d'admettre ou refuser un projet selon son scope et sa verifiabilite ;
-- de detecter les surfaces produit et les stacks presentes ;
-- d'executer des checks reproductibles ;
-- de produire des preuves machine-readable ;
-- de bloquer une promotion quand l'evidence est insuffisante.
+Nomos is a canonical-first product intelligence platform. Its purpose is to turn authoritative source material into governed, traceable, testable product evidence.
 
-La cible n'est pas "fonctionne sur n'importe quel projet". La cible est :
+The product target is not "works on every repository by magic". The target is:
 
-> fonctionne sur tout projet qui passe l'admission, et prouve quand il fonctionne.
+```text
+Nomos admits what it can prove, refuses what it cannot prove, and records the exact evidence boundary.
+```
 
-## Principes Produit
+## Current Alpha State
 
-1. Fail-closed par defaut.
-2. Scope explicite avant toute promesse de couverture.
-3. Separation stricte entre methode, adapters, policy, attestations et control plane.
-4. Les preuves doivent etre exportables, signables et verifiables hors de Nomos.
-5. Les integrations stack sont versionnees comme des adapters, pas codees en dur dans le coeur.
+`v0.1.0-ALPHA` establishes a working alpha baseline:
 
-## Overlay Regulated-Grade
+- CLI diagnosis and corpus commands are implemented.
+- The RBOK lawbook profile produces real feed, TOC, lexicon, RAG metadata, runtime import, proof report, and attestation artifacts.
+- The strict fidelity gate is wired into release validation.
+- Source spans and typed blocks are populated for the current RBOK lawbook POC.
+- The regulated-by-design documentation structure is installed.
+- Public claims are bounded by `docs/public-claim-boundary.md`.
 
-La roadmap v0.1 -> v1.0 reste la roadmap produit generale. Elle ne suffit pas, seule, a defendre une posture de marche regule.
+The alpha does not claim formal regulated validation, universal corpus fidelity, complete licensed-standard clause mapping, or production RAG behavior control.
 
-Le track regulated-grade ajoute une contrainte plus dure : Nomos doit appliquer sa propre methode a Nomos avant de demander a un client regule de lui faire confiance.
+## Quality-Level Position
 
-References de pilotage :
+Nomos currently sits at:
 
-- `docs/21-regulated-quality-reference.md` : controles, niveaux `NQ-0` a `NQ-6`, sources reglementaires et regles de claim governance.
-- `docs/22-nomos-praxis-synergy-market-audit.md` : analyse de positionnement contre ALM, validation lifecycle, test management, evidence/CAPA et angles morts Nomos/Praxis.
-- `docs/23-regulated-implementation-plan.md` : phases d'implementation, dependency tree, gates et alignement documentaire.
+```text
+NQ-2 alpha: operational tool with real corpus evidence.
+NQ-3 candidate: self-compliance structure exists, but approval and independent evidence closure are not complete.
+```
 
-Effet sur la roadmap :
+Allowed wording:
 
-- `v0.1` a `v0.2` doivent d'abord revenir green : build Go, CUE, CLI et erreurs fail-closed.
-- `v0.3` doit inclure `mode: canonical_corpus` et `mode: nomos_product`.
-- `v0.5` doit inclure la matrice de controles regules et le gate de references externes.
-- `v0.8` doit produire des attestations verifiables et pas seulement des schemas d'attestation.
-- `v1.0` peut etre "productized platform", mais pas "regulated-grade" sans le niveau `NQ-5` minimum pour l'intended use declare.
+```text
+Nomos v0.1.0-ALPHA provides a working canonical-first CLI, RBOK lawbook POC evidence, strict fidelity gates, and a regulated-readiness documentation baseline.
+```
 
-Seuils produit :
+Blocked wording:
 
-- `NQ-2` : outil operationnel, gates de base verts, evidence reelle.
-- `NQ-3` : Nomos-on-Nomos self-compliance verte.
-- `NQ-4` : integration Nomos/Praxis avec evidence runtime et CAPA.
-- `NQ-5` : validation pack et release evidence bundle complets.
-- `NQ-6` : reconstruction independante possible.
+```text
+Nomos is a validated regulated platform.
+Nomos is Part 11/GxP/Annex 11 compliant as a product.
+Nomos can convert any source into legally defensible product law without customer validation.
+```
 
-## Architecture Cible
+## Product Principles
 
-### 1. Spec Layer
+1. Fail closed when evidence is missing.
+2. Read source corpora as protected authorities by default.
+3. Preserve source identity, source hash, source span, hierarchy, and governance metadata.
+4. Treat adapters and corpus profiles as versioned capabilities with explicit limits.
+5. Keep generated RAG chunks downstream from canonical units, never as the authority.
+6. Make every public claim traceable to a gate, artifact, document, decision, or open gap.
 
-Artefacts de verite :
+## Roadmap
 
-- `nomos.project.yaml`
-- `docs/canonical/source-manifest.yaml`
-- `docs/canonical/<domain>-matrix.yaml`
-- contrats canoniques
-- schemas derives
+| Stage | Target | Exit gate |
+|---|---|---|
+| `v0.1.0-ALPHA` | Prove the canonical corpus pipeline, RBOK lawbook POC, strict fidelity gate, and public claim boundary. | Local and CI gates green; GitHub pre-release published; no regulated overclaim. |
+| `v0.2.x` | Make structure fidelity more portable beyond RBOK Markdown. | AST-to-Nomos comparison covers tables, lists, callouts, code, links, images, annexes, xrefs, H1-H6, and exact source spans across fixtures. |
+| `v0.3.x` | Harden adapters and structured-data atomization. | Markdown, YAML, JSON, and adapter fixtures produce governed nodes or explicit unsupported records; no silent skip of active source material. |
+| `v0.4.x` | Mature RAG and runtime import contracts. | Retrieval metadata, citation behavior, refusal cases, and downstream engine import are evaluated with traceable tests. |
+| `v0.5.x` | Close regulated-readiness evidence. | Reference-to-control matrix, validation inventory, GitHub QMS evidence, training records, approval records, and release bundle are reconstructible. |
+| `v0.6.x` | Publish the Nomos-to-Praxis evidence contract. | Praxis can consume verified Nomos artifacts without weakening the Nomos claim boundary. |
+| `v1.0` | Production-grade release candidate for scoped intended uses. | Support model, compatibility policy, validation evidence, security process, customer integration guide, and independent reconstruction evidence are complete. |
 
-Modele recommande :
+## Architecture Direction
 
-- source primaire de contraintes en CUE ;
-- export JSON Schema pour l'interoperabilite ;
-- export OpenAPI / AsyncAPI quand la surface l'exige.
+Nomos remains split into clear responsibility layers:
 
-### 2. Core CLI Layer
+| Layer | Responsibility |
+|---|---|
+| Specs | CUE/JSON/YAML contracts, examples, evidence schemas, and compatibility rules. |
+| CLI | Deterministic project diagnosis, corpus processing, fidelity gates, reports, and attestations. |
+| Corpus profiles | Domain-specific interpretation of source corpora without hard-coding the core engine to one customer. |
+| Adapters | Stack-specific detection and extraction capabilities with declared limits. |
+| Evidence | Reports, attestations, proof files, release bundles, and ALCOA+ metadata. |
+| Regulated docs | Quality, validation, supplier, control, approval, retention, and claim-governance records. |
+| Control plane | Optional portfolio-level registry and dashboard, not required for the alpha proof. |
 
-CLI `nomos` distribue comme binaire autonome.
+## Active Product Risks
 
-Commandes cibles :
+| Risk | Current handling |
+|---|---|
+| Overclaiming regulated readiness | Public claim boundary and release docs explicitly block certification language. |
+| RBOK-specific implementation bias | Roadmap requires portable AST/fidelity fixtures beyond RBOK. |
+| Licensed reference misuse | Licensed standards are tracked by intake sidecars; redistribution remains blocked unless license allows it. |
+| RAG authority drift | RAG remains downstream from canonical units and requires future retrieval/behavior evals. |
+| Praxis dependency overclaim | Praxis is downstream and not used as release-grade evidence until the shared contract is verified. |
 
-- `nomos init`
-- `nomos validate`
-- `nomos diagnose`
-- `nomos admit`
-- `nomos sources check`
-- `nomos matrix check`
-- `nomos contracts check`
-- `nomos product-check`
-- `nomos strict`
-- `nomos report`
-- `nomos attest`
+## Release Gates
 
-### 3. Adapter Layer
+Before public release notes or customer-facing wording change:
 
-Adapters versionnes par stack et surface :
-
-- Node / TypeScript
-- Python
-- JVM
-- Go
-- .NET
-- infra
-- data
-- event-driven
-
-Chaque adapter declare :
-
-- heuristiques de detection ;
-- surfaces supportees ;
-- patterns interdits ;
-- points d'extraction de provenance ;
-- commandes de verification ;
-- limites connues.
-
-### 4. Policy Layer
-
-Policies executables pour gates CI/CD :
-
-- regles de scope ;
-- regles de completude ;
-- regles de fuite sample/mock ;
-- regles de provenance ;
-- regles d'exception expirante.
-
-### 5. Evidence Layer
-
-Sorties machine-readable minimales :
-
-- `nomos-report.json`
-- `nomos-report.md`
-- attestations in-toto
-- provenance SLSA
-- signatures cosign
-- inventaires SPDX / CycloneDX
-
-### 6. Control Plane
-
-Service optionnel pour grande echelle :
-
-- registre projets ;
-- historique d'executions ;
-- statut des exceptions ;
-- vues portfolio ;
-- evidence browser.
-
-## Release Train
-
-### v0.1 - Core Spec
-
-Objectif :
-
-figer le meta-modele universel minimal.
-
-Livrables :
-
-- schema `nomos.project.yaml` ;
-- schema source manifest en CUE ;
-- schema canonical matrix en CUE ;
-- taxonomie de scope ;
-- taxonomie d'evidence ;
-- codes d'erreurs standard.
-
-Gate :
-
-un projet peut etre valide hors ligne sur ses manifests et recevoir un statut d'admission theorique.
-
-### v0.2 - CLI Minimal
-
-Objectif :
-
-rendre le meta-modele executable localement.
-
-Livrables :
-
-- binaire `nomos` ;
-- `init` ;
-- `validate` ;
-- `diagnose` heuristique ;
-- format de sortie stable JSON ;
-- contrat d'erreurs stable.
-
-Gate :
-
-les exemples Nomos sont validables de bout en bout sans service externe.
-
-### v0.3 - Admission Engine
-
-Objectif :
-
-decider si Nomos peut s'appliquer, et avec quel niveau de confiance.
-
-Livrables :
-
-- detection stack ;
-- detection surfaces ;
-- scoring de verifiabilite ;
-- profils greenfield / brownfield / regulated / low-risk ;
-- rapport d'admission motive.
-
-Gate :
-
-au moins 10 repos de reference sont classes correctement avec raisons explicites.
-
-### v0.4 - Adapters v1
-
-Objectif :
-
-supporter reellement plusieurs stacks.
-
-Livrables :
-
-- adapters Node / TypeScript, Python, JVM ;
-- parsing Tree-sitter ;
-- detection de patterns interdits ;
-- conventions d'integration par stack.
-
-Gate :
-
-`nomos product-check` detecte de vraies fuites et ne repose plus sur des regex seules.
-
-### v0.5 - Canonical Checks
-
-Objectif :
-
-couvrir source -> matrix -> contracts -> product.
-
-Livrables :
-
-- `sources check` ;
-- `matrix check` ;
-- `contracts check` ;
-- references croisees ;
-- `strict` ;
-- rapport couverture/gaps.
-
-Gate :
-
-aucun cas de regression prepare ne sort vert par erreur.
-
-### v0.6 - Brownfield Migration Pack
-
-Objectif :
-
-permettre l'adoption sur legacy sans big-bang rewrite.
-
-Livrables :
-
-- characterization templates ;
-- generation initiale de backlog de gaps ;
-- mode `partial` ;
-- workflow strangler ;
-- import semi-assiste des sources.
-
-Gate :
-
-un repo legacy peut entrer dans Nomos avec un verdict `partial` et une trajectoire claire de remediations.
-
-### v0.7 - CI/CD And Policy
-
-Objectif :
-
-rendre les gates opposables dans les pipelines.
-
-Livrables :
-
-- GitHub Action / GitLab job generiques ;
-- policies Rego et/ou CUE ;
-- exceptions expirantes ;
-- annotations PR ;
-- severite standardisee.
-
-Gate :
-
-une PR non conforme est bloquee avec messages de correction exploitables.
-
-### v0.8 - Provenance And Attestations
-
-Objectif :
-
-passer de checks locaux a une chaine de preuve transportable.
-
-Livrables :
-
-- modele d'attestation Nomos ;
-- export in-toto ;
-- provenance SLSA ;
-- signature cosign ;
-- exports SPDX / CycloneDX.
-
-Gate :
-
-une release Nomos peut etre verifiee hors de la machine qui l'a produite.
-
-### v0.9 - Control Plane
-
-Objectif :
-
-piloter un portefeuille de projets.
-
-Livrables :
-
-- registry projets ;
-- stockage rapports et attestations ;
-- dashboard multi-projets ;
-- historique ;
-- API de consultation.
-
-Gate :
-
-la direction technique peut connaitre a tout moment quels projets sont `in_scope`, `partial`, `blocked` ou `out_of_scope`.
-
-### v1.0 - Productized Platform
-
-Objectif :
-
-livrer une plateforme stable, documentee, adoptee sur plusieurs projets.
-
-Livrables :
-
-- SDK stable ;
-- adapters versionnes ;
-- 3 implementations de reference ;
-- matrice de compatibilite ;
-- guide operatoire complet ;
-- audit de robustesse.
-
-Gate :
-
-Nomos opere sur plusieurs projets greenfield et brownfield avec preuves signees et limites declarees.
-
-## Ordre Exact D'Implementation
-
-1. Restaurer un baseline credible : Go, CUE, CLI fail-closed et evidence non dummy.
-2. Figer le meta-modele.
-3. Choisir CUE comme source de verite des schemas.
-4. Construire le CLI minimal.
-5. Construire `diagnose` puis `admit`.
-6. Ajouter `mode: canonical_corpus` et `mode: nomos_product`.
-7. Ajouter Tree-sitter et la detection repo/surfaces.
-8. Livrer trois adapters prioritaires.
-9. Implementer `sources`, `matrix`, `contracts`, `product-check`, `strict`.
-10. Implementer `compliance references` et `compliance self-check`.
-11. Integrer les policies dans CI/CD.
-12. Ajouter le pack brownfield.
-13. Ajouter attestations, signatures et release evidence bundle.
-14. Connecter Praxis via le contrat d'evidence partage.
-15. Construire le control plane.
-16. Stabiliser SDK, adapters, references et compatibilite v1.
-
-## Ce Qu'il Ne Faut Pas Faire
-
-- construire le control plane avant l'admission ;
-- annoncer un support "any stack" avant d'avoir des adapters versionnes ;
-- signer des artefacts sans verifier la chaine d'evidence ;
-- confondre validation de schema et validite metier ;
-- utiliser le LLM comme calculateur de regles critiques.
-
-## Definition De Reussite v1.0
-
-Nomos v1.0 est atteint si :
-
-- le produit sait refuser un projet hors scope avec raisons precises ;
-- le produit sait admettre un projet en scope avec niveau de confiance explicite ;
-- les checks sont reproductibles localement et en CI ;
-- les adapters declarent leurs limites ;
-- les preuves sont exportables et verifiables hors de Nomos ;
-- le statut d'un portefeuille de projets est observable sans inspection manuelle repo par repo.
-- le niveau `NQ` atteint est explicite et les claims publics restent limites au niveau de preuve disponible.
+```bash
+cd cli
+go test ./...
+
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
+python -m unittest discover -s tests -v
+python scripts/regulated_docs_gate.py --report .regulated-doc-gate/regulated-doc-gate-report.json
+python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json
+```
+
+## Definition Of v1.0
+
+Nomos can be considered a production-grade release candidate only when:
+
+- admitted corpus scopes are explicit and reproducible;
+- unsupported source structures become explicit evidence records, not silent gaps;
+- source spans and document hierarchy are independently checkable;
+- adapters publish compatibility contracts and fixtures;
+- generated chunks, matrices, reports, and attestations are reconstructible;
+- regulated documentation maps to real gates, owners, approvals, and retained evidence;
+- customer validation remains scoped to intended use and is supported by a supplier pack;
+- public claims never exceed the current evidence level.

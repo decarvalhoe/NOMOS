@@ -1,10 +1,29 @@
 # Attestations
 
-Ce dossier portera les formats et exemples d'attestations Nomos.
+Attestations record what Nomos processed and which evidence was produced.
 
-Sorties cibles :
+## Current Alpha Output
 
-- attestations in-toto ;
-- provenance SLSA ;
-- signatures cosign ;
-- evidence exportables.
+Nomos can generate in-toto style corpus attestation records. These records help prove:
+
+- corpus identity;
+- project identity;
+- source scan summary;
+- units extracted;
+- diagnosis verdict;
+- generation timestamp;
+- relevant metadata.
+
+## Intended Expansion
+
+Future attestation work may include:
+
+- SLSA-aligned provenance;
+- artifact signing;
+- cosign integration;
+- release-bundle signatures;
+- customer evidence export.
+
+## Claim Boundary
+
+An attestation proves a recorded pipeline event. It does not prove that the source was correct, licensed, complete, or legally applicable. It also does not replace customer validation in regulated use.

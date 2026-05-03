@@ -16,7 +16,7 @@
 
 This validation master plan covers the Nomos CLI and its canonical-first
 verification pipeline. It does NOT claim regulated-grade compliance.
-Current quality level is NQ-0/NQ-1 boundary.
+Current quality level is NQ-2 alpha.
 
 ## Intended Use
 

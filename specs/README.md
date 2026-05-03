@@ -1,24 +1,30 @@
 # Specs
 
-Ce dossier contiendra les schemas source de verite du produit Nomos.
+`specs/` contains the machine-readable contracts that keep Nomos evidence reproducible.
 
-Contenu cible :
+## Current Contract Families
 
-- schemas CUE ;
-- schemas JSON derives ;
-- formats de report ;
-- contrats d'adapters ;
-- taxonomies de verdicts et d'evidence.
+- project manifest;
+- source manifest;
+- canonical matrix;
+- adapter manifest;
+- corpus evidence;
+- RBOK lawbook feed;
+- RBOK runtime import contract;
+- verdict taxonomy;
+- fidelity AST;
+- TOC artifact;
+- atomization spine;
+- provenance gate;
+- ALCOA evidence;
+- AI/RAG controls;
+- validation inventory;
+- evidence contract.
 
-Premiers artefacts poses :
+## Release Rule
 
-- `nomos-project.cue`
-- `nomos-project.md`
-- `source-manifest.cue`
-- `canonical-matrix.cue`
-- `adapter-manifest.cue`
-- `examples/`
+Schema changes are evidence-affecting changes. They require tests, documentation updates, and a migration note when the change can affect generated artifacts or customer validation records.
 
-Exemples de contrat :
+## Alpha Boundary
 
-- `examples/adapter-manifest.node-typescript.yaml`
+The schemas are usable for alpha pilots and internal validation. They may still change before `v1.0`; consumers should pin Nomos versions and retain generated artifacts with their schema version.

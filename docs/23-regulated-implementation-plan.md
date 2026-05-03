@@ -1,611 +1,226 @@
 # 23 - Regulated-Grade Implementation Plan
 
-Date: 2026-05-02
+Date: 2026-05-03
+Current release: `v0.1.0-ALPHA`
 
 ## Purpose
 
-This document turns the hard audit in `docs/21-regulated-quality-reference.md` and the Nomos/Praxis synergy audit in `docs/22-nomos-praxis-synergy-market-audit.md` into an implementation plan.
+This plan turns the regulated quality reference, Nomos/Praxis synergy audit, and regulated-by-design structure into the current implementation path.
 
-It should be read together with `docs/24-regulated-client-compliance-evidence.md`, which defines what regulated clients typically expect during supplier qualification, validation, and operational integration.
+The goal is not to make a stronger claim. The goal is to make every future claim defensible through:
 
-It should also be read with `docs/25-regulated-by-design-structure.md`, which installs the shared Nomos/Praxis folder structure, product profiles, evidence templates, and status model used by this plan.
-
-The objective is not to make a stronger claim. The objective is to build enough implementation, evidence, documentation, and governance that the claim becomes defensible:
-
-```text
-Nomos can transform an authoritative business corpus into governed product law,
-and Nomos itself follows the same compliance discipline it asks of other projects.
-```
+- intended-use definition;
+- risk-based validation;
+- source and evidence integrity;
+- controlled documents;
+- release evidence;
+- customer qualification support;
+- independent reconstruction.
 
 ## Current Verdict
 
-Nomos is not yet regulated-grade.
+Nomos is ready for an alpha release with regulated-readiness positioning.
 
-Post-final-wave status on 2026-05-03:
+Nomos is not yet a validated regulated platform.
 
-- `main` is technically green after commit `709d011 feat: Final wave`;
-- CLI, corpus tests, regulated documentation gate and regulated evidence pack are passing;
-- RBOK lawbook E2E has been proven in CI;
-- open GitHub PR and issue counts are zero;
-- the active gap reports still say `requires_evidence`.
+Current quality position:
 
-Therefore the critical path has moved from baseline recovery to compliance closure. Use `docs/28-regulated-compliance-closure-plan.md` as the current execution plan for GitHub QMS evidence, licensed bible completion, validation/release bundle closure, training, approvals and independent audit readiness.
-
-The historical quality level at the time this plan was created was `NQ-0/NQ-1 boundary`:
-
-- the method is documented;
-- the regulated baseline has been defined;
-- GitHub issues exist for the main gaps;
-- CI and core CLI behavior are still not green enough to defend the product claim;
-- Nomos-on-Nomos self-compliance is not yet executable;
-- the Nomos/Praxis evidence contract is not yet implemented.
-
-After the final wave, Nomos has moved beyond that recovery baseline technically, but the current governed status remains below `NQ-3` until the closure plan proves the remaining GitHub QMS, licensed bible, validation, approval, training and audit evidence.
-
-Until `docs/28-regulated-compliance-closure-plan.md` reaches at least `NQ-3`, public wording must stay at "regulated-by-design architecture under validation" or "operational prototype with compliance evidence baseline" level.
-
-## Implementation Principles
-
-1. No claim without evidence.
-2. No evidence without stable schema.
-3. No schema without a CLI gate.
-4. No regulated release with red main or waived critical controls.
-5. No source corpus write access unless an explicit controlled update process is opened.
-6. Praxis evidence can support Nomos only after the shared contract and Praxis parity controls are defined.
-7. Documentation is part of the product: each implementation issue must update the relevant docs, examples, and validation pack.
-
-## Execution Order
-
-Nomos is the critical path.
-
-Praxis work is intentionally downstream. Praxis issues may stay open as interface targets, but they must not be treated as implementation blockers for the first Nomos recovery sprint.
-
-Execution order:
-
-1. **Nomos baseline**: #125, #126, #127, #136, #137.
-2. **Nomos regulated self-compliance**: #139, #140, #141, #142, #143, #145, #146, #147.
-3. **Nomos RBOK lawbook proof**: #124, #128, #129, #130, #131, #132, #133, #134, #135.
-4. **Nomos evidence interface**: #144, #149, #150, #151, #152, #153, #154, #155, #156, #157, #158.
-5. **Praxis implementation**: RBOKproject/PRAXIS#247 through #256, only after Nomos has green producer artifacts and schemas.
-
-Praxis cannot consume what Nomos cannot yet produce. Therefore the first implementation wave must stay in Nomos until:
-
-- CLI and CUE are green;
-- Nomos-on-Nomos self-compliance runs;
-- RBOK lawbook feed is generated read-only;
-- Nomos/Praxis schema fixtures exist and validate;
-- Nomos release evidence bundle can carry an explicit "Praxis evidence absent/not yet qualified" status.
-
-The regulated-by-design structure is already installed under `docs/regulated/` and `templates/regulated/`. Those files are the operating frame for all remaining issues: every issue that changes claim scope, validation scope, evidence, corpus handling, release behavior, or Praxis integration must update the relevant profile, control, validation, supplier, release, AI/RAG, operations, customer-integration, or decision record.
-
-## Target Architecture
-
-```mermaid
-flowchart TD
-  A["External and business references"] --> B["Regulated control matrix"]
-  B --> C["Nomos CLI compliance gates"]
-  C --> D["Nomos self-compliance report"]
-  A --> E["Read-only corpus feed"]
-  E --> F["Canonical units and claims"]
-  F --> G["Nomos attestations"]
-  G --> H["Praxis project pack"]
-  H --> I["Runtime evidence and invariants"]
-  I --> J["CAPA and nonconformities"]
-  J --> K["Nomos control/evidence update"]
-  K --> L["Release go/no-go"]
+```text
+NQ-2 alpha achieved by operational CLI, real RBOK corpus evidence, strict fidelity gate, and bounded public docs.
+NQ-3 candidate remains open until self-compliance evidence, owner/approval records, and GitHub QMS evidence are closed.
 ```
 
-Nomos owns:
+## Current Open Dependencies
 
-- authority references;
-- source registry and read-only corpus policy;
-- canonical units, claims, control matrix, and attestations;
-- CLI gates and release evidence bundle;
-- claim governance.
+| Issue | Dependency | Blocks |
+|---|---|---|
+| `#314` | RBOK AQ proof umbrella | Stronger RBOK POC validation claim. |
+| `#320` | Nomos verified artifacts | Nomos/Praxis atom mapping and joint evidence claim. |
+| `#192` | Licensed ISO 13485 acquisition/intake | Complete regulated reference baseline. |
+| `#193` | Licensed ISO/IEC/IEEE 12207 acquisition/intake | Lifecycle-standard clause closure. |
+| `#194` | GAMP 5 and ISO/IEC 25010 license review | Licensed-standard processing decision. |
+| `#196` | Public/licensed bible processing | Reference-to-control proof at higher assurance levels. |
 
-Praxis owns:
+These issues do not block `v0.1.0-ALPHA` if the release remains a pre-release and keeps the claim boundary explicit.
 
-- project packs;
-- runtime scenario execution;
-- invariant results;
-- runtime evidence retention;
-- CAPA reports.
+## Quality-Level Ladder
 
-Shared contract:
+| Level | Meaning | Current status |
+|---|---|---|
+| `NQ-0` | Broken build/schema/gate. | Not current. |
+| `NQ-1` | Method documented only. | Passed. |
+| `NQ-2` | Operational tool with repeatable gates and real evidence. | Current alpha level. |
+| `NQ-3` | Nomos-on-Nomos self-compliance evidence is generated, reviewed, and bounded. | Candidate, not approved. |
+| `NQ-4` | Nomos/Praxis or equivalent runtime assurance evidence is contract-linked. | Future. |
+| `NQ-5` | Scoped validation pack and release bundle are customer-review ready. | Future. |
+| `NQ-6` | Independent reviewer can reconstruct every material claim. | Future. |
 
-- evidence IDs;
-- canonical claim IDs;
-- severity and verdict taxonomy;
-- deviations, waivers, and CAPA references;
-- release evidence bundle.
+## Implementation Phases
 
-## Phase 0 - Recover A Credible Baseline
+### Phase 1 - Alpha Release Closure
 
-Goal: reach `NQ-2` by making the current product buildable and executable before adding more regulated claims.
+Goal: publish `v0.1.0-ALPHA` without overclaim.
 
-Blocking issues:
+Required:
 
-- Nomos #125: restore CLI build.
-- Nomos #126: fix CUE schema validation.
-- Nomos #127: wire real RBOK lawbook CLI.
-- Nomos #136: release gate for RBOK lawbook profile.
-- Nomos #137: Nomos-on-Nomos self-compliance.
-
-Implementation work:
-
-1. Repair Go build failures in `cli/`.
-2. Repair `specs/rbok-lawbook-feed.cue` validation.
-3. Make unknown CLI commands exit non-zero.
-4. Expose real corpus commands:
-   - `nomos corpus scan`;
-   - `nomos corpus diff`;
-   - `nomos corpus manifest`;
-   - `nomos corpus validate-sidecar`;
-   - `nomos corpus feed`;
-   - `nomos corpus attest`.
-5. Remove dummy workflow fallbacks that can produce green reports with no real corpus artifacts.
-6. Add Windows smoke coverage for the same CLI surface.
-
-Exit gate:
-
-```powershell
-cd C:\Dev\nomos-viability-audit\cli
-go test ./...
-go vet ./...
-
-cd C:\Dev\nomos-viability-audit
-cue vet ./...
-```
-
-Expected result:
-
-- main development branch can be used as evidence again;
-- generated corpus artifacts are real;
-- unknown commands fail closed;
-- no regulated claim is made yet.
-
-## Phase 1 - Regulated Control Matrix And Reference Governance
-
-Goal: make every external reference and every public product claim governed.
-
-Blocking issues:
-
-- Nomos #138: regulated-grade parent epic.
-- Nomos #139: regulated control matrix/reference registry.
-- Nomos #140: external reference alignment gate.
-- Nomos #145: public claims governance.
-
-Implementation work:
-
-1. Add `specs/regulated-control-matrix.cue`.
-2. Add `specs/examples/regulated-control-matrix.nomos.yaml`.
-3. Add a compliance package in `cli/internal/compliance/`.
-4. Add CLI commands:
-   - `nomos compliance references`;
-   - `nomos compliance self-check`;
-   - `nomos compliance export`.
-5. Scan docs/specs for URLs and product claims.
-6. Fail when a URL or claim is not mapped to:
-   - owner;
-   - applicability;
-   - control;
-   - implementation reference;
-   - test reference;
-   - evidence or expiring waiver.
-7. Classify placeholder/future links as blocked or explicitly future endpoint.
-
-Exit gate:
-
-```powershell
-cd C:\Dev\nomos-viability-audit\cli
-go test ./internal/compliance ./internal/app -run Compliance -v
-
-cd C:\Dev\nomos-viability-audit
-nomos compliance references --root . --matrix specs/examples/regulated-control-matrix.nomos.yaml --output reports/reference-alignment.json
-```
-
-Expected result:
-
-- decorative references disappear;
-- product wording becomes release-gated;
-- every cited regulation or framework has traceable implementation status.
-
-## Phase 2 - Nomos-On-Nomos Self-Compliance
-
-Goal: reach `NQ-3` by proving Nomos can evaluate itself.
-
-Blocking issues:
-
-- Nomos #137: self-compliance parent.
-- Nomos #141: regulated self-compliance expansion.
-- Nomos #142: ALCOA+ evidence model.
-- Nomos #143: validation lifecycle pack.
-
-Implementation work:
-
-1. Add `mode: nomos_product` support in `nomos.project.yaml`.
-2. Create `docs/validation/`:
-   - intended use;
-   - risk assessment;
-   - URS/SRS;
-   - validation protocol;
-   - challenge cases;
-   - deviation log;
-   - validation summary;
-   - rollback/recovery procedure.
-3. Emit ALCOA+ metadata on every compliance report:
-   - actor;
-   - tool;
-   - command;
-   - timestamp;
-   - repo;
-   - commit;
-   - source hashes;
-   - artifact hash.
-4. Add deterministic report generation with stable IDs and stable ordering.
-5. Add self-compliance GitHub Action.
-6. Fail when critical controls are missing, stale, waived without expiry, or contradicted by CI state.
-
-Exit gate:
-
-```powershell
-cd C:\Dev\nomos-viability-audit
-nomos compliance self-check --root . --matrix specs/examples/regulated-control-matrix.nomos.yaml --output reports/nomos-self-compliance.json
-git status --porcelain
-```
-
-Expected result:
-
-- Nomos can produce a self-compliance report from its own repository;
-- report generation does not mutate protected source paths;
-- release claim can move from `NQ-2` to `NQ-3` only when this gate is green.
-
-## Phase 3 - RBOK Lawbook As Real Business Corpus
-
-Goal: prove the method on `realisons-business/01_rbok` as a canonical business reference, chunked like a lawbook.
-
-Blocking issues:
-
-- Nomos #124: RBOK lawbook viability epic.
-- Nomos #128: real RBOK E2E.
-- Nomos #129: contract normalization.
-- Nomos #130: Markdown extraction.
-- Nomos #131: parcours YAML governance.
-- Nomos #132: source policy.
-- Nomos #133: multi-doc feed/RAG/engine.
-- Nomos #134: read-only hardening.
-- Nomos #135: Windows confidence.
-
-Implementation work:
-
-1. Admit `realisons-business` as `mode: canonical_corpus`.
-2. Treat `01_rbok` as read-only source authority.
-3. Produce source manifest and sidecar manifest outside the corpus repo.
-4. Extract canonical units with stable IDs and source offsets/headings.
-5. Preserve existing governance metadata instead of flattening it.
-6. Generate lawbook chunks:
-   - canonical section ID;
-   - source path;
-   - hash;
-   - heading hierarchy;
-   - paragraph/rule span;
-   - governance fields;
-   - applicability and review status.
-7. Generate RAG metadata and corpus index.
-8. Emit attestation and lockfile.
-9. Prove `git status` before/after on the source repo.
-10. Fail on any source mutation, push, or output path inside the protected corpus.
-
-Exit gate:
-
-```powershell
-nomos corpus feed --profile rbok-lawbook --source C:\Dev\realisons-business\01_rbok --out C:\Dev\nomos-rbok-feed
-nomos corpus attest --feed C:\Dev\nomos-rbok-feed --out C:\Dev\nomos-rbok-feed\attestation.json
-```
-
-Expected result:
-
-- RBOK becomes a real reference corpus, not a fixture;
-- Nomos proves read-only behavior;
-- the feed can be consumed by downstream products without touching source documents.
-
-## Phase 4 - Nomos/Praxis Evidence Contract
-
-Goal: define the Nomos-side evidence interface first, then reach `NQ-4` later by connecting canonical product law to Praxis runtime evidence and CAPA.
-
-Execution rule:
-
-- Nomos #144, #149, #154, #155 must be implemented first as producer-side schemas, fixtures, and reports.
-- Praxis #247-#252 remain downstream until Nomos emits valid artifacts.
-- NQ-4 is not claimable until the Praxis side later consumes those artifacts and returns valid evidence.
-
-Blocking issues:
-
-- Nomos #144: shared evidence contract.
-- Nomos #149: joint evidence ledger contract.
-- Praxis #247: compatibility epic.
-- Praxis #248: Nomos project pack.
-- Praxis #249: Nomos compliance invariants.
-- Praxis #250: consume shared evidence contract.
-- Praxis #251: feed CAPA back into Nomos controls.
-- Praxis #252: cross-repo compatibility smoke test.
-
-Implementation work:
-
-1. Add `specs/nomos-praxis-evidence.schema.json`.
-2. Add valid and invalid examples.
-3. Map:
-   - `source_id`;
-   - `canonical_unit_id`;
-   - `claim_id`;
-   - `control_id`;
-   - `praxis_scenario_id`;
-   - `runtime_evidence_id`;
-   - `invariant_result_id`;
-   - `capa_id`.
-4. Create a Praxis project pack for Nomos.
-5. Add Praxis invariants for Nomos:
-   - source read-only;
-   - no dummy evidence;
-   - CLI fail-closed;
-   - evidence hash stability;
-   - reference alignment completeness.
-6. Add cross-repo CI smoke:
-   - Nomos generates evidence;
-   - Praxis consumes it;
-   - Praxis returns runtime/invariant/CAPA evidence;
-   - Nomos links it back to controls.
+- README, release notes, changelog, support, security, governance, contribution, and claim-boundary docs.
+- Version set to `0.1.0-ALPHA`.
+- Local Go, E2E, and Python gates.
+- Regulated documentation gate and evidence pack.
+- GitHub pre-release, not stable production release.
 
 Exit gate:
 
 ```text
-Nomos report -> Praxis project pack -> Praxis evidence -> Nomos control update
+Release exists, checks are green, and no public document claims formal regulated compliance.
 ```
 
-Expected result:
+### Phase 2 - NQ-3 Self-Compliance Closure
 
-- Praxis can strengthen Nomos instead of being only an adjacent tool;
-- the two products share an evidence vocabulary;
-- CAPA becomes actionable input for Nomos release decisions.
+Goal: make Nomos self-compliance executable and reviewer-ready.
 
-## Phase 5 - Validation Lifecycle And Regulated Evidence Bundle
+Required:
 
-Goal: reach `NQ-5` for a scoped intended use.
-
-Blocking issues:
-
-- Nomos #143: validation lifecycle pack.
-- Nomos #147: SLSA/in-toto provenance gate.
-- Nomos #150: release evidence bundle format.
-- Nomos #151: validation inventory/intended-use model.
-- Nomos #152: e-signature/approval semantics.
-- Nomos #153: independent review/quality-unit roles.
-
-Implementation work:
-
-1. Define validation inventory item for Nomos CLI and RBOK lawbook profile.
-2. Add risk classification per command/profile.
-3. Map URS -> FRS/SRS -> tests -> evidence -> release decision.
-4. Add scripted and challenge tests for critical commands.
-5. Generate release evidence bundle:
-   - control matrix snapshot;
-   - self-compliance report;
-   - reference alignment report;
-   - RBOK lawbook feed attestation;
-   - Praxis runtime evidence;
-   - CAPA/deviation log;
-   - SLSA/in-toto provenance;
-   - SBOM;
-   - approval record.
-6. Add independent review status and waiver expiry checks.
+- deterministic self-compliance report;
+- coverage report;
+- regulated reference canon report;
+- GitHub QMS live evidence or explicit waiver;
+- named quality, technical, security, and release owners;
+- training matrix and records;
+- approval semantics for GitHub reviews;
+- CODEOWNERS coverage for controlled docs, specs, evidence scripts, and release files.
 
 Exit gate:
 
 ```text
-release bundle can be reconstructed by an independent reviewer from repository state,
-CI artifacts, hashes, and documented approvals.
+An internal quality reviewer can trace Nomos claims to controlled evidence without relying on chat history.
 ```
 
-Expected result:
+### Phase 3 - Portable Fidelity Closure
 
-- Nomos can be described as validation-pack ready for the declared intended use;
-- still not "certified" unless an external regulated customer or assessor performs that process.
+Goal: prove Nomos is not RBOK-only.
 
-## Phase 6 - Praxis Regulatory Parity
+Required:
 
-Goal: prevent Praxis from weakening the joint regulated chain.
-
-Execution rule:
-
-Do not start Praxis parity implementation until Nomos has reached at least NQ-3 and has validated the Nomos-side evidence interface. Praxis parity is required before release-grade use of Praxis evidence, but it is not the first recovery priority.
-
-Blocking issues:
-
-- Praxis #253: regulated parity baseline.
-- Praxis #254: Praxis-on-Praxis self-compliance gate.
-- Praxis #255: validated project pack certification status.
-- Praxis #256: runtime evidence retention/trend model.
-
-Implementation work:
-
-1. Define Praxis quality levels aligned to Nomos NQ levels.
-2. Define when Praxis evidence is advisory versus release-grade.
-3. Add Praxis-on-Praxis self-compliance.
-4. Add retention and reconstruction rules for runtime evidence.
-5. Add project pack certification status:
-   - draft;
-   - reviewed;
-   - validated;
-   - expired;
-   - superseded.
-6. Make Nomos release bundles record Praxis evidence quality level.
+- Markdown AST fidelity fixtures beyond RBOK;
+- structured YAML/JSON atomization policy;
+- legal/regulatory corpus fixture;
+- technical standard fixture;
+- game-rule corpus fixture;
+- table/list/callout/code/image/link/annex/xref coverage;
+- exact source spans for active blocks;
+- explicit unsupported-block records.
 
 Exit gate:
 
 ```text
-Nomos cannot use Praxis evidence as release-grade if Praxis is below the required parity level.
+The fidelity gate blocks missing active source coverage across portable fixture families.
 ```
 
-Expected result:
+### Phase 4 - Reference Bible Closure
 
-- Praxis can become a regulated counterpart rather than an unqualified dependency;
-- joint product claims become auditable.
+Goal: make regulatory and quality references controlled authorities.
 
-## Phase 7 - Market Interoperability And Claims Discipline
+Required:
 
-Goal: position the product against regulated ALM, validation, and test-management ecosystems without overclaiming.
-
-Implementation issues from `docs/22-nomos-praxis-synergy-market-audit.md`:
-
-- Nomos #149 / SYN-001: joint evidence ledger contract.
-- Praxis #250 / SYN-002: Praxis consume shared evidence contract.
-- Nomos #154 / SYN-006: source change impact analysis for required Praxis tests.
-- Nomos #155 / SYN-007: Praxis scenario selection from impacted Nomos claims.
-- Nomos #156 / SYN-012: ReqIF/export/import compatibility decision.
-- Nomos #157 / SYN-013: market positioning/non-claim governance.
-- Nomos #158 / SYN-015: regulated demo reference architecture.
-
-Implementation work:
-
-1. Decide whether ReqIF import/export is required for the regulated market entry.
-2. Define ALM/QMS integration boundaries:
-   - export only;
-   - bidirectional sync;
-   - evidence bridge;
-   - no integration in v1.
-3. Create a regulated demo reference architecture using RBOK lawbook and a scoped Realisons product.
-4. Add public claims matrix:
-   - allowed wording;
-   - blocked wording;
-   - evidence required;
-   - quality level required.
-5. Add docs that compare Nomos/Praxis to ALM/QMS/test-management products without implying certification.
+- close `#192`, `#193`, `#194`, and `#196`;
+- keep licensed full text outside public Git unless license allows redistribution;
+- publish sidecars with source, hash, license holder, allowed use, reviewer, and decision;
+- process permitted public and licensed material read-only with Nomos;
+- map references to controls, tests, evidence, waivers, and blocked claims.
 
 Exit gate:
 
 ```text
-marketing, README, roadmap, and release notes cannot claim beyond current NQ/Praxis parity level.
+No cited framework remains decorative.
 ```
 
-Expected result:
+### Phase 5 - RAG And AI Governance
 
-- the product can be positioned in regulated IT without weakening its credibility;
-- future enterprise integrations are planned from a controlled boundary.
+Goal: make downstream LLM use bounded by the canonical source.
 
-## Dependency Tree
+Required:
+
+- retrieval evaluation with expected citations;
+- refusal tests when source evidence is missing;
+- prompt-injection and excessive-agency controls;
+- concise-answer contract for module/question flows;
+- model/provider policy for Swiss-only deployments where required;
+- traceability from RAG chunk to canonical unit to source span.
+
+Exit gate:
 
 ```text
-#125 + #126 + #127
-  -> #136
-  -> #137
-  -> #138
-
-#138
-  -> #139
-  -> #140
-  -> #141
-  -> #142
-  -> #143
-  -> #145
-  -> #146
-  -> #147
-
-#124
-  -> #128
-  -> #129 + #130 + #131 + #132
-  -> #133
-  -> #134
-  -> #135
-
-#144
-  -> #149
-  -> Praxis #247
-  -> Praxis #248 + #249 + #250 + #251
-  -> Praxis #252
-  -> Praxis #253
-  -> Praxis #254 + #255 + #256
-
-#150 + #151 + #152 + #153
-  -> NQ-5 release evidence bundle
-
-#154 + #155 + #156 + #157 + #158
-  -> RG-6 market interoperability and regulated demo
-
-NQ-2 = #125 + #126 + #127 + #136 green
-NQ-3 = NQ-2 + #137 + #139 + #140 + #141 + #142 + #143 + #145 green
-NQ-4 = NQ-3 + RBOK lawbook proof + #144 + #149 + Praxis #247-#252 green
-NQ-5 = NQ-4 + #150 + #151 + #152 + #153 + #147 + Praxis #254-#256 green
-NQ-6 = NQ-5 + independent review reconstruction successful
+LLM output assists the product without becoming the authority.
 ```
 
-Immediate Nomos-only chain:
+### Phase 6 - Nomos/Praxis Evidence Integration
+
+Goal: connect canonical evidence to runtime assurance.
+
+Required:
+
+- close `#320`;
+- publish Nomos-to-Praxis atom mapping;
+- validate shared evidence ledger fixtures;
+- record Praxis evidence quality level in Nomos release bundles;
+- feed runtime deviations/CAPA back into Nomos controls.
+
+Exit gate:
 
 ```text
-#125 + #126
-  -> #127
-  -> #136
-  -> #137
-  -> #139 + #140
-  -> #141 + #142 + #143 + #145 + #146 + #147
-  -> #124 + #128-#135
-  -> #144 + #149-#158
-  -> Praxis #247-#256
+Joint claims are permitted only when both products have compatible evidence and quality levels.
+```
+
+### Phase 7 - NQ-5/NQ-6 Validation Readiness
+
+Goal: support regulated customer qualification for a scoped intended use.
+
+Required:
+
+- validation inventory;
+- intended-use model;
+- risk assessment;
+- URS/SRS or equivalent requirements baseline;
+- traceability matrix;
+- test protocols and challenge cases;
+- deviation and CAPA log;
+- approval records;
+- release evidence bundle;
+- retention and reconstruction procedure;
+- independent reconstruction review.
+
+Exit gate:
+
+```text
+A regulated customer or independent reviewer can qualify Nomos for a declared intended use using retained evidence.
 ```
 
 ## Documentation Alignment Rules
 
-Each implementation PR must update documentation in the same PR when behavior or claims change.
+Each PR must update documentation when it changes:
 
-Required documentation updates by work type:
-
-| Work type | Required docs |
+| Change type | Required docs |
 |---|---|
-| CLI command or verdict behavior | `README.md`, `docs/14-product-roadmap.md`, command reference when added |
-| Regulated control or external reference | `docs/21-regulated-quality-reference.md`, control matrix example |
-| Client qualification or validation deliverable | `docs/24-regulated-client-compliance-evidence.md`, validation pack docs |
-| Nomos/Praxis evidence link | `docs/22-nomos-praxis-synergy-market-audit.md`, schema examples |
-| Implementation sequencing or issue dependency | `docs/23-regulated-implementation-plan.md`, `docs/15-product-backlog.md` |
-| Validation lifecycle artifact | `docs/validation/*`, regulated release checklist |
-| Public claim or wording | public claims matrix and README |
+| CLI behavior or command surface | README, CLI README, relevant specs, tests. |
+| Corpus/fidelity behavior | RBOK POC dossier, atomization docs, public claim boundary if claim changes. |
+| Regulated evidence or references | Regulated README, control matrix, validation pack, release bundle docs. |
+| Public wording | README, RELEASE, public claim boundary, changelog. |
+| Nomos/Praxis interface | Synergy audit, customer integration docs, evidence contract docs. |
+| Security/support/governance | SECURITY, SUPPORT, GOVERNANCE, contribution docs. |
 
-Documentation must not imply:
+## Claim Discipline
+
+Public and sales-facing documents must not imply:
 
 - certification;
-- validated status;
-- any-stack support;
-- regulated-grade readiness;
-- electronic-record/signature compliance;
-- autonomous AI authority creation.
+- customer validation;
+- universal source-format fidelity;
+- legal authority;
+- Part 11/GxP/Annex 11 compliance;
+- ISO certification;
+- NASA qualification;
+- eQMS replacement;
+- licensed-standard redistribution rights.
 
-Unless the corresponding gate is green.
-
-## Release Gates By Quality Level
-
-| Level | Required green gates |
-|---|---|
-| NQ-2 | Go build/test, CUE vet, CLI fail-closed, real corpus commands, no dummy evidence |
-| NQ-3 | NQ-2 plus reference alignment, self-compliance, ALCOA report metadata, validation docs |
-| NQ-4 | NQ-3 plus Nomos/Praxis shared evidence contract and cross-repo smoke |
-| NQ-5 | NQ-4 plus validation pack, release evidence bundle, SLSA/in-toto gate, review/approval records |
-| NQ-6 | NQ-5 plus independent reconstruction and audit-ready evidence retention |
-
-## First Execution Sprint
-
-The first sprint is Nomos-only. It should not implement Praxis yet. It should make Nomos executable and able to emit valid artifacts for Praxis to consume later:
-
-1. Fix current CLI/CUE build blockers.
-2. Implement compliance matrix schema and example.
-3. Implement `nomos compliance references`.
-4. Implement `nomos compliance self-check`.
-5. Add `docs/validation/` skeleton and link it to generated evidence.
-6. Add the first self-compliance CI workflow.
-7. Run RBOK lawbook feed in read-only mode and archive the evidence outside `realisons-business`.
-8. Create Nomos-side evidence fixtures for the future Praxis contract.
-9. Record Praxis evidence as absent/not-yet-qualified in release bundle fixtures until Praxis implementation starts.
-
-Definition of done:
-
-- all generated evidence is real and schema-valid;
-- source repos remain unmodified unless explicitly checked out for product code changes;
-- docs and issue dependencies match the implemented behavior;
-- README claim level matches the achieved NQ level.
+Unless that exact claim has a release gate and retained evidence.

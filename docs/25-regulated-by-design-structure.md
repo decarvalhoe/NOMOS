@@ -158,29 +158,28 @@ These gates are mandatory before regulated-grade wording can advance:
 
 ## Nomos First Implementation
 
-The initial implementation wave is documentation and structure only:
+The initial documentation-and-structure wave is installed:
 
-- install the regulated folders and templates;
-- create Nomos and Praxis product profiles;
-- make the structure visible from the README;
-- keep Nomos compliance status honest while CI and self-compliance are not green.
+- regulated folders and templates exist;
+- Nomos and Praxis product profiles exist;
+- the structure is linked from the public docs;
+- public claims are bounded for `v0.1.0-ALPHA`.
 
-The next implementation wave must wire those templates into schemas and CLI gates:
+The current alpha wave has moved beyond structure into operational evidence:
 
-- `nomos compliance references`;
-- `nomos compliance self-check`;
-- `nomos release bundle`;
-- `nomos corpus feed --profile rbok-lawbook`;
-- deterministic ALCOA+ report generation;
-- Praxis-compatible evidence export.
+- CLI and corpus commands are implemented;
+- RBOK lawbook feed and strict fidelity proof are available;
+- regulated documentation and evidence-pack automation exist;
+- release docs distinguish implemented evidence from blocked regulated claims.
 
-The current GitHub-native automation wave adds:
+The next closure wave must harden:
 
-- `regulated-documentation-gate.yml` for controlled-document structure, YAML validity and overclaim blocking;
-- `regulated-evidence-pack.yml` for automated evidence hash inventory and GitHub QMS audit artifact upload;
-- `regulated_docs_gate.py` for repository-local documentation checks;
-- `regulated_evidence_pack.py` for ALCOA+ oriented evidence inventory;
-- `regulated_github_qms_audit.py` for local plus live GitHub settings audit.
+- named quality/security/technical ownership;
+- CODEOWNERS and approval evidence;
+- GitHub live QMS evidence export;
+- licensed-reference review and sidecars;
+- reference-to-control closure;
+- release evidence bundle reconstruction.
 
 ## Non-Overclaim Boundary
 
@@ -188,9 +187,9 @@ The presence of this structure means:
 
 ```text
 regulated_by_design_structure: installed
-regulated_grade_claim: not yet allowed
-current_nomos_level: NQ-0/NQ-1 boundary
+regulated_grade_claim: not allowed
+current_nomos_level: NQ-2 alpha
 current_praxis_relationship: downstream target, not yet qualified through Nomos
 ```
 
-Public or customer-facing wording must continue to say "regulated-grade candidate" or "method/prototype under validation" until the gates above pass.
+Public or customer-facing wording must continue to say "alpha regulated-readiness baseline", "regulated-by-design architecture under validation", or equivalent bounded language until the higher-level gates pass.
