@@ -1,0 +1,80 @@
+schema_version: "0.1.0"
+policy_id: "RCP-004"
+title: "Artifact Retention and Audit-Log Export Policy"
+status: draft
+owner: "Compliance Owner"
+effective_date: null
+last_reviewed: "2026-05-03"
+
+retention_rules:
+  - id: RET-CI-001
+    category: ci_artifacts
+    description: "CI/CD build artifacts, test reports, coverage outputs."
+    retention_days: 90
+    storage: github_actions_artifacts
+    disposal_method: automatic_expiry
+    rationale: "Short-lived artifacts needed only for debugging recent builds."
+
+  - id: RET-EV-001
+    category: regulated_evidence
+    description: "Nomos reports, attestations, SBOM, provenance, signed evidence packs."
+    retention_years: 5
+    storage: regulated_evidence_archive
+    disposal_method: reviewed_destruction
+    rationale: "Regulatory requirement: evidence must be available for audit and inspection for 5 years minimum."
+
+  - id: RET-EV-002
+    category: corpus_attestations
+    description: "In-toto corpus attestations, feed snapshots, governance reports."
+    retention_years: 5
+    storage: regulated_evidence_archive
+    disposal_method: reviewed_destruction
+    rationale: "Corpus provenance attestations are part of the regulated evidence chain."
+
+  - id: RET-AUDIT-001
+    category: audit_logs
+    description: "GitHub audit log exports (organization and repository events)."
+    retention_years: 5
+    storage: regulated_audit_archive
+    disposal_method: reviewed_destruction
+    rationale: "Audit logs provide tamper-evident record of access, changes, and administrative actions."
+
+  - id: RET-REL-001
+    category: release_bundles
+    description: "Release evidence packs including SBOM, provenance, attestation, and compliance report."
+    retention_years: 5
+    storage: regulated_evidence_archive
+    disposal_method: reviewed_destruction
+    rationale: "Release bundles are the definitive compliance record for each promoted version."
+
+  - id: RET-SRC-001
+    category: source_snapshots
+    description: "Git repository state at release (tag or commit SHA)."
+    retention_years: 5
+    storage: git_tags_and_branches
+    disposal_method: never_delete_tags
+    rationale: "Source state at release must be reproducible for audit."
+
+audit_log_export:
+  schedule: weekly
+  day: sunday
+  time_utc: "02:00"
+  format: json
+  scope:
+    - organization_events
+    - repository_events
+    - workflow_events
+    - secret_scanning_events
+  output_path: ".regulated-audit-logs/"
+  retention: "follows RET-AUDIT-001"
+  verification:
+    - sha256_hash_per_export
+    - manifest_with_date_range
+    - signed_when_attestation_available
+
+compliance_notes:
+  - "All retention periods are minimums. Extensions require documented justification."
+  - "Disposal of regulated evidence requires approval from compliance owner."
+  - "Audit log exports must be verified against GitHub's event count for completeness."
+  - "Storage locations must support immutability or append-only access patterns."
+  - "This policy becomes effective only after compliance owner approval."
