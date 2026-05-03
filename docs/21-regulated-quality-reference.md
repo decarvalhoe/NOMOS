@@ -8,17 +8,15 @@ This document is the hard reference. It does not certify Nomos against any regul
 
 ## Current Hard Audit Verdict
 
-Status: **not yet defensible as regulated-grade**.
+Status: **alpha regulated-readiness baseline; not regulated-grade**.
 
 Reasons:
 
-- The current `main` state after PR #123 has failed CI for Go build, CUE validation, and RBOK lawbook E2E. A regulated tool cannot use a red main branch as evidence.
-- Nomos does not yet run a self-compliance gate on `RBOKproject/Nomos` using its own public CLI.
-- The public CLI does not yet expose the full promised RBOK lawbook pipeline through a proved `nomos corpus feed --profile rbok-lawbook` surface.
-- External references in the documentation are useful, but they are not yet governed as requirements with acceptance criteria, evidence, and release gates.
-- Several documentation URLs are placeholders or future endpoints: `example.com/*`, `get.nomos.dev`, `nomos.dev/attestation/v1`, and `schemas.nomos.dev/*`.
-- Existing SLSA/in-toto references are present in attestation schemas, but there is not yet a complete supply-chain evidence gate that proves those statements for Nomos itself.
-- Praxis already has strong evidence, runtime, invariant, and CAPA primitives, but Nomos has no formal interoperability contract with Praxis.
+- The `v0.1.0-ALPHA` line has an operational CLI, real RBOK lawbook POC evidence, source spans, typed blocks, certified TOC, strict fidelity gate, and regulated-readiness documentation baseline.
+- The repository can support commercial regulated-readiness discussions and internal pilots.
+- Nomos still lacks approved QMS owner records, training records, live GitHub QMS evidence exports, completed licensed-reference review, full reference-to-control closure, and independent reconstruction evidence.
+- The public claim boundary must remain alpha-level until those records are complete.
+- Praxis remains downstream: it can strengthen Nomos only after the Nomos-to-Praxis evidence contract is verified.
 
 ## Non-Negotiable Rule
 
@@ -78,7 +76,7 @@ Nomos must stop using a vague "production ready" concept. The quality level must
 | NQ-5 | Regulated validation pack | Intended use, risk model, URS/SRS, traceability, validation protocol, audit trail, records, signatures, and retention are complete. | "Validation-pack ready", not "certified". |
 | NQ-6 | Independent audit ready | Independent reviewer can reconstruct every claim without private tribal knowledge. | "Independent audit ready". |
 
-Current audit: **NQ-0/NQ-1 boundary**, because documentation exists but `main` is red and self-compliance is absent.
+Current audit: **NQ-2 alpha**, because the CLI and RBOK corpus proof are operational with real evidence. `NQ-3` remains a candidate level until self-compliance evidence, owner/approval records, GitHub QMS evidence, and independent review preparation are closed.
 
 ## Control Families
 

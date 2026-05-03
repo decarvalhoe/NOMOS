@@ -28,7 +28,6 @@ type treeSitterParseResult struct {
 type treeSitterGrammar struct {
 	name     string
 	language *sitter.Language
-	parser   *sitter.Parser
 }
 
 type treeSitterRegistry struct {
@@ -60,12 +59,9 @@ func newTreeSitterRegistry() *treeSitterRegistry {
 }
 
 func (r *treeSitterRegistry) register(name string, language *sitter.Language) {
-	parser := sitter.NewParser()
-	parser.SetLanguage(language)
 	r.grammars[name] = &treeSitterGrammar{
 		name:     name,
 		language: language,
-		parser:   parser,
 	}
 }
 
@@ -85,7 +81,11 @@ func (r *treeSitterRegistry) parse(
 	ctx, cancel := context.WithTimeout(context.Background(), treeSitterParseTimeout)
 	defer cancel()
 
-	tree, err := grammar.parser.ParseCtx(ctx, nil, content)
+	parser := sitter.NewParser()
+	defer parser.Close()
+	parser.SetLanguage(grammar.language)
+
+	tree, err := parser.ParseCtx(ctx, nil, content)
 	if err != nil {
 		return treeSitterParseResult{}, fmt.Errorf(
 			"tree-sitter parse failed for %s as %s: %w",

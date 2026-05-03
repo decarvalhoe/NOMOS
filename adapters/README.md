@@ -1,43 +1,32 @@
 # Adapters
 
-Ce dossier contient le contrat public des adapters Nomos et, a terme, les
-implementations versionnees par stack et surface.
+Adapters describe how Nomos observes application stacks without making the core depend on a specific framework.
 
-Contrat courant :
+## Alpha Status
 
-- `adapter-contract.md` : regles de manifeste, capabilities, versioning et
-  compatibilite ;
-- `node-typescript/` : premier profile adapter Node / TypeScript avec manifeste,
-  conventions et fixtures officielles NOM-402 ;
-- `../specs/adapter-manifest.cue` : schema CUE machine-readable du manifeste ;
-- `../specs/examples/adapter-manifest.node-typescript.yaml` : exemple concret de
-  manifeste adapter.
+The adapter area is a contract and early-profile workspace. It is useful for design validation and controlled pilots, but it is not yet a stable plugin marketplace.
 
-Chaque adapter doit declarer :
+Current material:
 
-- stacks supportees ;
-- surfaces detectables ;
-- capabilities stables ou experimentales ;
-- commandes exposees au CLI Nomos ;
-- patterns interdits ;
-- limites connues ;
-- version compatible du coeur Nomos.
+- `adapter-contract.md` defines the public adapter contract.
+- `node-typescript/` contains a Node/TypeScript profile and fixtures.
+- `python/` contains a Python profile and fixtures.
+- `jvm/` contains a JVM profile.
+- `../specs/adapter-manifest.cue` defines the machine-readable adapter manifest schema.
+- `../specs/examples/adapter-manifest.node-typescript.yaml` shows an example manifest.
 
-Nom de fichier attendu pour une implementation :
+## Adapter Requirements
 
-```text
-adapter.nomos.yaml
-```
+Every adapter must declare:
 
-Le manifeste est l'interface stable entre le coeur Nomos et les adapters. Une
-implementation sans manifeste valide n'est pas chargeable par le coeur, meme si
-son code existe.
+- supported stacks and surfaces;
+- capabilities and maturity status;
+- commands exposed to the Nomos CLI;
+- forbidden patterns;
+- known limitations;
+- compatible Nomos core version;
+- test fixtures and evidence expectations.
 
-Le coeur CLI expose maintenant une couche de parsing Tree-sitter commune pour
-les premiers adapters : Go, Java, JavaScript, Python, TSX et TypeScript. Quand
-une grammaire n'est pas enregistree, le rapport de detection doit emettre un
-diagnostic explicite plutot que masquer la limite de support.
+## Regulated-Readiness Rule
 
-Le profile Node / TypeScript v1 couvre les conventions backend/frontend
-suivantes : routes Next.js app/pages et Express/Fastify, modules de service,
-mocks de test, fixtures, et constantes de catalogue metier hardcodees.
+Adapters may help detect source-to-product drift, but an adapter alone is not validation evidence. Any regulated claim needs traceability from source to implementation to verification to approved evidence.

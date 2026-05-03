@@ -12,7 +12,7 @@ This protocol implements Gate 6 (Release gate) from docs/25-regulated-by-design-
 
 ## Claim Boundary
 
-This protocol covers Nomos v0.1 claims only. It does not extend to Praxis or downstream consumers. Current quality level is NQ-0/NQ-1 boundary.
+This protocol covers Nomos v0.1 alpha claims only. It does not extend to Praxis or downstream consumers. Current quality level is NQ-2 alpha; the protocol must pass with retained evidence before any NQ-6 or independent-audit-ready claim.
 
 ## Reviewer Qualifications
 

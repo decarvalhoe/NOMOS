@@ -3,7 +3,7 @@ project:
   id: nomos
   name: Nomos
   description: Canonical-first product intelligence platform.
-  repository: https://github.com/RBOKproject/Nomos
+  repository: https://github.com/RBOKproject/NOMOS
   domain: product-intelligence
   lifecycle: greenfield
   risk_level: medium

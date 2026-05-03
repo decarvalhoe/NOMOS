@@ -6,7 +6,7 @@ owner: product-owner
 product:
   id: nomos
   name: Nomos
-  version: "0.1.0-dev"
+  version: "0.1.0-ALPHA"
 
 intended_use:
   summary: >

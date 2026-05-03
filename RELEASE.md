@@ -1,44 +1,93 @@
-# Nomos v0.1.0-dev Release Readiness
+# Release v0.1.0-ALPHA
 
-## Gates
+Nomos `v0.1.0-ALPHA` is the first public alpha release candidate for the canonical-first product intelligence platform.
 
-| Gate | Status | Details |
-|---|---|---|
-| `nomos.project.yaml` exists | PASS | Project manifest with id=nomos, verdict=in_scope |
-| `go test ./...` (cli) | PASS | 16 packages, all tests green |
-| `go vet ./...` (cli) | PASS | No issues |
-| `docs/decisions/` exists | PASS | ADR-0001-canonical-first.md |
-| `nomos diagnose` (self) | PASS | verdict=pass, in_scope, confidence=high |
-| Source manifest | PASS | docs/canonical/source-manifest.yaml (18 sources) |
-| Canonical matrix | PASS | docs/canonical/canonical-matrix.yaml (12 units) |
-| CI workflow | PASS | .github/workflows/ci.yml (go-test, cue-vet, yaml-lint) |
-| Release artifacts | PASS | reports/nomos-report.json, nomos-spdx.json, nomos-cyclonedx.json, nomos-attestation.json |
+## Release Intent
 
-## Packages Tested
+This release is designed to support:
 
-- admit, app, attestation, checks, checks/contracts, detect, diagnose
-- exceptions, export, output, partial, productcheck, remediation
-- report, strict, validate
+- corpus assessment and canonical-first project bootstrapping;
+- read-only processing of authority source repositories;
+- lawbook-style Markdown corpus feeds;
+- traceable RBOK proof-of-concept validation;
+- regulated-readiness documentation and evidence-pack preparation;
+- internal customer demos and commercial qualification discussions.
 
-## CLI Commands Implemented
+It is not intended to be sold or represented as a certified regulated platform. It is an alpha that proves a substantial pipeline and defines the honest evidence boundary for regulated customers.
 
-- `nomos init` — scaffold project manifests
-- `nomos validate` — schema validation
-- `nomos diagnose` — admission pre-report
-- `nomos sources check` — source integrity
-- `nomos contracts check` — contract validation
-- `nomos matrix check` — matrix structure
-- `nomos product-check` — project manifest checks
-- `nomos strict` — aggregated release gate
-- `nomos exceptions check` — expiring exceptions
-- `nomos report` — generate nomos-report.json
-- `nomos export spdx` — SPDX 2.3 SBOM
-- `nomos export cyclonedx` — CycloneDX 1.5 BOM
-- `nomos attest` — in-toto attestation
+## Delivered Capabilities
 
-## Evidence
+| Area | v0.1.0-ALPHA status |
+|---|---|
+| CLI project diagnosis | Implemented |
+| Corpus scan, manifest, diff, sidecar validation | Implemented |
+| Corpus feed and attestation | Implemented |
+| RBOK lawbook profile | Implemented and POC-tested |
+| Source spans | Implemented for generated lawbook feed nodes |
+| Typed semantic blocks | Implemented for tables, links, images, callouts, and code blocks |
+| Certified table of contents | Implemented and release-gated |
+| Governed lexicon artifact | Implemented initial extraction |
+| RAG metadata | Implemented as traceable metadata output |
+| Runtime import projection | Implemented for RBOK engine integration |
+| Strict fidelity gate | Implemented and release-gated |
+| Regulated documentation baseline | Installed and gated for structure |
+| Evidence pack automation | Implemented initial scripts |
+| Formal customer validation package | Partial, not complete |
+| Formal regulatory certification | Not claimed |
 
-- `reports/nomos-report.json` — full detect report
-- `reports/nomos-spdx.json` — SPDX 2.3 SBOM
-- `reports/nomos-cyclonedx.json` — CycloneDX 1.5 BOM
-- `reports/nomos-attestation.json` — signed attestation envelope
+## Alpha POC Evidence
+
+The latest RBOK lawbook POC was executed against a read-only clone of `realisons-business/01_rbok`.
+
+| Metric | Result |
+|---|---|
+| Source files scanned | 240 |
+| Generated feed nodes | 7191 |
+| Certified TOC entries | 1090 |
+| Nodes with spans | 7191 |
+| Strict fidelity gate | pass |
+| Blocking findings | 0 |
+| Non-blocking findings | 0 |
+| Fidelity proof status | `full_fidelity_proven` |
+| Source mutation verification | pass |
+
+## Release Gates
+
+Local gates used for this release:
+
+```bash
+go test ./...
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/e2e.ps1
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions gates:
+
+- Go vet and test for CLI and control-plane packages;
+- CUE vet;
+- YAML lint;
+- corpus tests on Linux, macOS, and Windows;
+- RBOK lawbook E2E;
+- RBOK runtime E2E;
+- fidelity proof report generation;
+- regulated documentation gate;
+- regulated evidence pack.
+
+## Known Limitations
+
+- The robust POC target is RBOK lawbook-style Markdown; portability to every legal, regulatory, PDF, DOCX, HTML, table-heavy, image-heavy, or nested annex corpus still requires more validation.
+- The regulated documentation set is a baseline, not an approved QMS.
+- Licensed reference standards may be tracked by intake record, but their full text must be handled according to license terms and may not be redistributed.
+- RAG metadata is generated, but production vector-store ingestion, retrieval evaluation, and LLM behavior control remain integration work.
+- Customer validation remains customer-specific and must be performed against intended use, deployment context, risk, and SOPs.
+- Open follow-up issues remain for stronger RBOK proof (`#314`), Nomos/Praxis atom mapping (`#320`), licensed reference acquisition/review (`#192`, `#193`, `#194`), and public/licensed bible processing (`#196`).
+
+## Release Decision
+
+Release as `v0.1.0-ALPHA` if:
+
+- `main` contains this release documentation;
+- all GitHub required checks are green;
+- the GitHub release is marked as pre-release;
+- release notes include the alpha limitations and claim boundary;
+- no document claims formal regulated certification.
