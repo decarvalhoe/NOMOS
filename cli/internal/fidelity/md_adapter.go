@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// NodeKind enumerates CommonMark block and inline node types.
+// NodeKind enumerates CommonMark and GFM block/inline node types.
 type NodeKind string
 
 const (
@@ -26,6 +26,10 @@ const (
 	KindLink           NodeKind = "link"
 	KindImage          NodeKind = "image"
 	KindHTML           NodeKind = "html_block"
+	// GFM extensions
+	KindTaskListItem   NodeKind = "task_list_item"
+	KindFootnoteDef    NodeKind = "footnote_def"
+	KindFootnoteRef    NodeKind = "footnote_ref"
 )
 
 // CNode is a node in the Canonical AST.
@@ -56,7 +60,7 @@ type CAST struct {
 	Coverage   Coverage `json:"coverage"`
 }
 
-// Coverage reports which CommonMark elements were detected.
+// Coverage reports which CommonMark and GFM elements were detected.
 type Coverage struct {
 	Headings       int `json:"headings"`
 	Paragraphs     int `json:"paragraphs"`
@@ -69,6 +73,12 @@ type Coverage struct {
 	Links          int `json:"links"`
 	Images         int `json:"images"`
 	HTMLBlocks     int `json:"html_blocks"`
+	// GFM extensions
+	TaskListItems  int `json:"task_list_items"`
+	Strikethroughs int `json:"strikethroughs"`
+	Autolinks      int `json:"autolinks"`
+	FootnoteDefs   int `json:"footnote_defs"`
+	FootnoteRefs   int `json:"footnote_refs"`
 }
 
 var (
@@ -84,6 +94,13 @@ var (
 	imageRe        = regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`)
 	htmlBlockRe    = regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>`)
 	htmlCloseRe    = regexp.MustCompile(`^</([a-zA-Z][a-zA-Z0-9]*)>`)
+	// GFM extensions
+	taskItemRe     = regexp.MustCompile(`^(\s*)[-*+]\s+\[([ xX])\]\s+(.+)$`)
+	strikeRe       = regexp.MustCompile(`~~([^~]+)~~`)
+	autolinkRe     = regexp.MustCompile(`<(https?://[^>]+)>`)
+	bareAutolinkRe = regexp.MustCompile(`(?:^|\s)(https?://[^\s<>\[\]]+)`)
+	footnoteDefRe  = regexp.MustCompile(`^\[\^([^\]]+)\]:\s+(.+)$`)
+	footnoteRefRe  = regexp.MustCompile(`\[\^([^\]]+)\]`)
 )
 
 // ParseMarkdown parses Markdown source into a Canonical AST.
@@ -296,15 +313,36 @@ func ParseMarkdown(source string) CAST {
 			continue
 		}
 
-		// List (unordered or ordered).
-		if ulItemRe.MatchString(line) || olItemRe.MatchString(line) {
+		// Footnote definition (GFM).
+		if footnoteDefRe.MatchString(trimmed) {
+			m := footnoteDefRe.FindStringSubmatch(trimmed)
+			parent := currentParent(headingStack)
+			n := CNode{
+				ID: nodeID("footnote_def", i), Kind: KindFootnoteDef,
+				Text: m[2], RawText: line, ParentID: parent,
+				Span: Span{StartLine: i + 1, EndLine: i + 1}, Hash: hashStr(trimmed),
+				Props: map[string]string{"label": m[1]},
+			}
+			cast.Nodes = append(cast.Nodes, n)
+			addChildRef(&cast, parent, n.ID)
+			cov.FootnoteDefs++
+			i++
+			continue
+		}
+
+		// List (unordered, ordered, or task list).
+		if taskItemRe.MatchString(line) || ulItemRe.MatchString(line) || olItemRe.MatchString(line) {
 			start := i
 			parent := currentParent(headingStack)
-			ordered := olItemRe.MatchString(line)
+			ordered := olItemRe.MatchString(line) && !taskItemRe.MatchString(line)
+			hasTask := taskItemRe.MatchString(line)
 			listID := nodeID("list", start)
 			listKind := "unordered"
 			if ordered {
 				listKind = "ordered"
+			}
+			if hasTask {
+				listKind = "task"
 			}
 			listNode := CNode{
 				ID: listID, Kind: KindList, ParentID: parent,
@@ -314,6 +352,33 @@ func ParseMarkdown(source string) CAST {
 
 			for i < len(lines) {
 				li := lines[i]
+				// Task list item takes priority.
+				if tm := taskItemRe.FindStringSubmatch(li); tm != nil {
+					checked := tm[2] == "x" || tm[2] == "X"
+					itemText := tm[3]
+					itemProps := extractGFMInlineProps(itemText)
+					if itemProps == nil {
+						itemProps = map[string]string{}
+					}
+					if checked {
+						itemProps["checked"] = "true"
+					} else {
+						itemProps["checked"] = "false"
+					}
+					item := CNode{
+						ID: nodeID("task_list_item", i), Kind: KindTaskListItem,
+						Text: strings.TrimSpace(itemText), RawText: li, ParentID: listID,
+						Span: Span{StartLine: i + 1, EndLine: i + 1}, Hash: hashStr(itemText),
+						Props: itemProps,
+					}
+					listNode.Children = append(listNode.Children, item.ID)
+					cast.Nodes = append(cast.Nodes, item)
+					cov.TaskListItems++
+					cov.ListItems++
+					i++
+					continue
+				}
+
 				var itemText string
 				if m := ulItemRe.FindStringSubmatch(li); m != nil {
 					itemText = m[2]
@@ -327,8 +392,8 @@ func ParseMarkdown(source string) CAST {
 					Text: strings.TrimSpace(itemText), RawText: li, ParentID: listID,
 					Span: Span{StartLine: i + 1, EndLine: i + 1}, Hash: hashStr(itemText),
 				}
-				// Extract inline links/images.
-				item.Props = extractInlineRefs(itemText)
+				// Extract inline links/images + GFM inlines.
+				item.Props = extractGFMInlineProps(itemText)
 				listNode.Children = append(listNode.Children, item.ID)
 				cast.Nodes = append(cast.Nodes, item)
 				cov.ListItems++
@@ -374,15 +439,18 @@ func ParseMarkdown(source string) CAST {
 				Span: Span{StartLine: start + 1, EndLine: i},
 				Hash: hashStr(content), ParentID: parent,
 			}
-			// Extract inline links and images.
-			n.Props = extractInlineRefs(content)
+			// Extract inline links, images, and GFM inlines.
+			n.Props = extractGFMInlineProps(content)
 			cast.Nodes = append(cast.Nodes, n)
 			addChildRef(&cast, parent, n.ID)
 			cov.Paragraphs++
 
-			// Count inline links and images.
+			// Count inline elements.
 			cov.Links += len(linkRe.FindAllString(content, -1))
 			cov.Images += len(imageRe.FindAllString(content, -1))
+			cov.Strikethroughs += len(strikeRe.FindAllString(content, -1))
+			cov.Autolinks += len(autolinkRe.FindAllString(content, -1)) + len(bareAutolinkRe.FindAllString(content, -1))
+			cov.FootnoteRefs += len(footnoteRefRe.FindAllString(content, -1))
 		}
 	}
 
@@ -456,6 +524,45 @@ func extractInlineRefs(text string) map[string]string {
 			props[fmt.Sprintf("link_%d_href", i)] = m[2]
 		}
 	}
+	if len(props) == 0 {
+		return nil
+	}
+	return props
+}
+
+// extractGFMInlineProps extracts CommonMark + GFM inline references.
+func extractGFMInlineProps(text string) map[string]string {
+	props := extractInlineRefs(text)
+	if props == nil {
+		props = map[string]string{}
+	}
+
+	// Strikethrough.
+	if strikes := strikeRe.FindAllStringSubmatch(text, -1); len(strikes) > 0 {
+		for i, m := range strikes {
+			props[fmt.Sprintf("strikethrough_%d", i)] = m[1]
+		}
+	}
+
+	// Autolinks.
+	if autolinks := autolinkRe.FindAllStringSubmatch(text, -1); len(autolinks) > 0 {
+		for i, m := range autolinks {
+			props[fmt.Sprintf("autolink_%d", i)] = m[1]
+		}
+	}
+	if barelinks := bareAutolinkRe.FindAllStringSubmatch(text, -1); len(barelinks) > 0 {
+		for i, m := range barelinks {
+			props[fmt.Sprintf("autolink_bare_%d", i)] = strings.TrimSpace(m[1])
+		}
+	}
+
+	// Footnote references.
+	if fnrefs := footnoteRefRe.FindAllStringSubmatch(text, -1); len(fnrefs) > 0 {
+		for i, m := range fnrefs {
+			props[fmt.Sprintf("footnote_ref_%d", i)] = m[1]
+		}
+	}
+
 	if len(props) == 0 {
 		return nil
 	}
