@@ -189,6 +189,11 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write rbok-certified-toc.json: %w", err)
 	}
 
+	// Strict fidelity gate — wired into artifact pipeline (AQ-329).
+	tocArtifactPath := filepath.Join(outDir, "rbok-certified-toc.json")
+	lexiconArtifactPath := filepath.Join(outDir, "rbok-governed-lexicon.yaml")
+	_, _ = RunStrictFidelityGateForPack(assembly, outDir, tocArtifactPath, lexiconArtifactPath)
+
 	artifacts := []string{
 		"rbok-lawbook-feed.json",
 		"rbok-lawbook-index.json",
@@ -198,6 +203,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		"rbok-attestation.json",
 		"rbok-governed-lexicon.yaml",
 		"rbok-certified-toc.json",
+		"rbok-strict-fidelity-gate.json",
 	}
 	sort.Strings(artifacts)
 
