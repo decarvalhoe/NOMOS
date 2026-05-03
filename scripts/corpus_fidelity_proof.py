@@ -153,6 +153,10 @@ def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str
 def node_has_span(node: dict[str, Any]) -> bool:
     if isinstance(node.get("byte_span"), dict) or isinstance(node.get("source_span"), dict):
         return True
+    # Check nested "span" object (LawbookSourceSpan from Go serialization)
+    span = node.get("span")
+    if isinstance(span, dict) and span.get("start_line", 0) > 0:
+        return True
     return all(key in node for key in ("start_byte", "end_byte", "start_line", "end_line"))
 
 
