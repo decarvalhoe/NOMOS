@@ -148,13 +148,6 @@ func (t StructureTree) CrossRefIndex() map[string][]string {
 	return index
 }
 
-func buildNumber(counters []int, level int) string {
-	parts := make([]string, 0, level)
-	for i := 1; i <= level; i++ {
-		parts = append(parts, fmt.Sprintf("%d", counters[i]))
-	}
-	return strings.Join(parts, ".")
-}
 
 func findParent(stack []*TOCNode, level int) *TOCNode {
 	for i := level - 1; i >= 0; i-- {

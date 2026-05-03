@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func sampleHeadings() []HeadingInput {
+func treeTestHeadings() []HeadingInput {
 	return []HeadingInput{
 		{ID: "H1", Title: "Introduction", Level: 1, Hash: "sha256:h1"},
 		{ID: "H2", Title: "Architecture", Level: 2, Hash: "sha256:h2"},
@@ -17,7 +17,7 @@ func sampleHeadings() []HeadingInput {
 }
 
 func TestBuildStructureTreeBasic(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC", SourceHash: "sha256:src"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC", SourceHash: "sha256:src"})
 
 	if tree.DocumentID != "DOC" {
 		t.Fatalf("expected DOC, got %s", tree.DocumentID)
@@ -34,7 +34,7 @@ func TestBuildStructureTreeBasic(t *testing.T) {
 }
 
 func TestBuildStructureTreeRootChildren(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	// Root should have 2 children: Introduction (H1) and Appendix (H1).
 	if len(tree.Root.Children) != 2 {
@@ -49,7 +49,7 @@ func TestBuildStructureTreeRootChildren(t *testing.T) {
 }
 
 func TestBuildStructureTreeNesting(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	intro := tree.Root.Children[0]
 	// Introduction should have 2 children: Architecture, Deployment.
@@ -67,16 +67,16 @@ func TestBuildStructureTreeNesting(t *testing.T) {
 }
 
 func TestBuildStructureTreeNumbering(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	flat := tree.FlatTOC()
 	expected := map[string]string{
-		"H1": "1",
-		"H2": "1.1",
-		"H3": "1.1.1",
-		"H4": "1.1.2",
-		"H5": "1.2",
-		"H6": "2",
+		"H1": "0.1",
+		"H2": "0.1.1",
+		"H3": "0.1.1.1",
+		"H4": "0.1.1.2",
+		"H5": "0.1.2",
+		"H6": "0.2",
 	}
 	for _, node := range flat {
 		if exp, ok := expected[node.ID]; ok {
@@ -88,7 +88,7 @@ func TestBuildStructureTreeNumbering(t *testing.T) {
 }
 
 func TestBuildStructureTreeHash(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	if tree.TreeHash == "" {
 		t.Fatal("expected non-empty tree hash")
@@ -99,7 +99,7 @@ func TestBuildStructureTreeHash(t *testing.T) {
 }
 
 func TestBuildStructureTreeVerify(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	if !tree.Verify() {
 		t.Fatal("tree should verify against its own hash")
@@ -107,7 +107,7 @@ func TestBuildStructureTreeVerify(t *testing.T) {
 }
 
 func TestBuildStructureTreeVerifyDetectsTamper(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 	tree.TreeHash = "sha256:tampered"
 
 	if tree.Verify() {
@@ -116,8 +116,8 @@ func TestBuildStructureTreeVerifyDetectsTamper(t *testing.T) {
 }
 
 func TestBuildStructureTreeDeterministic(t *testing.T) {
-	t1 := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
-	t2 := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	t1 := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
+	t2 := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	if t1.TreeHash != t2.TreeHash {
 		t.Fatal("tree hash should be deterministic")
@@ -125,7 +125,7 @@ func TestBuildStructureTreeDeterministic(t *testing.T) {
 }
 
 func TestBuildStructureTreeFlatTOC(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 	flat := tree.FlatTOC()
 
 	if len(flat) != 7 { // root + 6
@@ -138,7 +138,7 @@ func TestBuildStructureTreeFlatTOC(t *testing.T) {
 }
 
 func TestBuildStructureTreeFindByID(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	node := tree.FindByID("H4")
 	if node == nil {
@@ -150,7 +150,7 @@ func TestBuildStructureTreeFindByID(t *testing.T) {
 }
 
 func TestBuildStructureTreeFindByIDNotFound(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	node := tree.FindByID("NONEXISTENT")
 	if node != nil {
@@ -159,7 +159,7 @@ func TestBuildStructureTreeFindByIDNotFound(t *testing.T) {
 }
 
 func TestBuildStructureTreeCrossRefIndex(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 	index := tree.CrossRefIndex()
 
 	// H4 references H3.
@@ -187,7 +187,7 @@ func TestBuildStructureTreeEmptyHeadings(t *testing.T) {
 }
 
 func TestBuildStructureTreeParentIDs(t *testing.T) {
-	tree := BuildStructureTree(sampleHeadings(), TreeConfig{DocumentID: "DOC"})
+	tree := BuildStructureTree(treeTestHeadings(), TreeConfig{DocumentID: "DOC"})
 
 	node := tree.FindByID("H3")
 	if node == nil {

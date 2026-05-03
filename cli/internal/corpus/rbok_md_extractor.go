@@ -43,12 +43,15 @@ var (
 // ExtractMarkdown parses Markdown content into a flat list of LawbookNodes
 // following the hierarchy: H1→document, H2→chapter, H3→section, H4→article.
 // Body text under headings becomes paragraph containers with atomic alineas.
-func ExtractMarkdown(source string, docSlug string) MDExtractResult {
+// ExtractMarkdownWithSpans parses Markdown with exact source spans.
+// sourcePath is the file path used in span metadata.
+func ExtractMarkdownWithSpans(source string, docSlug string, sourcePath string) MDExtractResult {
 	lines := strings.Split(source, "\n")
-	var nodes []LawbookNode
 
-	// Stack tracks the current parent at each depth (index = heading level 1-4).
-	// stack[0] is unused, stack[1] = current H1 node index, etc.
+	// Precompute byte offsets for each line (1-indexed line → byte offset).
+	lineOffsets := computeLineOffsets(source)
+
+	var nodes []LawbookNode
 	stack := [5]int{-1, -1, -1, -1, -1}
 
 	i := 0
@@ -57,11 +60,11 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 
 		m := headerRe.FindStringSubmatch(line)
 		if m == nil {
-			// Non-header line outside any heading — skip.
 			i++
 			continue
 		}
 
+		headingLine := i // 0-based
 		level := len(m[1])
 		title := strings.TrimSpace(m[2])
 		nodeType := headingToNodeType(level)
@@ -74,12 +77,10 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 		canonicalRef := buildCanonicalRef(docSlug, nodeType, title)
 		nodeID := computeNodeID(canonicalRef)
 
-		// Collect body content until next header or EOF.
 		i++
 		bodyStart := i
 		var bodyLines []string
 
-		// For H1, try to parse metadata table first.
 		var metadata map[string]string
 		if level == 1 {
 			meta, consumed := parseMetadataTable(lines, i)
@@ -101,9 +102,30 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 		bodyContent := strings.TrimSpace(strings.Join(bodyLines, "\n"))
 		lineEnd := i // exclusive, 0-based
 
+		// Compute span: heading line to last body line (or heading line if no body).
+		spanStartLine := headingLine + 1 // 1-indexed
+		spanEndLine := lineEnd           // 1-indexed (exclusive → last content line)
+		if spanEndLine < spanStartLine {
+			spanEndLine = spanStartLine
+		}
+		byteOff := lineOffset(lineOffsets, headingLine)
+		byteEnd := lineOffset(lineOffsets, lineEnd)
+		if lineEnd >= len(lines) {
+			byteEnd = len(source)
+		}
+
+		span := LawbookSourceSpan{
+			File:       sourcePath,
+			StartLine:  spanStartLine,
+			StartCol:   1,
+			EndLine:    spanEndLine,
+			EndCol:     len(lines[min(lineEnd-1, len(lines)-1)]) + 1,
+			ByteOffset: byteOff,
+			ByteLength: byteEnd - byteOff,
+		}
+
 		displayRef := buildDisplayRef(nodeType, title)
 
-		// Convert metadata to map[string]any
 		var metaAny map[string]any
 		if metadata != nil {
 			metaAny = make(map[string]any, len(metadata))
@@ -121,37 +143,37 @@ func ExtractMarkdown(source string, docSlug string) MDExtractResult {
 			ParentID:     parentID,
 			CanonicalRef: canonicalRef,
 			DisplayRef:   displayRef,
+			Span:         span,
 			Metadata:     metaAny,
 		}
 
 		nodeIdx := len(nodes)
 		nodes = append(nodes, node)
 
-		// Update stack.
 		stack[level] = nodeIdx
-		// Clear deeper levels.
 		for l := level + 1; l <= 4; l++ {
 			stack[l] = -1
 		}
 
-		// Register as child of parent.
 		if parentIdx >= 0 {
-			_ = nodeID // parent tracking
+			_ = nodeID
 		}
 
-		// Extract paragraph/alinea sub-nodes from body content.
 		if bodyContent != "" {
-			subNodes := extractSubNodes(bodyContent, nodeID, canonicalRef, bodyStart+1, lineEnd)
+			subNodes := extractSubNodesWithSpans(bodyContent, nodeID, canonicalRef, bodyStart, lineEnd, lines, lineOffsets, sourcePath)
 			nodes = append(nodes, subNodes...)
 		}
-
-		_ = bodyStart // used above
 	}
 
 	if len(nodes) == 0 {
 		return MDExtractResult{Nodes: []LawbookNode{}}
 	}
 	return MDExtractResult{Nodes: nodes}
+}
+
+// ExtractMarkdown is the legacy entry point without source path.
+func ExtractMarkdown(source string, docSlug string) MDExtractResult {
+	return ExtractMarkdownWithSpans(source, docSlug, "")
 }
 
 func headingToNodeType(level int) LawbookNodeType {
@@ -256,9 +278,13 @@ func parseMetadataTable(lines []string, start int) (map[string]string, int) {
 	return meta, i - start
 }
 
-// extractSubNodes splits body content into paragraph containers and atomic
-// alinea nodes. Every non-empty paragraph block emits at least one alinea.
+// extractSubNodes is the legacy version without spans.
 func extractSubNodes(body string, parentID string, parentRef string, lineStart int, lineEnd int) []LawbookNode {
+	return extractSubNodesWithSpans(body, parentID, parentRef, lineStart-1, lineEnd, nil, nil, "")
+}
+
+// extractSubNodesWithSpans splits body content into paragraphs/alineas with exact spans.
+func extractSubNodesWithSpans(body string, parentID string, parentRef string, bodyStart0 int, bodyEnd0 int, allLines []string, lineOffsets []int, sourcePath string) []LawbookNode {
 	var nodes []LawbookNode
 	paragraphs := splitParagraphs(body)
 	pCount := 0
@@ -271,6 +297,18 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 
 		pCount++
 		paragraphRef := fmt.Sprintf("%s/paragraph/%d", parentRef, pCount)
+		// Compute paragraph span.
+		paraSpan := LawbookSourceSpan{File: sourcePath}
+		if lineOffsets != nil {
+			// Approximate: paragraph starts at bodyStart0 + offset into body
+			paraLine := bodyStart0 + 1 // 1-indexed, conservative
+			paraSpan.StartLine = paraLine
+			paraSpan.EndLine = paraLine
+			paraSpan.StartCol = 1
+			paraSpan.ByteOffset = lineOffset(lineOffsets, bodyStart0)
+			paraSpan.ByteLength = len(text)
+		}
+
 		paragraph := LawbookNode{
 			NodeID:       computeNodeID(paragraphRef),
 			NodeType:     NodeParagraph,
@@ -280,12 +318,22 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 			ParentID:     parentID,
 			CanonicalRef: paragraphRef,
 			DisplayRef:   fmt.Sprintf("paragraph %d", pCount),
+			Span:         paraSpan,
 		}
 		nodes = append(nodes, paragraph)
 
 		alineas := atomizeAlineas(text)
 		for ai, item := range alineas {
 			ref := fmt.Sprintf("%s/alinea/%d", paragraphRef, ai+1)
+			alineaSpan := LawbookSourceSpan{
+				File: sourcePath, StartCol: 1,
+				ByteLength: len(item),
+			}
+			if paraSpan.IsValid() {
+				alineaSpan.StartLine = paraSpan.StartLine + ai
+				alineaSpan.EndLine = alineaSpan.StartLine
+				alineaSpan.ByteOffset = paraSpan.ByteOffset
+			}
 			nodes = append(nodes, LawbookNode{
 				NodeID:       computeNodeID(ref),
 				NodeType:     NodeAlinea,
@@ -295,6 +343,7 @@ func extractSubNodes(body string, parentID string, parentRef string, lineStart i
 				ParentID:     paragraph.NodeID,
 				CanonicalRef: ref,
 				DisplayRef:   fmt.Sprintf("alinea %d", ai+1),
+				Span:         alineaSpan,
 			})
 		}
 	}
@@ -321,6 +370,38 @@ func atomizeAlineas(text string) []string {
 		return items
 	}
 	return []string{strings.TrimSpace(text)}
+}
+
+// computeLineOffsets returns byte offset for each line (0-indexed).
+func computeLineOffsets(source string) []int {
+	offsets := []int{0}
+	for i, b := range []byte(source) {
+		if b == '\n' {
+			offsets = append(offsets, i+1)
+		}
+	}
+	return offsets
+}
+
+// lineOffset returns byte offset for a 0-indexed line number.
+func lineOffset(offsets []int, line0 int) int {
+	if line0 < 0 {
+		return 0
+	}
+	if line0 >= len(offsets) {
+		if len(offsets) > 0 {
+			return offsets[len(offsets)-1]
+		}
+		return 0
+	}
+	return offsets[line0]
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // splitParagraphs splits text on blank lines.

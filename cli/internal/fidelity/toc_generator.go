@@ -25,17 +25,6 @@ type TOCArtifact struct {
 	ArtifactHash  string     `json:"artifact_hash"`
 }
 
-// TOCEntry is a single line in the certified TOC.
-type TOCEntry struct {
-	ID       string `json:"id"`
-	Number   string `json:"number"`
-	Title    string `json:"title"`
-	Depth    int    `json:"depth"`
-	Hash     string `json:"hash"`
-	ParentID string `json:"parent_id,omitempty"`
-	HasChildren bool `json:"has_children"`
-	PageRef  string `json:"page_ref,omitempty"`
-}
 
 // TOCGeneratorConfig controls TOC generation.
 type TOCGeneratorConfig struct {
@@ -101,8 +90,8 @@ func WriteTOCMarkdown(w io.Writer, toc TOCArtifact) error {
 	for _, e := range toc.Entries {
 		indent := strings.Repeat("  ", e.Depth)
 		fmt.Fprintf(w, "%s- **%s** %s", indent, e.Number, e.Title)
-		if e.PageRef != "" {
-			fmt.Fprintf(w, " _(p. %s)_", e.PageRef)
+		if e.Line != 0 {
+			fmt.Fprintf(w, " _(line %d)_", e.Line)
 		}
 		fmt.Fprintln(w)
 	}
@@ -133,12 +122,10 @@ func flattenToEntries(node *TOCNode, config TOCGeneratorConfig, depth int) []TOC
 		}
 
 		entry := TOCEntry{
-			ID:          node.ID,
+			NodeID:          node.ID,
 			Number:      node.Number,
 			Title:       node.Title,
 			Depth:       node.Depth,
-			ParentID:    node.ParentID,
-			HasChildren: len(node.Children) > 0,
 		}
 
 		if config.IncludeHashes {
@@ -146,7 +133,7 @@ func flattenToEntries(node *TOCNode, config TOCGeneratorConfig, depth int) []TOC
 		}
 
 		if config.PageRefs != nil {
-			entry.PageRef = config.PageRefs[node.ID]
+			entry.Line = 0
 		}
 
 		entries = append(entries, entry)
@@ -175,7 +162,7 @@ func computeArtifactHash(toc TOCArtifact) string {
 	h.Write([]byte(toc.SourceHash))
 	h.Write([]byte(toc.TreeHash))
 	for _, e := range toc.Entries {
-		h.Write([]byte(e.ID))
+		h.Write([]byte(e.NodeID))
 		h.Write([]byte(e.Number))
 		h.Write([]byte(e.Title))
 		h.Write([]byte(fmt.Sprintf("%d", e.Depth)))
@@ -183,3 +170,4 @@ func computeArtifactHash(toc TOCArtifact) string {
 	}
 	return "sha256:" + hex.EncodeToString(h.Sum(nil))
 }
+

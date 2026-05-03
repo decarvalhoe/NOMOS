@@ -6,17 +6,17 @@ import (
 
 func TestCompareTOCPerfectMatch(t *testing.T) {
 	source := []TOCEntry{
-		{ID: "h1", Title: "Introduction", Depth: 1},
-		{ID: "h2", Title: "Background", Depth: 2},
-		{ID: "h3", Title: "Conclusion", Depth: 1},
+		{NodeID: "h1", Title: "Introduction", Depth: 1},
+		{NodeID: "h2", Title: "Background", Depth: 2},
+		{NodeID: "h3", Title: "Conclusion", Depth: 1},
 	}
 	nomos := []TOCEntry{
-		{ID: "n1", Title: "Introduction", Depth: 1},
-		{ID: "n2", Title: "Background", Depth: 2},
-		{ID: "n3", Title: "Conclusion", Depth: 1},
+		{NodeID: "n1", Title: "Introduction", Depth: 1},
+		{NodeID: "n2", Title: "Background", Depth: 2},
+		{NodeID: "n3", Title: "Conclusion", Depth: 1},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if !result.Aligned {
 		t.Fatalf("expected aligned, got drifts: %v", result.Drifts)
@@ -31,16 +31,16 @@ func TestCompareTOCPerfectMatch(t *testing.T) {
 
 func TestCompareTOCMissing(t *testing.T) {
 	source := []TOCEntry{
-		{ID: "h1", Title: "Chapter 1", Depth: 1},
-		{ID: "h2", Title: "Chapter 2", Depth: 1},
-		{ID: "h3", Title: "Chapter 3", Depth: 1},
+		{NodeID: "h1", Title: "Chapter 1", Depth: 1},
+		{NodeID: "h2", Title: "Chapter 2", Depth: 1},
+		{NodeID: "h3", Title: "Chapter 3", Depth: 1},
 	}
 	nomos := []TOCEntry{
-		{ID: "n1", Title: "Chapter 1", Depth: 1},
-		{ID: "n3", Title: "Chapter 3", Depth: 1},
+		{NodeID: "n1", Title: "Chapter 1", Depth: 1},
+		{NodeID: "n3", Title: "Chapter 3", Depth: 1},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")
@@ -58,14 +58,14 @@ func TestCompareTOCMissing(t *testing.T) {
 
 func TestCompareTOCExtra(t *testing.T) {
 	source := []TOCEntry{
-		{ID: "h1", Title: "Section A", Depth: 1},
+		{NodeID: "h1", Title: "Section A", Depth: 1},
 	}
 	nomos := []TOCEntry{
-		{ID: "n1", Title: "Section A", Depth: 1},
-		{ID: "n2", Title: "Section B", Depth: 1},
+		{NodeID: "n1", Title: "Section A", Depth: 1},
+		{NodeID: "n2", Title: "Section B", Depth: 1},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")
@@ -83,13 +83,13 @@ func TestCompareTOCExtra(t *testing.T) {
 
 func TestCompareTOCDepthMismatch(t *testing.T) {
 	source := []TOCEntry{
-		{ID: "h1", Title: "Topic", Depth: 1},
+		{NodeID: "h1", Title: "Topic", Depth: 1},
 	}
 	nomos := []TOCEntry{
-		{ID: "n1", Title: "Topic", Depth: 2},
+		{NodeID: "n1", Title: "Topic", Depth: 2},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")
@@ -107,17 +107,17 @@ func TestCompareTOCDepthMismatch(t *testing.T) {
 
 func TestCompareTOCReordered(t *testing.T) {
 	source := []TOCEntry{
-		{ID: "h1", Title: "First", Depth: 1},
-		{ID: "h2", Title: "Second", Depth: 1},
-		{ID: "h3", Title: "Third", Depth: 1},
+		{NodeID: "h1", Title: "First", Depth: 1},
+		{NodeID: "h2", Title: "Second", Depth: 1},
+		{NodeID: "h3", Title: "Third", Depth: 1},
 	}
 	nomos := []TOCEntry{
-		{ID: "n1", Title: "First", Depth: 1},
-		{ID: "n3", Title: "Third", Depth: 1},
-		{ID: "n2", Title: "Second", Depth: 1},
+		{NodeID: "n1", Title: "First", Depth: 1},
+		{NodeID: "n3", Title: "Third", Depth: 1},
+		{NodeID: "n2", Title: "Second", Depth: 1},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned (reordered)")
@@ -134,7 +134,7 @@ func TestCompareTOCReordered(t *testing.T) {
 }
 
 func TestCompareTOCBothEmpty(t *testing.T) {
-	result := CompareTOC(nil, nil)
+	result := CompareTOCLegacy(nil, nil)
 	if !result.Aligned {
 		t.Fatal("expected aligned for empty")
 	}
@@ -144,8 +144,8 @@ func TestCompareTOCBothEmpty(t *testing.T) {
 }
 
 func TestCompareTOCSourceEmpty(t *testing.T) {
-	nomos := []TOCEntry{{ID: "n1", Title: "Something", Depth: 1}}
-	result := CompareTOC(nil, nomos)
+	nomos := []TOCEntry{{NodeID: "n1", Title: "Something", Depth: 1}}
+	result := CompareTOCLegacy(nil, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")
@@ -156,8 +156,8 @@ func TestCompareTOCSourceEmpty(t *testing.T) {
 }
 
 func TestCompareTOCNomosEmpty(t *testing.T) {
-	source := []TOCEntry{{ID: "h1", Title: "Something", Depth: 1}}
-	result := CompareTOC(source, nil)
+	source := []TOCEntry{{NodeID: "h1", Title: "Something", Depth: 1}}
+	result := CompareTOCLegacy(source, nil)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")
@@ -168,10 +168,10 @@ func TestCompareTOCNomosEmpty(t *testing.T) {
 }
 
 func TestCompareTOCCaseInsensitive(t *testing.T) {
-	source := []TOCEntry{{ID: "h1", Title: "CHAPTER ONE", Depth: 1}}
-	nomos := []TOCEntry{{ID: "n1", Title: "chapter one", Depth: 1}}
+	source := []TOCEntry{{NodeID: "h1", Title: "CHAPTER ONE", Depth: 1}}
+	nomos := []TOCEntry{{NodeID: "n1", Title: "chapter one", Depth: 1}}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if !result.Aligned {
 		t.Fatalf("expected aligned (case insensitive), got drifts: %v", result.Drifts)
@@ -179,10 +179,10 @@ func TestCompareTOCCaseInsensitive(t *testing.T) {
 }
 
 func TestCompareTOCWhitespaceTrimming(t *testing.T) {
-	source := []TOCEntry{{ID: "h1", Title: "  Title  ", Depth: 1}}
-	nomos := []TOCEntry{{ID: "n1", Title: "Title", Depth: 1}}
+	source := []TOCEntry{{NodeID: "h1", Title: "  Title  ", Depth: 1}}
+	nomos := []TOCEntry{{NodeID: "n1", Title: "Title", Depth: 1}}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if !result.Aligned {
 		t.Fatal("expected aligned after whitespace trimming")
@@ -201,7 +201,7 @@ func TestCompareTOCScore(t *testing.T) {
 		{Title: "B", Depth: 1},
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 	// 2 matched out of max(4, 2) = 4
 	if result.Score != 0.5 {
 		t.Fatalf("expected score 0.5, got %f", result.Score)
@@ -243,7 +243,7 @@ func TestCompareTOCMultipleDrifts(t *testing.T) {
 		// B missing, C missing
 	}
 
-	result := CompareTOC(source, nomos)
+	result := CompareTOCLegacy(source, nomos)
 
 	if result.Aligned {
 		t.Fatal("expected not aligned")

@@ -95,6 +95,30 @@ func (p LawbookPriority) IsValid() bool {
 	}
 }
 
+// LawbookSourceSpan locates a node precisely in its source file.
+type LawbookSourceSpan struct {
+	File       string `json:"file"        yaml:"file"`
+	StartLine  int    `json:"start_line"  yaml:"start_line"`
+	StartCol   int    `json:"start_col"   yaml:"start_col"`
+	EndLine    int    `json:"end_line"    yaml:"end_line"`
+	EndCol     int    `json:"end_col"     yaml:"end_col"`
+	ByteOffset int    `json:"byte_offset" yaml:"byte_offset"`
+	ByteLength int    `json:"byte_length" yaml:"byte_length"`
+}
+
+// IsValid returns true if the span has non-zero line range.
+func (s LawbookSourceSpan) IsValid() bool {
+	return s.StartLine > 0 && s.EndLine >= s.StartLine
+}
+
+// String returns a human-readable location.
+func (s LawbookSourceSpan) String() string {
+	if s.StartLine == s.EndLine {
+		return fmt.Sprintf("%s:%d", s.File, s.StartLine)
+	}
+	return fmt.Sprintf("%s:%d-%d", s.File, s.StartLine, s.EndLine)
+}
+
 // LawbookNode is a single structural node in a lawbook feed.
 type LawbookNode struct {
 	NodeID        string            `json:"node_id" yaml:"node_id"`
@@ -106,6 +130,7 @@ type LawbookNode struct {
 	OrdinalPath   string            `json:"ordinal_path" yaml:"ordinal_path"`
 	SourcePath    string            `json:"source_path" yaml:"source_path"`
 	SourceHash    string            `json:"source_hash" yaml:"source_hash"`
+	Span          LawbookSourceSpan `json:"span" yaml:"span"`
 	Status        LawbookNodeStatus `json:"status" yaml:"status"`
 	Priority      LawbookPriority   `json:"priority" yaml:"priority"`
 	Domain        string            `json:"domain" yaml:"domain"`
@@ -114,6 +139,38 @@ type LawbookNode struct {
 	ParentID      string            `json:"parent_id,omitempty" yaml:"parent_id,omitempty"`
 	EffectiveDate string            `json:"effective_date,omitempty" yaml:"effective_date,omitempty"`
 	Metadata      map[string]any    `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
+// SpanCoverageResult reports how well source spans cover the document.
+type SpanCoverageResult struct {
+	TotalNodes    int     `json:"total_nodes"`
+	WithSpan      int     `json:"with_span"`
+	WithoutSpan   int     `json:"without_span"`
+	TotalBytes    int     `json:"total_bytes"`
+	CoveredBytes  int     `json:"covered_bytes"`
+	CoverageRatio float64 `json:"coverage_ratio"`
+}
+
+// ComputeSpanCoverage calculates span coverage for a set of nodes.
+func ComputeSpanCoverage(nodes []LawbookNode, sourceLen int) SpanCoverageResult {
+	result := SpanCoverageResult{TotalNodes: len(nodes), TotalBytes: sourceLen}
+	coveredBytes := 0
+	for _, n := range nodes {
+		if n.Span.IsValid() {
+			result.WithSpan++
+			coveredBytes += n.Span.ByteLength
+		} else {
+			result.WithoutSpan++
+		}
+	}
+	result.CoveredBytes = coveredBytes
+	if sourceLen > 0 {
+		result.CoverageRatio = float64(coveredBytes) / float64(sourceLen)
+		if result.CoverageRatio > 1.0 {
+			result.CoverageRatio = 1.0
+		}
+	}
+	return result
 }
 
 // LawbookFeed is a batch of lawbook nodes forming a feed document.
