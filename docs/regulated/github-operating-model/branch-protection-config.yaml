@@ -1,8 +1,11 @@
 schema_version: "0.1.0"
 document_id: NOMOS-GH-BP-001
-status: draft
-owner: devops-owner
-claim_boundary: "Declarative configuration only. Enforcement requires applying via GitHub API or UI."
+status: applied_main
+owner: realisonsdotcom
+approver: yhalt
+claim_boundary: >-
+  Declarative configuration only. Enforcement requires applying via GitHub API
+  or UI.
 
 repository:
   owner: RBOKproject
@@ -14,7 +17,7 @@ branch_rules:
       require_pull_request: true
       required_approving_review_count: 1
       dismiss_stale_reviews: true
-      require_code_owner_reviews: false  # enable when real CODEOWNERS teams exist
+      require_code_owner_reviews: true
       require_last_push_approval: false
       require_linear_history: true
       allow_force_pushes: false
@@ -24,7 +27,8 @@ branch_rules:
         contexts:
           - "Go vet & test (cli)"
           - "CUE vet"
-          - "Regulated documentation gate"
+          - "Validate regulated documentation controls"
+          - "Build regulated evidence pack"
       enforce_admins: true
       restrictions: null  # no push restrictions beyond PR requirement
       lock_branch: false

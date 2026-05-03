@@ -27,6 +27,15 @@ LIVE_CONTROL_NAMES = [
     "security_features",
 ]
 
+REQUIRED_SECURITY_FEATURES = [
+    "code_security",
+    "dependabot_security_updates",
+    "secret_scanning",
+    "secret_scanning_non_provider_patterns",
+    "secret_scanning_push_protection",
+    "secret_scanning_validity_checks",
+]
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -171,10 +180,25 @@ def live_checks(repo: str) -> dict[str, dict[str, object]]:
 
     ok, repo_detail = gh_api(repo, "")
     if ok:
-        checks["security_features"] = {
-            "status": "requires_human_review",
-            "detail": "Repository data collected; code scanning, Dependabot and secret scanning require security settings review.",
-        }
+        security = repo_detail.get("security_and_analysis", {})
+        disabled = [
+            feature
+            for feature in REQUIRED_SECURITY_FEATURES
+            if security.get(feature, {}).get("status") != "enabled"
+        ]
+        if disabled:
+            checks["security_features"] = {
+                "status": "requires_human_review",
+                "detail": "Some required GitHub security features are not enabled.",
+                "disabled_features": disabled,
+                "security_and_analysis": security,
+            }
+        else:
+            checks["security_features"] = {
+                "status": "verified",
+                "enabled_features": REQUIRED_SECURITY_FEATURES,
+                "security_and_analysis": security,
+            }
     else:
         checks["security_features"] = requires_live("No repository security configuration evidence was collected.")
         checks["security_features"]["api_detail"] = repo_detail

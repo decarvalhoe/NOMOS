@@ -1,0 +1,62 @@
+schema_version: "0.1.0"
+record_type: public_surrogate_annex
+reference_id: ISO-13485-2016
+surrogate_for: ISO-13485-2016
+status: temporary_surrogate_until_official_document_acquired
+claim_boundary: "Public surrogate only. This annex enables temporary non-clause-level QMS processing and does not authorize ISO full-text processing, ISO clause-level mapping, ISO certification claims, or redistribution of ISO content."
+reason: "ISO 13485:2016 is required as a Nomos bible, but the licensed artifact has not yet been acquired and reviewed for internal processing rights."
+license_acquisition_contact: "dev@realisons.com"
+official_reference_metadata:
+  url: "https://www.iso.org/standard/59752.html"
+  use: "metadata_only_no_machine_processing_of_protected_iso_content"
+  note: "ISO lists ISO 13485:2016 as current/confirmed and copyrighted; this annex does not reproduce the standard."
+sources:
+  - id: FDA-QMSR-FAQ
+    title: "Quality Management System Regulation - Frequently Asked Questions"
+    publisher: "US FDA"
+    url: "https://www.fda.gov/medical-devices/quality-management-system-regulation-qmsr/quality-management-system-regulation-frequently-asked-questions"
+    authority: official_public_regulator_source
+    rationale: "FDA explains that QMSR incorporates ISO 13485:2016 by reference and aligns 21 CFR 820 with that standard."
+  - id: FDA-QMSR-FINAL-RULE-2024
+    title: "Medical Devices; Quality System Regulation Amendments"
+    publisher: "US FDA / Federal Register"
+    url: "https://www.fda.gov/media/177022/download"
+    authority: official_public_regulator_source
+    rationale: "Final rule documents QMSR, effective 2026-02-02, and describes the incorporation by reference of ISO 13485:2016."
+  - id: FDA-21CFR820-QMSR
+    title: "21 CFR Part 820 - Quality Management System Regulation"
+    publisher: "US FDA / eCFR"
+    url: "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-820"
+    authority: official_public_regulation
+    rationale: "Public regulatory text can be processed as the temporary QMS compliance corpus until licensed ISO intake is complete."
+  - id: ANSI-IBR-ISO-PORTAL
+    title: "ANSI Incorporated by Reference Portal - ISO standards"
+    publisher: "ANSI"
+    url: "https://ibr.ansi.org/Standards/iso1.aspx"
+    authority: incorporated_by_reference_access_point
+    rationale: "FDA identifies ANSI IBR as a read-only access path for incorporated standards. Nomos must not automate extraction from restricted viewers."
+allowed_processing:
+  mode: public_surrogate_annex
+  full_text_fetch_allowed: true
+  source_scope:
+    - "FDA QMSR public pages"
+    - "Federal Register final rule"
+    - "eCFR public regulation text"
+  generated_outputs_allowed:
+    - manifest
+    - source_hash
+    - public_surrogate_chunks
+    - qms_topic_index
+    - traceability_matrix_to_public_sources
+    - gap_report_to_licensed_iso_intake
+blocked_claims:
+  - iso_clause_level_mapping
+  - iso_certification_claim
+  - licensed_full_text_processing_claim
+  - redistribution_of_iso_content
+  - equivalence_claim_beyond_public_regulator_sources
+exit_criteria:
+  - "Acquire ISO 13485:2016 through an authorized channel."
+  - "Create docs/regulated/reference-basis/licensed-intakes/ISO-13485-2016.yaml."
+  - "Record license holder, allowed internal processing use, hash, reviewer, and approval status."
+  - "Run Nomos read-only licensed intake and replace this temporary surrogate for ISO-specific clause mapping."
