@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "rbok-runtime-e2e.sh"
+LAWBOOK_SCRIPT = ROOT / "scripts" / "rbok-lawbook-e2e.sh"
 
 
 class TestScriptExists(unittest.TestCase):
@@ -70,6 +71,15 @@ class TestScriptSteps(unittest.TestCase):
 
     def test_disables_push(self):
         self.assertIn("no_push", self.content)
+
+
+class TestLawbookScriptSteps(unittest.TestCase):
+    def setUp(self):
+        self.content = LAWBOOK_SCRIPT.read_text()
+
+    def test_generates_fidelity_proof(self):
+        self.assertIn("corpus_fidelity_proof.py", self.content)
+        self.assertIn("rbok-fidelity-proof.json", self.content)
 
 
 class TestLayerClassification(unittest.TestCase):

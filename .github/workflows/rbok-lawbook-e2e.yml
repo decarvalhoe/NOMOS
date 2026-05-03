@@ -5,13 +5,17 @@ on:
     branches: [main, develop]
     paths:
       - 'cli/internal/corpus/**'
+      - 'scripts/corpus_fidelity_proof.py'
       - 'scripts/rbok-lawbook-e2e.sh'
+      - 'tests/test_corpus_fidelity_proof.py'
       - '.github/workflows/rbok-lawbook-e2e.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'cli/internal/corpus/**'
+      - 'scripts/corpus_fidelity_proof.py'
       - 'scripts/rbok-lawbook-e2e.sh'
+      - 'tests/test_corpus_fidelity_proof.py'
       - '.github/workflows/rbok-lawbook-e2e.yml'
   workflow_dispatch:
 
@@ -88,7 +92,7 @@ jobs:
       - name: Verify pipeline artifacts
         run: |
           echo "=== Checking pipeline output ==="
-          for f in diagnosis.json artifact-pack.json rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json; do
+          for f in diagnosis.json artifact-pack.json rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json rbok-fidelity-proof.json; do
             if [ ! -f "/tmp/rbok-output/$f" ]; then
               echo "FAIL: missing expected artifact: $f"
               exit 1
