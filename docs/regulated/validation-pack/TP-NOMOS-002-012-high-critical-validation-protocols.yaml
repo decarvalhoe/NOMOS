@@ -1,0 +1,300 @@
+schema_version: "0.1.0"
+document_id: TP-NOMOS-002-012
+status: executed_local_pending_independent_review
+owner: compliance-team
+issue_ref: "#315"
+
+claim_boundary: >
+  This protocol pack records local execution evidence for Nomos high and
+  critical validation entries that previously lacked TP-NOMOS coverage. It
+  does not by itself establish regulated-grade compliance, production
+  readiness, or final quality-unit approval.
+
+execution_context:
+  repo_commit: "11199fa"
+  executed_by: "codex-local"
+  executed_at: "2026-05-03T12:25:42+02:00"
+  os: "windows-local"
+  go_binary: "C:\\Dev\\canonical-first-method\\.tools\\go\\bin\\go.exe"
+
+protocols:
+  - id: TP-NOMOS-002
+    title: "Cross-manifest strict consistency protocol"
+    validation_ref: VAL-003
+    risk_level: high
+    function_under_test: "cli/internal/strict"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Go workspace dependencies are available."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative
+        command: "go test -v ./internal/strict/..."
+        expected_result: "Strict consistency, duplicate, dangling reference, orphan, invalid YAML, and mode tests pass."
+        actual_result: "PASS; 12 strict tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-003
+    title: "Expiring exceptions enforcement protocol"
+    validation_ref: VAL-004
+    risk_level: high
+    function_under_test: "cli/internal/exceptions"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Go workspace dependencies are available."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative
+        command: "go test -v ./internal/exceptions/..."
+        expected_result: "Valid, expired, revoked, missing owner, missing approver, missing expiration, invalid YAML, and nonexistent manifest cases pass."
+        actual_result: "PASS; 11 exceptions tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-004
+    title: "Read-only source protection protocol"
+    validation_ref: VAL-007
+    risk_level: high
+    function_under_test: "cli/internal/guard"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Go workspace dependencies are available."
+      - "Local git is available for fixture repositories."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative_challenge
+        command: "go test -v ./internal/guard/..."
+        expected_result: "Clean corpus passes and modified, added, deleted, dirty-tree, and push-remote cases fail closed."
+        actual_result: "PASS; guard E2E, hash integrity, output location, clean-tree, and push-remote tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-005
+    title: "Public claims governance protocol"
+    validation_ref: VAL-008
+    risk_level: high
+    function_under_test: "cli/internal/compliance"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Forbidden claims policy file is present."
+    test_cases:
+      - id: TC-001
+        category: functional_negative_regression
+        command: "go test -v ./internal/compliance/... -run ForbiddenClaim"
+        expected_result: "Forbidden compliance, certification, enterprise-grade, production-ready, and alias claims are detected; allowed negations and policy tables are not false positives."
+        actual_result: "PASS; 17 forbidden-claim tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-006
+    title: "RBOK lawbook release gate protocol"
+    validation_ref: VAL-012
+    risk_level: high
+    function_under_test: "cli/internal/corpus/release_gate.go"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Gate-compatible RBOK artifact fixtures are available."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative
+        command: "go test -v ./internal/corpus/... -run ReleaseGate"
+        expected_result: "Release gate passes for complete artifacts and fails for missing feed, node types, attestation, governance, invalid directory, empty feed, and broken structural parent chains."
+        actual_result: "PASS; 15 release gate tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-007
+    title: "Forbidden market claims gate protocol"
+    validation_ref: VAL-014
+    risk_level: high
+    function_under_test: "cli/internal/compliance/forbidden_claims.go"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Forbidden claims policy file is present."
+    test_cases:
+      - id: TC-001
+        category: functional_negative_regression
+        command: "go test -v ./internal/compliance/... -run ForbiddenClaim"
+        expected_result: "Forbidden market claim scanner detects prohibited claims and preserves documented exclusions."
+        actual_result: "PASS; 17 forbidden-claim tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-008
+    title: "ALCOA+ evidence envelope protocol"
+    validation_ref: VAL-015
+    risk_level: high
+    function_under_test: "cli/internal/compliance"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Compliance test suite is available."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_regression
+        command: "go test -v ./internal/compliance/..."
+        expected_result: "Evidence attributes, compliance rollup, record validation, approval records, and signature chain tests pass."
+        actual_result: "PASS; compliance suite passed including ALCOA attribute, evidence record, report, approval, and signature chain tests."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-009
+    title: "AI/RAG governance controls protocol"
+    validation_ref: VAL-016
+    risk_level: high
+    function_under_test: "cli/internal/compliance/ai_rag_controls.go"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "AI/RAG governance controls are compiled into the compliance package."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative
+        command: "go test -v ./internal/compliance/... -run Evaluate"
+        expected_result: "Hallucination, missing citation, low confidence, missing provenance, human review pending/rejected, and injection warning cases are evaluated correctly."
+        actual_result: "PASS; 10 AI/RAG evaluation tests passed."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-010
+    title: "Validation lifecycle completeness protocol"
+    validation_ref: VAL-019
+    risk_level: critical
+    function_under_test: "cli/internal/compliance/validation_lifecycle.go"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Validation pack artifacts are present under docs/regulated/validation-pack."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative_regression
+        command: "go test -v ./internal/compliance/... -run ValidationLifecycle"
+        expected_result: "Nomos repo validation lifecycle is compliant and fixture cases detect full, partial, empty, malformed, and nonexistent roots."
+        actual_result: "PASS; 8 validation lifecycle tests passed with verdict=compliant artifacts=8 present=8 findings=0 blocking=0."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-011
+    title: "Release bundle completeness protocol"
+    validation_ref: VAL-020
+    risk_level: critical
+    function_under_test: "cli/internal/compliance"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Release bundle and regulated evidence structures are present."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative_regression
+        command: "go test -v ./internal/compliance/..."
+        expected_result: "Release bundle assembly, completeness validation, manifest JSON, zip bundle, categories, timestamps, and partial repository cases pass."
+        actual_result: "PASS; compliance suite passed including RCP and release bundle tests."
+        status: passed
+        evidence_ref: "local command output, 2026-05-03"
+    deviations: []
+    summary:
+      verdict: passed
+      approval_status: pending_quality_owner
+
+  - id: TP-NOMOS-012
+    title: "Evidence ledger integrity protocol"
+    validation_ref: VAL-023
+    risk_level: high
+    function_under_test: "cli/internal/compliance/evidence_ledger.go"
+    preconditions:
+      - "Repository checkout is clean before execution."
+      - "Evidence ledger is present under docs/regulated/evidence-index."
+    test_cases:
+      - id: TC-001
+        category: functional_boundary_negative
+        command: "go test -v ./internal/compliance/... -run Ledger"
+        expected_result: "Evidence ledger parser, validator, missing-file, malformed YAML, duplicate, empty category, missing evidence, and blocking gap tests pass."
+        actual_result: "PASS; ledger tests passed. Real repo ledger verdict remains partial with 19 non-blocking findings, which is retained as a bounded evidence limitation."
+        status: passed_with_observation
+        evidence_ref: "local command output, 2026-05-03"
+    deviations:
+      - id: DEV-TP-NOMOS-012-001
+        test_case_ref: TC-001
+        description: "Real repository evidence ledger reports partial due to unknown draft statuses/categories, but no blocking findings."
+        severity: medium
+        root_cause: "Ledger taxonomy is not yet fully normalized for all regulated documentation categories."
+        remediation: "Track ledger taxonomy normalization outside this protocol if regulated-grade evidence ledger claim is required."
+        owner: compliance-team
+        status: open
+        decision_ref: "#314"
+    summary:
+      verdict: passed_with_observation
+      approval_status: pending_quality_owner
+
+summary:
+  total_protocols: 11
+  passed: 10
+  passed_with_observation: 1
+  failed: 0
+  blocked: 0
+  coverage:
+    validations:
+      - VAL-003
+      - VAL-004
+      - VAL-007
+      - VAL-008
+      - VAL-012
+      - VAL-014
+      - VAL-015
+      - VAL-016
+      - VAL-019
+      - VAL-020
+      - VAL-023
+    risk_levels:
+      high: 9
+      critical: 2
+  verdict: passed_with_observation
+  reviewer: ""
+  review_date: ""
+  notes: >
+    TP coverage is now present for all high/critical validations that lacked
+    protocols after TP-NOMOS-001. Independent review and formal approval
+    remain pending.
+
+approval:
+  - role: quality-owner
+    name: ""
+    date: ""
+    signature: ""
+  - role: product-owner
+    name: ""
+    date: ""
+    signature: ""
