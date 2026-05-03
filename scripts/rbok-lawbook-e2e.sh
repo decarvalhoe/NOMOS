@@ -114,17 +114,27 @@ echo "Artifact pack: $PACK"
 echo "=== Step 5: Run release gate ==="
 (cd "$ROOT_DIR/cli" && go run ./internal/corpus/cmd/release-gate --artifacts "$OUT_DIR" --profile "$PROFILE")
 
-# --- Step 6: Validate artifacts ---
-echo "=== Step 6: Validate artifacts ==="
+# --- Step 6: Generate fidelity proof pack ---
+echo "=== Step 6: Generate corpus fidelity proof ==="
+FIDELITY_PROOF="$OUT_DIR/rbok-fidelity-proof.json"
+python3 "$ROOT_DIR/scripts/corpus_fidelity_proof.py" \
+  --corpus "$CORPUS_DIR" \
+  --artifacts-dir "$OUT_DIR" \
+  --profile "$PROFILE" \
+  --report "$FIDELITY_PROOF"
+echo "Fidelity proof: $FIDELITY_PROOF"
+
+# --- Step 7: Validate artifacts ---
+echo "=== Step 7: Validate artifacts ==="
 artifact_count="$(find "$OUT_DIR" -type f \( -name '*.json' -o -name '*.yaml' \) | wc -l)"
 echo "Total artifacts: $artifact_count"
 
-if [[ "$artifact_count" -lt 6 ]]; then
-  echo "FAIL: Expected at least 6 artifacts, got $artifact_count"
+if [[ "$artifact_count" -lt 7 ]]; then
+  echo "FAIL: Expected at least 7 artifacts, got $artifact_count"
   exit 1
 fi
 
-for f in rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json; do
+for f in rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json rbok-fidelity-proof.json; do
   if [[ ! -f "$OUT_DIR/$f" ]]; then
     echo "FAIL: missing expected artifact: $f"
     exit 1
@@ -156,8 +166,8 @@ else:
         print(f"  {t}: {counts[t]}")
 PY
 
-# --- Step 7: Post-extraction read-only check ---
-echo "=== Step 7: Read-only verification ==="
+# --- Step 8: Post-extraction read-only check ---
+echo "=== Step 8: Read-only verification ==="
 
 FINGERPRINT_AFTER="$(mktemp)"
 find "$CORPUS_DIR" -type f -exec sha256sum {} \; | sort > "$FINGERPRINT_AFTER"
@@ -180,4 +190,5 @@ echo "Artifacts:    $artifact_count"
 echo "  diagnosis:    $(basename "$DIAGNOSIS")"
 echo "  pack:         $(basename "$PACK")"
 echo "  feed:         rbok-lawbook-feed.json"
+echo "  fidelity:     rbok-fidelity-proof.json"
 echo "  attestation:  rbok-attestation.json"

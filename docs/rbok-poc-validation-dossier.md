@@ -58,6 +58,7 @@ Local evidence pack: `C:\Dev\nomos-rbok-poc-run-20260503-dynamic-depth`
 | Gate-compatible artifacts | PASS: `rbok-lawbook-feed.json`, index, RAG metadata, engine import, governance, attestation |
 | Attestation boundary | PASS: predicate scope `full_profile`, diagnosis embedded |
 | Release gate | PASS: 0 blocking checks |
+| Fidelity proof pack | PARTIAL: full fidelity claim blocked by 7 explicit findings |
 
 ### Release Gate Result
 
@@ -73,6 +74,37 @@ The RBOK lawbook release gate passes against the current evidence pack:
 ```
 
 The gate now validates nested multi-feed lawbook nodes and computes the corpus' actual structural depth from parent chains. Current RBOK depth is `max:2` with `chapter` and `section` levels under `document`; the gate no longer hard-codes `article`, but it still fails if heading nodes are orphaned, cyclic, or cannot be traced back to a document.
+
+### Corpus Fidelity Proof Result
+
+`scripts/corpus_fidelity_proof.py` now runs as part of `scripts/rbok-lawbook-e2e.sh` and emits `rbok-fidelity-proof.json`.
+
+Current local execution against `C:\Dev\realisons-business\01_rbok` produced:
+
+```json
+{
+  "status": "partial",
+  "full_fidelity_claim_allowed": false,
+  "summary": {
+    "findings": 7,
+    "blocking_findings": 7
+  }
+}
+```
+
+The proof pack scanned 240 corpus files, including 69 Markdown files, and compared the source structure against the generated `rbok-lawbook` artifacts. It confirms the base POC lane is usable, but it blocks any full-fidelity claim until the missing fidelity artifacts and node types are implemented.
+
+Current proof blockers:
+
+| Code | Evidence |
+|------|----------|
+| `BYTE_SPANS_MISSING` | 0 / 7,022 generated nodes carry exact byte/line spans |
+| `TABLE_BLOCKS_NOT_TYPED` | 142 Markdown tables / 1,206 table rows are present in source; no table nodes are emitted |
+| `CODE_BLOCKS_NOT_TYPED` | 50 fenced code blocks are present in source; no code block nodes are emitted |
+| `CALLOUT_BLOCKS_NOT_TYPED` | 1,511 blockquote/callout lines are present in source; no callout nodes are emitted |
+| `LINKS_NOT_TYPED` | 137 Markdown links are present in source; generated nodes do not expose link metadata |
+| `CERTIFIED_TOC_ARTIFACT_MISSING` | No certified TOC/structure proof artifact is emitted |
+| `LEXICON_ARTIFACT_MISSING` | No governed lexicon artifact is emitted |
 
 ### Corpus Admission Result
 
@@ -251,9 +283,9 @@ go vet: clean
 ### GAP-002: No live 01_rbok E2E in CI without corpus token
 
 **Severity**: low
-**Status**: open
+**Status**: resolved in issue #316 / live CI run
 **Description**: The rbok-lawbook-e2e workflow requires NOMOS_CORPUS_READ_TOKEN to access realisons-business. Without the token, CI runs only unit tests against fixtures.
-**Remediation**: Configure the secret in GitHub repository settings. Local E2E can be run with `scripts/rbok-lawbook-e2e.sh`.
+**Resolution**: The secret is configured and the live `RBOK Lawbook E2E` workflow passed on `main` with read-only checkout, disabled push remote, artifact verification, attestation verification, and source mutation check.
 
 ### GAP-003: Reconstruction review verdict is failed
 
@@ -267,9 +299,9 @@ go vet: clean
 ### GAP-004: Approval signatures pending
 
 **Severity**: low
-**Status**: open
+**Status**: resolved in issue #318 / PR #323
 **Description**: The validation master plan, test protocol TP-NOMOS-001, and this dossier lack approval signatures.
-**Remediation**: Requires named quality owner and product owner to review and sign.
+**Resolution**: `approval-workflow.yaml`, `approval-workflow.md`, and `validation-approval-record.yaml` define the controlled approval path. The status remains `pending_approval`; the gate now blocks any `approved` status without immutable evidence.
 
 ### GAP-005: Praxis integration not activated
 
@@ -301,6 +333,14 @@ go vet: clean
 **Issue**: https://github.com/RBOKproject/NOMOS/issues/312
 **Description**: The local POC command could generate `corpus_admissible` attestation for a restricted Markdown snapshot even when the full `rbok-lawbook` profile diagnosis was blocked.
 **Resolution**: Corpus attestations now include explicit `scope` and embedded diagnosis. Generation rejects `corpus_admissible` if the bound diagnosis is blocked or partial.
+
+### GAP-009: Full document fidelity proof is partial
+
+**Severity**: high
+**Status**: open in issue #319
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/319
+**Description**: `rbok-fidelity-proof.json` is now generated, but the report blocks the full-fidelity claim because byte spans, typed tables/code/callouts/links, certified TOC, and governed lexicon artifacts are not yet emitted.
+**Remediation**: Implement exact source spans and typed Markdown semantic block preservation in the portable fidelity engine, then emit certified TOC and governed lexicon artifacts as first-class E2E outputs.
 
 ## Verdict
 
