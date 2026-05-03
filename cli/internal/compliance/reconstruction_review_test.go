@@ -102,6 +102,22 @@ const intendedUseContent = `intended_use:
       function: "Schema validation"
 `
 
+const executedProtocolContent = `schema_version: "0.1.0"
+document_id: TP-NOMOS-001
+status: executed
+protocol:
+  id: TP-NOMOS-001
+  validation_ref: VAL-013
+test_cases:
+  - id: TC-001
+    command: "go test ./internal/compliance/..."
+    status: passed
+    actual_output: "PASS"
+    evidence_ref: "ci/artifacts/compliance.log"
+summary:
+  verdict: passed
+`
+
 func TestReconstructionReview_CompleteChain(t *testing.T) {
 	dir, config := setupReconstructionFixture(t)
 	writeFixtureInventory(t, dir, completeInventory)
@@ -182,7 +198,7 @@ func TestReconstructionReview_HighRiskRequiresProtocol(t *testing.T) {
 func TestReconstructionReview_HighRiskWithProtocol(t *testing.T) {
 	dir, config := setupReconstructionFixture(t)
 	writeFixtureInventory(t, dir, highRiskInventory)
-	writeFixtureProtocol(t, dir, "TP-NOMOS-001.yaml", "validation_ref: VAL-013\nstatus: executed\n")
+	writeFixtureProtocol(t, dir, "TP-NOMOS-001.yaml", executedProtocolContent)
 
 	result, err := RunReconstructionReview(config)
 	if err != nil {
@@ -197,6 +213,73 @@ func TestReconstructionReview_HighRiskWithProtocol(t *testing.T) {
 			}
 		}
 		t.Fatalf("expected passed with protocol present, got %s", result.Verdict)
+	}
+}
+
+func TestReconstructionReview_HighRiskWithTemplateProtocol(t *testing.T) {
+	dir, config := setupReconstructionFixture(t)
+	writeFixtureInventory(t, dir, highRiskInventory)
+	writeFixtureProtocol(t, dir, "TP-NOMOS-001.yaml", `schema_version: "0.1.0"
+document_id: TP-NOMOS-001
+status: executed
+protocol:
+  id: TP-NOMOS-001
+  validation_ref: VAL-013
+test_cases:
+  - id: TC-001
+    inputs:
+      command: "go test ./internal/compliance/..."
+    status: passed
+    actual_output: "PASS"
+    evidence_ref: "ci/artifacts/self-compliance-report.json"
+summary:
+  verdict: passed
+`)
+
+	result, err := RunReconstructionReview(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != "passed" {
+		t.Fatalf("expected passed with template-style protocol, got %s", result.Verdict)
+	}
+}
+
+func TestReconstructionReview_HighRiskRejectsUnexecutedProtocol(t *testing.T) {
+	dir, config := setupReconstructionFixture(t)
+	writeFixtureInventory(t, dir, highRiskInventory)
+	writeFixtureProtocol(t, dir, "TP-NOMOS-001.yaml", `schema_version: "0.1.0"
+document_id: TP-NOMOS-001
+status: draft
+protocol:
+  id: TP-NOMOS-001
+  validation_ref: VAL-013
+test_cases:
+  - id: TC-001
+    command: "go test ./internal/compliance/..."
+    status: planned
+    actual_output: ""
+    evidence_ref: ""
+summary:
+  verdict: incomplete
+`)
+
+	result, err := RunReconstructionReview(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != "failed" {
+		t.Fatalf("expected failed when protocol lacks executed evidence, got %s", result.Verdict)
+	}
+
+	found := false
+	for _, link := range result.Results[0].Chain {
+		if link.Name == "test_protocol" && link.Status == "missing" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("expected missing test_protocol link for unexecuted protocol")
 	}
 }
 
