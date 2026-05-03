@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // ChainLink identifies one step in the evidence chain.
@@ -36,9 +38,9 @@ type ReconstructionReviewResult struct {
 
 // ReconstructionConfig holds paths needed for the review.
 type ReconstructionConfig struct {
-	RepoRoot      string
-	InventoryPath string
-	LedgerPath    string
+	RepoRoot        string
+	InventoryPath   string
+	LedgerPath      string
 	IntendedUsePath string
 }
 
@@ -139,10 +141,10 @@ func reconstructEntry(v ValidationEntry, config ReconstructionConfig) Reconstruc
 
 	// Link 9: For high/critical risk, check test protocol exists.
 	if v.RiskLevel == "high" || v.RiskLevel == "critical" {
-		protocolExists := hasTestProtocol(v.ID, config.RepoRoot)
+		protocolExists, detail := hasExecutedTestProtocol(v.ID, config.RepoRoot)
 		chain = append(chain, checkLink("test_protocol",
 			protocolExists,
-			fmt.Sprintf("risk=%s requires executed protocol", v.RiskLevel)))
+			fmt.Sprintf("risk=%s %s", v.RiskLevel, detail)))
 	}
 
 	// Link 10: Intended-use traceability (if ref provided).
@@ -191,26 +193,127 @@ func isReproducibleCommand(cmd string) bool {
 	return false
 }
 
-func hasTestProtocol(validationID string, repoRoot string) bool {
+type validationProtocolDoc struct {
+	DocumentID string                    `yaml:"document_id"`
+	Status     string                    `yaml:"status"`
+	Protocol   *validationProtocol       `yaml:"protocol"`
+	Protocols  []validationProtocol      `yaml:"protocols"`
+	TestCases  []validationTestCase      `yaml:"test_cases"`
+	Summary    validationProtocolSummary `yaml:"summary"`
+}
+
+type validationProtocol struct {
+	ID            string                    `yaml:"id"`
+	Status        string                    `yaml:"status"`
+	ValidationRef string                    `yaml:"validation_ref"`
+	TestCases     []validationTestCase      `yaml:"test_cases"`
+	Summary       validationProtocolSummary `yaml:"summary"`
+}
+
+type validationTestCase struct {
+	ID           string                   `yaml:"id"`
+	Command      string                   `yaml:"command"`
+	Inputs       validationTestCaseInputs `yaml:"inputs"`
+	Status       string                   `yaml:"status"`
+	ActualOutput string                   `yaml:"actual_output"`
+	ActualResult string                   `yaml:"actual_result"`
+	EvidenceRef  string                   `yaml:"evidence_ref"`
+}
+
+type validationTestCaseInputs struct {
+	Command string `yaml:"command"`
+}
+
+type validationProtocolSummary struct {
+	Verdict string `yaml:"verdict"`
+}
+
+func hasExecutedTestProtocol(validationID string, repoRoot string) (bool, string) {
 	packDir := filepath.Join(repoRoot, "docs", "regulated", "validation-pack")
 	entries, err := os.ReadDir(packDir)
 	if err != nil {
-		return false
+		return false, "requires executed protocol"
 	}
+	lastDetail := "requires executed protocol"
 	for _, e := range entries {
 		name := strings.ToLower(e.Name())
 		if strings.HasPrefix(name, "tp-") && (strings.HasSuffix(name, ".yaml") || strings.HasSuffix(name, ".yml")) {
-			// Read the file and check if it references this validation.
 			data, err := os.ReadFile(filepath.Join(packDir, e.Name()))
 			if err != nil {
 				continue
 			}
-			if strings.Contains(string(data), validationID) {
-				return true
+			ok, detail := protocolFileHasExecutedEvidence(data, validationID)
+			if ok {
+				return true, detail
+			}
+			if detail != "" {
+				lastDetail = detail
 			}
 		}
 	}
-	return false
+	return false, lastDetail
+}
+
+func protocolFileHasExecutedEvidence(data []byte, validationID string) (bool, string) {
+	var doc validationProtocolDoc
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return false, "protocol YAML invalid"
+	}
+
+	topStatus := doc.Status
+	if doc.Protocol != nil && doc.Protocol.ValidationRef == validationID {
+		if len(doc.Protocol.TestCases) == 0 {
+			doc.Protocol.TestCases = doc.TestCases
+		}
+		if doc.Protocol.Summary.Verdict == "" {
+			doc.Protocol.Summary = doc.Summary
+		}
+		if doc.Protocol.Status == "" {
+			doc.Protocol.Status = topStatus
+		}
+		return executedProtocolOK(doc.DocumentID, *doc.Protocol)
+	}
+
+	for _, protocol := range doc.Protocols {
+		if protocol.ValidationRef != validationID {
+			continue
+		}
+		if protocol.Status == "" {
+			protocol.Status = topStatus
+		}
+		return executedProtocolOK(protocol.ID, protocol)
+	}
+
+	return false, ""
+}
+
+func executedProtocolOK(protocolID string, protocol validationProtocol) (bool, string) {
+	status := strings.ToLower(strings.TrimSpace(protocol.Status))
+	verdict := strings.ToLower(strings.TrimSpace(protocol.Summary.Verdict))
+	if !strings.Contains(status, "executed") {
+		return false, fmt.Sprintf("%s status=%s is not executed", protocolID, protocol.Status)
+	}
+	if verdict != "passed" && verdict != "passed_with_observation" {
+		return false, fmt.Sprintf("%s verdict=%s is not passed", protocolID, protocol.Summary.Verdict)
+	}
+	for _, tc := range protocol.TestCases {
+		tcStatus := strings.ToLower(strings.TrimSpace(tc.Status))
+		command := strings.TrimSpace(tc.Command)
+		if command == "" {
+			command = strings.TrimSpace(tc.Inputs.Command)
+		}
+		actual := strings.TrimSpace(tc.ActualOutput)
+		if actual == "" {
+			actual = strings.TrimSpace(tc.ActualResult)
+		}
+		if (tcStatus == "passed" || tcStatus == "passed_with_observation") &&
+			command != "" &&
+			actual != "" &&
+			strings.TrimSpace(tc.EvidenceRef) != "" {
+			return true, fmt.Sprintf("%s status=%s verdict=%s", protocolID, protocol.Status, protocol.Summary.Verdict)
+		}
+	}
+	return false, fmt.Sprintf("%s has no executed test case with command, actual result, and evidence_ref", protocolID)
 }
 
 func intendedUseFunctionExists(funcRef string, iuPath string) bool {

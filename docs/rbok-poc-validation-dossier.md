@@ -258,11 +258,11 @@ go vet: clean
 ### GAP-003: Reconstruction review verdict is failed
 
 **Severity**: medium
-**Status**: unblocked by issue #315 follow-up branch; hardening remains tracked by issue #317
+**Status**: resolved in issue #317 follow-up branch, pending PR/merge
 **Issue**: https://github.com/RBOKproject/NOMOS/issues/317
 **Description**: The automated reconstruction review previously reported `failed` because high/critical validations lacked test protocols.
-**Resolution**: With TP-NOMOS-002 through TP-NOMOS-012 present, `go test -v ./internal/compliance/... -run Reconstruction` reports `verdict=passed reconstructed=24 failed=0 missing=0`.
-**Remaining hardening**: Issue #317 keeps the stricter requirement open: reconstruction should eventually parse protocol execution status and evidence artifacts directly, not only verify that protocol files reference each high/critical validation.
+**Resolution**: With TP-NOMOS-002 through TP-NOMOS-012 present and reconstruction protocol parsing hardened, `go test -v ./internal/compliance/... -run Reconstruction` reports `verdict=passed reconstructed=24 failed=0 missing=0`.
+**Gate behavior**: High/critical validations now require an executed protocol with a passed or passed-with-observation verdict, at least one executed passing test case, a reproducible command, actual output/result, and an evidence reference. A draft/planned protocol that only mentions the validation ID remains blocking.
 
 ### GAP-004: Approval signatures pending
 
