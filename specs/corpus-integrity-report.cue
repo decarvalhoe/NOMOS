@@ -1,4 +1,4 @@
-package specs
+package nomos
 
 // #IntegrityReport mirrors corpus.IntegrityReport produced by SFI-04
 // (cli/internal/corpus/source_integrity_gate.go). It is intentionally
