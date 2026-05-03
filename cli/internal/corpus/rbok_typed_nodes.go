@@ -12,6 +12,7 @@ var (
 	mdTableSepRe = regexp.MustCompile(`(?m)^\|[\s:|-]+\|$`)
 	mdCodeFenceRe = regexp.MustCompile("(?m)^```(\\w*)\\s*$")
 	mdCalloutRe  = regexp.MustCompile(`(?m)^>\s*\[!(NOTE|WARNING|TIP|IMPORTANT|CAUTION)\]`)
+	mdBlockquoteRe = regexp.MustCompile(`(?m)^>\s+\S`)
 	mdLinkRe     = regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
 	mdImageRe    = regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`)
 )
@@ -28,7 +29,9 @@ func EmitTypedNodesFromExtraction(result *MDExtractResult) {
 
 	for i := range result.Nodes {
 		node := &result.Nodes[i]
-		if node.NodeType != NodeParagraph && node.NodeType != NodeAlinea {
+		// Only process paragraphs — alineas duplicate paragraph text
+		// and would produce duplicate typed nodes.
+		if node.NodeType != NodeParagraph {
 			continue
 		}
 
@@ -150,40 +153,74 @@ func extractCodeBlocks(text string, parent *LawbookNode) []LawbookNode {
 }
 
 func extractCallout(text string, parent *LawbookNode) *LawbookNode {
+	// Try GitHub-style callout first.
 	matches := mdCalloutRe.FindStringSubmatch(text)
-	if matches == nil {
+	if matches != nil {
+		calloutType := matches[1]
+		lines := strings.Split(text, "\n")
+		var content []string
+		foundMarker := false
+		for _, line := range lines {
+			if !foundMarker && mdCalloutRe.MatchString(line) {
+				foundMarker = true
+				continue
+			}
+			if foundMarker {
+				clean := strings.TrimPrefix(line, "> ")
+				clean = strings.TrimPrefix(clean, ">")
+				content = append(content, strings.TrimSpace(clean))
+			}
+		}
+		ref := fmt.Sprintf("%s/callout/%s", parent.CanonicalRef, strings.ToLower(calloutType))
+		return &LawbookNode{
+			NodeID:       computeNodeID(ref),
+			NodeType:     NodeCallout,
+			Depth:        parent.Depth,
+			Title:        calloutType,
+			Text:         strings.TrimSpace(strings.Join(content, "\n")),
+			ParentID:     parent.ParentID,
+			CanonicalRef: ref,
+			DisplayRef:   fmt.Sprintf("callout [%s]", calloutType),
+			Span:         parent.Span,
+			Metadata:     map[string]any{"callout_type": calloutType},
+		}
+	}
+
+	// Fallback: plain blockquote (> lines) — common in real RBOK content.
+	if !mdBlockquoteRe.MatchString(text) {
 		return nil
 	}
-	calloutType := matches[1]
-
-	// Extract content after marker.
 	lines := strings.Split(text, "\n")
+	allQuoted := true
 	var content []string
-	foundMarker := false
 	for _, line := range lines {
-		if !foundMarker && mdCalloutRe.MatchString(line) {
-			foundMarker = true
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
 			continue
 		}
-		if foundMarker {
-			clean := strings.TrimPrefix(line, "> ")
-			clean = strings.TrimPrefix(clean, ">")
-			content = append(content, strings.TrimSpace(clean))
+		if !strings.HasPrefix(trimmed, ">") {
+			allQuoted = false
+			break
 		}
+		clean := strings.TrimPrefix(trimmed, ">")
+		clean = strings.TrimSpace(clean)
+		content = append(content, clean)
 	}
-
-	ref := fmt.Sprintf("%s/callout/%s", parent.CanonicalRef, strings.ToLower(calloutType))
+	if !allQuoted || len(content) == 0 {
+		return nil
+	}
+	ref := fmt.Sprintf("%s/callout/blockquote", parent.CanonicalRef)
 	return &LawbookNode{
 		NodeID:       computeNodeID(ref),
 		NodeType:     NodeCallout,
 		Depth:        parent.Depth,
-		Title:        calloutType,
+		Title:        "blockquote",
 		Text:         strings.TrimSpace(strings.Join(content, "\n")),
 		ParentID:     parent.ParentID,
 		CanonicalRef: ref,
-		DisplayRef:   fmt.Sprintf("callout [%s]", calloutType),
+		DisplayRef:   "callout [blockquote]",
 		Span:         parent.Span,
-		Metadata:     map[string]any{"callout_type": calloutType},
+		Metadata:     map[string]any{"callout_type": "blockquote"},
 	}
 }
 
