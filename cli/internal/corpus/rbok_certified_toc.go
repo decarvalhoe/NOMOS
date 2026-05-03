@@ -1,6 +1,8 @@
 package corpus
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -70,5 +72,29 @@ func nodeTypeToHeadingLevel(t LawbookNodeType) int {
 		return 5
 	default:
 		return 6
+	}
+}
+
+// buildCertifiedTOCFromFeeds constructs a certified TOC from assembled multi-feed data.
+func buildCertifiedTOCFromFeeds(assembly MultiFeedAssembly) fidelity.CertifiedTOC {
+	var entries []fidelity.TOCEntry
+	for _, feed := range assembly.Feeds {
+		for _, node := range feed.Nodes {
+			if node.NodeType == "document" || node.NodeType == "chapter" || node.NodeType == "section" {
+				entries = append(entries, fidelity.TOCEntry{
+					NodeID: node.NodeID,
+					Title:  node.Title,
+					Depth:  node.Depth,
+				})
+			}
+		}
+	}
+	h := sha256.Sum256([]byte(fmt.Sprintf("%v", entries)))
+	return fidelity.CertifiedTOC{
+		Format:        "nomos.certified-toc.v1",
+		DocumentRef:   "multi-document",
+		StructureHash: hex.EncodeToString(h[:]),
+		EntryCount:    len(entries),
+		Entries:       entries,
 	}
 }

@@ -182,6 +182,12 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write rbok-governed-lexicon.yaml: %w", err)
 	}
 
+	// Certified TOC artifact.
+	toc := buildCertifiedTOCFromFeeds(assembly)
+	if err := WriteCertifiedTOCArtifact(toc, outDir); err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write rbok-certified-toc.json: %w", err)
+	}
+
 	artifacts := []string{
 		"rbok-lawbook-feed.json",
 		"rbok-lawbook-index.json",
@@ -190,6 +196,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		"rbok-governance.json",
 		"rbok-attestation.json",
 		"rbok-governed-lexicon.yaml",
+		"rbok-certified-toc.json",
 	}
 	sort.Strings(artifacts)
 
