@@ -234,6 +234,40 @@ parcours:
 	}
 }
 
+func TestExtractParcoursTemplatePlaceholderSequences(t *testing.T) {
+	data := []byte(`
+parcours:
+  code: PAR_TEMPLATE_LEGER
+  name: Template parcours leger
+  modules:
+    - code: MOD_TEMPLATE_01
+      name: Module template
+      type: conversational
+      ai_instructions: Poser uniquement la question du step courant.
+      checkpoints:
+        - checkpoint_id: [code-parcours]-[code-module]-cp-1
+          titre: "[Ce qui doit être acquis à ce stade]"
+      objectives:
+        - key: [nom-objectif]
+          titre: "[Ce que l'IA cherche à comprendre]"
+          questions:
+            - key: [nom-question]
+              label: "[Question posée au client]"
+              type: text
+              help_text: "[Indication courte pour guider la réponse.]"
+`)
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("template placeholders should be accepted: %v", err)
+	}
+	if result.TotalUnits != 2 {
+		t.Fatalf("expected module plus question units, got %d", result.TotalUnits)
+	}
+	if !strings.Contains(result.Units[1].UnitID, "NOM-QUESTION") {
+		t.Fatalf("expected placeholder question key in unit id, got %q", result.Units[1].UnitID)
+	}
+}
+
 func TestExtractParcoursMissingID(t *testing.T) {
 	data := []byte(`
 parcours:
