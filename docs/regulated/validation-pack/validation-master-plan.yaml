@@ -1,0 +1,113 @@
+schema_version: "0.1.0"
+document_id: VMP-NOMOS-001
+title: "Validation Master Plan — Nomos"
+status: draft
+owner: quality-owner
+approved_by: null
+effective_date: null
+last_reviewed: "2026-05-03"
+
+claim_boundary: >
+  This VMP covers the Nomos CLI verification pipeline at NQ-0/NQ-1.
+  It does NOT claim regulated-grade (NQ-2+) compliance.
+  Quality evidence is documented but not independently audited.
+
+scope:
+  in_scope:
+    - "CLI packages: validate, checks, detect, diagnose, report, export"
+    - "Corpus pipeline: scan, manifest, feed, attest"
+    - "Fidelity pipeline: parse, structure, atomize, compare"
+    - "Compliance gates: ALCOA+, provenance, evidence ledger"
+  out_of_scope:
+    - "Runtime application behavior"
+    - "Third-party library internals"
+    - "Network/infrastructure operations"
+
+validation_approach:
+  methodology: "risk-based"
+  reference_standards:
+    - id: REF-FDA-GPSV
+      title: "FDA General Principles of Software Validation"
+      applicability: "Validation planning framework"
+    - id: REF-FDA-CSA
+      title: "FDA Computer Software Assurance (draft)"
+      applicability: "Risk-based testing approach"
+    - id: REF-GAMP5
+      title: "ISPE GAMP 5 (licensed, not committed)"
+      applicability: "Software category classification"
+
+  software_category: "Category 4 — Configured product"
+  rationale: >
+    Nomos is a configured CLI tool. Its behavior is defined by schemas,
+    manifests, and pipeline configuration rather than custom algorithms.
+
+validation_activities:
+  - id: VA-UNIT-TESTS
+    activity: "Automated unit and integration tests"
+    tool: "go test -race ./..."
+    frequency: "Every commit (CI)"
+    evidence: "Test pass/fail results in CI artifacts"
+    risk_coverage: ["functional correctness", "regression prevention"]
+
+  - id: VA-STATIC-ANALYSIS
+    activity: "Static analysis and vet"
+    tool: "go vet ./..."
+    frequency: "Every commit (CI)"
+    evidence: "Vet output in CI artifacts"
+    risk_coverage: ["code quality", "type safety"]
+
+  - id: VA-SCHEMA-VALIDATION
+    activity: "CUE schema validation"
+    tool: "cue vet specs/*.cue"
+    frequency: "Every schema change (CI)"
+    evidence: "CUE vet pass in CI"
+    risk_coverage: ["schema correctness", "contract integrity"]
+
+  - id: VA-GOLD-REGRESSION
+    activity: "Gold annotation regression"
+    tool: "go test ./internal/atomization/... (gold tests)"
+    frequency: "Every atomization change"
+    evidence: "Regression score in fidelity proof reports"
+    risk_coverage: ["extraction accuracy", "semantic preservation"]
+
+  - id: VA-LOSSLESS-SUITE
+    activity: "Markdown losslessness verification"
+    tool: "go test ./internal/fidelity/... (lossless tests)"
+    frequency: "Every parser change"
+    evidence: "Lossless test results"
+    risk_coverage: ["parse fidelity", "roundtrip integrity"]
+
+  - id: VA-EVIDENCE-MANIFEST
+    activity: "Evidence pack completeness check"
+    tool: "CI workflow: fidelity-proof-reports"
+    frequency: "Every release candidate"
+    evidence: "evidence-manifest.json artifact"
+    risk_coverage: ["evidence completeness", "audit readiness"]
+
+acceptance_criteria:
+  - id: AC-ALL-TESTS-PASS
+    criterion: "All automated tests pass with -race flag"
+    gate: "CI green required for merge"
+
+  - id: AC-VET-CLEAN
+    criterion: "go vet reports zero findings"
+    gate: "CI green required for merge"
+
+  - id: AC-GOLD-SCORE
+    criterion: "Gold annotation regression score >= 0.8"
+    gate: "Fidelity proof reports workflow"
+
+  - id: AC-EVIDENCE-COMPLETE
+    criterion: "Evidence manifest shows all required artifacts present"
+    gate: "Release gate"
+
+  - id: AC-HUMAN-REVIEW
+    criterion: "Domain owner has reviewed extracted atoms"
+    gate: "Manual approval before release promotion"
+
+traceability:
+  intended_use_ref: "IUS-NOMOS-001"
+  risk_assessment_ref: "RA-NOMOS-001 (future)"
+  test_protocol_refs:
+    - "TP-NOMOS-001-self-compliance"
+  evidence_ledger_ref: "EV-VAL-001"
