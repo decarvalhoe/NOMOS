@@ -29,7 +29,7 @@ jobs:
     name: RBOK Runtime E2E
     runs-on: ubuntu-latest
     env:
-      CGO_ENABLED: "0"
+      CGO_ENABLED: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -85,7 +85,7 @@ jobs:
     name: Corpus unit tests
     runs-on: ubuntu-latest
     env:
-      CGO_ENABLED: "0"
+      CGO_ENABLED: "1"
     defaults:
       run:
         working-directory: cli
