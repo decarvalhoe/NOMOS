@@ -1,0 +1,81 @@
+schema_version: "0.1.0"
+document_id: NOMOS-GH-BP-001
+status: draft
+owner: devops-owner
+claim_boundary: "Declarative configuration only. Enforcement requires applying via GitHub API or UI."
+
+repository:
+  owner: RBOKproject
+  name: NOMOS
+
+branch_rules:
+  - branch: main
+    protection:
+      require_pull_request: true
+      required_approving_review_count: 1
+      dismiss_stale_reviews: true
+      require_code_owner_reviews: false  # enable when real CODEOWNERS teams exist
+      require_last_push_approval: false
+      require_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+      required_status_checks:
+        strict: true
+        contexts:
+          - "Go vet & test (cli)"
+          - "CUE vet"
+          - "Regulated documentation gate"
+      enforce_admins: true
+      restrictions: null  # no push restrictions beyond PR requirement
+      lock_branch: false
+
+  - branch: "release/*"
+    protection:
+      require_pull_request: true
+      required_approving_review_count: 2
+      dismiss_stale_reviews: true
+      require_code_owner_reviews: false
+      require_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+      required_status_checks:
+        strict: true
+        contexts:
+          - "Go vet & test (cli)"
+          - "CUE vet"
+          - "Regulated documentation gate"
+          - "Regulated evidence pack"
+      enforce_admins: true
+      lock_branch: false
+
+  - branch: develop
+    protection:
+      require_pull_request: true
+      required_approving_review_count: 1
+      dismiss_stale_reviews: false
+      require_linear_history: false
+      allow_force_pushes: false
+      allow_deletions: false
+      required_status_checks:
+        strict: false
+        contexts:
+          - "Go vet & test (cli)"
+      enforce_admins: false
+      lock_branch: false
+
+tag_rules:
+  - pattern: "v*"
+    protection:
+      allow_creations: true
+      allow_updates: false
+      allow_deletions: false
+      require_signed_commits: false  # enable when signing is configured
+
+environments:
+  - name: regulated-release
+    protection:
+      required_reviewers: []  # populate when real reviewers assigned
+      prevent_self_review: true
+      wait_timer_minutes: 0
+    deployment_branch_policy:
+      protected_branches_only: true
