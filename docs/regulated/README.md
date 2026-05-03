@@ -45,6 +45,20 @@ Nomos remains at `NQ-0/NQ-1 boundary` until the build, schema, corpus feed, and 
 
 Praxis remains downstream and cannot be used as regulated support evidence for Nomos until Nomos publishes verified producer artifacts and a shared evidence contract.
 
+## Current Closure Plan
+
+The active plan for closing the remaining compliance gaps is `docs/28-regulated-compliance-closure-plan.md`.
+
+It covers:
+
+- GitHub branch/ruleset/environment/security/audit evidence;
+- QMS owner, approver, training and approval records;
+- licensed bible intake and license review;
+- Nomos processing of public and licensed reference bibles;
+- reference-to-control matrix closure;
+- validation inventory and release evidence bundle;
+- Praxis downstream boundary and later compatibility.
+
 ## Automation
 
 The current automation is intentionally evidence-oriented:

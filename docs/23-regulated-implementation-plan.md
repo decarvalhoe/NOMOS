@@ -21,7 +21,17 @@ and Nomos itself follows the same compliance discipline it asks of other project
 
 Nomos is not yet regulated-grade.
 
-Current quality level is `NQ-0/NQ-1 boundary`:
+Post-final-wave status on 2026-05-03:
+
+- `main` is technically green after commit `709d011 feat: Final wave`;
+- CLI, corpus tests, regulated documentation gate and regulated evidence pack are passing;
+- RBOK lawbook E2E has been proven in CI;
+- open GitHub PR and issue counts are zero;
+- the active gap reports still say `requires_evidence`.
+
+Therefore the critical path has moved from baseline recovery to compliance closure. Use `docs/28-regulated-compliance-closure-plan.md` as the current execution plan for GitHub QMS evidence, licensed bible completion, validation/release bundle closure, training, approvals and independent audit readiness.
+
+The historical quality level at the time this plan was created was `NQ-0/NQ-1 boundary`:
 
 - the method is documented;
 - the regulated baseline has been defined;
@@ -30,7 +40,9 @@ Current quality level is `NQ-0/NQ-1 boundary`:
 - Nomos-on-Nomos self-compliance is not yet executable;
 - the Nomos/Praxis evidence contract is not yet implemented.
 
-Until the plan below reaches at least `NQ-3`, public wording must stay at "method draft" or "operational prototype" level.
+After the final wave, Nomos has moved beyond that recovery baseline technically, but the current governed status remains below `NQ-3` until the closure plan proves the remaining GitHub QMS, licensed bible, validation, approval, training and audit evidence.
+
+Until `docs/28-regulated-compliance-closure-plan.md` reaches at least `NQ-3`, public wording must stay at "regulated-by-design architecture under validation" or "operational prototype with compliance evidence baseline" level.
 
 ## Implementation Principles
 
