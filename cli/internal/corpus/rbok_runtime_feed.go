@@ -1,197 +1,267 @@
 package corpus
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"sort"
 	"strings"
+	"time"
 )
-
-// CorpusLayer identifies the source layer in realisons-business.
-type CorpusLayer string
-
-const (
-	LayerRBOK      CorpusLayer = "01_rbok"
-	LayerParcours  CorpusLayer = "02_parcours"
-	LayerWorkbooks CorpusLayer = "03_workbooks"
-	LayerDoctrine  CorpusLayer = "04_doctrine"
-	LayerArchive   CorpusLayer = "99_archive"
-)
-
-// IsValid returns true if the layer is recognized.
-func (l CorpusLayer) IsValid() bool {
-	switch l {
-	case LayerRBOK, LayerParcours, LayerWorkbooks, LayerDoctrine, LayerArchive:
-		return true
-	default:
-		return false
-	}
-}
-
-// AuthorityLevel classifies the normative weight of a node.
-type AuthorityLevel string
-
-const (
-	AuthBinding       AuthorityLevel = "binding"
-	AuthRegulatory    AuthorityLevel = "regulatory"
-	AuthGuidance      AuthorityLevel = "guidance"
-	AuthInformational AuthorityLevel = "informational"
-	AuthInternal      AuthorityLevel = "internal"
-	AuthDeprecated    AuthorityLevel = "deprecated"
-)
-
-// IsValid returns true if the authority level is recognized.
-func (a AuthorityLevel) IsValid() bool {
-	switch a {
-	case AuthBinding, AuthRegulatory, AuthGuidance, AuthInformational, AuthInternal, AuthDeprecated:
-		return true
-	default:
-		return false
-	}
-}
-
-// RuntimeFeedNode extends the lawbook node with multi-layer metadata.
-type RuntimeFeedNode struct {
-	NodeID         string         `json:"node_id" yaml:"node_id"`
-	DocumentID     string         `json:"document_id" yaml:"document_id"`
-	CanonicalRef   string         `json:"canonical_ref" yaml:"canonical_ref"`
-	DisplayRef     string         `json:"display_ref" yaml:"display_ref"`
-	SourcePath     string         `json:"source_path" yaml:"source_path"`
-	SourceHash     string         `json:"source_hash" yaml:"source_hash"`
-	Status         LawbookNodeStatus `json:"status" yaml:"status"`
-	Priority       LawbookPriority   `json:"priority" yaml:"priority"`
-	Domain         string         `json:"domain" yaml:"domain"`
-	Layer          CorpusLayer    `json:"layer" yaml:"layer"`
-	AuthorityLevel AuthorityLevel `json:"authority_level" yaml:"authority_level"`
-	NodeType       string         `json:"node_type" yaml:"node_type"`
-	Depth          int            `json:"depth" yaml:"depth"`
-	OrdinalPath    string         `json:"ordinal_path,omitempty" yaml:"ordinal_path,omitempty"`
-	ParentID       string         `json:"parent_id,omitempty" yaml:"parent_id,omitempty"`
-	Title          string         `json:"title,omitempty" yaml:"title,omitempty"`
-	Text           string         `json:"text,omitempty" yaml:"text,omitempty"`
-	EffectiveDate  string         `json:"effective_date,omitempty" yaml:"effective_date,omitempty"`
-
-	// Parcours-specific.
-	PredecessorIDs []string `json:"predecessor_ids,omitempty" yaml:"predecessor_ids,omitempty"`
-	SuccessorIDs   []string `json:"successor_ids,omitempty" yaml:"successor_ids,omitempty"`
-	GateCriteria   string   `json:"gate_criteria,omitempty" yaml:"gate_criteria,omitempty"`
-
-	// Workbook-specific.
-	RefType    string `json:"ref_type,omitempty" yaml:"ref_type,omitempty"`
-	TargetURL  string `json:"target_url,omitempty" yaml:"target_url,omitempty"`
-	TargetHash string `json:"target_hash,omitempty" yaml:"target_hash,omitempty"`
-
-	Metadata map[string]any `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-}
-
-// LayerSummary provides per-layer aggregate counts.
-type LayerSummary struct {
-	NodeCount          int            `json:"node_count" yaml:"node_count"`
-	DocumentCount      int            `json:"document_count" yaml:"document_count"`
-	AuthorityBreakdown map[string]int `json:"authority_breakdown" yaml:"authority_breakdown"`
-}
-
-// RuntimeFeed is the multi-layer feed combining all corpus layers.
-type RuntimeFeed struct {
-	SchemaVersion string                  `json:"schema_version" yaml:"schema_version"`
-	FeedFormat    string                  `json:"feed_format" yaml:"feed_format"`
-	FeedID        string                  `json:"feed_id" yaml:"feed_id"`
-	CorpusID      string                  `json:"corpus_id" yaml:"corpus_id"`
-	Domain        string                  `json:"domain" yaml:"domain"`
-	GeneratedAt   string                  `json:"generated_at" yaml:"generated_at"`
-	Layers        []CorpusLayer           `json:"layers" yaml:"layers"`
-	NodeCount     int                     `json:"node_count" yaml:"node_count"`
-	Nodes         []RuntimeFeedNode       `json:"nodes" yaml:"nodes"`
-	LayerSummary  map[string]LayerSummary `json:"layer_summary" yaml:"layer_summary"`
-}
 
 const RuntimeFeedFormat = "nomos.rbok-runtime-feed.v1"
 
-// ValidateRuntimeFeedNode checks a node for structural validity.
-func ValidateRuntimeFeedNode(n RuntimeFeedNode) []string {
-	var errs []string
+// LayerKind identifies the business purpose of a source layer.
+type LayerKind string
 
-	if !nodeIDPattern.MatchString(n.NodeID) {
-		errs = append(errs, fmt.Sprintf("node_id %q invalid", n.NodeID))
-	}
-	if !nodeIDPattern.MatchString(n.DocumentID) {
-		errs = append(errs, fmt.Sprintf("document_id %q invalid", n.DocumentID))
-	}
-	if strings.TrimSpace(n.CanonicalRef) == "" {
-		errs = append(errs, "canonical_ref required")
-	}
-	if strings.TrimSpace(n.DisplayRef) == "" {
-		errs = append(errs, "display_ref required")
-	}
-	if !hashPattern.MatchString(n.SourceHash) {
-		errs = append(errs, fmt.Sprintf("source_hash %q invalid", n.SourceHash))
-	}
-	if !n.Layer.IsValid() {
-		errs = append(errs, fmt.Sprintf("layer %q invalid", n.Layer))
-	}
-	if !n.AuthorityLevel.IsValid() {
-		errs = append(errs, fmt.Sprintf("authority_level %q invalid", n.AuthorityLevel))
-	}
-	if strings.TrimSpace(n.Domain) == "" {
-		errs = append(errs, "domain required")
-	}
-	if n.Depth < 0 || n.Depth > 10 {
-		errs = append(errs, fmt.Sprintf("depth %d out of range 0-10", n.Depth))
-	}
+const (
+	LayerReferentiel LayerKind = "referentiel"
+	LayerDomaine     LayerKind = "domaine"
+	LayerMeta        LayerKind = "meta"
+	LayerOverride    LayerKind = "override"
+)
 
-	return errs
+// LayerInput describes one source layer to be scanned and merged.
+type LayerInput struct {
+	ID       string    `json:"id"`
+	Kind     LayerKind `json:"kind"`
+	Path     string    `json:"path"`
+	Domain   string    `json:"domain"`
+	Priority int       `json:"priority"` // lower = higher priority in merge
 }
 
-// ValidateRuntimeFeed checks the feed envelope for consistency.
-func ValidateRuntimeFeed(f RuntimeFeed) []string {
-	var errs []string
-
-	if f.FeedFormat != RuntimeFeedFormat {
-		errs = append(errs, fmt.Sprintf("feed_format must be %q, got %q", RuntimeFeedFormat, f.FeedFormat))
-	}
-	if strings.TrimSpace(f.FeedID) == "" {
-		errs = append(errs, "feed_id required")
-	}
-	if strings.TrimSpace(f.CorpusID) == "" {
-		errs = append(errs, "corpus_id required")
-	}
-	if strings.TrimSpace(f.Domain) == "" {
-		errs = append(errs, "domain required")
-	}
-	if f.NodeCount != len(f.Nodes) {
-		errs = append(errs, fmt.Sprintf("node_count %d != len(nodes) %d", f.NodeCount, len(f.Nodes)))
-	}
-
-	for i, node := range f.Nodes {
-		nodeErrs := ValidateRuntimeFeedNode(node)
-		for _, e := range nodeErrs {
-			errs = append(errs, fmt.Sprintf("nodes[%d]: %s", i, e))
-		}
-	}
-
-	return errs
+// LayerProvenance records the scan result for one layer.
+type LayerProvenance struct {
+	ID         string `json:"id"`
+	Kind       string `json:"kind"`
+	Path       string `json:"path"`
+	Domain     string `json:"domain"`
+	Priority   int    `json:"priority"`
+	NodeCount  int    `json:"node_count"`
+	SourceHash string `json:"source_hash"`
 }
 
-// ComputeLayerSummary builds the per-layer summary from nodes.
-func ComputeLayerSummary(nodes []RuntimeFeedNode) map[string]LayerSummary {
-	summaries := map[string]*LayerSummary{}
-	docSets := map[string]map[string]bool{}
+// RuntimeFeedNode is a node in the unified feed with layer provenance.
+type RuntimeFeedNode struct {
+	NodeID       string            `json:"node_id"`
+	DocumentID   string            `json:"document_id"`
+	NodeType     LawbookNodeType   `json:"node_type"`
+	CanonicalRef string            `json:"canonical_ref"`
+	DisplayRef   string            `json:"display_ref"`
+	Depth        int               `json:"depth"`
+	OrdinalPath  string            `json:"ordinal_path"`
+	SourcePath   string            `json:"source_path"`
+	SourceHash   string            `json:"source_hash"`
+	Status       LawbookNodeStatus `json:"status"`
+	Priority     LawbookPriority   `json:"priority"`
+	Domain       string            `json:"domain"`
+	Title        string            `json:"title,omitempty"`
+	Text         string            `json:"text,omitempty"`
+	ParentID     string            `json:"parent_id,omitempty"`
+	LayerID      string            `json:"layer_id"`
+	LayerKind    string            `json:"layer_kind"`
+}
 
-	for _, n := range nodes {
-		layer := string(n.Layer)
-		s, ok := summaries[layer]
+// RuntimeFeed is the unified multi-layer output.
+type RuntimeFeed struct {
+	Format      string            `json:"format"`
+	GeneratedAt string            `json:"generated_at"`
+	ContentHash string            `json:"content_hash"`
+	LayerCount  int               `json:"layer_count"`
+	NodeCount   int               `json:"node_count"`
+	Layers      []LayerProvenance `json:"layers"`
+	Nodes       []RuntimeFeedNode `json:"nodes"`
+	Conflicts   []MergeConflict   `json:"conflicts,omitempty"`
+}
+
+// MergeConflict records when the same canonical_ref appears in multiple layers.
+type MergeConflict struct {
+	CanonicalRef string   `json:"canonical_ref"`
+	LayerIDs     []string `json:"layer_ids"`
+	Resolution   string   `json:"resolution"` // "priority" or "first"
+	WinnerLayer  string   `json:"winner_layer"`
+}
+
+// RuntimeFeedOptions configures feed assembly.
+type RuntimeFeedOptions struct {
+	Now time.Time
+}
+
+// AssembleRuntimeFeed scans multiple layers, classifies their nodes,
+// merges them into a unified feed with per-node layer provenance,
+// and detects cross-layer conflicts.
+func AssembleRuntimeFeed(layers []LayerInput, feeds map[string]LawbookFeed, opts RuntimeFeedOptions) RuntimeFeed {
+	now := opts.Now
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+
+	// Sort layers by priority (lower = higher priority).
+	sorted := make([]LayerInput, len(layers))
+	copy(sorted, layers)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Priority < sorted[j].Priority
+	})
+
+	var provenances []LayerProvenance
+	var allNodes []RuntimeFeedNode
+	refToLayers := map[string][]string{}     // canonical_ref → layer IDs
+	refToNode := map[string]RuntimeFeedNode{} // canonical_ref → winning node
+	refToPriority := map[string]int{}         // canonical_ref → winning priority
+
+	for _, layer := range sorted {
+		feed, ok := feeds[layer.ID]
 		if !ok {
-			s = &LayerSummary{AuthorityBreakdown: map[string]int{}}
-			summaries[layer] = s
-			docSets[layer] = map[string]bool{}
+			continue
 		}
-		s.NodeCount++
-		s.AuthorityBreakdown[string(n.AuthorityLevel)]++
-		docSets[layer][n.DocumentID] = true
+
+		prov := LayerProvenance{
+			ID:         layer.ID,
+			Kind:       string(layer.Kind),
+			Path:       layer.Path,
+			Domain:     layer.Domain,
+			Priority:   layer.Priority,
+			NodeCount:  len(feed.Nodes),
+			SourceHash: feed.SourceHash,
+		}
+		provenances = append(provenances, prov)
+
+		for _, node := range feed.Nodes {
+			rn := RuntimeFeedNode{
+				NodeID:       node.NodeID,
+				DocumentID:   node.DocumentID,
+				NodeType:     node.NodeType,
+				CanonicalRef: node.CanonicalRef,
+				DisplayRef:   node.DisplayRef,
+				Depth:        node.Depth,
+				OrdinalPath:  node.OrdinalPath,
+				SourcePath:   node.SourcePath,
+				SourceHash:   node.SourceHash,
+				Status:       node.Status,
+				Priority:     node.Priority,
+				Domain:       node.Domain,
+				Title:        node.Title,
+				Text:         node.Text,
+				ParentID:     node.ParentID,
+				LayerID:      layer.ID,
+				LayerKind:    string(layer.Kind),
+			}
+
+			ref := node.CanonicalRef
+			refToLayers[ref] = appendUnique(refToLayers[ref], layer.ID)
+
+			// Priority merge: lower priority number wins.
+			if _, exists := refToNode[ref]; !exists {
+				refToNode[ref] = rn
+				refToPriority[ref] = layer.Priority
+			} else if layer.Priority < refToPriority[ref] {
+				refToNode[ref] = rn
+				refToPriority[ref] = layer.Priority
+			}
+		}
 	}
 
-	result := make(map[string]LayerSummary, len(summaries))
-	for layer, s := range summaries {
-		s.DocumentCount = len(docSets[layer])
-		result[layer] = *s
+	// Collect winning nodes in deterministic order.
+	var refs []string
+	for ref := range refToNode {
+		refs = append(refs, ref)
 	}
+	sort.Strings(refs)
+
+	for _, ref := range refs {
+		allNodes = append(allNodes, refToNode[ref])
+	}
+
+	// Detect conflicts.
+	var conflicts []MergeConflict
+	for ref, layerIDs := range refToLayers {
+		if len(layerIDs) > 1 {
+			conflicts = append(conflicts, MergeConflict{
+				CanonicalRef: ref,
+				LayerIDs:     layerIDs,
+				Resolution:   "priority",
+				WinnerLayer:  refToNode[ref].LayerID,
+			})
+		}
+	}
+	sort.Slice(conflicts, func(i, j int) bool {
+		return conflicts[i].CanonicalRef < conflicts[j].CanonicalRef
+	})
+
+	result := RuntimeFeed{
+		Format:      RuntimeFeedFormat,
+		GeneratedAt: now.Format(time.RFC3339),
+		LayerCount:  len(provenances),
+		NodeCount:   len(allNodes),
+		Layers:      provenances,
+		Nodes:       allNodes,
+		Conflicts:   conflicts,
+	}
+
+	result.ContentHash = computeRuntimeFeedHash(result)
 	return result
+}
+
+// WriteRuntimeFeed serialises the feed as indented JSON.
+func WriteRuntimeFeed(w io.Writer, feed RuntimeFeed) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(feed)
+}
+
+func computeRuntimeFeedHash(feed RuntimeFeed) string {
+	tmp := feed
+	tmp.ContentHash = ""
+	data, _ := json.Marshal(tmp)
+	h := sha256.Sum256(data)
+	return "sha256:" + hex.EncodeToString(h[:])
+}
+
+func appendUnique(slice []string, val string) []string {
+	for _, s := range slice {
+		if s == val {
+			return slice
+		}
+	}
+	return append(slice, val)
+}
+
+// RuntimeFeedSummary provides a quick overview for governance.
+type RuntimeFeedSummary struct {
+	LayerCount    int            `json:"layer_count"`
+	NodeCount     int            `json:"node_count"`
+	ConflictCount int            `json:"conflict_count"`
+	ByLayer       map[string]int `json:"by_layer"`
+	ByDomain      map[string]int `json:"by_domain"`
+	ByNodeType    map[string]int `json:"by_node_type"`
+}
+
+// Summarize produces a governance summary of the runtime feed.
+func (f RuntimeFeed) Summarize() RuntimeFeedSummary {
+	s := RuntimeFeedSummary{
+		LayerCount:    f.LayerCount,
+		NodeCount:     f.NodeCount,
+		ConflictCount: len(f.Conflicts),
+		ByLayer:       map[string]int{},
+		ByDomain:      map[string]int{},
+		ByNodeType:    map[string]int{},
+	}
+	for _, n := range f.Nodes {
+		s.ByLayer[n.LayerID]++
+		s.ByDomain[n.Domain]++
+		s.ByNodeType[string(n.NodeType)]++
+	}
+	return s
+}
+
+// FormatSummary returns a human-readable summary string.
+func (s RuntimeFeedSummary) FormatSummary() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "Runtime feed: %d layers, %d nodes, %d conflicts\n", s.LayerCount, s.NodeCount, s.ConflictCount)
+	for layer, count := range s.ByLayer {
+		fmt.Fprintf(&b, "  layer %s: %d nodes\n", layer, count)
+	}
+	return b.String()
 }

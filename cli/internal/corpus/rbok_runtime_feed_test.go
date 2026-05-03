@@ -1,247 +1,303 @@
 package corpus
 
 import (
+	"bytes"
+	"encoding/json"
+	"strings"
 	"testing"
+	"time"
 )
 
-func validRuntimeNode() RuntimeFeedNode {
-	return RuntimeFeedNode{
-		NodeID:         "ART-L113-1",
-		DocumentID:     "DOC-CODE-ASSURANCES",
-		CanonicalRef:   "code-assurances/l113-1",
-		DisplayRef:     "Art. L113-1",
-		SourcePath:     "01_rbok/code-assurances/l113-1.md",
-		SourceHash:     "sha256:aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111",
-		Status:         StatusActive,
-		Priority:       PriorityCritical,
-		Domain:         "insurance-regulation",
-		Layer:          LayerRBOK,
-		AuthorityLevel: AuthBinding,
-		NodeType:       "article",
-		Depth:          4,
-	}
-}
+var rtTestTime = time.Date(2026, 5, 3, 12, 0, 0, 0, time.UTC)
 
-func validRuntimeFeed() RuntimeFeed {
-	lawNode := validRuntimeNode()
-	parcoursNode := RuntimeFeedNode{
-		NodeID:         "PARCOURS-SINISTRE",
-		DocumentID:     "DOC-PARCOURS-SINISTRE",
-		CanonicalRef:   "parcours/sinistre",
-		DisplayRef:     "Parcours sinistre",
-		SourcePath:     "02_parcours/sinistre/index.md",
-		SourceHash:     "sha256:bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222",
-		Status:         StatusActive,
-		Priority:       PriorityHigh,
-		Domain:         "insurance-regulation",
-		Layer:          LayerParcours,
-		AuthorityLevel: AuthInternal,
-		NodeType:       "parcours",
-		Depth:          0,
-	}
-	wbNode := RuntimeFeedNode{
-		NodeID:         "WB-FORM-SINISTRE",
-		DocumentID:     "DOC-WORKBOOKS",
-		CanonicalRef:   "workbooks/form-sinistre",
-		DisplayRef:     "Formulaire sinistre",
-		SourcePath:     "03_workbooks/forms/sinistre.md",
-		SourceHash:     "sha256:cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333",
-		Status:         StatusActive,
-		Priority:       PriorityMedium,
-		Domain:         "insurance-regulation",
-		Layer:          LayerWorkbooks,
-		AuthorityLevel: AuthInformational,
-		NodeType:       "form",
-		Depth:          1,
-		RefType:        "form",
-	}
-	return RuntimeFeed{
+func makeLayerFeed(docID string, nodes []LawbookNode) LawbookFeed {
+	return LawbookFeed{
 		SchemaVersion: "0.1.0",
-		FeedFormat:    RuntimeFeedFormat,
-		FeedID:        "rbok-runtime-test",
-		CorpusID:      "realisons-business",
-		Domain:        "insurance-regulation",
-		GeneratedAt:   "2026-05-03T10:00:00Z",
-		Layers:        []CorpusLayer{LayerRBOK, LayerParcours, LayerWorkbooks},
-		NodeCount:     3,
-		Nodes:         []RuntimeFeedNode{lawNode, parcoursNode, wbNode},
+		FeedID:        strings.ToLower(docID) + "-feed",
+		DocumentID:    docID,
+		Domain:        "insurance",
+		GeneratedAt:   "2026-05-03T12:00:00Z",
+		SourcePath:    "sources/" + strings.ToLower(docID) + ".md",
+		SourceHash:    "sha256:aaaa",
+		NodeCount:     len(nodes),
+		Nodes:         nodes,
 	}
 }
 
-func TestValidateRuntimeFeedNodeValid(t *testing.T) {
-	errs := ValidateRuntimeFeedNode(validRuntimeNode())
-	if len(errs) != 0 {
-		t.Fatalf("expected no errors, got %v", errs)
+func node(id, ref, docID, domain string, nodeType LawbookNodeType) LawbookNode {
+	return LawbookNode{
+		NodeID: id, DocumentID: docID, NodeType: nodeType,
+		CanonicalRef: ref, DisplayRef: string(nodeType) + ": " + id,
+		Depth: nodeType.Depth(), OrdinalPath: "1",
+		SourcePath: "sources/" + strings.ToLower(docID) + ".md",
+		SourceHash: "sha256:bbbb", Status: StatusActive,
+		Priority: PriorityMedium, Domain: domain, Title: id,
 	}
 }
 
-func TestValidateRuntimeFeedNodeInvalidLayer(t *testing.T) {
-	n := validRuntimeNode()
-	n.Layer = "05_unknown"
-	errs := ValidateRuntimeFeedNode(n)
-	if len(errs) == 0 {
-		t.Fatal("expected error for invalid layer")
+func testLayers() ([]LayerInput, map[string]LawbookFeed) {
+	layers := []LayerInput{
+		{ID: "referentiel", Kind: LayerReferentiel, Path: "01_referentiel/", Domain: "insurance", Priority: 1},
+		{ID: "domaine-habitation", Kind: LayerDomaine, Path: "02_domaines/habitation/", Domain: "insurance-home", Priority: 2},
+		{ID: "meta", Kind: LayerMeta, Path: "00_meta/", Domain: "meta", Priority: 3},
+	}
+
+	feeds := map[string]LawbookFeed{
+		"referentiel": makeLayerFeed("DOC-REF", []LawbookNode{
+			node("REF-ART-1", "ref/article/garantie-eau", "DOC-REF", "insurance", NodeArticle),
+			node("REF-ART-2", "ref/article/exclusion-toit", "DOC-REF", "insurance", NodeArticle),
+		}),
+		"domaine-habitation": makeLayerFeed("DOC-HAB", []LawbookNode{
+			node("HAB-ART-1", "hab/article/franchise", "DOC-HAB", "insurance-home", NodeArticle),
+			node("HAB-ART-2", "hab/article/plafond", "DOC-HAB", "insurance-home", NodeArticle),
+		}),
+		"meta": makeLayerFeed("DOC-META", []LawbookNode{
+			node("META-GLOSS", "meta/glossary", "DOC-META", "meta", NodeDocument),
+		}),
+	}
+
+	return layers, feeds
+}
+
+func TestAssembleRuntimeFeedBasic(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if feed.Format != RuntimeFeedFormat {
+		t.Fatalf("format: %q", feed.Format)
+	}
+	if feed.LayerCount != 3 {
+		t.Fatalf("expected 3 layers, got %d", feed.LayerCount)
+	}
+	if feed.NodeCount != 5 {
+		t.Fatalf("expected 5 nodes, got %d", feed.NodeCount)
+	}
+	if feed.GeneratedAt != "2026-05-03T12:00:00Z" {
+		t.Fatalf("timestamp: %q", feed.GeneratedAt)
 	}
 }
 
-func TestValidateRuntimeFeedNodeInvalidAuthority(t *testing.T) {
-	n := validRuntimeNode()
-	n.AuthorityLevel = "supreme"
-	errs := ValidateRuntimeFeedNode(n)
-	if len(errs) == 0 {
-		t.Fatal("expected error for invalid authority")
+func TestAssembleRuntimeFeedProvenance(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if len(feed.Layers) != 3 {
+		t.Fatalf("expected 3 layer provenances, got %d", len(feed.Layers))
+	}
+
+	// Check provenance order matches priority (sorted).
+	if feed.Layers[0].ID != "referentiel" {
+		t.Fatalf("first layer should be referentiel, got %q", feed.Layers[0].ID)
+	}
+	if feed.Layers[0].NodeCount != 2 {
+		t.Fatalf("referentiel should have 2 nodes, got %d", feed.Layers[0].NodeCount)
 	}
 }
 
-func TestValidateRuntimeFeedValid(t *testing.T) {
-	f := validRuntimeFeed()
-	f.LayerSummary = ComputeLayerSummary(f.Nodes)
-	errs := ValidateRuntimeFeed(f)
-	if len(errs) != 0 {
-		t.Fatalf("expected no errors, got %v", errs)
-	}
-}
+func TestAssembleRuntimeFeedNodeLayerIDs(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
 
-func TestValidateRuntimeFeedWrongFormat(t *testing.T) {
-	f := validRuntimeFeed()
-	f.FeedFormat = "wrong"
-	errs := ValidateRuntimeFeed(f)
-	found := false
-	for _, e := range errs {
-		if e != "" {
-			found = true
+	for _, n := range feed.Nodes {
+		if n.LayerID == "" {
+			t.Fatalf("node %s has empty layer_id", n.NodeID)
+		}
+		if n.LayerKind == "" {
+			t.Fatalf("node %s has empty layer_kind", n.NodeID)
 		}
 	}
-	if !found {
-		t.Fatal("expected error for wrong feed_format")
+}
+
+func TestAssembleRuntimeFeedConflictResolution(t *testing.T) {
+	layers := []LayerInput{
+		{ID: "primary", Kind: LayerReferentiel, Path: "a/", Domain: "ins", Priority: 1},
+		{ID: "override", Kind: LayerOverride, Path: "b/", Domain: "ins", Priority: 0},
+	}
+
+	sharedRef := "shared/article/x"
+	feeds := map[string]LawbookFeed{
+		"primary":  makeLayerFeed("DOC-A", []LawbookNode{node("A-1", sharedRef, "DOC-A", "ins", NodeArticle)}),
+		"override": makeLayerFeed("DOC-B", []LawbookNode{node("B-1", sharedRef, "DOC-B", "ins", NodeArticle)}),
+	}
+
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if len(feed.Conflicts) != 1 {
+		t.Fatalf("expected 1 conflict, got %d", len(feed.Conflicts))
+	}
+	c := feed.Conflicts[0]
+	if c.CanonicalRef != sharedRef {
+		t.Fatalf("conflict ref: %q", c.CanonicalRef)
+	}
+	if c.WinnerLayer != "override" {
+		t.Fatalf("override (priority 0) should win, got %q", c.WinnerLayer)
+	}
+	if c.Resolution != "priority" {
+		t.Fatalf("resolution: %q", c.Resolution)
+	}
+
+	// Only 1 node should remain for the shared ref.
+	if feed.NodeCount != 1 {
+		t.Fatalf("expected 1 merged node, got %d", feed.NodeCount)
 	}
 }
 
-func TestValidateRuntimeFeedCountMismatch(t *testing.T) {
-	f := validRuntimeFeed()
-	f.NodeCount = 99
-	errs := ValidateRuntimeFeed(f)
-	found := false
-	for _, e := range errs {
-		if len(e) > 0 {
-			found = true
+func TestAssembleRuntimeFeedNoConflicts(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if len(feed.Conflicts) != 0 {
+		t.Fatalf("expected no conflicts, got %d", len(feed.Conflicts))
+	}
+}
+
+func TestAssembleRuntimeFeedContentHash(t *testing.T) {
+	layers, feeds := testLayers()
+	f1 := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+	f2 := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if !strings.HasPrefix(f1.ContentHash, "sha256:") {
+		t.Fatalf("invalid hash: %q", f1.ContentHash)
+	}
+	if f1.ContentHash != f2.ContentHash {
+		t.Fatal("hash should be deterministic")
+	}
+}
+
+func TestAssembleRuntimeFeedDifferentTimesDifferentHash(t *testing.T) {
+	layers, feeds := testLayers()
+	f1 := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+	f2 := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime.Add(time.Hour)})
+
+	if f1.ContentHash == f2.ContentHash {
+		t.Fatal("different timestamps should produce different hashes")
+	}
+}
+
+func TestAssembleRuntimeFeedMissingLayer(t *testing.T) {
+	layers := []LayerInput{
+		{ID: "exists", Kind: LayerReferentiel, Path: "a/", Domain: "ins", Priority: 1},
+		{ID: "missing", Kind: LayerDomaine, Path: "b/", Domain: "ins", Priority: 2},
+	}
+	feeds := map[string]LawbookFeed{
+		"exists": makeLayerFeed("DOC-A", []LawbookNode{node("A-1", "a/art/1", "DOC-A", "ins", NodeArticle)}),
+	}
+
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	if feed.LayerCount != 1 {
+		t.Fatalf("expected 1 layer (missing skipped), got %d", feed.LayerCount)
+	}
+	if feed.NodeCount != 1 {
+		t.Fatalf("expected 1 node, got %d", feed.NodeCount)
+	}
+}
+
+func TestAssembleRuntimeFeedEmpty(t *testing.T) {
+	feed := AssembleRuntimeFeed(nil, nil, RuntimeFeedOptions{Now: rtTestTime})
+
+	if feed.LayerCount != 0 {
+		t.Fatalf("expected 0 layers, got %d", feed.LayerCount)
+	}
+	if feed.NodeCount != 0 {
+		t.Fatalf("expected 0 nodes, got %d", feed.NodeCount)
+	}
+}
+
+func TestAssembleRuntimeFeedNodeOrder(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	// Nodes should be sorted by canonical_ref.
+	for i := 1; i < len(feed.Nodes); i++ {
+		if feed.Nodes[i].CanonicalRef < feed.Nodes[i-1].CanonicalRef {
+			t.Fatalf("nodes not sorted: %q before %q",
+				feed.Nodes[i-1].CanonicalRef, feed.Nodes[i].CanonicalRef)
 		}
 	}
-	if !found {
-		t.Fatal("expected error for count mismatch")
+}
+
+func TestWriteRuntimeFeedJSON(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
+
+	var buf bytes.Buffer
+	if err := WriteRuntimeFeed(&buf, feed); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	var decoded RuntimeFeed
+	if err := json.Unmarshal(buf.Bytes(), &decoded); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if decoded.Format != RuntimeFeedFormat {
+		t.Fatalf("format: %q", decoded.Format)
+	}
+	if decoded.NodeCount != feed.NodeCount {
+		t.Fatalf("node count: %d vs %d", decoded.NodeCount, feed.NodeCount)
 	}
 }
 
-func TestComputeLayerSummary(t *testing.T) {
-	f := validRuntimeFeed()
-	summary := ComputeLayerSummary(f.Nodes)
+func TestRuntimeFeedSummarize(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
 
-	if summary["01_rbok"].NodeCount != 1 {
-		t.Fatalf("expected 1 rbok node, got %d", summary["01_rbok"].NodeCount)
+	summary := feed.Summarize()
+	if summary.LayerCount != 3 {
+		t.Fatalf("layer count: %d", summary.LayerCount)
 	}
-	if summary["02_parcours"].NodeCount != 1 {
-		t.Fatalf("expected 1 parcours node, got %d", summary["02_parcours"].NodeCount)
+	if summary.NodeCount != 5 {
+		t.Fatalf("node count: %d", summary.NodeCount)
 	}
-	if summary["03_workbooks"].NodeCount != 1 {
-		t.Fatalf("expected 1 workbook node, got %d", summary["03_workbooks"].NodeCount)
+	if summary.ConflictCount != 0 {
+		t.Fatalf("conflict count: %d", summary.ConflictCount)
 	}
-	if summary["01_rbok"].AuthorityBreakdown["binding"] != 1 {
-		t.Fatalf("expected 1 binding in rbok layer")
+	if summary.ByLayer["referentiel"] != 2 {
+		t.Fatalf("referentiel count: %d", summary.ByLayer["referentiel"])
 	}
-	if summary["02_parcours"].AuthorityBreakdown["internal"] != 1 {
-		t.Fatalf("expected 1 internal in parcours layer")
-	}
-	if summary["01_rbok"].DocumentCount != 1 {
-		t.Fatalf("expected 1 document in rbok, got %d", summary["01_rbok"].DocumentCount)
+	if summary.ByDomain["insurance-home"] != 2 {
+		t.Fatalf("insurance-home count: %d", summary.ByDomain["insurance-home"])
 	}
 }
 
-func TestComputeLayerSummaryMultipleDocsPerLayer(t *testing.T) {
-	nodes := []RuntimeFeedNode{
-		{NodeID: "A1", DocumentID: "DOC-1", Layer: LayerRBOK, AuthorityLevel: AuthBinding,
-			CanonicalRef: "a", DisplayRef: "a", SourceHash: "sha256:aa", Domain: "d"},
-		{NodeID: "A2", DocumentID: "DOC-2", Layer: LayerRBOK, AuthorityLevel: AuthRegulatory,
-			CanonicalRef: "b", DisplayRef: "b", SourceHash: "sha256:bb", Domain: "d"},
-		{NodeID: "A3", DocumentID: "DOC-1", Layer: LayerRBOK, AuthorityLevel: AuthBinding,
-			CanonicalRef: "c", DisplayRef: "c", SourceHash: "sha256:cc", Domain: "d"},
-	}
-	summary := ComputeLayerSummary(nodes)
+func TestRuntimeFeedSummaryFormat(t *testing.T) {
+	layers, feeds := testLayers()
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
 
-	if summary["01_rbok"].NodeCount != 3 {
-		t.Fatalf("expected 3 nodes, got %d", summary["01_rbok"].NodeCount)
+	s := feed.Summarize().FormatSummary()
+	if !strings.Contains(s, "3 layers") {
+		t.Fatalf("summary: %q", s)
 	}
-	if summary["01_rbok"].DocumentCount != 2 {
-		t.Fatalf("expected 2 documents, got %d", summary["01_rbok"].DocumentCount)
-	}
-	if summary["01_rbok"].AuthorityBreakdown["binding"] != 2 {
-		t.Fatalf("expected 2 binding, got %d", summary["01_rbok"].AuthorityBreakdown["binding"])
+	if !strings.Contains(s, "5 nodes") {
+		t.Fatalf("summary: %q", s)
 	}
 }
 
-func TestCorpusLayerIsValid(t *testing.T) {
-	valid := []CorpusLayer{LayerRBOK, LayerParcours, LayerWorkbooks, LayerDoctrine, LayerArchive}
-	for _, l := range valid {
-		if !l.IsValid() {
-			t.Fatalf("expected %s valid", l)
-		}
+func TestAssembleRuntimeFeedMultiConflict(t *testing.T) {
+	layers := []LayerInput{
+		{ID: "l1", Kind: LayerReferentiel, Path: "a/", Domain: "ins", Priority: 1},
+		{ID: "l2", Kind: LayerDomaine, Path: "b/", Domain: "ins", Priority: 2},
+		{ID: "l3", Kind: LayerOverride, Path: "c/", Domain: "ins", Priority: 0},
 	}
-	if CorpusLayer("05_bogus").IsValid() {
-		t.Fatal("expected bogus invalid")
+	ref := "shared/x"
+	feeds := map[string]LawbookFeed{
+		"l1": makeLayerFeed("D1", []LawbookNode{node("N1", ref, "D1", "ins", NodeArticle)}),
+		"l2": makeLayerFeed("D2", []LawbookNode{node("N2", ref, "D2", "ins", NodeArticle)}),
+		"l3": makeLayerFeed("D3", []LawbookNode{node("N3", ref, "D3", "ins", NodeArticle)}),
 	}
-}
 
-func TestAuthorityLevelIsValid(t *testing.T) {
-	valid := []AuthorityLevel{AuthBinding, AuthRegulatory, AuthGuidance, AuthInformational, AuthInternal, AuthDeprecated}
-	for _, a := range valid {
-		if !a.IsValid() {
-			t.Fatalf("expected %s valid", a)
-		}
-	}
-	if AuthorityLevel("supreme").IsValid() {
-		t.Fatal("expected bogus invalid")
-	}
-}
+	feed := AssembleRuntimeFeed(layers, feeds, RuntimeFeedOptions{Now: rtTestTime})
 
-func TestRuntimeFeedFormat(t *testing.T) {
-	if RuntimeFeedFormat != "nomos.rbok-runtime-feed.v1" {
-		t.Fatalf("expected nomos.rbok-runtime-feed.v1, got %s", RuntimeFeedFormat)
+	if len(feed.Conflicts) != 1 {
+		t.Fatalf("expected 1 conflict, got %d", len(feed.Conflicts))
 	}
-}
-
-func TestParcoursNodeFields(t *testing.T) {
-	n := RuntimeFeedNode{
-		NodeID: "STEP-001", DocumentID: "DOC-P",
-		CanonicalRef: "p/step1", DisplayRef: "Step 1",
-		SourcePath: "02_parcours/step.md",
-		SourceHash: "sha256:dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444",
-		Status: StatusActive, Priority: PriorityHigh,
-		Domain: "insurance", Layer: LayerParcours,
-		AuthorityLevel: AuthInternal, NodeType: "step", Depth: 2,
-		PredecessorIDs: []string{"STEP-000"},
-		SuccessorIDs:   []string{"STEP-002"},
-		GateCriteria:   "Documents complets.",
+	if len(feed.Conflicts[0].LayerIDs) != 3 {
+		t.Fatalf("expected 3 layers in conflict, got %d", len(feed.Conflicts[0].LayerIDs))
 	}
-	errs := ValidateRuntimeFeedNode(n)
-	if len(errs) != 0 {
-		t.Fatalf("expected no errors for parcours node, got %v", errs)
+	if feed.Conflicts[0].WinnerLayer != "l3" {
+		t.Fatalf("l3 (priority 0) should win, got %q", feed.Conflicts[0].WinnerLayer)
 	}
-}
-
-func TestWorkbookNodeFields(t *testing.T) {
-	n := RuntimeFeedNode{
-		NodeID: "WB-TPL-001", DocumentID: "DOC-WB",
-		CanonicalRef: "wb/template", DisplayRef: "Template X",
-		SourcePath: "03_workbooks/tpl.md",
-		SourceHash: "sha256:eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555",
-		Status: StatusActive, Priority: PriorityLow,
-		Domain: "insurance", Layer: LayerWorkbooks,
-		AuthorityLevel: AuthInformational, NodeType: "template", Depth: 1,
-		RefType:    "template",
-		TargetURL:  "https://intranet/templates/x.docx",
-		TargetHash: "sha256:ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666",
-	}
-	errs := ValidateRuntimeFeedNode(n)
-	if len(errs) != 0 {
-		t.Fatalf("expected no errors for workbook node, got %v", errs)
+	if feed.NodeCount != 1 {
+		t.Fatalf("only winner should remain, got %d nodes", feed.NodeCount)
 	}
 }
