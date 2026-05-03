@@ -129,12 +129,12 @@ echo "=== Step 7: Validate artifacts ==="
 artifact_count="$(find "$OUT_DIR" -type f \( -name '*.json' -o -name '*.yaml' \) | wc -l)"
 echo "Total artifacts: $artifact_count"
 
-if [[ "$artifact_count" -lt 7 ]]; then
-  echo "FAIL: Expected at least 7 artifacts, got $artifact_count"
+if [[ "$artifact_count" -lt 8 ]]; then
+  echo "FAIL: Expected at least 8 artifacts, got $artifact_count"
   exit 1
 fi
 
-for f in rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json rbok-fidelity-proof.json; do
+for f in rbok-lawbook-feed.json rbok-lawbook-index.json rbok-rag-metadata.json rbok-engine-import.json rbok-governance.json rbok-attestation.json rbok-fidelity-proof.json rbok-governed-lexicon.yaml; do
   if [[ ! -f "$OUT_DIR/$f" ]]; then
     echo "FAIL: missing expected artifact: $f"
     exit 1
