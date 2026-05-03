@@ -90,8 +90,8 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 					StartLine: i + 1, EndLine: i + 1,
 					ByteOff: offset, ByteLen: len(line),
 				},
-				Hash:     hashStr(line),
-				ParentID: currentParent(stack, indent),
+				Hash:     yamlHashStr(line),
+				ParentID: yamlCurrentParent(stack, indent),
 			}
 			ast.Nodes = append(ast.Nodes, node)
 			addYAMLChild(&ast, node.ParentID, node.ID)
@@ -111,8 +111,8 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 					StartLine: i + 1, EndLine: i + 1,
 					ByteOff: offset, ByteLen: len(line),
 				},
-				Hash:     hashStr(line),
-				ParentID: currentParent(stack, indent),
+				Hash:     yamlHashStr(line),
+				ParentID: yamlCurrentParent(stack, indent),
 			}
 			ast.Nodes = append(ast.Nodes, node)
 			addYAMLChild(&ast, node.ParentID, node.ID)
@@ -123,7 +123,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 		// Sequence item: "- value" or "- key: value".
 		if strings.HasPrefix(trimmed, "- ") {
 			itemValue := strings.TrimPrefix(trimmed, "- ")
-			parent := currentParent(stack, indent)
+			parent := yamlCurrentParent(stack, indent)
 
 			node := YAMLASTNode{
 				ID:     yamlNodeID("seq_item", i, i),
@@ -135,7 +135,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 					StartLine: i + 1, EndLine: i + 1,
 					ByteOff: offset, ByteLen: len(line),
 				},
-				Hash:     hashStr(line),
+				Hash:     yamlHashStr(line),
 				ParentID: parent,
 			}
 
@@ -162,7 +162,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 				rest = strings.TrimSpace(trimmed[colonIdx+1:])
 			}
 
-			parent := currentParent(stack, indent)
+			parent := yamlCurrentParent(stack, indent)
 
 			if rest == "" {
 				// Mapping container (key with nested children).
@@ -176,7 +176,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 						StartLine: i + 1, EndLine: i + 1,
 						ByteOff: offset, ByteLen: len(line),
 					},
-					Hash:     hashStr(line),
+					Hash:     yamlHashStr(line),
 					ParentID: parent,
 				}
 				ast.Nodes = append(ast.Nodes, node)
@@ -196,7 +196,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 						StartLine: i + 1, EndLine: i + 1,
 						ByteOff: offset, ByteLen: len(line),
 					},
-					Hash:     hashStr(line),
+					Hash:     yamlHashStr(line),
 					ParentID: parent,
 				}
 				ast.Nodes = append(ast.Nodes, node)
@@ -209,7 +209,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 		}
 
 		// Scalar continuation or unstructured line.
-		parent := currentParent(stack, indent)
+		parent := yamlCurrentParent(stack, indent)
 		node := YAMLASTNode{
 			ID:     yamlNodeID("scalar", i, i),
 			Kind:   YAMLScalar,
@@ -220,7 +220,7 @@ func ParseYAMLAST(source []byte, filename string) YAMLAST {
 				StartLine: i + 1, EndLine: i + 1,
 				ByteOff: offset, ByteLen: len(line),
 			},
-			Hash:     hashStr(line),
+			Hash:     yamlHashStr(line),
 			ParentID: parent,
 		}
 		ast.Nodes = append(ast.Nodes, node)
@@ -283,7 +283,7 @@ func countIndent(line string) int {
 	return n
 }
 
-func currentParent(stack []yamlStackEntry, indent int) string {
+func yamlCurrentParent(stack []yamlStackEntry, indent int) string {
 	for i := len(stack) - 1; i >= 0; i-- {
 		if stack[i].indent < indent {
 			return stack[i].id
@@ -324,6 +324,6 @@ func hashBytes(data []byte) string {
 	return "sha256:" + hex.EncodeToString(h[:])
 }
 
-func hashStr(s string) string {
+func yamlHashStr(s string) string {
 	return hashBytes([]byte(s))
 }
