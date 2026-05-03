@@ -58,6 +58,11 @@ evidence_categories:
     expected_location: ".regulated-evidence-pack/"
     current_status: generated_by_workflow_when_run
     claim_allowed: "evidence_inventory_only"
+  - id: EV-PLAN-001
+    category: regulated_compliance_closure_plan
+    expected_location: "docs/28-regulated-compliance-closure-plan.md"
+    current_status: present_draft
+    claim_allowed: "execution_plan_only"
 blocking_gaps:
   - id: GAP-QMS-OWNER
     description: "Quality owner is not assigned."

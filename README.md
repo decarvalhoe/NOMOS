@@ -86,6 +86,7 @@ Domaines typiques : assurance, fiscalité, santé, pharma, banque, droit, RH, co
 - `docs/25-regulated-by-design-structure.md` : structure operationnelle `regulated by design` pour Nomos et Praxis.
 - `docs/26-structure-aware-atomization-process.md` : process et architecture cible pour une atomisation documentaire fiable, certifiable et consciente de la structure.
 - `docs/27-aaa-regulated-it-document-set.md` : document set AAA+ cible, règles de non-invention et limites de claims régulés.
+- `docs/28-regulated-compliance-closure-plan.md` : plan courant pour fermer les gaps compliance, GitHub QMS, bibles licenciées, validation et release evidence.
 - `docs/regulated/` : dossiers de profils produit, matrices, validation, supplier pack, release bundle et operations qualite.
 - `docs/verdict-taxonomy.md` : taxonomie des verdicts, niveaux de confiance et escalades.
 - `references/methodological-references.md` : références méthodologiques et pourquoi elles comptent.
@@ -113,6 +114,7 @@ Le track régulé est maintenant gouverné par trois documents :
 - `docs/25-regulated-by-design-structure.md` installe la structure partagee Nomos/Praxis : profils produit, matrice de controles, pack fournisseur, validation pack, release bundle, AI/RAG governance et integration client.
 - `docs/26-structure-aware-atomization-process.md` definit l'engine cible d'atomisation structure-aware et son systeme de certification.
 - `docs/27-aaa-regulated-it-document-set.md` definit le set documentaire AAA+ et la règle stricte: un manque devient un gap, jamais une preuve inventee.
+- `docs/28-regulated-compliance-closure-plan.md` est le plan d'execution courant pour passer de main techniquement vert a une posture compliance defendable.
 - `docs/regulated/github-operating-model/` definit le modele GitHub-native pour issues, PR, gates, preuves, audit exports et limites Part 11/eQMS.
 - `scripts/regulated_docs_gate.py`, `scripts/regulated_evidence_pack.py` et `scripts/regulated_github_qms_audit.py` automatisent les controles documentaires, le hashage des preuves et l'audit GitHub QMS.
 
