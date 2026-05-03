@@ -38,7 +38,7 @@ jobs:
       - name: Download E2E artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: rbok-lawbook-nodes-*
+          pattern: rbok-lawbook-feed-*
           path: /tmp/rbok-artifacts
           merge-multiple: true
         continue-on-error: true

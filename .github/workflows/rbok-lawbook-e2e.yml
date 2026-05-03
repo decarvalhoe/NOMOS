@@ -88,13 +88,32 @@ jobs:
       - name: Verify pipeline artifacts
         run: |
           echo "=== Checking pipeline output ==="
-          for f in snapshot.json source-manifest.yaml feed.json attestation.json; do
+          expected=(
+            snapshot.json
+            source-manifest.yaml
+            rbok-governance.json
+            profile-output.json
+            rbok-lawbook-feed.json
+            rbok-rag-metadata.json
+            rbok-atomization-report.json
+            rbok-traceability-matrix.json
+            rbok-engine-import.json
+            attestation.json
+          )
+          for f in "${expected[@]}"; do
             if [ ! -f "/tmp/rbok-output/$f" ]; then
               echo "FAIL: missing expected artifact: $f"
               exit 1
             fi
             echo "  ok: $f ($(wc -c < "/tmp/rbok-output/$f") bytes)"
           done
+
+      - name: Run release gate
+        working-directory: cli
+        run: |
+          go run ./internal/corpus/cmd/release-gate \
+            --artifacts /tmp/rbok-output \
+            --profile rbok-lawbook
 
       - name: Verify attestation format
         run: |
