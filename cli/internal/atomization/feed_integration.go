@@ -47,6 +47,15 @@ type LawbookFeedEntry struct {
 	ParentID     string         `json:"parent_id,omitempty"`
 	ReviewState  string         `json:"review_state"`
 	AtomID       string         `json:"atom_id"`
+	Span         *FeedSpan      `json:"span,omitempty"`
+}
+
+// FeedSpan carries source location for fidelity proof verification.
+type FeedSpan struct {
+	StartLine int `json:"start_line"`
+	EndLine   int `json:"end_line"`
+	StartCol  int `json:"start_col,omitempty"`
+	EndCol    int `json:"end_col,omitempty"`
 }
 
 // LawbookFeedResult is the output of atom-to-lawbook-feed projection.
@@ -82,7 +91,7 @@ func ProjectAtomsToLawbookFeed(atoms []Atom, config FeedIntegrationConfig) Lawbo
 	entries := make([]LawbookFeedEntry, 0, len(certified))
 
 	for i, atom := range certified {
-		entries = append(entries, LawbookFeedEntry{
+		entry := LawbookFeedEntry{
 			NodeID:       atomToNodeID(atom),
 			DocumentID:   docID,
 			NodeType:     mapAtomTypeToNodeType(atom.Type),
@@ -100,7 +109,16 @@ func ProjectAtomsToLawbookFeed(atoms []Atom, config FeedIntegrationConfig) Lawbo
 			ParentID:     atom.ParentID,
 			ReviewState:  string(atom.ReviewState),
 			AtomID:       atom.ID,
-		})
+		}
+		if atom.SourceSpan.StartLine > 0 {
+			entry.Span = &FeedSpan{
+				StartLine: atom.SourceSpan.StartLine,
+				EndLine:   atom.SourceSpan.EndLine,
+				StartCol:  atom.SourceSpan.StartCol,
+				EndCol:    atom.SourceSpan.EndCol,
+			}
+		}
+		entries = append(entries, entry)
 	}
 
 	feedID := makeFeedID(config.Domain, config.SourcePath)
