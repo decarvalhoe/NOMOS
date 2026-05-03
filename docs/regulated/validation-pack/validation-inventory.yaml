@@ -161,3 +161,159 @@ validations:
     owner: core-team
     verification_command: "cd cli && go test -v ./internal/corpus/... -run ReleaseGate"
     last_verified: ""
+
+  - id: VAL-013
+    intended_use_ref: ""
+    title: "Self-compliance evaluation"
+    risk_level: critical
+    validation_type: automated
+    method: "Nomos evaluates own repo with its CLI and regulated controls"
+    evidence_artifact: "go test ./internal/compliance/... -run SelfCompliance"
+    acceptance_gate: ci
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run SelfCompliance"
+    last_verified: ""
+
+  - id: VAL-014
+    intended_use_ref: ""
+    title: "Forbidden claims gate"
+    risk_level: high
+    validation_type: automated
+    method: "Scan public docs for forbidden market claims per FC-NOMOS-001"
+    evidence_artifact: "go test ./internal/compliance/... -run ForbiddenClaim"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run ForbiddenClaim"
+    last_verified: ""
+
+  - id: VAL-015
+    intended_use_ref: ""
+    title: "ALCOA+ evidence envelope"
+    risk_level: high
+    validation_type: automated
+    method: "Validate ALCOA attributes on evidence records"
+    evidence_artifact: "go test ./internal/compliance/... -run Alcoa"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run Alcoa"
+    last_verified: ""
+
+  - id: VAL-016
+    intended_use_ref: ""
+    title: "AI/RAG governance controls"
+    risk_level: high
+    validation_type: automated
+    method: "Evaluate AI response for hallucination, citation, provenance, injection"
+    evidence_artifact: "go test ./internal/compliance/... -run Evaluate"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run Evaluate"
+    last_verified: ""
+
+  - id: VAL-017
+    intended_use_ref: ""
+    title: "Reference alignment gate"
+    risk_level: medium
+    validation_type: automated
+    method: "Verify external references are governed with evidence and review dates"
+    evidence_artifact: "go test ./internal/compliance/... -run Alignment"
+    acceptance_gate: regulated-documentation-gate
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run Alignment"
+    last_verified: ""
+
+  - id: VAL-018
+    intended_use_ref: ""
+    title: "Provenance and SLSA verification"
+    risk_level: medium
+    validation_type: automated
+    method: "Validate SLSA provenance records meet minimum level"
+    evidence_artifact: "go test ./internal/compliance/... -run Provenance"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run Provenance"
+    last_verified: ""
+
+  - id: VAL-019
+    intended_use_ref: ""
+    title: "Validation lifecycle completeness"
+    risk_level: critical
+    validation_type: automated
+    method: "Verify all regulated validation artifacts are present and non-empty"
+    evidence_artifact: "go test ./internal/compliance/... -run ValidationLifecycle"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run ValidationLifecycle"
+    last_verified: ""
+
+  - id: VAL-020
+    intended_use_ref: ""
+    title: "Release bundle completeness"
+    risk_level: critical
+    validation_type: automated
+    method: "Verify release bundle contains all required evidence artifacts"
+    evidence_artifact: "go test ./internal/compliance/... -run ReleaseBundle"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run ReleaseBundle"
+    last_verified: ""
+
+  - id: VAL-021
+    intended_use_ref: ""
+    title: "Atomization pipeline"
+    risk_level: medium
+    validation_type: automated
+    method: "Markdown AST parsing, atom extraction, stable IDs, loss reporting"
+    evidence_artifact: "go test ./internal/atomization/..."
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/atomization/..."
+    last_verified: ""
+
+  - id: VAL-022
+    intended_use_ref: ""
+    title: "Traceability matrix projection"
+    risk_level: medium
+    validation_type: automated
+    method: "Atom-to-source-to-code-to-test reference extraction and gap detection"
+    evidence_artifact: "go test ./internal/atomization/... -run Trace"
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/atomization/... -run Trace"
+    last_verified: ""
+
+  - id: VAL-023
+    intended_use_ref: ""
+    title: "Evidence ledger integrity"
+    risk_level: high
+    validation_type: automated
+    method: "Validate evidence ledger entries have required fields and hashes"
+    evidence_artifact: "go test ./internal/compliance/... -run Ledger"
+    acceptance_gate: regulated-evidence-pack
+    status: implemented
+    owner: compliance-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run Ledger"
+    last_verified: ""
+
+  - id: VAL-024
+    intended_use_ref: ""
+    title: "Source impact analysis"
+    risk_level: medium
+    validation_type: automated
+    method: "Detect downstream impact when source documents change"
+    evidence_artifact: "go test ./internal/compliance/... -run SourceImpact"
+    acceptance_gate: ci
+    status: implemented
+    owner: core-team
+    verification_command: "cd cli && go test -v ./internal/compliance/... -run SourceImpact"
+    last_verified: ""

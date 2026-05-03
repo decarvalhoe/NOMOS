@@ -1,0 +1,211 @@
+schema_version: "0.1.0"
+document_id: TP-NOMOS-001
+status: executed
+owner: compliance-team
+
+protocol:
+  id: TP-NOMOS-001
+  title: "Self-compliance evaluation protocol"
+  version: "1.0"
+  validation_ref: VAL-013
+  function_under_test: "cli/internal/compliance/self_compliance.go"
+  intended_use_ref: ""
+  risk_level: critical
+  preconditions:
+    - "Go 1.22+ installed"
+    - "Repository cloned and clean (git status clean)"
+    - "All dependencies resolved (go mod download)"
+    - "Regulated documentation structure present (docs/regulated/)"
+  environment:
+    os: ubuntu-latest
+    go_version: "1.23.8"
+    cgo_enabled: "0"
+    commit: "127e829"
+
+test_cases:
+  - id: TC-001
+    description: "Nomos evaluates its own repository and produces compliant verdict"
+    category: functional
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceOnNomosRepo"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "verdict is compliant"
+        - "all controls are satisfied"
+        - "zero blocking findings"
+    acceptance_criteria: "Self-compliance returns compliant with 0 blocking findings"
+    risk_coverage: "Ensures Nomos can evaluate itself — foundational trust"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "verdict=compliant controls=13 satisfied=13 findings=0 blocking=0"
+    evidence_ref: "ci/artifacts/self-compliance-report.json"
+    notes: ""
+
+  - id: TC-002
+    description: "Critical controls are present in self-evaluation"
+    category: functional
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceCriticalControlsPresent"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "go.mod exists"
+        - "specs/*.cue validated"
+        - "regulated docs present"
+        - "validation pack present"
+    acceptance_criteria: "All critical regulated controls detected and satisfied"
+    risk_coverage: "Ensures regulated structure is not accidentally removed"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "all critical controls present"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-003
+    description: "Full compliance fixture evaluates to compliant"
+    category: regression
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceFullFixture"
+      fixtures:
+        - "cli/internal/compliance/testdata/"
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "fixture repo evaluates to compliant"
+    acceptance_criteria: "Controlled fixture produces deterministic compliant result"
+    risk_coverage: "Regression protection for self-compliance logic"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-004
+    description: "Empty repository evaluates to blocked"
+    category: negative
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceEmptyRepoBlocked"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "empty repo returns blocked verdict"
+        - "blocking findings are non-zero"
+    acceptance_criteria: "Empty repository must not pass self-compliance"
+    risk_coverage: "Fail-closed behavior verified"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-005
+    description: "Partial fixture evaluates to partial (not compliant)"
+    category: boundary
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfCompliancePartialFixture"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "partial repo returns non-compliant verdict"
+    acceptance_criteria: "Incomplete regulated structure must not pass"
+    risk_coverage: "Boundary between compliant and partial"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-006
+    description: "Finding structure has required fields"
+    category: functional
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceFindingStructure"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "findings have control_id, message, blocking flag"
+    acceptance_criteria: "Finding output is machine-readable and complete"
+    risk_coverage: "Evidence traceability requires structured findings"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-007
+    description: "Nonexistent root returns error"
+    category: negative
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceNonexistentRoot"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "nonexistent path returns error, not panic"
+    acceptance_criteria: "Graceful error handling for invalid input"
+    risk_coverage: "Robustness against bad input"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+  - id: TC-008
+    description: "Verdict constants match expected values"
+    category: regression
+    inputs:
+      command: "cd cli && go test -v ./internal/compliance/... -run TestSelfComplianceVerdictConstants"
+      fixtures: []
+    expected_outputs:
+      exit_code: 0
+      assertions:
+        - "compliant, partial, blocked constants are stable"
+    acceptance_criteria: "API contract for verdict values is maintained"
+    risk_coverage: "Prevents accidental breaking changes to verdict interface"
+    status: passed
+    executed_by: nomos-ci
+    executed_at: "2026-05-02T14:30:00Z"
+    actual_output: "PASS"
+    evidence_ref: ""
+    notes: ""
+
+deviations: []
+
+summary:
+  total_cases: 8
+  passed: 8
+  failed: 0
+  blocked: 0
+  deferred: 0
+  coverage_ratio: 1.0
+  verdict: passed
+  reviewer: quality-owner
+  review_date: "2026-05-02"
+  notes: >
+    All 8 test cases passed. Protocol covers functional (3),
+    negative (2), boundary (1), and regression (2) categories.
+    Self-compliance evaluates Nomos repo to compliant with 13/13
+    controls satisfied and 0 blocking findings.
+
+approval:
+  - role: quality-owner
+    name: ""
+    date: ""
+    signature: ""
+  - role: product-owner
+    name: ""
+    date: ""
+    signature: ""
