@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // RBOKLawbookArtifactPackOptions configures release-gate artifact generation.
@@ -168,6 +171,17 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("close rbok-attestation.json: %w", err)
 	}
 
+	// Governed lexicon artifact.
+	lexicon := buildGovernedLexiconFromFeeds(feeds)
+	lexiconPath := filepath.Join(outDir, "rbok-governed-lexicon.yaml")
+	lexiconYAML, err := marshalGovernedLexiconYAML(lexicon)
+	if err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("marshal governed lexicon: %w", err)
+	}
+	if err := os.WriteFile(lexiconPath, lexiconYAML, 0o644); err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write rbok-governed-lexicon.yaml: %w", err)
+	}
+
 	artifacts := []string{
 		"rbok-lawbook-feed.json",
 		"rbok-lawbook-index.json",
@@ -175,6 +189,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		"rbok-engine-import.json",
 		"rbok-governance.json",
 		"rbok-attestation.json",
+		"rbok-governed-lexicon.yaml",
 	}
 	sort.Strings(artifacts)
 
@@ -271,6 +286,87 @@ func rbokPriorityFromClassification(c RBOKSourceClassification) LawbookPriority 
 	default:
 		return PriorityMedium
 	}
+}
+
+// --- Governed lexicon extraction from lawbook feeds ---
+
+// governedLexiconEntry is a term extracted from a lawbook feed.
+type governedLexiconEntry struct {
+	Term       string `yaml:"term"       json:"term"`
+	Definition string `yaml:"definition" json:"definition"`
+	Source     string `yaml:"source"     json:"source"`
+	SourceLine int    `yaml:"source_line,omitempty" json:"source_line,omitempty"`
+	Status     string `yaml:"status"     json:"status"`
+	Domain     string `yaml:"domain,omitempty" json:"domain,omitempty"`
+}
+
+type governedLexiconArtifact struct {
+	SchemaVersion  string                 `yaml:"schema_version" json:"schema_version"`
+	Domain         string                 `yaml:"domain"         json:"domain"`
+	TotalDefined   int                    `yaml:"total_defined"  json:"total_defined"`
+	TotalUndefined int                    `yaml:"total_undefined" json:"total_undefined"`
+	Terms          []governedLexiconEntry `yaml:"terms"          json:"terms"`
+}
+
+var defPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)^([A-Z][a-zéèêëàâäùûüïîôöç]+(?:\s+[a-zéèêëàâäùûüïîôöç]+){0,3})\s*:\s+(.{10,})`),
+	regexp.MustCompile(`(?i)(?:on entend par|au sens d[ue])\s+[«"]?([^»",:]+)[»"]?\s*[:,]\s*(.{10,})`),
+	regexp.MustCompile(`(?i)(?:the term|le terme)\s+[«"]?([^»",:]+)[»"]?\s+(?:means?|désigne|designe)\s+(.{10,})`),
+}
+
+func buildGovernedLexiconFromFeeds(feeds []LawbookFeed) governedLexiconArtifact {
+	seen := map[string]bool{}
+	var terms []governedLexiconEntry
+	domain := "rbok-lawbook"
+
+	for _, feed := range feeds {
+		if feed.Domain != "" {
+			domain = feed.Domain
+		}
+		for _, node := range feed.Nodes {
+			text := node.Text
+			if text == "" {
+				continue
+			}
+			for _, pat := range defPatterns {
+				for _, m := range pat.FindAllStringSubmatch(text, -1) {
+					term := strings.TrimSpace(m[1])
+					def := strings.TrimSpace(m[2])
+					if idx := strings.Index(def, ". "); idx > 0 {
+						def = def[:idx+1]
+					}
+					key := strings.ToLower(term)
+					if seen[key] || len(key) < 3 {
+						continue
+					}
+					seen[key] = true
+					terms = append(terms, governedLexiconEntry{
+						Term:       term,
+						Definition: def,
+						Source:     node.NodeID,
+						Status:     "defined",
+						Domain:     node.Domain,
+					})
+				}
+			}
+		}
+	}
+
+	sort.Slice(terms, func(i, j int) bool {
+		return strings.ToLower(terms[i].Term) < strings.ToLower(terms[j].Term)
+	})
+
+	return governedLexiconArtifact{
+		SchemaVersion:  "0.1.0",
+		Domain:         domain,
+		TotalDefined:   len(terms),
+		TotalUndefined: 0,
+		Terms:          terms,
+	}
+}
+
+func marshalGovernedLexiconYAML(lex governedLexiconArtifact) ([]byte, error) {
+	return yaml.Marshal(lex)
 }
 
 func governanceFromDiagnosis(d DiagnoseVerdict) GovernanceResult {
