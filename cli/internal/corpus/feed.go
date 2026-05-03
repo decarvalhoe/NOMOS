@@ -321,6 +321,13 @@ func extractFeedUnits(root string, manifest SidecarManifest) ([]extractedFeedUni
 				return nil, fmt.Errorf("extract markdown %s: %w", source.Path, err)
 			}
 			for _, unit := range units {
+				// SFI-03 (#341): structural heading entries carry no
+				// body bytes, so they do not produce a feed unit on
+				// their own — the canonical semantic leaves under
+				// each heading do.
+				if unit.Kind == HeadingUnitKindHeading {
+					continue
+				}
 				content := strings.TrimSpace(unit.Content)
 				if content == "" {
 					content = unit.Title

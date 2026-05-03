@@ -35,33 +35,78 @@ Additional reference material.
 This is a level 4 heading.
 `
 
+func filterHeadingEntries(units []HeadingUnit) []HeadingUnit {
+	out := make([]HeadingUnit, 0, len(units))
+	for _, u := range units {
+		if u.Kind == HeadingUnitKindHeading {
+			out = append(out, u)
+		}
+	}
+	return out
+}
+
+func filterSemanticLeaves(units []HeadingUnit) []HeadingUnit {
+	out := make([]HeadingUnit, 0, len(units))
+	for _, u := range units {
+		if u.IsSemanticLeaf() {
+			out = append(out, u)
+		}
+	}
+	return out
+}
+
 func TestExtractMarkdownUnitsBasic(t *testing.T) {
 	units, err := ExtractMarkdownUnitsFromReader("docs/overview.md", strings.NewReader(fixtureMarkdown))
 	if err != nil {
 		t.Fatalf("extract: %v", err)
 	}
 
-	if len(units) != 7 {
-		t.Fatalf("expected 7 units, got %d", len(units))
+	headings := filterHeadingEntries(units)
+	if len(headings) != 7 {
+		t.Fatalf("expected 7 heading entries, got %d", len(headings))
 	}
 
-	assertUnit(t, units[0], 1, "Project Overview", 1)
-	assertUnit(t, units[1], 2, "Architecture", 6)
-	assertUnit(t, units[2], 3, "Data Layer", 10)
-	assertUnit(t, units[3], 3, "API Layer", 14)
-	assertUnit(t, units[4], 2, "Deployment", 18)
-	assertUnit(t, units[5], 1, "Appendix", 22)
-	assertUnit(t, units[6], 4, "Deep Heading", 26)
+	assertUnit(t, headings[0], 1, "Project Overview", 1)
+	assertUnit(t, headings[1], 2, "Architecture", 6)
+	assertUnit(t, headings[2], 3, "Data Layer", 10)
+	assertUnit(t, headings[3], 3, "API Layer", 14)
+	assertUnit(t, headings[4], 2, "Deployment", 18)
+	assertUnit(t, headings[5], 1, "Appendix", 22)
+	assertUnit(t, headings[6], 4, "Deep Heading", 26)
+
+	for _, h := range headings {
+		if strings.TrimSpace(h.Content) != "" {
+			t.Fatalf("heading %q must not own descendant body, got Content=%q", h.Title, h.Content)
+		}
+	}
 }
 
 func TestExtractMarkdownUnitsContent(t *testing.T) {
 	units, _ := ExtractMarkdownUnitsFromReader("test.md", strings.NewReader(fixtureMarkdown))
 
-	if !strings.Contains(units[0].Content, "introduction to the project") {
-		t.Fatalf("expected intro content, got: %s", units[0].Content)
+	leaves := filterSemanticLeaves(units)
+	if len(leaves) == 0 {
+		t.Fatal("expected at least one semantic leaf")
 	}
-	if !strings.Contains(units[2].Content, "PostgreSQL") {
-		t.Fatalf("expected data layer content, got: %s", units[2].Content)
+
+	// Body text appears once on a semantic leaf, never on a heading.
+	wantSubstrings := []string{
+		"introduction to the project",
+		"PostgreSQL",
+	}
+	for _, want := range wantSubstrings {
+		hits := 0
+		for _, u := range units {
+			if strings.Contains(u.Content, want) {
+				hits++
+				if u.Kind == HeadingUnitKindHeading {
+					t.Fatalf("body text %q must not appear on a heading entry, got %q", want, u.Title)
+				}
+			}
+		}
+		if hits != 1 {
+			t.Fatalf("expected body text %q to appear exactly once across units, got %d", want, hits)
+		}
 	}
 }
 
@@ -99,20 +144,38 @@ func TestExtractMarkdownUnitsNoHeadings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("extract: %v", err)
 	}
+	// SFI-03 (#341): pre-heading semantic content is intentionally
+	// not emitted as a unit; SFI-04 will surface it as a coverage
+	// finding. The contract here is that no headings means no units.
 	if len(units) != 0 {
 		t.Fatalf("expected 0 units with no headings, got %d", len(units))
 	}
 }
 
-func TestExtractMarkdownUnitsIgnoresH5H6(t *testing.T) {
+func TestExtractMarkdownUnitsH5H6PreservedAsHeadings(t *testing.T) {
 	content := "# Valid\n\nContent\n\n##### Too Deep\n\nIgnored\n\n###### Even Deeper\n\nAlso ignored\n"
 	units, _ := ExtractMarkdownUnitsFromReader("test.md", strings.NewReader(content))
 
-	if len(units) != 1 {
-		t.Fatalf("expected 1 unit (H5/H6 ignored), got %d", len(units))
+	headings := filterHeadingEntries(units)
+	wantLevels := []int{1, 5, 6}
+	if len(headings) != len(wantLevels) {
+		t.Fatalf("expected %d heading entries, got %d", len(wantLevels), len(headings))
 	}
-	if !strings.Contains(units[0].Content, "Too Deep") {
-		t.Fatalf("H5 line should be part of H1 content: %s", units[0].Content)
+	for i, want := range wantLevels {
+		if headings[i].Level != want {
+			t.Fatalf("heading %d: expected level %d, got %d (title=%q)",
+				i, want, headings[i].Level, headings[i].Title)
+		}
+	}
+	// H5/H6 must not be folded into the H1's body content.
+	h1 := headings[0]
+	if strings.Contains(h1.Content, "Too Deep") || strings.Contains(h1.Content, "Even Deeper") {
+		t.Fatalf("H5/H6 must remain typed as headings, not folded into H1 content: %q", h1.Content)
+	}
+	for _, u := range filterSemanticLeaves(units) {
+		if strings.Contains(u.Content, "Too Deep") || strings.Contains(u.Content, "Even Deeper") {
+			t.Fatalf("H5/H6 lines must not appear inside a semantic leaf: %q", u.Content)
+		}
 	}
 }
 
@@ -120,11 +183,12 @@ func TestExtractMarkdownUnitsTrailingHashes(t *testing.T) {
 	content := "## Heading With Trailing ##\n\nBody\n"
 	units, _ := ExtractMarkdownUnitsFromReader("test.md", strings.NewReader(content))
 
-	if len(units) != 1 {
-		t.Fatalf("expected 1 unit, got %d", len(units))
+	headings := filterHeadingEntries(units)
+	if len(headings) != 1 {
+		t.Fatalf("expected 1 heading entry, got %d", len(headings))
 	}
-	if units[0].Title != "Heading With Trailing" {
-		t.Fatalf("expected trailing hashes stripped, got: %q", units[0].Title)
+	if headings[0].Title != "Heading With Trailing" {
+		t.Fatalf("expected trailing hashes stripped, got: %q", headings[0].Title)
 	}
 }
 
@@ -132,11 +196,12 @@ func TestExtractMarkdownUnitsRequiresSpaceAfterHash(t *testing.T) {
 	content := "#NotAHeading\n\n# Real Heading\n\nBody\n"
 	units, _ := ExtractMarkdownUnitsFromReader("test.md", strings.NewReader(content))
 
-	if len(units) != 1 {
-		t.Fatalf("expected 1 unit (#NotAHeading is not valid), got %d", len(units))
+	headings := filterHeadingEntries(units)
+	if len(headings) != 1 {
+		t.Fatalf("expected 1 heading entry (#NotAHeading is not valid), got %d", len(headings))
 	}
-	if units[0].Title != "Real Heading" {
-		t.Fatalf("unexpected title: %q", units[0].Title)
+	if headings[0].Title != "Real Heading" {
+		t.Fatalf("unexpected title: %q", headings[0].Title)
 	}
 }
 
@@ -160,8 +225,13 @@ func TestExtractMarkdownUnitsFromFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("extract from file: %v", err)
 	}
-	if len(units) != 2 {
-		t.Fatalf("expected 2 units, got %d", len(units))
+	headings := filterHeadingEntries(units)
+	if len(headings) != 2 {
+		t.Fatalf("expected 2 heading entries, got %d", len(headings))
+	}
+	leaves := filterSemanticLeaves(units)
+	if len(leaves) != 2 {
+		t.Fatalf("expected 2 semantic leaves, got %d", len(leaves))
 	}
 }
 
