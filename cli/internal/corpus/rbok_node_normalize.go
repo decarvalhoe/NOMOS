@@ -1,6 +1,9 @@
 package corpus
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // NodeDefaults provides document-level values that the extractor cannot
 // infer from Markdown alone. These are applied by NormalizeNode to every
@@ -39,14 +42,30 @@ func NormalizeNode(n *LawbookNode, defaults NodeDefaults, ordinal string) []stri
 		n.Priority = defaults.Priority
 	}
 
-	// Fix depth to match node_type canonical depth.
-	if n.NodeType.IsValid() {
+	// Fix depth to match node_type canonical depth when that type has a
+	// canonical lawbook depth. Portable block nodes keep their AST depth.
+	if n.NodeType.IsValid() && n.NodeType.hasFixedDepth() {
 		n.Depth = n.NodeType.Depth()
 	}
 
 	// Assign ordinal_path if missing.
 	if n.OrdinalPath == "" && ordinal != "" {
 		n.OrdinalPath = ordinal
+	}
+
+	if n.SourceSpan != nil {
+		if strings.TrimSpace(n.SourceSpan.SourceID) == "" {
+			n.SourceSpan.SourceID = defaults.DocumentID
+		}
+		if strings.TrimSpace(n.SourceSpan.Path) == "" {
+			n.SourceSpan.Path = defaults.SourcePath
+		}
+		if strings.TrimSpace(n.SourceSpan.Hash) == "" {
+			n.SourceSpan.Hash = defaults.SourceHash
+		}
+		if strings.TrimSpace(n.SourceSpan.Locator) == "" {
+			n.SourceSpan.Locator = sourceSpanLocator(defaults.SourcePath, n.SourceSpan)
+		}
 	}
 
 	return ValidateNode(*n)

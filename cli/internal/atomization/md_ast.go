@@ -12,16 +12,21 @@ import (
 type BlockType string
 
 const (
-	BlockDocument  BlockType = "document"
-	BlockHeading   BlockType = "heading"
-	BlockParagraph BlockType = "paragraph"
-	BlockList      BlockType = "list"
-	BlockListItem  BlockType = "list_item"
-	BlockCodeBlock BlockType = "code_block"
-	BlockTable     BlockType = "table"
-	BlockTableRow  BlockType = "table_row"
-	BlockMetadata  BlockType = "metadata"
-	BlockBlankLine BlockType = "blank_line"
+	BlockDocument      BlockType = "document"
+	BlockHeading       BlockType = "heading"
+	BlockParagraph     BlockType = "paragraph"
+	BlockList          BlockType = "list"
+	BlockListItem      BlockType = "list_item"
+	BlockCodeBlock     BlockType = "code_block"
+	BlockTable         BlockType = "table"
+	BlockTableRow      BlockType = "table_row"
+	BlockThematicBreak BlockType = "thematic_break"
+	BlockBlockQuote    BlockType = "block_quote"
+	BlockCallout       BlockType = "callout"
+	BlockRawHTML       BlockType = "raw_html"
+	BlockImage         BlockType = "image"
+	BlockMetadata      BlockType = "metadata"
+	BlockBlankLine     BlockType = "blank_line"
 )
 
 // Span records the byte offset range in the original source.
@@ -48,21 +53,21 @@ type Block struct {
 
 // AST is the parsed block tree for a Markdown document.
 type AST struct {
-	Blocks      []Block  `json:"blocks"`
-	Root        string   `json:"root"`
-	SourceHash  string   `json:"source_hash"`
-	SourceLen   int      `json:"source_len"`
-	LossReport  LossReport `json:"loss_report"`
+	Blocks     []Block    `json:"blocks"`
+	Root       string     `json:"root"`
+	SourceHash string     `json:"source_hash"`
+	SourceLen  int        `json:"source_len"`
+	LossReport LossReport `json:"loss_report"`
 }
 
 // LossReport tracks content that was not captured by any block.
 type LossReport struct {
-	TotalSourceBytes   int          `json:"total_source_bytes"`
-	CoveredBytes       int          `json:"covered_bytes"`
-	LostBytes          int          `json:"lost_bytes"`
-	LossRatio          float64      `json:"loss_ratio"`
-	LostSpans          []LostSpan   `json:"lost_spans,omitempty"`
-	IsLossless         bool         `json:"is_lossless"`
+	TotalSourceBytes int        `json:"total_source_bytes"`
+	CoveredBytes     int        `json:"covered_bytes"`
+	LostBytes        int        `json:"lost_bytes"`
+	LossRatio        float64    `json:"loss_ratio"`
+	LostSpans        []LostSpan `json:"lost_spans,omitempty"`
+	IsLossless       bool       `json:"is_lossless"`
 }
 
 // LostSpan identifies a range of source that no block covers.
@@ -73,18 +78,25 @@ type LostSpan struct {
 }
 
 var (
-	headingRe   = regexp.MustCompile(`^(#{1,6})\s+(.+)$`)
-	codeOpenRe  = regexp.MustCompile("^```(\\w*)\\s*$")
-	tableRowRe  = regexp.MustCompile(`^\|.+\|$`)
-	tableSepRe  = regexp.MustCompile(`^\|[\s:_-]+(\|[\s:_-]+)+\|$`)
-	listItemRe  = regexp.MustCompile(`^(\s*)(?:[-*+]|\d+[.)]) (.+)$`)
-	metaTableRe = regexp.MustCompile(`^\|\s*(.+?)\s*\|\s*(.+?)\s*\|$`)
+	headingRe       = regexp.MustCompile(`^(#{1,6})\s+(.+)$`)
+	codeOpenRe      = regexp.MustCompile("^```(\\w*)\\s*$")
+	tableRowRe      = regexp.MustCompile(`^\|.+\|$`)
+	tableSepRe      = regexp.MustCompile(`^\|[\s:_-]+(\|[\s:_-]+)+\|$`)
+	listItemRe      = regexp.MustCompile(`^(\s*)(?:[-*+]|\d+[.)]) (.+)$`)
+	metaTableRe     = regexp.MustCompile(`^\|\s*(.+?)\s*\|\s*(.+?)\s*\|$`)
+	thematicBreakRe = regexp.MustCompile(`^\s{0,3}(?:[-*_]\s*){3,}$`)
+	blockQuoteRe    = regexp.MustCompile(`^>\s?(.*)$`)
+	calloutRe       = regexp.MustCompile(`^>\s?\[!([A-Za-z0-9_-]+)\]\s*$`)
+	rawHTMLRe       = regexp.MustCompile(`^<[A-Za-z][A-Za-z0-9-]*(?:\s[^>]*)?>.*(?:</[A-Za-z][A-Za-z0-9-]*>|/>)\s*$`)
+	imageRe         = regexp.MustCompile(`^!\[([^\]]*)\]\(([^)]+)\)\s*$`)
+	linkRe          = regexp.MustCompile(`\[[^\]]+\]\(([^)]+)\)`)
 )
 
 // ParseMarkdown parses Markdown source into a block AST.
 // It is loss-aware: after parsing, it computes which source bytes are
 // not covered by any block and reports them.
 func ParseMarkdown(source string) AST {
+	source = normalizeMarkdownLineEndings(source)
 	lines := strings.Split(source, "\n")
 	lineOffsets := computeLineOffsets(source)
 
@@ -207,6 +219,77 @@ func ParseMarkdown(source string) AST {
 			continue
 		}
 
+		// Thematic break.
+		if thematicBreakRe.MatchString(line) {
+			parent := parentFromStack(headingStack, 0)
+			blk := makeBlock(BlockThematicBreak, strings.TrimSpace(line), line, i, i, lineOffsets, parent)
+			ast.Blocks = append(ast.Blocks, blk)
+			addChild(&ast, parent, blk.ID)
+			i++
+			continue
+		}
+
+		// Block quote or callout.
+		if blockQuoteRe.MatchString(line) {
+			startLine := i
+			var quoteLines []string
+			for i < len(lines) && blockQuoteRe.MatchString(lines[i]) {
+				quoteLines = append(quoteLines, lines[i])
+				i++
+			}
+			raw := strings.Join(quoteLines, "\n")
+			parent := parentFromStack(headingStack, 0)
+			blockType := BlockBlockQuote
+			props := map[string]string{}
+			if m := calloutRe.FindStringSubmatch(quoteLines[0]); m != nil {
+				blockType = BlockCallout
+				props["kind"] = strings.ToUpper(m[1])
+			}
+			var textLines []string
+			for _, ql := range quoteLines {
+				m := blockQuoteRe.FindStringSubmatch(ql)
+				if m == nil {
+					continue
+				}
+				body := strings.TrimSpace(m[1])
+				if calloutRe.MatchString(ql) {
+					continue
+				}
+				textLines = append(textLines, body)
+			}
+			blk := makeBlock(blockType, strings.TrimSpace(strings.Join(textLines, "\n")), raw, startLine, i-1, lineOffsets, parent)
+			if len(props) > 0 {
+				blk.Props = props
+			}
+			ast.Blocks = append(ast.Blocks, blk)
+			addChild(&ast, parent, blk.ID)
+			continue
+		}
+
+		// Raw HTML block.
+		if rawHTMLRe.MatchString(trimmed) {
+			parent := parentFromStack(headingStack, 0)
+			blk := makeBlock(BlockRawHTML, trimmed, line, i, i, lineOffsets, parent)
+			ast.Blocks = append(ast.Blocks, blk)
+			addChild(&ast, parent, blk.ID)
+			i++
+			continue
+		}
+
+		// Image-only block.
+		if m := imageRe.FindStringSubmatch(trimmed); m != nil {
+			parent := parentFromStack(headingStack, 0)
+			blk := makeBlock(BlockImage, strings.TrimSpace(m[1]), line, i, i, lineOffsets, parent)
+			blk.Props = map[string]string{
+				"alt":    strings.TrimSpace(m[1]),
+				"target": strings.TrimSpace(m[2]),
+			}
+			ast.Blocks = append(ast.Blocks, blk)
+			addChild(&ast, parent, blk.ID)
+			i++
+			continue
+		}
+
 		// List.
 		if listItemRe.MatchString(line) {
 			startLine := i
@@ -238,7 +321,9 @@ func ParseMarkdown(source string) AST {
 		for i < len(lines) {
 			tl := strings.TrimSpace(lines[i])
 			if tl == "" || headingRe.MatchString(lines[i]) || codeOpenRe.MatchString(lines[i]) ||
-				tableRowRe.MatchString(lines[i]) || listItemRe.MatchString(lines[i]) {
+				tableRowRe.MatchString(lines[i]) || thematicBreakRe.MatchString(lines[i]) ||
+				blockQuoteRe.MatchString(lines[i]) || rawHTMLRe.MatchString(tl) ||
+				imageRe.MatchString(tl) || listItemRe.MatchString(lines[i]) {
 				break
 			}
 			paraLines = append(paraLines, lines[i])
@@ -248,12 +333,42 @@ func ParseMarkdown(source string) AST {
 		text := strings.TrimSpace(raw)
 		parent := parentFromStack(headingStack, 0)
 		blk := makeBlock(BlockParagraph, text, raw, startLine, i-1, lineOffsets, parent)
+		if links := extractMarkdownLinks(text); len(links) > 0 {
+			blk.Props = map[string]string{"links": strings.Join(links, ",")}
+		}
 		ast.Blocks = append(ast.Blocks, blk)
 		addChild(&ast, parent, blk.ID)
 	}
 
 	ast.LossReport = computeLossReport(source, lines, ast.Blocks, lineOffsets)
 	return ast
+}
+
+func normalizeMarkdownLineEndings(source string) string {
+	source = strings.ReplaceAll(source, "\r\n", "\n")
+	source = strings.ReplaceAll(source, "\r", "\n")
+	return source
+}
+
+func extractMarkdownLinks(text string) []string {
+	matches := linkRe.FindAllStringSubmatch(text, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	links := make([]string, 0, len(matches))
+	seen := map[string]struct{}{}
+	for _, match := range matches {
+		target := strings.TrimSpace(match[1])
+		if target == "" {
+			continue
+		}
+		if _, ok := seen[target]; ok {
+			continue
+		}
+		seen[target] = struct{}{}
+		links = append(links, target)
+	}
+	return links
 }
 
 func makeBlock(typ BlockType, text, raw string, startLine, endLine int, offsets []int, parentID string) Block {

@@ -95,6 +95,23 @@ func TestParseMarkdownMetadata(t *testing.T) {
 	}
 }
 
+func TestParseMarkdownCRLFMetadataTable(t *testing.T) {
+	src := "# Doc\r\n\r\n| Champ | Valeur |\r\n|-------|--------|\r\n| Référence | DOC-1 |\r\n\r\n## Body\r\n\r\nText.\r\n"
+	ast := ParseMarkdown(src)
+	meta := blocksOfType(ast, BlockMetadata)
+	if len(meta) != 1 {
+		t.Fatalf("expected one metadata block for CRLF table, got %d", len(meta))
+	}
+	if meta[0].Props["référence"] != "DOC-1" {
+		t.Fatalf("expected metadata reference DOC-1, got %v", meta[0].Props)
+	}
+	for _, block := range ast.Blocks {
+		if block.Type == BlockParagraph && strings.Contains(block.Text, "Champ") {
+			t.Fatalf("metadata table must not become paragraph: %+v", block)
+		}
+	}
+}
+
 func TestParseMarkdownParagraphs(t *testing.T) {
 	ast := ParseMarkdown(sampleMD)
 	paras := blocksOfType(ast, BlockParagraph)
@@ -288,6 +305,66 @@ func TestParseMarkdownNestedList(t *testing.T) {
 	// Should capture at least 2 items (outer, another). Inner may be continuation.
 	if len(items) < 2 {
 		t.Fatalf("expected at least 2 list items, got %d", len(items))
+	}
+}
+
+func TestParseMarkdownH5H6Headings(t *testing.T) {
+	src := "# Doc\n\n##### Article level\n\nArticle text.\n\n###### Clause level\n\nClause text.\n"
+	ast := ParseMarkdown(src)
+	headings := blocksOfType(ast, BlockHeading)
+	if len(headings) != 3 {
+		t.Fatalf("expected 3 headings, got %d", len(headings))
+	}
+	if headings[1].Level != 5 || headings[1].Text != "Article level" {
+		t.Fatalf("expected H5 article heading, got level=%d text=%q", headings[1].Level, headings[1].Text)
+	}
+	if headings[2].Level != 6 || headings[2].Text != "Clause level" {
+		t.Fatalf("expected H6 clause heading, got level=%d text=%q", headings[2].Level, headings[2].Text)
+	}
+	if headings[2].ParentID != headings[1].ID {
+		t.Fatalf("expected H6 parent to be H5, got %q want %q", headings[2].ParentID, headings[1].ID)
+	}
+}
+
+func TestParseMarkdownPortableBlockTypes(t *testing.T) {
+	src := "# Doc\n\n> quoted policy\n\n> [!NOTE]\n> governed note\n\n<div data-x=\"1\">raw</div>\n\n![Diagram](./diagram.png)\n\nSee [RBOK](../index.md) for context.\n"
+	ast := ParseMarkdown(src)
+
+	if got := len(blocksOfType(ast, BlockType("block_quote"))); got != 1 {
+		t.Fatalf("expected 1 block_quote, got %d", got)
+	}
+	callouts := blocksOfType(ast, BlockType("callout"))
+	if len(callouts) != 1 {
+		t.Fatalf("expected 1 callout, got %d", len(callouts))
+	}
+	if callouts[0].Props["kind"] != "NOTE" {
+		t.Fatalf("expected callout kind NOTE, got %v", callouts[0].Props)
+	}
+	if got := len(blocksOfType(ast, BlockType("raw_html"))); got != 1 {
+		t.Fatalf("expected 1 raw_html block, got %d", got)
+	}
+	images := blocksOfType(ast, BlockType("image"))
+	if len(images) != 1 {
+		t.Fatalf("expected 1 image block, got %d", len(images))
+	}
+	if images[0].Props["alt"] != "Diagram" || images[0].Props["target"] != "./diagram.png" {
+		t.Fatalf("unexpected image props: %v", images[0].Props)
+	}
+	var linkedParagraph *Block
+	for i := range ast.Blocks {
+		if ast.Blocks[i].Type == BlockParagraph && strings.Contains(ast.Blocks[i].Text, "RBOK") {
+			linkedParagraph = &ast.Blocks[i]
+			break
+		}
+	}
+	if linkedParagraph == nil {
+		t.Fatal("expected linked paragraph")
+	}
+	if linkedParagraph.Props["links"] != "../index.md" {
+		t.Fatalf("expected link target prop, got %v", linkedParagraph.Props)
+	}
+	if !ast.LossReport.IsLossless {
+		t.Fatalf("portable block parse must be lossless, got %+v", ast.LossReport)
 	}
 }
 

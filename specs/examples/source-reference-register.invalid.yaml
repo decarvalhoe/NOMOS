@@ -1,0 +1,21 @@
+method_version: "0.1.0"
+generated_at: "2026-05-03T04:30:00Z"
+scope: "Invalid source register fixture"
+curator: "codex"
+method:
+  objective: "Demonstrate source validation failure."
+  selection_rules:
+    - "Prefer primary sources."
+  quality_rules:
+    - "Every source must have an HTTPS URL and at least one NOMOS use."
+sources:
+  - id: "bad source id"
+    title: ""
+    url: "http://example.com/not-accepted"
+    publisher: ""
+    status: "blog"
+    domain: "unknown"
+    authority: "tertiary"
+    nomos_use: []
+    license_status: "unknown"
+    accessed_at: ""

@@ -36,13 +36,14 @@ type ReleaseGateResult struct {
 
 // ReleaseGateConfig specifies what the gate expects to find.
 type ReleaseGateConfig struct {
-	Profile             string
-	ArtifactsDir        string
-	RequiredNodeTypes   []LawbookNodeType
-	RequireFeed         bool
-	RequireAttestation  bool
-	RequireGovernance   bool
-	MaxBlockingFindings int
+	Profile                  string
+	ArtifactsDir             string
+	RequiredNodeTypes        []LawbookNodeType
+	RequireFeed              bool
+	RequireAttestation       bool
+	RequireGovernance        bool
+	RequireStructureFidelity bool
+	MaxBlockingFindings      int
 }
 
 // DefaultRBOKLawbookGateConfig returns the default gate config for the
@@ -57,10 +58,11 @@ func DefaultRBOKLawbookGateConfig(artifactsDir string) ReleaseGateConfig {
 			NodeParagraph,
 			NodeAlinea,
 		},
-		RequireFeed:         true,
-		RequireAttestation:  true,
-		RequireGovernance:   true,
-		MaxBlockingFindings: 0,
+		RequireFeed:              true,
+		RequireAttestation:       true,
+		RequireGovernance:        true,
+		RequireStructureFidelity: true,
+		MaxBlockingFindings:      0,
 	}
 }
 
@@ -100,6 +102,11 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 		checks = append(checks, checkGovernance(absDir, config.MaxBlockingFindings))
 	}
 
+	// Check 5: Structure fidelity report present and not blocking.
+	if config.RequireStructureFidelity {
+		checks = append(checks, checkStructureFidelity(absDir))
+	}
+
 	blocking := 0
 	warnings := 0
 	for _, c := range checks {
@@ -124,6 +131,45 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 		Blocking: blocking,
 		Warnings: warnings,
 	}, nil
+}
+
+func checkStructureFidelity(dir string) ReleaseGateCheck {
+	patterns := []string{
+		filepath.Join(dir, "*structure-fidelity*.json"),
+		filepath.Join(dir, "*structure_fidelity*.json"),
+		filepath.Join(dir, "*fidelity*.json"),
+	}
+	for _, p := range patterns {
+		matches, _ := filepath.Glob(p)
+		sort.Strings(matches)
+		for _, m := range matches {
+			report, err := parseStructureFidelityFile(m)
+			if err != nil {
+				continue
+			}
+			if report.Blocking > 0 || report.Verdict == "fail" {
+				return ReleaseGateCheck{
+					Name:    "structure_fidelity",
+					Verdict: GateFail,
+					Detail:  fmt.Sprintf("blocking=%d, covered=%d/%d", report.Blocking, report.CoveredSourceBlockCount, report.SourceBlockCount),
+				}
+			}
+			verdict := GatePass
+			if report.Warnings > 0 {
+				verdict = GateWarn
+			}
+			return ReleaseGateCheck{
+				Name:    "structure_fidelity",
+				Verdict: verdict,
+				Detail:  fmt.Sprintf("blocking=%d, covered=%d/%d", report.Blocking, report.CoveredSourceBlockCount, report.SourceBlockCount),
+			}
+		}
+	}
+	return ReleaseGateCheck{
+		Name:    "structure_fidelity",
+		Verdict: GateFail,
+		Detail:  "no structure fidelity report found",
+	}
 }
 
 func checkFeedArtifacts(dir string) ReleaseGateCheck {
@@ -407,4 +453,19 @@ func parseGovernanceFile(path string) (GovernanceResult, error) {
 		return GovernanceResult{}, err
 	}
 	return result, nil
+}
+
+func parseStructureFidelityFile(path string) (StructureFidelityReport, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return StructureFidelityReport{}, err
+	}
+	var report StructureFidelityReport
+	if err := json.Unmarshal(data, &report); err != nil {
+		return StructureFidelityReport{}, err
+	}
+	if report.Format != StructureFidelityFormat && !strings.Contains(strings.ToLower(filepath.Base(path)), "fidelity") {
+		return StructureFidelityReport{}, fmt.Errorf("not a structure fidelity report")
+	}
+	return report, nil
 }

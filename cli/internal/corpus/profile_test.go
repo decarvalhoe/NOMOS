@@ -17,8 +17,8 @@ func TestLookupProfileRBOKLawbook(t *testing.T) {
 		t.Fatalf("lookup: %v", err)
 	}
 	assertEqual(t, ProfileRBOKLawbook, p.Name)
-	if len(p.Outputs) != 8 {
-		t.Fatalf("expected 8 outputs, got %d", len(p.Outputs))
+	if len(p.Outputs) != 9 {
+		t.Fatalf("expected 9 outputs, got %d", len(p.Outputs))
 	}
 }
 
@@ -182,6 +182,33 @@ func TestRunProfileFeedTraceabilityMatrixCoversEveryNode(t *testing.T) {
 	}
 }
 
+func TestRunProfileFeedIncludesStructureFidelityReport(t *testing.T) {
+	dir := makeRealisonsBusinessFixture(t)
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputStructureFidelityReport},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+
+	var report StructureFidelityReport
+	if err := json.Unmarshal(result.Sections[OutputStructureFidelityReport], &report); err != nil {
+		t.Fatalf("unmarshal structure fidelity report: %v", err)
+	}
+	if report.Format != StructureFidelityFormat {
+		t.Fatalf("expected format %s, got %s", StructureFidelityFormat, report.Format)
+	}
+	if report.CheckedSourceCount == 0 {
+		t.Fatal("expected checked markdown sources")
+	}
+	if report.Blocking != 0 {
+		t.Fatalf("expected fixture to pass fidelity gate, got %+v", report.Findings)
+	}
+}
+
 func TestRunProfileFeedAtomizesParcoursTemplatesOutsideRuntimeBinding(t *testing.T) {
 	dir := t.TempDir()
 	writeTestCorpusFile(t, dir, "00_meta/parcours-template-leger.yaml", []byte(`
@@ -279,6 +306,88 @@ func TestRunProfileFeedAtomizesAIBehaviorConfigJSON(t *testing.T) {
 	}
 	if !foundResponseFormat {
 		t.Fatal("expected responseFormatOverride node")
+	}
+}
+
+func TestRunProfileFeedStructuredSourcesCarrySourceSpansAndExactLocators(t *testing.T) {
+	dir := t.TempDir()
+	writeTestCorpusFile(t, dir, "03_parcours/parcours.yaml", []byte(`
+parcours:
+  code: PAR_PORTABLE
+  name: Parcours portable
+  modules:
+    - code: MOD_PORTABLE
+      name: Module portable
+      type: conversational
+      ai_instructions: Poser uniquement la question courante.
+      objectives:
+        - key: objectif-portable
+          titre: Objectif portable
+          questions:
+            - key: question-portable
+              label: Quelle est la decision ?
+              type: text
+              help_text: Une seule question concise.
+`))
+	writeTestCorpusFile(t, dir, "03_parcours/ai-config/ai-behavior-config-strict.json", []byte(`{
+  "schemaVersion": 1,
+  "scope": "global",
+  "version": 2,
+  "fields": {
+    "responseFormatOverride": {
+      "value": "MAXIMUM 60 MOTS. UNE SEULE question par message.",
+      "isOverride": false,
+      "source": "default"
+    }
+  }
+}`))
+
+	result, err := RunProfileFeed(ProfileFeedInput{
+		Profile:    ProfileRBOKLawbook,
+		CorpusRoot: dir,
+		Outputs:    []OutputFlag{OutputFeed, OutputStructureFidelityReport},
+	})
+	if err != nil {
+		t.Fatalf("profile feed: %v", err)
+	}
+
+	var assembly MultiFeedAssembly
+	if err := json.Unmarshal(result.Sections[OutputFeed], &assembly); err != nil {
+		t.Fatalf("unmarshal feed assembly: %v", err)
+	}
+	for _, sourcePath := range []string{
+		"03_parcours/parcours.yaml",
+		"03_parcours/ai-config/ai-behavior-config-strict.json",
+	} {
+		nodes := nodesBySource(assembly, sourcePath)
+		if len(nodes) == 0 {
+			t.Fatalf("expected nodes for %s", sourcePath)
+		}
+		for _, node := range nodes {
+			if node.SourceSpan == nil {
+				t.Fatalf("node %s has no source_span", node.NodeID)
+			}
+			if node.SourceSpan.StartLine == nil || node.SourceSpan.StartByte == nil {
+				t.Fatalf("node %s has incomplete source_span: %+v", node.NodeID, node.SourceSpan)
+			}
+			if !strings.Contains(node.Locator, "#L") {
+				t.Fatalf("node %s locator should be source-line based, got %q", node.NodeID, node.Locator)
+			}
+			if !strings.HasPrefix(node.SourceSpan.Hash, "sha256:") {
+				t.Fatalf("node %s source_span hash is not populated: %+v", node.NodeID, node.SourceSpan)
+			}
+		}
+	}
+
+	var report StructureFidelityReport
+	if err := json.Unmarshal(result.Sections[OutputStructureFidelityReport], &report); err != nil {
+		t.Fatalf("unmarshal structure fidelity report: %v", err)
+	}
+	if report.CheckedSourceCount < 2 {
+		t.Fatalf("expected structured YAML/JSON sources to be checked, got %d", report.CheckedSourceCount)
+	}
+	if report.Blocking != 0 {
+		t.Fatalf("expected structured sources to pass fidelity gate, got %+v", report.Findings)
 	}
 }
 
