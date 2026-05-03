@@ -1,0 +1,60 @@
+schema_version: "0.1.0"
+template_id: RCP-014-COMPETENCE-ASSESSMENT
+title: Competence Assessment Record Template
+status: draft
+owner: not_assigned
+
+instructions: >
+  Complete one record per person per competence. The assessor must be
+  different from the assessee. Retain signed records as controlled
+  quality evidence.
+
+record:
+  # --- Identification ---
+  assessee:
+    name: ""
+    role_id: ""
+    employee_id: ""
+  assessor:
+    name: ""
+    role_id: ""
+    employee_id: ""
+
+  # --- Competence ---
+  competence:
+    id: ""
+    name: ""
+    required_level: ""  # awareness | proficient | expert
+
+  # --- Assessment ---
+  assessment:
+    date: ""  # YYYY-MM-DD
+    method: ""  # written_assessment | practical_assessment | scenario_assessment | certification
+    description: ""
+    pass_criteria: ""
+    result: ""  # pass | fail | conditional
+    score: null  # optional numeric score
+    evidence_artifact: ""  # path or reference to evidence file
+    notes: ""
+
+  # --- Decision ---
+  decision:
+    competent: null  # true | false
+    conditions: ""  # conditions for conditional pass
+    reassessment_date: ""  # YYYY-MM-DD if conditional or fail
+    signed_by_assessor: false
+    signed_by_assessee: false
+    signed_at: ""  # RFC3339 timestamp
+
+  # --- Approval ---
+  approval:
+    approved_by: ""
+    approved_at: ""
+    approval_role: ""  # quality_unit | approver
+    approval_hash: ""  # sha256 chain hash for Part 11
+
+  # --- Validity ---
+  validity:
+    effective_from: ""
+    expires_at: ""  # YYYY-MM-DD, null if no expiry
+    retraining_trigger: ""  # event or schedule that triggers retraining

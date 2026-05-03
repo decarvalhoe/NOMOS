@@ -1,0 +1,207 @@
+schema_version: "0.1.0"
+document_id: RCP-014-TRAINING-MATRIX
+title: Training and Competence Matrix
+status: draft
+owner: not_assigned
+created_at: "2026-05-03"
+updated_at: "2026-05-03"
+claim_boundary: >
+  This matrix registers required competences per role. No training
+  completion is claimed until individual records are signed and dated.
+
+roles:
+  - role_id: developer
+    title: Developer
+    description: >
+      Writes and maintains source code, tests, and configuration under
+      version control. Responsible for unit-level evidence.
+    status: not_assigned
+    required_competences:
+      - id: comp-dev-001
+        name: Version control and branching strategy
+        category: technical
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-dev-002
+        name: Nomos CLI usage and manifest authoring
+        category: tooling
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-dev-003
+        name: Regulated coding practices (Part 11, data integrity)
+        category: regulatory
+        level: awareness
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-dev-004
+        name: Unit testing and coverage evidence
+        category: technical
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-dev-005
+        name: Secure development (OWASP, SSDF)
+        category: security
+        level: awareness
+        training_status: not_assigned
+        evidence_type: written_assessment
+
+  - role_id: reviewer
+    title: Reviewer
+    description: >
+      Reviews code, documentation, and evidence for correctness,
+      completeness, and compliance before approval.
+    status: not_assigned
+    required_competences:
+      - id: comp-rev-001
+        name: Code review best practices
+        category: technical
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-rev-002
+        name: Nomos report interpretation
+        category: tooling
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-rev-003
+        name: Regulated review obligations (GxP)
+        category: regulatory
+        level: proficient
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-rev-004
+        name: Evidence evaluation and gap identification
+        category: quality
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+
+  - role_id: approver
+    title: Approver
+    description: >
+      Provides final sign-off on evidence records, release decisions,
+      and controlled document changes. Cannot self-approve authored work.
+    status: not_assigned
+    required_competences:
+      - id: comp-app-001
+        name: Approval workflow and e-signature semantics
+        category: regulatory
+        level: proficient
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-app-002
+        name: Risk-based decision making
+        category: quality
+        level: proficient
+        training_status: not_assigned
+        evidence_type: scenario_assessment
+      - id: comp-app-003
+        name: Regulatory landscape (Part 11, Annex 11, GAMP 5)
+        category: regulatory
+        level: awareness
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-app-004
+        name: Nomos strict gate and control matrix
+        category: tooling
+        level: awareness
+        training_status: not_assigned
+        evidence_type: practical_assessment
+
+  - role_id: quality_unit
+    title: Quality Unit
+    description: >
+      Maintains the quality system, oversees deviations, CAPAs, and
+      audit readiness. Independent from development.
+    status: not_assigned
+    required_competences:
+      - id: comp-qu-001
+        name: Quality management system (ISO 13485, ICH Q10)
+        category: regulatory
+        level: expert
+        training_status: not_assigned
+        evidence_type: certification
+      - id: comp-qu-002
+        name: Deviation, CAPA, and change control
+        category: quality
+        level: expert
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-qu-003
+        name: Audit preparation and response
+        category: quality
+        level: proficient
+        training_status: not_assigned
+        evidence_type: scenario_assessment
+      - id: comp-qu-004
+        name: Data integrity principles (ALCOA+)
+        category: regulatory
+        level: proficient
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-qu-005
+        name: Nomos evidence pack review and release gate
+        category: tooling
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+
+  - role_id: release_manager
+    title: Release Manager
+    description: >
+      Coordinates release activities, ensures all gates pass, manages
+      deployment to regulated environments.
+    status: not_assigned
+    required_competences:
+      - id: comp-rm-001
+        name: Release process and deployment controls
+        category: technical
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-rm-002
+        name: CI/CD pipeline and environment protection
+        category: technical
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-rm-003
+        name: Evidence pack assembly and attestation
+        category: tooling
+        level: proficient
+        training_status: not_assigned
+        evidence_type: practical_assessment
+      - id: comp-rm-004
+        name: Regulated release requirements (Part 11, Annex 11)
+        category: regulatory
+        level: awareness
+        training_status: not_assigned
+        evidence_type: written_assessment
+      - id: comp-rm-005
+        name: Rollback and incident escalation
+        category: operational
+        level: proficient
+        training_status: not_assigned
+        evidence_type: scenario_assessment
+
+competence_levels:
+  - id: awareness
+    description: Understands concepts and can identify when to escalate.
+  - id: proficient
+    description: Can independently execute tasks and produce evidence.
+  - id: expert
+    description: Can design processes, train others, and handle exceptions.
+
+evidence_types:
+  - id: written_assessment
+    description: Questionnaire or exam with pass threshold.
+  - id: practical_assessment
+    description: Observed task execution with documented outcome.
+  - id: scenario_assessment
+    description: Response to scenario-based exercise with decision log.
+  - id: certification
+    description: External or internal certification with validity period.
