@@ -96,6 +96,21 @@ Gate release :
 - sauvegarde/rollback vérifiés ;
 - approbation propriétaire métier.
 
+### Strict release gate inputs and the corpus integrity boundary
+
+The strict release gate today aggregates the inputs above (`validate`, `canonical:check`, `canonical:check:strict`, `release:compliance`). Source-to-feed fidelity is **not** part of the current strict gate; it is a documented future input.
+
+| Strict-gate input | Status today | Notes |
+|---|---|---|
+| `validate` (lint, typecheck, unit, contract, `canonical:check`) | Active | Daily gate. |
+| `canonical:check` (manifest, hashes, matrix, contracts, read-model) | Active | Coherence gate. |
+| `canonical:check:strict` (no mocks, no critical missing units, golden cases) | Active | Conformance gate. |
+| `release:compliance` (strict green, coverage, changelog, ADR, rollback, owner approval) | Active | Release gate. |
+| `corpus-integrity-check` (source coverage, duplicate spans, junk content, feed linkage, RAG linkage) | **Future strict-gate section** | Depends on `#346` (SFI-08); inputs from `#342` and `#345`. |
+| Full fidelity proof (source-to-feed) | **Not currently produced** | Planned in `#342` (SFI-04), `#345` (SFI-07), `#346` (SFI-08). The phrase `full_fidelity_proven` is reserved for builds whose corpus integrity report is present and passing. |
+
+Until `corpus-integrity-check` is wired into the strict release gate, no release artifact may advertise a platform-wide source-to-feed fidelity proof. Existing artifact-generation gates remain active and are documented as such above.
+
 ## Rapport De Couverture
 
 Chemin recommandé :

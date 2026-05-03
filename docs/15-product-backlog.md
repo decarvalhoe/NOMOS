@@ -26,6 +26,7 @@ As checked during release preparation on 2026-05-03, open Nomos issues are:
 | `#193` | Reference bibles | Acquire and intake ISO/IEC/IEEE 12207:2026. | Blocks lifecycle-standard clause closure. |
 | `#194` | Reference bibles | Complete license review for GAMP 5 and ISO/IEC 25010. | Blocks licensed-standard processing and redistribution decisions. |
 | `#196` | Reference bibles | Process public and licensed bibles with Nomos. | Depends on licensed/public reference readiness; blocks higher assurance reference-to-control proof. |
+| `#337` | SFI epic — source-to-feed integrity | Umbrella epic for source-to-feed fidelity and semantic feed hygiene (children `#338`–`#349`). | In progress; claim boundary pending all SFI children. Blocks any platform-wide `full_fidelity_proven` claim until the corpus integrity gate is wired and passing. |
 
 ## Delivered Alpha Capabilities
 
