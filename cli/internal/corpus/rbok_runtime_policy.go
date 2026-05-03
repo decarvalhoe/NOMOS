@@ -5,23 +5,23 @@ import (
 	"strings"
 )
 
-// RuntimeLayer identifies a layer in the realisons-business corpus.
-type RuntimeLayer string
+// LayerID identifies a layer in the realisons-business corpus.
+type LayerID string
 
 const (
-	LayerDoctrine   RuntimeLayer = "doctrine"     // 01_rbok: authoritative source of truth
-	LayerRuntime    RuntimeLayer = "runtime"       // 02_parcours: runtime business paths
-	LayerWorkbooks  RuntimeLayer = "workbooks"     // 03_workbooks: generated/derived artifacts
-	LayerMeta       RuntimeLayer = "meta"          // 00_meta: index and governance metadata
-	LayerSchemas    RuntimeLayer = "schemas"        // 98_schemas: structural schemas
-	LayerReference  RuntimeLayer = "reference"     // 99_*: original reference PDFs
-	LayerUnknown    RuntimeLayer = "unknown"        // unclassified
+	PolicyDoctrine  LayerID = "doctrine"     // 01_rbok: authoritative source of truth
+	PolicyRuntime   LayerID = "runtime"       // 02_parcours: runtime business paths
+	PolicyWorkbooks LayerID = "workbooks"     // 03_workbooks: generated/derived artifacts
+	PolicyMeta      LayerID = "meta"          // 00_meta: index and governance metadata
+	PolicySchemas   LayerID = "schemas"        // 98_schemas: structural schemas
+	LayerReference  LayerID = "reference"     // 99_*: original reference PDFs
+	LayerUnknown    LayerID = "unknown"        // unclassified
 )
 
 // RuntimeLayerClassification is the policy result for a realisons-business file.
 type RuntimeLayerClassification struct {
 	Path        string       `json:"path"`
-	Layer       RuntimeLayer `json:"layer"`
+	Layer       LayerID `json:"layer"`
 	Priority    string       `json:"priority"`
 	Status      string       `json:"status"`
 	Role        SourceRole   `json:"role"`
@@ -32,7 +32,7 @@ type RuntimeLayerClassification struct {
 
 // layerDef holds the classification template for a layer.
 type layerDef struct {
-	Layer       RuntimeLayer
+	Layer       LayerID
 	Priority    string
 	Status      string
 	Role        SourceRole
@@ -41,33 +41,33 @@ type layerDef struct {
 	Reason      string
 }
 
-var layerDefs = map[RuntimeLayer]layerDef{
-	LayerMeta: {
-		Layer: LayerMeta, Priority: "primary", Status: "active",
+var layerDefs = map[LayerID]layerDef{
+	PolicyMeta: {
+		Layer: PolicyMeta, Priority: "primary", Status: "active",
 		Role: RoleLawbook, Mutable: false,
 		AllowedUses: []string{"structured_contract", "vector_index", "citation_internal"},
 		Reason:      "governance metadata and corpus index",
 	},
-	LayerDoctrine: {
-		Layer: LayerDoctrine, Priority: "primary", Status: "active",
+	PolicyDoctrine: {
+		Layer: PolicyDoctrine, Priority: "primary", Status: "active",
 		Role: RoleLawbook, Mutable: false,
 		AllowedUses: []string{"structured_contract", "vector_index", "citation_internal", "citation_external", "golden_case"},
 		Reason:      "authoritative doctrine — single source of truth",
 	},
-	LayerRuntime: {
-		Layer: LayerRuntime, Priority: "primary", Status: "active",
+	PolicyRuntime: {
+		Layer: PolicyRuntime, Priority: "primary", Status: "active",
 		Role: RoleLawbook, Mutable: false,
 		AllowedUses: []string{"structured_contract", "vector_index", "citation_internal", "golden_case"},
 		Reason:      "runtime business paths and parcours",
 	},
-	LayerWorkbooks: {
-		Layer: LayerWorkbooks, Priority: "derived", Status: "active",
+	PolicyWorkbooks: {
+		Layer: PolicyWorkbooks, Priority: "derived", Status: "active",
 		Role: RoleDerived, Mutable: true,
 		AllowedUses: []string{"citation_internal"},
 		Reason:      "generated workbooks and derived artifacts",
 	},
-	LayerSchemas: {
-		Layer: LayerSchemas, Priority: "reference", Status: "active",
+	PolicySchemas: {
+		Layer: PolicySchemas, Priority: "reference", Status: "active",
 		Role: RoleSchema, Mutable: false,
 		AllowedUses: []string{"structured_contract", "citation_internal"},
 		Reason:      "structural schemas for validation",
@@ -101,7 +101,7 @@ func ClassifyRuntimeLayer(filePath string) RuntimeLayerClassification {
 	// Derived markers override layer (generated files anywhere).
 	if isRuntimeDerived(lower, parts) {
 		return RuntimeLayerClassification{
-			Path: filePath, Layer: LayerWorkbooks,
+			Path: filePath, Layer: PolicyWorkbooks,
 			Priority: "derived", Status: "active",
 			Role: RoleDerived, Mutable: true,
 			AllowedUses: []string{"citation_internal"},
@@ -134,7 +134,7 @@ func ClassifyRuntimeLayer(filePath string) RuntimeLayerClassification {
 	}
 }
 
-func matchLayer(parts []string) RuntimeLayer {
+func matchLayer(parts []string) LayerID {
 	if len(parts) == 0 {
 		return LayerUnknown
 	}
@@ -142,21 +142,21 @@ func matchLayer(parts []string) RuntimeLayer {
 
 	switch {
 	case strings.HasPrefix(top, "00_meta"):
-		return LayerMeta
+		return PolicyMeta
 	case strings.HasPrefix(top, "01_rbok"):
-		return LayerDoctrine
+		return PolicyDoctrine
 	case strings.HasPrefix(top, "01_referentiel"):
-		return LayerDoctrine
+		return PolicyDoctrine
 	case strings.HasPrefix(top, "02_parcours"):
-		return LayerRuntime
+		return PolicyRuntime
 	case strings.HasPrefix(top, "02_domaines"):
-		return LayerRuntime
+		return PolicyRuntime
 	case strings.HasPrefix(top, "03_workbook"):
-		return LayerWorkbooks
+		return PolicyWorkbooks
 	case strings.HasPrefix(top, "03_generated"):
-		return LayerWorkbooks
+		return PolicyWorkbooks
 	case strings.HasPrefix(top, "98_schema"):
-		return LayerSchemas
+		return PolicySchemas
 	case strings.HasPrefix(top, "99_rbok"), strings.HasPrefix(top, "99_initial"):
 		return LayerReference
 	}

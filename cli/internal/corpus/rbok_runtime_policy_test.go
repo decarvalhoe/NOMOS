@@ -6,7 +6,7 @@ import "testing"
 
 func TestLayerDoctrine01Rbok(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok/referentiel/garanties.yaml")
-	assertLayer(t, r, LayerDoctrine, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyDoctrine, "primary", RoleLawbook, false)
 	assertUse(t, r, "structured_contract")
 	assertUse(t, r, "citation_external")
 	assertUse(t, r, "golden_case")
@@ -14,29 +14,29 @@ func TestLayerDoctrine01Rbok(t *testing.T) {
 
 func TestLayerDoctrine01Referentiel(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_referentiel/source-manifest.yaml")
-	assertLayer(t, r, LayerDoctrine, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyDoctrine, "primary", RoleLawbook, false)
 }
 
 func TestLayerDoctrine01RbokSubdir(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok/domaines/assurance-habitation/clauses.md")
-	assertLayer(t, r, LayerDoctrine, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyDoctrine, "primary", RoleLawbook, false)
 }
 
 func TestLayerRuntime02Parcours(t *testing.T) {
 	r := ClassifyRuntimeLayer("02_parcours/assurance-habitation/souscription.yaml")
-	assertLayer(t, r, LayerRuntime, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyRuntime, "primary", RoleLawbook, false)
 	assertUse(t, r, "structured_contract")
 	assertUse(t, r, "golden_case")
 }
 
 func TestLayerRuntime02Domaines(t *testing.T) {
 	r := ClassifyRuntimeLayer("02_domaines/habitation/garanties.yaml")
-	assertLayer(t, r, LayerRuntime, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyRuntime, "primary", RoleLawbook, false)
 }
 
 func TestLayerWorkbooks03(t *testing.T) {
 	r := ClassifyRuntimeLayer("03_workbooks/output/report.xlsx")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 	assertUse(t, r, "citation_internal")
 	if len(r.AllowedUses) != 1 {
 		t.Fatalf("expected 1 allowed_use, got %d: %v", len(r.AllowedUses), r.AllowedUses)
@@ -45,18 +45,18 @@ func TestLayerWorkbooks03(t *testing.T) {
 
 func TestLayerWorkbooks03Generated(t *testing.T) {
 	r := ClassifyRuntimeLayer("03_generated/build/output.json")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 }
 
 func TestLayerMeta00(t *testing.T) {
 	r := ClassifyRuntimeLayer("00_meta/glossaire.yaml")
-	assertLayer(t, r, LayerMeta, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyMeta, "primary", RoleLawbook, false)
 	assertUse(t, r, "vector_index")
 }
 
 func TestLayerSchemas98(t *testing.T) {
 	r := ClassifyRuntimeLayer("98_schemas/source-manifest.cue")
-	assertLayer(t, r, LayerSchemas, "reference", RoleSchema, false)
+	assertLayer(t, r, PolicySchemas, "reference", RoleSchema, false)
 	assertUse(t, r, "structured_contract")
 }
 
@@ -102,22 +102,22 @@ func TestRuntimeOutOfScopeGit(t *testing.T) {
 
 func TestRuntimeDerivedGenerated(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok/generated/output.json")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 }
 
 func TestRuntimeDerivedTranslation(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok/garanties.de.yaml")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 }
 
 func TestRuntimeDerivedTestdata(t *testing.T) {
 	r := ClassifyRuntimeLayer("02_parcours/testdata/fixture.yaml")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 }
 
 func TestRuntimeDerivedGenFile(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok/model_gen.go")
-	assertLayer(t, r, LayerWorkbooks, "derived", RoleDerived, true)
+	assertLayer(t, r, PolicyWorkbooks, "derived", RoleDerived, true)
 }
 
 // --- Unknown / secondary ---
@@ -136,7 +136,7 @@ func TestRuntimeUnknownRootFile(t *testing.T) {
 
 func TestRuntimeWindowsBackslash(t *testing.T) {
 	r := ClassifyRuntimeLayer("01_rbok\\domaines\\habitation.yaml")
-	assertLayer(t, r, LayerDoctrine, "primary", RoleLawbook, false)
+	assertLayer(t, r, PolicyDoctrine, "primary", RoleLawbook, false)
 }
 
 // --- Determinism ---
@@ -190,24 +190,24 @@ func TestRuntimeMutabilityFalse(t *testing.T) {
 func TestRuntimeFullLayout(t *testing.T) {
 	cases := []struct {
 		path     string
-		layer    RuntimeLayer
+		layer    LayerID
 		priority string
 		role     SourceRole
 		mutable  bool
 	}{
-		{"00_meta/index.yaml", LayerMeta, "primary", RoleLawbook, false},
-		{"01_rbok/referentiel/garanties.yaml", LayerDoctrine, "primary", RoleLawbook, false},
-		{"01_referentiel/normes/norme.md", LayerDoctrine, "primary", RoleLawbook, false},
-		{"02_parcours/habitation/souscription.yaml", LayerRuntime, "primary", RoleLawbook, false},
-		{"02_domaines/auto/franchise.yaml", LayerRuntime, "primary", RoleLawbook, false},
-		{"03_workbooks/export/rapport.xlsx", LayerWorkbooks, "derived", RoleDerived, true},
-		{"03_generated/output.json", LayerWorkbooks, "derived", RoleDerived, true},
-		{"98_schemas/warranty.schema.json", LayerSchemas, "reference", RoleSchema, false},
+		{"00_meta/index.yaml", PolicyMeta, "primary", RoleLawbook, false},
+		{"01_rbok/referentiel/garanties.yaml", PolicyDoctrine, "primary", RoleLawbook, false},
+		{"01_referentiel/normes/norme.md", PolicyDoctrine, "primary", RoleLawbook, false},
+		{"02_parcours/habitation/souscription.yaml", PolicyRuntime, "primary", RoleLawbook, false},
+		{"02_domaines/auto/franchise.yaml", PolicyRuntime, "primary", RoleLawbook, false},
+		{"03_workbooks/export/rapport.xlsx", PolicyWorkbooks, "derived", RoleDerived, true},
+		{"03_generated/output.json", PolicyWorkbooks, "derived", RoleDerived, true},
+		{"98_schemas/warranty.schema.json", PolicySchemas, "reference", RoleSchema, false},
 		{"99_RBOK_initial_pdf/CG-2026.pdf", LayerReference, "reference", RoleReference, false},
 		{"scripts/deploy.sh", LayerUnknown, "out_of_scope", RoleOutOfScope, false},
 		{".DS_Store", LayerUnknown, "out_of_scope", RoleOutOfScope, false},
-		{"01_rbok/generated/data.json", LayerWorkbooks, "derived", RoleDerived, true},
-		{"01_rbok/terms.de.yaml", LayerWorkbooks, "derived", RoleDerived, true},
+		{"01_rbok/generated/data.json", PolicyWorkbooks, "derived", RoleDerived, true},
+		{"01_rbok/terms.de.yaml", PolicyWorkbooks, "derived", RoleDerived, true},
 		{"04_other/notes.md", LayerUnknown, "secondary", RoleLawbook, false},
 	}
 	for _, tc := range cases {
@@ -232,9 +232,9 @@ func TestRuntimeFullLayout(t *testing.T) {
 // --- Layer constant values ---
 
 func TestLayerConstants(t *testing.T) {
-	if LayerDoctrine != "doctrine" || LayerRuntime != "runtime" ||
-		LayerWorkbooks != "workbooks" || LayerMeta != "meta" ||
-		LayerSchemas != "schemas" || LayerReference != "reference" ||
+	if PolicyDoctrine != "doctrine" || PolicyRuntime != "runtime" ||
+		PolicyWorkbooks != "workbooks" || PolicyMeta != "meta" ||
+		PolicySchemas != "schemas" || LayerReference != "reference" ||
 		LayerUnknown != "unknown" {
 		t.Fatal("layer constant mismatch")
 	}
@@ -242,7 +242,7 @@ func TestLayerConstants(t *testing.T) {
 
 // --- helpers ---
 
-func assertLayer(t *testing.T, r RuntimeLayerClassification, layer RuntimeLayer, priority string, role SourceRole, mutable bool) {
+func assertLayer(t *testing.T, r RuntimeLayerClassification, layer LayerID, priority string, role SourceRole, mutable bool) {
 	t.Helper()
 	if r.Layer != layer {
 		t.Fatalf("expected layer %q, got %q (reason: %s)", layer, r.Layer, r.Reason)
