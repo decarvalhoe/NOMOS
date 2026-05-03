@@ -36,6 +36,7 @@ validations:
     intended_use_ref: IU-FUNC-003
     title: "Cross-manifest consistency (strict)"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-002
     validation_type: automated
     method: "Unit tests with cross-reference validation"
     evidence_artifact: "go test ./internal/strict/..."
@@ -49,6 +50,7 @@ validations:
     intended_use_ref: IU-FUNC-004
     title: "Expiring exceptions enforcement"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-003
     validation_type: automated
     method: "Unit tests with time-based expiration scenarios"
     evidence_artifact: "go test ./internal/exceptions/..."
@@ -88,6 +90,7 @@ validations:
     intended_use_ref: ""
     title: "Read-only source protection"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-004
     validation_type: automated
     method: "Push guard + output guard + SHA-256 fingerprint"
     evidence_artifact: "go test ./internal/guard/..."
@@ -101,6 +104,7 @@ validations:
     intended_use_ref: ""
     title: "Public claims governance"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-005
     validation_type: automated
     method: "Regex scan of public docs + evidence registry check"
     evidence_artifact: "go test ./internal/compliance/..."
@@ -153,6 +157,7 @@ validations:
     intended_use_ref: ""
     title: "Release gate for RBOK lawbook"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-006
     validation_type: automated
     method: "Feed + attestation + governance artifact checks"
     evidence_artifact: "go test ./internal/corpus/... -run ReleaseGate"
@@ -166,6 +171,7 @@ validations:
     intended_use_ref: ""
     title: "Self-compliance evaluation"
     risk_level: critical
+    test_protocol_ref: TP-NOMOS-001
     validation_type: automated
     method: "Nomos evaluates own repo with its CLI and regulated controls"
     evidence_artifact: "go test ./internal/compliance/... -run SelfCompliance"
@@ -179,6 +185,7 @@ validations:
     intended_use_ref: ""
     title: "Forbidden claims gate"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-007
     validation_type: automated
     method: "Scan public docs for forbidden market claims per FC-NOMOS-001"
     evidence_artifact: "go test ./internal/compliance/... -run ForbiddenClaim"
@@ -192,6 +199,7 @@ validations:
     intended_use_ref: ""
     title: "ALCOA+ evidence envelope"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-008
     validation_type: automated
     method: "Validate ALCOA attributes on evidence records"
     evidence_artifact: "go test ./internal/compliance/... -run Alcoa"
@@ -205,6 +213,7 @@ validations:
     intended_use_ref: ""
     title: "AI/RAG governance controls"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-009
     validation_type: automated
     method: "Evaluate AI response for hallucination, citation, provenance, injection"
     evidence_artifact: "go test ./internal/compliance/... -run Evaluate"
@@ -244,6 +253,7 @@ validations:
     intended_use_ref: ""
     title: "Validation lifecycle completeness"
     risk_level: critical
+    test_protocol_ref: TP-NOMOS-010
     validation_type: automated
     method: "Verify all regulated validation artifacts are present and non-empty"
     evidence_artifact: "go test ./internal/compliance/... -run ValidationLifecycle"
@@ -257,6 +267,7 @@ validations:
     intended_use_ref: ""
     title: "Release bundle completeness"
     risk_level: critical
+    test_protocol_ref: TP-NOMOS-011
     validation_type: automated
     method: "Verify release bundle contains all required evidence artifacts"
     evidence_artifact: "go test ./internal/compliance/... -run ReleaseBundle"
@@ -296,6 +307,7 @@ validations:
     intended_use_ref: ""
     title: "Evidence ledger integrity"
     risk_level: high
+    test_protocol_ref: TP-NOMOS-012
     validation_type: automated
     method: "Validate evidence ledger entries have required fields and hashes"
     evidence_artifact: "go test ./internal/compliance/... -run Ledger"

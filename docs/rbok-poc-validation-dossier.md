@@ -243,9 +243,10 @@ go vet: clean
 ### GAP-001: Missing test protocols for high/critical validations
 
 **Severity**: medium
-**Status**: open
-**Description**: 11 validation entries with risk_level high or critical lack executed test protocols (TP-NOMOS-NNN). The reconstruction review requires these for full evidence chain.
-**Remediation**: Create TP-NOMOS-002 through TP-NOMOS-012 covering each high/critical validation entry. Priority order: self-compliance (done: TP-NOMOS-001), forbidden claims, read-only guards, release gate, validation lifecycle.
+**Status**: resolved in issue #315 follow-up branch, pending PR/merge
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/315
+**Description**: 11 validation entries with risk_level high or critical lacked TP-NOMOS protocol coverage after TP-NOMOS-001. The reconstruction review requires these for a complete evidence chain.
+**Resolution**: TP-NOMOS-002 through TP-NOMOS-012 now cover the remaining high/critical validations. The protocols record local execution evidence, deviations where applicable, and pending quality-owner/product-owner approval.
 
 ### GAP-002: No live 01_rbok E2E in CI without corpus token
 
@@ -257,9 +258,11 @@ go vet: clean
 ### GAP-003: Reconstruction review verdict is failed
 
 **Severity**: medium
-**Status**: open
-**Description**: The automated reconstruction review reports `failed` because high/critical validations lack test protocols. The underlying tests all pass — the gap is documentation, not functionality.
-**Remediation**: Blocked by GAP-001. Once test protocols are created, reconstruction will pass.
+**Status**: unblocked by issue #315 follow-up branch; hardening remains tracked by issue #317
+**Issue**: https://github.com/RBOKproject/NOMOS/issues/317
+**Description**: The automated reconstruction review previously reported `failed` because high/critical validations lacked test protocols.
+**Resolution**: With TP-NOMOS-002 through TP-NOMOS-012 present, `go test -v ./internal/compliance/... -run Reconstruction` reports `verdict=passed reconstructed=24 failed=0 missing=0`.
+**Remaining hardening**: Issue #317 keeps the stricter requirement open: reconstruction should eventually parse protocol execution status and evidence artifacts directly, not only verify that protocol files reference each high/critical validation.
 
 ### GAP-004: Approval signatures pending
 

@@ -152,10 +152,11 @@ class TestWorkflowExists(unittest.TestCase):
         content = wf.read_text()
         self.assertIn("git status", content)
 
-    def test_workflow_cgo_disabled(self):
+    def test_workflow_cgo_enabled_for_runtime_checks(self):
         wf = ROOT / ".github" / "workflows" / "rbok-runtime-e2e.yml"
         content = wf.read_text()
-        self.assertIn('CGO_ENABLED: "0"', content)
+        self.assertIn('CGO_ENABLED: "1"', content)
+        self.assertIn("go test -race ./internal/corpus/...", content)
 
 
 if __name__ == "__main__":
