@@ -96,7 +96,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		if docSlug == "" {
 			docSlug = "rbok-lawbook"
 		}
-		extracted := ExtractMarkdown(string(data), docSlug)
+		extracted := ExtractMarkdownWithSpans(string(data), docSlug, source.Path)
 		if len(extracted.Nodes) == 0 {
 			continue
 		}
