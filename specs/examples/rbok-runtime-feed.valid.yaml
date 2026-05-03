@@ -1,0 +1,112 @@
+schema_version: "0.1.0"
+feed_format: "nomos.rbok-runtime-feed.v1"
+feed_id: "rbok-runtime-full"
+corpus_id: "realisons-business"
+domain: "insurance-regulation"
+generated_at: "2026-05-03T10:00:00Z"
+layers:
+  - "01_rbok"
+  - "02_parcours"
+  - "03_workbooks"
+node_count: 5
+nodes:
+  - node_id: "DOC-CODE-ASSURANCES"
+    document_id: "DOC-CODE-ASSURANCES"
+    canonical_ref: "code-assurances"
+    display_ref: "Code des assurances"
+    source_path: "01_rbok/code-assurances/index.md"
+    source_hash: "sha256:aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"
+    status: active
+    priority: critical
+    domain: "insurance-regulation"
+    layer: "01_rbok"
+    authority_level: binding
+    node_type: document
+    depth: 0
+    title: "Code des assurances"
+
+  - node_id: "ART-L113-1"
+    document_id: "DOC-CODE-ASSURANCES"
+    canonical_ref: "code-assurances/l113-1"
+    display_ref: "Art. L113-1"
+    source_path: "01_rbok/code-assurances/l113-1.md"
+    source_hash: "sha256:bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222"
+    status: active
+    priority: critical
+    domain: "insurance-regulation"
+    layer: "01_rbok"
+    authority_level: binding
+    node_type: article
+    depth: 4
+    ordinal_path: "1.1.1.1.1"
+    parent_id: "DOC-CODE-ASSURANCES"
+    title: "Obligation de déclaration"
+    text: "L'assuré est obligé de déclarer..."
+
+  - node_id: "PARCOURS-SINISTRE"
+    document_id: "DOC-PARCOURS-SINISTRE"
+    canonical_ref: "parcours/sinistre"
+    display_ref: "Parcours sinistre"
+    source_path: "02_parcours/sinistre/index.md"
+    source_hash: "sha256:cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333"
+    status: active
+    priority: high
+    domain: "insurance-regulation"
+    layer: "02_parcours"
+    authority_level: internal
+    node_type: parcours
+    depth: 0
+    title: "Parcours déclaration de sinistre"
+
+  - node_id: "STEP-SINISTRE-DECLARATION"
+    document_id: "DOC-PARCOURS-SINISTRE"
+    canonical_ref: "parcours/sinistre/declaration"
+    display_ref: "Étape: Déclaration"
+    source_path: "02_parcours/sinistre/declaration.md"
+    source_hash: "sha256:dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444"
+    status: active
+    priority: high
+    domain: "insurance-regulation"
+    layer: "02_parcours"
+    authority_level: internal
+    node_type: step
+    depth: 2
+    parent_id: "PARCOURS-SINISTRE"
+    predecessor_ids: []
+    successor_ids:
+      - "STEP-SINISTRE-INSTRUCTION"
+    gate_criteria: "Déclaration complète reçue dans les 5 jours."
+
+  - node_id: "WB-FORMULAIRE-SINISTRE"
+    document_id: "DOC-WORKBOOK-FORMULAIRES"
+    canonical_ref: "workbooks/formulaire-sinistre"
+    display_ref: "Formulaire déclaration sinistre"
+    source_path: "03_workbooks/formulaires/sinistre.md"
+    source_hash: "sha256:eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555"
+    status: active
+    priority: medium
+    domain: "insurance-regulation"
+    layer: "03_workbooks"
+    authority_level: informational
+    node_type: form
+    depth: 1
+    ref_type: form
+    target_url: "https://intranet.example.com/forms/sinistre-v3.pdf"
+    target_hash: "sha256:ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666"
+
+layer_summary:
+  "01_rbok":
+    node_count: 2
+    document_count: 1
+    authority_breakdown:
+      binding: 2
+  "02_parcours":
+    node_count: 2
+    document_count: 1
+    authority_breakdown:
+      internal: 2
+  "03_workbooks":
+    node_count: 1
+    document_count: 1
+    authority_breakdown:
+      informational: 1
