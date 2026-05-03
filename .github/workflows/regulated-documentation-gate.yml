@@ -51,6 +51,8 @@ jobs:
           mkdir -p .regulated-doc-gate
           python scripts/regulated_docs_gate.py \
             --report .regulated-doc-gate/regulated-doc-gate-report.json
+          python scripts/regulated_approval_gate.py \
+            --report .regulated-doc-gate/approval-gate-report.json
           python scripts/regulated_reference_canon.py \
             --report .regulated-doc-gate/reference-canon-report.json
 

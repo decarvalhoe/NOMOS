@@ -74,6 +74,41 @@ record_type: validation_protocol
 """.lstrip(),
     )
     write(
+        tmp_path / "docs/regulated/validation-pack/approval-workflow.yaml",
+        """
+schema_version: "0.1.0"
+record_type: validation_approval_workflow
+document_id: APPR-NOMOS-001
+version: 0.1.0
+status: pending_approval
+claim_boundary: "Approval workflow only; no validation approval is claimed."
+required_roles:
+  - id: quality_owner
+  - id: product_owner
+  - id: technical_owner
+evidence_channels:
+  protected_pr_review:
+    enabled: true
+    requires_codeowners: true
+    minimum_approvals: 2
+  signed_commits_or_tags:
+    required_for_effective_release: true
+  attestation_artifact:
+    path: docs/regulated/validation-pack/validation-approval-record.yaml
+immutability_controls:
+  codeowners_required: true
+  evidence_pack_hashing_required: true
+  immutable_release_tag_required_for_effective_status: true
+approval_records:
+  - document_id: VMP-NOMOS-001
+    record_path: docs/regulated/validation-pack/validation-master-plan.md
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+""".lstrip(),
+    )
+    write(
         tmp_path / ".github/ISSUE_TEMPLATE/regulated-gap.yml",
         """
 name: Regulated gap
@@ -348,6 +383,176 @@ blocked_claims:
             self.assertTrue(iso["surrogate_processing_allowed"])
             self.assertFalse(iso["full_text_fetch_allowed"])
             self.assertEqual(report["gaps"][0]["status"], "temporarily_mitigated")
+
+    def test_approval_gate_accepts_pending_controlled_workflow(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/validation-pack/approval-workflow.yaml",
+                """
+schema_version: "0.1.0"
+record_type: validation_approval_workflow
+document_id: APPR-NOMOS-001
+version: 0.1.0
+status: pending_approval
+claim_boundary: "Approval workflow only; no validation approval is claimed."
+required_roles:
+  - id: quality_owner
+    meaning: "Quality owner verifies validation adequacy and regulated claim boundary."
+  - id: product_owner
+    meaning: "Product owner accepts intended use and product risk."
+  - id: technical_owner
+    meaning: "Technical owner accepts implementation and reproducibility evidence."
+evidence_channels:
+  protected_pr_review:
+    enabled: true
+    requires_codeowners: true
+    minimum_approvals: 2
+  signed_commits_or_tags:
+    required_for_effective_release: true
+  attestation_artifact:
+    path: docs/regulated/validation-pack/validation-approval-record.yaml
+immutability_controls:
+  codeowners_required: true
+  evidence_pack_hashing_required: true
+  immutable_release_tag_required_for_effective_status: true
+approval_records:
+  - document_id: VMP-NOMOS-001
+    record_path: docs/regulated/validation-pack/validation-master-plan.md
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+""".lstrip(),
+            )
+            output = repo / "out/approval-gate.json"
+
+            result = run_script(
+                "regulated_approval_gate.py",
+                "--root",
+                str(repo),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "pending_approval")
+            self.assertEqual(report["summary"]["approval_records"], 1)
+            self.assertEqual(report["summary"]["approved_records"], 0)
+            self.assertEqual(
+                report["required_roles"],
+                ["product_owner", "quality_owner", "technical_owner"],
+            )
+
+    def test_approval_gate_blocks_approved_status_without_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/validation-pack/approval-workflow.yaml",
+                """
+schema_version: "0.1.0"
+record_type: validation_approval_workflow
+document_id: APPR-NOMOS-001
+version: 0.1.0
+status: pending_approval
+claim_boundary: "Approval workflow only; no validation approval is claimed."
+required_roles:
+  - id: quality_owner
+  - id: product_owner
+  - id: technical_owner
+evidence_channels:
+  protected_pr_review:
+    enabled: true
+    requires_codeowners: true
+    minimum_approvals: 2
+  signed_commits_or_tags:
+    required_for_effective_release: true
+  attestation_artifact:
+    path: docs/regulated/validation-pack/validation-approval-record.yaml
+immutability_controls:
+  codeowners_required: true
+  evidence_pack_hashing_required: true
+  immutable_release_tag_required_for_effective_status: true
+approval_records:
+  - document_id: VMP-NOMOS-001
+    record_path: docs/regulated/validation-pack/validation-master-plan.md
+    approval_status: approved
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+""".lstrip(),
+            )
+            output = repo / "out/approval-gate.json"
+
+            result = run_script(
+                "regulated_approval_gate.py",
+                "--root",
+                str(repo),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(finding["code"] == "APPROVED_WITHOUT_EVIDENCE" for finding in report["findings"]),
+                report["findings"],
+            )
+
+    def test_regulated_docs_gate_runs_approval_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/validation-pack/approval-workflow.yaml",
+                """
+schema_version: "0.1.0"
+record_type: validation_approval_workflow
+document_id: APPR-NOMOS-001
+version: 0.1.0
+status: pending_approval
+required_roles:
+  - id: quality_owner
+  - id: product_owner
+  - id: technical_owner
+evidence_channels:
+  protected_pr_review:
+    enabled: true
+    requires_codeowners: true
+    minimum_approvals: 2
+  signed_commits_or_tags:
+    required_for_effective_release: true
+  attestation_artifact:
+    path: docs/regulated/validation-pack/validation-approval-record.yaml
+immutability_controls:
+  codeowners_required: true
+  evidence_pack_hashing_required: true
+  immutable_release_tag_required_for_effective_status: true
+approval_records:
+  - document_id: VMP-NOMOS-001
+    record_path: docs/regulated/validation-pack/validation-master-plan.md
+    approval_status: approved
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+""".lstrip(),
+            )
+            output = repo / "out/regulated-doc-gate.json"
+
+            result = run_script(
+                "regulated_docs_gate.py",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertTrue(
+                any(finding["message"].find("APPROVED_WITHOUT_EVIDENCE") >= 0 for finding in report["findings"]),
+                report["findings"],
+            )
 
 
 if __name__ == "__main__":

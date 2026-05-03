@@ -19,6 +19,8 @@ except ImportError as exc:  # pragma: no cover - exercised in CI setup failure
     print("PyYAML is required for regulated documentation validation.", file=sys.stderr)
     raise SystemExit(2) from exc
 
+from regulated_approval_gate import validate_workflow as validate_approval_workflow
+
 
 CONTROLLED_ROOTS = [
     Path("docs/regulated/quality-system"),
@@ -105,6 +107,43 @@ def validate_no_overclaim(path: Path, findings: list[dict[str, str]]) -> None:
             })
 
 
+def validate_approval_workflow_file(findings: list[dict[str, str]]) -> None:
+    workflow_path = Path("docs/regulated/validation-pack/approval-workflow.yaml")
+    if not workflow_path.exists():
+        findings.append({
+            "severity": "error",
+            "path": str(workflow_path),
+            "message": "Approval workflow file is missing.",
+        })
+        return
+
+    try:
+        workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001 - report parser detail to CI
+        findings.append({
+            "severity": "error",
+            "path": str(workflow_path),
+            "message": f"Approval workflow YAML parse failed: {exc}",
+        })
+        return
+
+    if not isinstance(workflow, dict):
+        findings.append({
+            "severity": "error",
+            "path": str(workflow_path),
+            "message": "Approval workflow must be a YAML object.",
+        })
+        return
+
+    approval_findings, _summary = validate_approval_workflow(workflow, workflow_path)
+    for finding in approval_findings:
+        findings.append({
+            "severity": finding["severity"],
+            "path": finding["path"],
+            "message": f"Approval gate {finding['code']}: {finding['message']}",
+        })
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", default="regulated-doc-gate-report.json")
@@ -136,6 +175,8 @@ def main() -> int:
             "path": str(issue_templates),
             "message": "GitHub issue forms are missing.",
         })
+
+    validate_approval_workflow_file(findings)
 
     report = {
         "schema_version": "0.1.0",
