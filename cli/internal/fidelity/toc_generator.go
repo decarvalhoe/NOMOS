@@ -25,11 +25,10 @@ type TOCArtifact struct {
 	ArtifactHash  string     `json:"artifact_hash"`
 }
 
-
 // TOCGeneratorConfig controls TOC generation.
 type TOCGeneratorConfig struct {
-	MaxDepth      int    // 0 = unlimited
-	IncludeHashes bool   // include per-entry hashes
+	MaxDepth      int               // 0 = unlimited
+	IncludeHashes bool              // include per-entry hashes
 	PageRefs      map[string]string // id → page reference (optional)
 }
 
@@ -69,6 +68,33 @@ func GenerateTOCFromHeadings(headings []HeadingInput, docID string, sourceHash s
 		SourceHash: sourceHash,
 	})
 	return GenerateTOC(tree, config)
+}
+
+// TOCArtifactFromCertified adapts the legacy certified-TOC artifact into the
+// strict gate TOC artifact contract without changing the certified source file.
+func TOCArtifactFromCertified(toc CertifiedTOC) TOCArtifact {
+	maxDepth := toc.MaxDepth
+	if maxDepth == 0 {
+		maxDepth = maxEntryDepth(toc.Entries)
+	}
+	certified := toc.Format == CertifiedTOCFormat &&
+		toc.EntryCount == len(toc.Entries) &&
+		toc.StructureHash == computeStructureHash(toc.Entries)
+
+	artifact := TOCArtifact{
+		SchemaVersion: "0.1.0",
+		ArtifactType:  "nomos.toc.v1",
+		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
+		DocumentID:    toc.DocumentRef,
+		SourceHash:    toc.StructureHash,
+		TreeHash:      toc.StructureHash,
+		TotalEntries:  len(toc.Entries),
+		MaxDepth:      maxDepth,
+		Certified:     certified,
+		Entries:       toc.Entries,
+	}
+	artifact.ArtifactHash = computeArtifactHash(artifact)
+	return artifact
 }
 
 // WriteTOCJSON serializes the artifact.
@@ -122,10 +148,10 @@ func flattenToEntries(node *TOCNode, config TOCGeneratorConfig, depth int) []TOC
 		}
 
 		entry := TOCEntry{
-			NodeID:          node.ID,
-			Number:      node.Number,
-			Title:       node.Title,
-			Depth:       node.Depth,
+			NodeID: node.ID,
+			Number: node.Number,
+			Title:  node.Title,
+			Depth:  node.Depth,
 		}
 
 		if config.IncludeHashes {
@@ -170,4 +196,3 @@ func computeArtifactHash(toc TOCArtifact) string {
 	}
 	return "sha256:" + hex.EncodeToString(h.Sum(nil))
 }
-

@@ -35,15 +35,16 @@ type ReleaseGateResult struct {
 
 // ReleaseGateConfig specifies what the gate expects to find.
 type ReleaseGateConfig struct {
-	Profile                string
-	ArtifactsDir           string
-	RequiredNodeTypes      []LawbookNodeType
-	RequireStructuralDepth bool
-	RequireFeed            bool
-	RequireAttestation     bool
-	RequireGovernance      bool
-	RequireCertifiedTOC    bool
-	MaxBlockingFindings    int
+	Profile                   string
+	ArtifactsDir              string
+	RequiredNodeTypes         []LawbookNodeType
+	RequireStructuralDepth    bool
+	RequireFeed               bool
+	RequireAttestation        bool
+	RequireGovernance         bool
+	RequireCertifiedTOC       bool
+	RequireStrictFidelityGate bool
+	MaxBlockingFindings       int
 }
 
 // DefaultRBOKLawbookGateConfig returns the default gate config for the
@@ -57,12 +58,13 @@ func DefaultRBOKLawbookGateConfig(artifactsDir string) ReleaseGateConfig {
 			NodeParagraph,
 			NodeAlinea,
 		},
-		RequireStructuralDepth: true,
-		RequireFeed:            true,
-		RequireAttestation:     true,
-		RequireGovernance:      true,
-		RequireCertifiedTOC:    true,
-		MaxBlockingFindings:    0,
+		RequireStructuralDepth:    true,
+		RequireFeed:               true,
+		RequireAttestation:        true,
+		RequireGovernance:         true,
+		RequireCertifiedTOC:       true,
+		RequireStrictFidelityGate: true,
+		MaxBlockingFindings:       0,
 	}
 }
 
@@ -105,6 +107,11 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 	// Check 5: Certified TOC artifact present and valid.
 	if config.RequireCertifiedTOC {
 		checks = append(checks, checkCertifiedTOC(absDir))
+	}
+
+	// Check 6: Strict fidelity gate must not be silently red.
+	if config.RequireStrictFidelityGate {
+		checks = append(checks, checkStrictFidelityGate(absDir))
 	}
 
 	blocking := 0
@@ -504,6 +511,56 @@ func checkCertifiedTOC(dir string) ReleaseGateCheck {
 		Name:    "certified_toc",
 		Verdict: GatePass,
 		Detail:  fmt.Sprintf("certified TOC: %d entries, hash=%s", toc.EntryCount, toc.StructureHash[:20]+"..."),
+	}
+}
+
+func checkStrictFidelityGate(dir string) ReleaseGateCheck {
+	gatePath := filepath.Join(dir, "rbok-strict-fidelity-gate.json")
+	data, err := os.ReadFile(gatePath)
+	if err != nil {
+		return ReleaseGateCheck{
+			Name:    "strict_fidelity_gate",
+			Verdict: GateFail,
+			Detail:  "STRICT_FIDELITY_GATE_MISSING: rbok-strict-fidelity-gate.json not found",
+		}
+	}
+
+	var gate struct {
+		Pass          bool `json:"pass"`
+		BlockingCount int  `json:"blocking_count"`
+		Findings      []struct {
+			Code     string `json:"code"`
+			Blocking bool   `json:"blocking"`
+		} `json:"findings"`
+	}
+	if err := json.Unmarshal(data, &gate); err != nil {
+		return ReleaseGateCheck{
+			Name:    "strict_fidelity_gate",
+			Verdict: GateFail,
+			Detail:  "STRICT_FIDELITY_GATE_INVALID: " + err.Error(),
+		}
+	}
+
+	blocking := gate.BlockingCount
+	if blocking == 0 {
+		for _, finding := range gate.Findings {
+			if finding.Blocking {
+				blocking++
+			}
+		}
+	}
+	if !gate.Pass || blocking > 0 {
+		return ReleaseGateCheck{
+			Name:    "strict_fidelity_gate",
+			Verdict: GateFail,
+			Detail:  fmt.Sprintf("strict fidelity gate failed: pass=%v, blocking=%d, findings=%d", gate.Pass, blocking, len(gate.Findings)),
+		}
+	}
+
+	return ReleaseGateCheck{
+		Name:    "strict_fidelity_gate",
+		Verdict: GatePass,
+		Detail:  fmt.Sprintf("strict fidelity gate: pass=true, blocking=0, findings=%d", len(gate.Findings)),
 	}
 }
 

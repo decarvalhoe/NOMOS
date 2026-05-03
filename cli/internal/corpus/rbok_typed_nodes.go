@@ -8,13 +8,13 @@ import (
 
 // Regex patterns for typed block detection in Markdown content.
 var (
-	mdTableRe    = regexp.MustCompile(`(?m)^\|.+\|$`)
-	mdTableSepRe = regexp.MustCompile(`(?m)^\|[\s:|-]+\|$`)
-	mdCodeFenceRe = regexp.MustCompile("(?m)^```(\\w*)\\s*$")
-	mdCalloutRe  = regexp.MustCompile(`(?m)^>\s*\[!(NOTE|WARNING|TIP|IMPORTANT|CAUTION)\]`)
+	mdTableRe      = regexp.MustCompile(`(?m)^\|.+\|$`)
+	mdTableSepRe   = regexp.MustCompile(`(?m)^\|[\s:|-]+\|$`)
+	mdCodeFenceRe  = regexp.MustCompile("(?m)^```(\\w*)\\s*$")
+	mdCalloutRe    = regexp.MustCompile(`(?m)^>\s*\[!(NOTE|WARNING|TIP|IMPORTANT|CAUTION)\]`)
 	mdBlockquoteRe = regexp.MustCompile(`(?m)^>\s+\S`)
-	mdLinkRe     = regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
-	mdImageRe    = regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`)
+	mdLinkRe       = regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
+	mdImageRe      = regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`)
 )
 
 // EmitTypedNodesFromExtraction post-processes an MDExtractResult and
@@ -39,6 +39,7 @@ func EmitTypedNodesFromExtraction(result *MDExtractResult) {
 
 		// Detect tables (paragraph that looks like a table).
 		if isMarkdownTable(text) {
+			tableMetadata := extractTableMetadata(text)
 			newNodes = append(newNodes, LawbookNode{
 				NodeID:       computeNodeID(node.CanonicalRef + "/table"),
 				NodeType:     NodeTable,
@@ -49,6 +50,7 @@ func EmitTypedNodesFromExtraction(result *MDExtractResult) {
 				CanonicalRef: node.CanonicalRef + "/table",
 				DisplayRef:   "table",
 				Span:         node.Span,
+				Metadata:     tableMetadata,
 			})
 		}
 
@@ -109,6 +111,59 @@ func isMarkdownTable(text string) bool {
 	return hasHeader && hasSep
 }
 
+func extractTableMetadata(text string) map[string]any {
+	lines := markdownTableLines(text)
+	if len(lines) == 0 {
+		return map[string]any{
+			"col_count": "0",
+			"row_count": "0",
+		}
+	}
+
+	headers := splitMarkdownTableRow(lines[0])
+	rowCount := 0
+	for _, line := range lines[1:] {
+		if mdTableSepRe.MatchString(strings.TrimSpace(line)) {
+			continue
+		}
+		if len(splitMarkdownTableRow(line)) > 0 {
+			rowCount++
+		}
+	}
+
+	return map[string]any{
+		"col_count": fmt.Sprintf("%d", len(headers)),
+		"row_count": fmt.Sprintf("%d", rowCount),
+		"headers":   strings.Join(headers, "|"),
+	}
+}
+
+func markdownTableLines(text string) []string {
+	var lines []string
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if mdTableRe.MatchString(trimmed) || mdTableSepRe.MatchString(trimmed) {
+			lines = append(lines, trimmed)
+		}
+	}
+	return lines
+}
+
+func splitMarkdownTableRow(line string) []string {
+	trimmed := strings.TrimSpace(line)
+	trimmed = strings.TrimPrefix(trimmed, "|")
+	trimmed = strings.TrimSuffix(trimmed, "|")
+	parts := strings.Split(trimmed, "|")
+	cells := make([]string, 0, len(parts))
+	for _, part := range parts {
+		cell := strings.TrimSpace(part)
+		if cell != "" {
+			cells = append(cells, cell)
+		}
+	}
+	return cells
+}
+
 func extractCodeBlocks(text string, parent *LawbookNode) []LawbookNode {
 	matches := mdCodeFenceRe.FindAllStringSubmatchIndex(text, -1)
 	if len(matches) == 0 {
@@ -133,17 +188,25 @@ func extractCodeBlocks(text string, parent *LawbookNode) []LawbookNode {
 				// Closing fence.
 				content := strings.Join(lines[startIdx+1:i], "\n")
 				ref := fmt.Sprintf("%s/code_block/%d", parent.CanonicalRef, len(nodes))
+				declared := lang != ""
+				effectiveLang := lang
+				if effectiveLang == "" {
+					effectiveLang = "plain_text"
+				}
 				nodes = append(nodes, LawbookNode{
 					NodeID:       computeNodeID(ref),
 					NodeType:     NodeCodeBlock,
 					Depth:        parent.Depth,
-					Title:        fmt.Sprintf("code (%s)", lang),
+					Title:        fmt.Sprintf("code (%s)", effectiveLang),
 					Text:         content,
 					ParentID:     parent.ParentID,
 					CanonicalRef: ref,
-					DisplayRef:   fmt.Sprintf("code_block [%s]", lang),
+					DisplayRef:   fmt.Sprintf("code_block [%s]", effectiveLang),
 					Span:         parent.Span,
-					Metadata:     map[string]any{"language": lang},
+					Metadata: map[string]any{
+						"language":          effectiveLang,
+						"language_declared": declared,
+					},
 				})
 			}
 			fenceCount++
