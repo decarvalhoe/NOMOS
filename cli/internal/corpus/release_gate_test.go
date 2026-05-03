@@ -50,6 +50,27 @@ func writeGovernanceArtifact(t *testing.T, dir string, name string, result Gover
 	}
 }
 
+func writeCertifiedTOCArtifact(t *testing.T, dir string) {
+	t.Helper()
+	toc := map[string]any{
+		"format":         "nomos.certified-toc.v1",
+		"structure_hash": "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+		"entry_count":    3,
+		"entries": []map[string]any{
+			{"number": "1", "title": "Document", "depth": 0, "hash": "sha256:aaa"},
+			{"number": "1.1", "title": "Chapter", "depth": 1, "hash": "sha256:bbb"},
+			{"number": "1.1.1", "title": "Section", "depth": 2, "hash": "sha256:ccc"},
+		},
+	}
+	data, err := json.MarshalIndent(toc, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal toc: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "rbok-certified-toc.json"), data, 0o644); err != nil {
+		t.Fatalf("write toc: %v", err)
+	}
+}
+
 func sampleNodes() []LawbookNode {
 	return []LawbookNode{
 		{NodeID: "DOC-001", NodeType: NodeDocument, Text: "doc"},
@@ -68,6 +89,7 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -80,8 +102,8 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 	if result.Blocking != 0 {
 		t.Fatalf("expected 0 blocking, got %d", result.Blocking)
 	}
-	if len(result.Checks) != 4 {
-		t.Fatalf("expected 4 checks, got %d", len(result.Checks))
+	if len(result.Checks) != 5 {
+		t.Fatalf("expected 5 checks, got %d", len(result.Checks))
 	}
 }
 
@@ -107,6 +129,7 @@ func TestEvaluateReleaseGateReadsNestedMultiFeedNodes(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
 	if err != nil {
@@ -131,6 +154,7 @@ func TestEvaluateReleaseGateAcceptsSectionAsNormativeHeading(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
 	if err != nil {
@@ -157,6 +181,7 @@ func TestEvaluateReleaseGateValidatesDynamicStructuralDepth(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
 	if err != nil {
@@ -190,6 +215,7 @@ func TestEvaluateReleaseGateFailsBrokenStructuralParentChain(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	result, err := EvaluateReleaseGate(DefaultRBOKLawbookGateConfig(dir))
 	if err != nil {
@@ -206,6 +232,7 @@ func TestEvaluateReleaseGate_MissingFeed(t *testing.T) {
 	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
 		Verdict: VerdictAdmissible,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -230,6 +257,7 @@ func TestEvaluateReleaseGate_MissingNodeTypes(t *testing.T) {
 	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
 		Verdict: VerdictAdmissible,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -257,6 +285,7 @@ func TestEvaluateReleaseGate_MissingAttestation(t *testing.T) {
 	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
 		Verdict: VerdictAdmissible,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -296,6 +325,7 @@ func TestEvaluateReleaseGate_GovernanceBlocked(t *testing.T) {
 			{ID: "F-002", Severity: "critical", Blocking: true, Message: "test2"},
 		},
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -316,6 +346,7 @@ func TestEvaluateReleaseGate_GovernancePartialWarns(t *testing.T) {
 		TotalFindings: 1,
 		Blocking:      0,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -340,8 +371,8 @@ func TestEvaluateReleaseGate_EmptyDir(t *testing.T) {
 	if result.Verdict != GateFail {
 		t.Fatalf("expected fail for empty dir, got %s", result.Verdict)
 	}
-	if result.Blocking != 4 {
-		t.Fatalf("expected 4 blocking checks for empty dir, got %d", result.Blocking)
+	if result.Blocking != 5 {
+		t.Fatalf("expected 5 blocking checks for empty dir, got %d", result.Blocking)
 	}
 }
 
@@ -361,6 +392,7 @@ func TestEvaluateReleaseGate_EmptyFeed(t *testing.T) {
 	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
 		Verdict: VerdictAdmissible,
 	})
+	writeCertifiedTOCArtifact(t, dir)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
