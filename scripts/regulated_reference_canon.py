@@ -36,6 +36,17 @@ VALID_PUBLIC_SURROGATE_STATUSES = (
     "temporary_surrogate_until_official_document_acquired",
     "temporary_surrogate",
 )
+APPROVED_LICENSE_REVIEW_STATUSES = (
+    "approved",
+    "approved_for_internal_nomos_processing",
+)
+APPROVED_INTERNAL_PROCESSING_VALUES = (
+    "approved",
+    "approved_internal_only",
+    "approved_for_internal_nomos_processing",
+    "allowed_internal_processing",
+    "allowed_with_restrictions",
+)
 
 
 def utc_now() -> str:
@@ -225,12 +236,99 @@ def verify_licensed_artifact(
             },
         )
 
+    verification = {
+        "licensed_artifact_status": "verified",
+        "intake_sidecar": sidecar.as_posix(),
+        "artifact_relative_path": local_relative_path,
+        "sha256": actual_hash,
+    }
+    review_status, review_gap = verify_license_review(intake, ref_id, sidecar)
+    verification.update(review_status)
+    if review_gap is not None:
+        verification["licensed_artifact_status"] = "verified_license_review_required"
+        return verification, review_gap
+
+    return (
+        verification,
+        None,
+    )
+
+
+def verify_license_review(
+    intake: dict[str, Any],
+    ref_id: str,
+    sidecar: Path,
+) -> tuple[dict[str, Any], dict[str, str] | None]:
+    review = intake.get("review") or {}
+    allowed_use = intake.get("allowed_use") or {}
+    reviewer = str(review.get("reviewer") or "").strip()
+    approval_status = str(review.get("approval_status") or "").strip()
+    internal_processing = str(allowed_use.get("internal_processing_by_nomos") or "").strip()
+    commit_full_text = allowed_use.get("commit_full_text_to_git")
+    customer_redistribution = allowed_use.get("customer_redistribution")
+
+    status = {
+        "license_review_status": approval_status or "missing",
+        "license_reviewer": reviewer or "missing",
+        "licensed_internal_processing": internal_processing or "missing",
+        "commit_full_text_to_git": commit_full_text,
+        "customer_redistribution": customer_redistribution,
+        "license_review_verified": False,
+    }
+
+    missing = reviewer == "" or reviewer == "not_assigned"
+    if missing or approval_status not in APPROVED_LICENSE_REVIEW_STATUSES:
+        return (
+            status,
+            {
+                "id": f"GAP-LICENSE-REVIEW-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": (
+                    "Licensed artifact hash is verified, but the license review is not approved "
+                    "by an assigned reviewer."
+                ),
+                "sidecar": sidecar.as_posix(),
+            },
+        )
+
+    if internal_processing not in APPROVED_INTERNAL_PROCESSING_VALUES:
+        return (
+            status,
+            {
+                "id": f"GAP-LICENSE-USE-{ref_id}",
+                "severity": "major",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": (
+                    "Licensed artifact hash is verified, but allowed_use.internal_processing_by_nomos "
+                    "does not authorize internal Nomos processing."
+                ),
+                "sidecar": sidecar.as_posix(),
+            },
+        )
+
+    if commit_full_text is not False or customer_redistribution is not False:
+        return (
+            status,
+            {
+                "id": f"GAP-LICENSE-SAFETY-{ref_id}",
+                "severity": "critical",
+                "status": "open",
+                "reference_id": ref_id,
+                "message": (
+                    "Licensed sidecar must explicitly forbid committing full text to Git and "
+                    "customer redistribution before Nomos processing is allowed."
+                ),
+                "sidecar": sidecar.as_posix(),
+            },
+        )
+
     return (
         {
-            "licensed_artifact_status": "verified",
-            "intake_sidecar": sidecar.as_posix(),
-            "artifact_relative_path": local_relative_path,
-            "sha256": actual_hash,
+            **status,
+            "license_review_verified": True,
         },
         None,
     )

@@ -21,6 +21,15 @@ review:
   reviewer: not_assigned
   approval_status: draft
   evidence_status: requires_evidence
+  approved_status_values:
+    - approved
+    - approved_for_internal_nomos_processing
+  required_for_processing:
+    - assigned_reviewer
+    - approval_status_approved
+    - internal_processing_by_nomos_authorized
+    - commit_full_text_to_git_false
+    - customer_redistribution_false
 nomos_processing:
   mode: read_only
   command: requires_command
