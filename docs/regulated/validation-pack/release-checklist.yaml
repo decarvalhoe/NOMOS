@@ -1,0 +1,141 @@
+schema_version: "0.1.0"
+document_id: NUF-11.4-RELEASE-CHECKLIST
+title: Release Checklist
+status: draft
+owner: not_assigned
+effective_date: "2026-05-03"
+
+purpose: >
+  Pre-release verification checklist ensuring all quality gates, evidence
+  collection, and approval steps are completed before regulated release.
+
+checklist:
+  - id: RC-001
+    category: evidence
+    item: All test suites pass
+    gate: ci_test_gate
+    evidence_ref: EVD-001
+    blocking: true
+    status: not_verified
+
+  - id: RC-002
+    category: evidence
+    item: Coverage meets threshold
+    gate: ci_coverage_gate
+    evidence_ref: EVD-002
+    blocking: true
+    status: not_verified
+    threshold: "80%"
+
+  - id: RC-003
+    category: fidelity
+    item: Conformance harness passes
+    gate: conformance_gate
+    evidence_ref: EVD-003
+    blocking: true
+    status: not_verified
+
+  - id: RC-004
+    category: fidelity
+    item: All validation packs pass
+    gate: validation_pack_gate
+    evidence_ref: EVD-004
+    blocking: true
+    status: not_verified
+
+  - id: RC-005
+    category: fidelity
+    item: AQ-4 semantic proof passes
+    gate: aq4_proof_gate
+    evidence_ref: EVD-005
+    blocking: true
+    status: not_verified
+
+  - id: RC-006
+    category: integrity
+    item: Corpus read-only verified
+    gate: read_only_corpus_gate
+    evidence_ref: ci_gates_report
+    blocking: true
+    status: not_verified
+
+  - id: RC-007
+    category: integrity
+    item: Artifact integrity verified
+    gate: artifact_integrity_gate
+    evidence_ref: EVD-006
+    blocking: true
+    status: not_verified
+
+  - id: RC-008
+    category: governance
+    item: External references aligned
+    gate: ref_alignment_gate
+    evidence_ref: ref_alignment_report
+    blocking: true
+    status: not_verified
+
+  - id: RC-009
+    category: governance
+    item: AI/RAG controls evaluated
+    gate: ai_rag_gate
+    evidence_ref: ai_rag_evaluation
+    blocking: true
+    status: not_verified
+
+  - id: RC-010
+    category: approval
+    item: Author signature present
+    gate: approval_workflow
+    evidence_ref: approval_record
+    blocking: true
+    role: author
+    status: not_verified
+
+  - id: RC-011
+    category: approval
+    item: Reviewer signature present
+    gate: approval_workflow
+    evidence_ref: approval_record
+    blocking: true
+    role: reviewer
+    status: not_verified
+
+  - id: RC-012
+    category: approval
+    item: Approver signature present
+    gate: approval_workflow
+    evidence_ref: approval_record
+    blocking: true
+    role: approver
+    status: not_verified
+
+  - id: RC-013
+    category: approval
+    item: No self-approval
+    gate: approval_policy_check
+    evidence_ref: approval_record
+    blocking: true
+    status: not_verified
+
+  - id: RC-014
+    category: deployment
+    item: Release environment protected
+    gate: github_environment_check
+    evidence_ref: github_config_export
+    blocking: true
+    status: not_verified
+
+  - id: RC-015
+    category: documentation
+    item: Release notes documented
+    gate: documentation_gate
+    evidence_ref: changelog
+    blocking: false
+    status: not_verified
+
+completion_criteria:
+  all_blocking_verified: true
+  approval_chain_valid: true
+  evidence_pack_uploaded: true
+  no_open_blocking_findings: true
