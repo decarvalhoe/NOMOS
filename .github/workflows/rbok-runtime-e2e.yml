@@ -1,0 +1,99 @@
+name: RBOK Runtime E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      corpus_path:
+        description: "Path to realisons-business corpus (relative to repo)"
+        required: true
+        default: "."
+      corpus_id:
+        description: "Corpus identifier"
+        required: true
+        default: "realisons-business"
+      project_id:
+        description: "Consumer project identifier"
+        required: true
+        default: "rbok"
+  pull_request:
+    paths:
+      - "cli/internal/corpus/**"
+      - "scripts/rbok-runtime-e2e.sh"
+      - ".github/workflows/rbok-runtime-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: RBOK Runtime E2E
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+
+      - name: Build CLI
+        working-directory: cli
+        run: go build -o ../nomos-cli .
+
+      - name: Create test corpus fixture
+        run: |
+          mkdir -p /tmp/test-corpus/00_meta
+          mkdir -p /tmp/test-corpus/01_rbok/referentiel
+          mkdir -p /tmp/test-corpus/02_parcours/habitation
+          mkdir -p /tmp/test-corpus/03_workbooks
+          mkdir -p /tmp/test-corpus/98_schemas
+          echo "glossaire: []" > /tmp/test-corpus/00_meta/glossaire.yaml
+          echo "# Garanties habitation" > /tmp/test-corpus/01_rbok/referentiel/garanties.md
+          echo "parcours: {id: souscription}" > /tmp/test-corpus/02_parcours/habitation/souscription.yaml
+          echo "generated: true" > /tmp/test-corpus/03_workbooks/report.json
+          echo '{"type": "object"}' > /tmp/test-corpus/98_schemas/schema.json
+
+      - name: Run E2E pipeline
+        run: |
+          bash scripts/rbok-runtime-e2e.sh \
+            --corpus /tmp/test-corpus \
+            --out /tmp/e2e-output \
+            --cli ./nomos-cli \
+            --corpus-id "${{ inputs.corpus_id || 'realisons-business' }}" \
+            --project-id "${{ inputs.project_id || 'rbok' }}"
+
+      - name: Verify git clean
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "FAIL: repo dirty after E2E"
+            git status --porcelain
+            exit 1
+          fi
+          echo "PASS: repo clean after E2E"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rbok-runtime-e2e-output
+          path: /tmp/e2e-output/
+          retention-days: 30
+
+  unit-tests:
+    name: Corpus unit tests
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: "0"
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - run: go vet ./internal/corpus/...
+      - run: go test -race ./internal/corpus/...
