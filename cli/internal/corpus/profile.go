@@ -18,14 +18,15 @@ const ProfileRBOKLawbook = "rbok-lawbook"
 type OutputFlag string
 
 const (
-	OutputIndex              OutputFlag = "index"
-	OutputGovernance         OutputFlag = "governance"
-	OutputCitation           OutputFlag = "citation"
-	OutputImport             OutputFlag = "import"
-	OutputFeed               OutputFlag = "feed"
-	OutputRAGMetadata        OutputFlag = "rag_metadata"
-	OutputAtomizationReport  OutputFlag = "atomization_report"
-	OutputTraceabilityMatrix OutputFlag = "traceability_matrix"
+	OutputIndex                   OutputFlag = "index"
+	OutputGovernance              OutputFlag = "governance"
+	OutputCitation                OutputFlag = "citation"
+	OutputImport                  OutputFlag = "import"
+	OutputFeed                    OutputFlag = "feed"
+	OutputRAGMetadata             OutputFlag = "rag_metadata"
+	OutputAtomizationReport       OutputFlag = "atomization_report"
+	OutputTraceabilityMatrix      OutputFlag = "traceability_matrix"
+	OutputStructureFidelityReport OutputFlag = "structure_fidelity_report"
 )
 
 var allOutputFlags = []OutputFlag{
@@ -37,6 +38,7 @@ var allOutputFlags = []OutputFlag{
 	OutputRAGMetadata,
 	OutputAtomizationReport,
 	OutputTraceabilityMatrix,
+	OutputStructureFidelityReport,
 }
 
 // Profile describes a corpus processing profile.
@@ -135,6 +137,7 @@ type TraceabilityEntry struct {
 type profileArtifacts struct {
 	Assembly     MultiFeedAssembly
 	Report       ProfileAtomizationReport
+	Fidelity     StructureFidelityReport
 	Traceability []TraceabilityEntry
 }
 
@@ -372,6 +375,9 @@ func buildSection(flag OutputFlag, classifications []RBOKSourceClassification, a
 	case OutputTraceabilityMatrix:
 		return json.Marshal(artifacts.Traceability)
 
+	case OutputStructureFidelityReport:
+		return json.Marshal(artifacts.Fidelity)
+
 	default:
 		return nil, fmt.Errorf("unknown output flag %q", flag)
 	}
@@ -439,10 +445,12 @@ func buildProfileArtifacts(profileName string, corpusRoot string, classification
 	assembly := AssembleMultiFeed(feeds, MultiAssembleOptions{Now: now})
 	traceability := buildTraceabilityMatrix(assembly)
 	report := buildAtomizationReport(profileName, generatedAt, len(classifications), len(feeds), assembly, traceability)
+	fidelity := BuildStructureFidelityReport(profileName, generatedAt, corpusRoot, classifications, assembly)
 
 	return profileArtifacts{
 		Assembly:     assembly,
 		Report:       report,
+		Fidelity:     fidelity,
 		Traceability: traceability,
 	}, messages
 }
@@ -499,7 +507,11 @@ func buildMarkdownProfileFeed(corpusRoot string, c RBOKSourceClassification, gen
 
 func buildParcoursProfileFeed(corpusRoot string, c RBOKSourceClassification, generatedAt string) (LawbookFeed, error) {
 	absPath := filepath.Join(corpusRoot, filepath.FromSlash(c.Path))
-	extracted, err := ExtractParcours(absPath)
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return LawbookFeed{}, err
+	}
+	extracted, err := ExtractParcoursFromBytes(data)
 	if err != nil {
 		return LawbookFeed{}, err
 	}
@@ -531,6 +543,10 @@ func buildParcoursProfileFeed(corpusRoot string, c RBOKSourceClassification, gen
 			Domain:       domainForClassification(c),
 			Title:        firstNonEmpty(extracted.ParcoursName, extracted.ParcoursID),
 			Text:         firstNonEmpty(extracted.ParcoursName, extracted.ParcoursID),
+			SourceSpan:   fullFileSourceSpan(docID, c.Path, sourceHash, data),
+			Metadata: map[string]any{
+				"span_precision": "file",
+			},
 		},
 	}
 	applySourceClassification(&nodes[0], c)
@@ -566,6 +582,20 @@ func buildParcoursProfileFeed(corpusRoot string, c RBOKSourceClassification, gen
 				"runtime_status": unit.Status,
 			},
 		}
+		spanMatch := exactSourceSpanForNeedles(
+			docID,
+			c.Path,
+			sourceHash,
+			data,
+			unit.BusinessRule,
+			unit.Name,
+			unit.EtapeName,
+			unit.ObjectifID,
+			unit.EtapeID,
+			unit.ParcoursID,
+		)
+		node.SourceSpan = spanMatch.Span
+		node.Metadata["span_precision"] = spanMatch.Precision
 		applySourceClassification(&node, c)
 		node.Locator = locatorForNode(c.Path, node)
 		if errs := ValidateNode(node); len(errs) > 0 {
@@ -642,11 +672,13 @@ func buildAIBehaviorConfigProfileFeed(corpusRoot string, c RBOKSourceClassificat
 			Domain:       domainForClassification(c),
 			Title:        filepath.Base(c.Path),
 			Text:         fmt.Sprintf("AI behavior configuration scope=%s version=%d", firstNonEmpty(config.Scope, "unspecified"), config.Version),
+			SourceSpan:   fullFileSourceSpan(docID, c.Path, sourceHash, data),
 			Metadata: map[string]any{
 				"schema_version": config.SchemaVersion,
 				"exported_at":    config.ExportedAt,
 				"scope":          config.Scope,
 				"version":        config.Version,
+				"span_precision": "file",
 			},
 		},
 	}
@@ -688,6 +720,9 @@ func buildAIBehaviorConfigProfileFeed(corpusRoot string, c RBOKSourceClassificat
 		if strings.TrimSpace(node.Text) == "" {
 			node.Text = key
 		}
+		spanMatch := exactSourceSpanForNeedles(docID, c.Path, sourceHash, data, `"`+key+`"`, key, node.Text)
+		node.SourceSpan = spanMatch.Span
+		node.Metadata["span_precision"] = spanMatch.Precision
 		applySourceClassification(&node, c)
 		node.Locator = locatorForNode(c.Path, node)
 		if errs := ValidateNode(node); len(errs) > 0 {
@@ -850,6 +885,9 @@ func feedIDForPath(rel string) string {
 }
 
 func locatorForNode(rel string, node LawbookNode) string {
+	if locator := sourceSpanLocator(rel, node.SourceSpan); locator != "" {
+		return locator
+	}
 	if node.OrdinalPath != "" {
 		return rel + "#" + node.OrdinalPath
 	}

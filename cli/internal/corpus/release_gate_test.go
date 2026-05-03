@@ -75,6 +75,30 @@ func writeGovernanceArtifact(t *testing.T, dir string, name string, result Gover
 	}
 }
 
+func writeStructureFidelityArtifact(t *testing.T, dir string, name string, blocking int) {
+	t.Helper()
+	verdict := "pass"
+	if blocking > 0 {
+		verdict = "fail"
+	}
+	report := StructureFidelityReport{
+		Format:                  StructureFidelityFormat,
+		Profile:                 ProfileRBOKLawbook,
+		CheckedSourceCount:      1,
+		SourceBlockCount:        3,
+		CoveredSourceBlockCount: 3,
+		Blocking:                blocking,
+		Verdict:                 verdict,
+	}
+	data, err := json.Marshal(report)
+	if err != nil {
+		t.Fatalf("marshal structure fidelity: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		t.Fatalf("write structure fidelity: %v", err)
+	}
+}
+
 func writeDiagnoseGovernanceArtifact(t *testing.T, dir string, name string, verdict DiagnoseVerdict) {
 	t.Helper()
 	data, err := json.Marshal(verdict)
@@ -104,6 +128,8 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -116,8 +142,36 @@ func TestEvaluateReleaseGate_AllPass(t *testing.T) {
 	if result.Blocking != 0 {
 		t.Fatalf("expected 0 blocking, got %d", result.Blocking)
 	}
-	if len(result.Checks) != 4 {
-		t.Fatalf("expected 4 checks, got %d", len(result.Checks))
+	if len(result.Checks) != 5 {
+		t.Fatalf("expected 5 checks, got %d", len(result.Checks))
+	}
+}
+
+func TestEvaluateReleaseGate_StructureFidelityBlockedFails(t *testing.T) {
+	dir := t.TempDir()
+	writeFeedArtifact(t, dir, "rbok-feed.json", sampleNodes())
+	writeAttestationArtifact(t, dir, "rbok-attestation.json")
+	writeGovernanceArtifact(t, dir, "rbok-governance.json", GovernanceResult{
+		Verdict: VerdictAdmissible,
+	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 2)
+
+	config := DefaultRBOKLawbookGateConfig(dir)
+	result, err := EvaluateReleaseGate(config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Verdict != GateFail {
+		t.Fatalf("expected fail for blocked structure fidelity, got %s: %+v", result.Verdict, result.Checks)
+	}
+	found := false
+	for _, check := range result.Checks {
+		if check.Name == "structure_fidelity" && check.Verdict == GateFail {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("expected structure_fidelity check to fail")
 	}
 }
 
@@ -130,6 +184,7 @@ func TestEvaluateReleaseGate_AcceptsMultiFeedAssembly(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -151,6 +206,7 @@ func TestEvaluateReleaseGate_AcceptsProfileDiagnoseGovernance(t *testing.T) {
 		Confidence: "high",
 		Summary:    "ready",
 	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -176,6 +232,7 @@ func TestEvaluateReleaseGate_NodeTypesIgnoreNonFeedArtifacts(t *testing.T) {
 		TotalFindings: 0,
 		Blocking:      0,
 	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
 	traceabilityRows := []TraceabilityEntry{
 		{NodeID: "DOC-001", NodeType: string(NodeDocument)},
 		{NodeID: "ART-001", NodeType: string(NodeArticle)},
@@ -369,6 +426,7 @@ func TestEvaluateReleaseGate_GovernancePartialWarns(t *testing.T) {
 		TotalFindings: 1,
 		Blocking:      0,
 	})
+	writeStructureFidelityArtifact(t, dir, "rbok-structure-fidelity-report.json", 0)
 
 	config := DefaultRBOKLawbookGateConfig(dir)
 	result, err := EvaluateReleaseGate(config)
@@ -393,8 +451,8 @@ func TestEvaluateReleaseGate_EmptyDir(t *testing.T) {
 	if result.Verdict != GateFail {
 		t.Fatalf("expected fail for empty dir, got %s", result.Verdict)
 	}
-	if result.Blocking != 4 {
-		t.Fatalf("expected 4 blocking checks for empty dir, got %d", result.Blocking)
+	if result.Blocking != 5 {
+		t.Fatalf("expected 5 blocking checks for empty dir, got %d", result.Blocking)
 	}
 }
 
@@ -446,6 +504,9 @@ func TestDefaultRBOKLawbookGateConfig(t *testing.T) {
 	}
 	if !config.RequireGovernance {
 		t.Fatal("expected RequireGovernance to be true")
+	}
+	if !config.RequireStructureFidelity {
+		t.Fatal("expected RequireStructureFidelity to be true")
 	}
 	if config.MaxBlockingFindings != 0 {
 		t.Fatalf("expected MaxBlockingFindings 0, got %d", config.MaxBlockingFindings)

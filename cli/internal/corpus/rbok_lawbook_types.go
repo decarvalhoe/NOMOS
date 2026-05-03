@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	parsemodel "github.com/RBOKproject/Nomos/cli/internal/corpus/parse"
 )
 
 // LawbookNodeType enumerates the structural levels of a lawbook.
@@ -15,15 +17,26 @@ const (
 	NodeSection    LawbookNodeType = "section"
 	NodeSubsection LawbookNodeType = "subsection"
 	NodeArticle    LawbookNodeType = "article"
+	NodeClause     LawbookNodeType = "clause"
+	NodeSubclause  LawbookNodeType = "subclause"
 	NodeParagraph  LawbookNodeType = "paragraph"
 	NodeAlinea     LawbookNodeType = "alinea"
+	NodeTable      LawbookNodeType = "table"
+	NodeTableRow   LawbookNodeType = "table_row"
+	NodeCodeBlock  LawbookNodeType = "code_block"
+	NodeCallout    LawbookNodeType = "callout"
+	NodeBlockQuote LawbookNodeType = "block_quote"
+	NodeImage      LawbookNodeType = "image"
+	NodeRawHTML    LawbookNodeType = "raw_html"
 )
 
 // AllNodeTypes returns all valid lawbook node types in depth order.
 func AllNodeTypes() []LawbookNodeType {
 	return []LawbookNodeType{
 		NodeDocument, NodeChapter, NodeSection, NodeSubsection,
-		NodeArticle, NodeParagraph, NodeAlinea,
+		NodeArticle, NodeClause, NodeSubclause, NodeParagraph, NodeAlinea,
+		NodeTable, NodeTableRow, NodeCodeBlock, NodeCallout, NodeBlockQuote,
+		NodeImage, NodeRawHTML,
 	}
 }
 
@@ -40,6 +53,10 @@ func (t LawbookNodeType) Depth() int {
 		return 3
 	case NodeArticle:
 		return 4
+	case NodeClause:
+		return 5
+	case NodeSubclause:
+		return 6
 	case NodeParagraph:
 		return 5
 	case NodeAlinea:
@@ -51,7 +68,25 @@ func (t LawbookNodeType) Depth() int {
 
 // IsValid returns true if the node type is recognized.
 func (t LawbookNodeType) IsValid() bool {
-	return t.Depth() >= 0
+	switch t {
+	case NodeDocument, NodeChapter, NodeSection, NodeSubsection,
+		NodeArticle, NodeClause, NodeSubclause, NodeParagraph, NodeAlinea,
+		NodeTable, NodeTableRow, NodeCodeBlock, NodeCallout, NodeBlockQuote,
+		NodeImage, NodeRawHTML:
+		return true
+	default:
+		return false
+	}
+}
+
+func (t LawbookNodeType) hasFixedDepth() bool {
+	switch t {
+	case NodeDocument, NodeChapter, NodeSection, NodeSubsection,
+		NodeArticle, NodeClause, NodeSubclause, NodeParagraph, NodeAlinea:
+		return true
+	default:
+		return false
+	}
 }
 
 // LawbookNodeStatus tracks the lifecycle of a node.
@@ -97,28 +132,29 @@ func (p LawbookPriority) IsValid() bool {
 
 // LawbookNode is a single structural node in a lawbook feed.
 type LawbookNode struct {
-	NodeID        string            `json:"node_id" yaml:"node_id"`
-	DocumentID    string            `json:"document_id" yaml:"document_id"`
-	NodeType      LawbookNodeType   `json:"node_type" yaml:"node_type"`
-	CanonicalRef  string            `json:"canonical_ref" yaml:"canonical_ref"`
-	DisplayRef    string            `json:"display_ref" yaml:"display_ref"`
-	Depth         int               `json:"depth" yaml:"depth"`
-	OrdinalPath   string            `json:"ordinal_path" yaml:"ordinal_path"`
-	SourcePath    string            `json:"source_path" yaml:"source_path"`
-	SourceHash    string            `json:"source_hash" yaml:"source_hash"`
-	SourceClass   string            `json:"source_class,omitempty" yaml:"source_class,omitempty"`
-	CorpusLayer   string            `json:"corpus_layer,omitempty" yaml:"corpus_layer,omitempty"`
-	Authority     string            `json:"authority,omitempty" yaml:"authority,omitempty"`
-	AllowedUses   []string          `json:"allowed_uses,omitempty" yaml:"allowed_uses,omitempty"`
-	Locator       string            `json:"locator,omitempty" yaml:"locator,omitempty"`
-	Status        LawbookNodeStatus `json:"status" yaml:"status"`
-	Priority      LawbookPriority   `json:"priority" yaml:"priority"`
-	Domain        string            `json:"domain" yaml:"domain"`
-	Title         string            `json:"title,omitempty" yaml:"title,omitempty"`
-	Text          string            `json:"text,omitempty" yaml:"text,omitempty"`
-	ParentID      string            `json:"parent_id,omitempty" yaml:"parent_id,omitempty"`
-	EffectiveDate string            `json:"effective_date,omitempty" yaml:"effective_date,omitempty"`
-	Metadata      map[string]any    `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	NodeID        string                 `json:"node_id" yaml:"node_id"`
+	DocumentID    string                 `json:"document_id" yaml:"document_id"`
+	NodeType      LawbookNodeType        `json:"node_type" yaml:"node_type"`
+	CanonicalRef  string                 `json:"canonical_ref" yaml:"canonical_ref"`
+	DisplayRef    string                 `json:"display_ref" yaml:"display_ref"`
+	Depth         int                    `json:"depth" yaml:"depth"`
+	OrdinalPath   string                 `json:"ordinal_path" yaml:"ordinal_path"`
+	SourcePath    string                 `json:"source_path" yaml:"source_path"`
+	SourceHash    string                 `json:"source_hash" yaml:"source_hash"`
+	SourceClass   string                 `json:"source_class,omitempty" yaml:"source_class,omitempty"`
+	CorpusLayer   string                 `json:"corpus_layer,omitempty" yaml:"corpus_layer,omitempty"`
+	Authority     string                 `json:"authority,omitempty" yaml:"authority,omitempty"`
+	AllowedUses   []string               `json:"allowed_uses,omitempty" yaml:"allowed_uses,omitempty"`
+	Locator       string                 `json:"locator,omitempty" yaml:"locator,omitempty"`
+	SourceSpan    *parsemodel.SourceSpan `json:"source_span,omitempty" yaml:"source_span,omitempty"`
+	Status        LawbookNodeStatus      `json:"status" yaml:"status"`
+	Priority      LawbookPriority        `json:"priority" yaml:"priority"`
+	Domain        string                 `json:"domain" yaml:"domain"`
+	Title         string                 `json:"title,omitempty" yaml:"title,omitempty"`
+	Text          string                 `json:"text,omitempty" yaml:"text,omitempty"`
+	ParentID      string                 `json:"parent_id,omitempty" yaml:"parent_id,omitempty"`
+	EffectiveDate string                 `json:"effective_date,omitempty" yaml:"effective_date,omitempty"`
+	Metadata      map[string]any         `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 // LawbookFeed is a batch of lawbook nodes forming a feed document.
@@ -160,11 +196,16 @@ func ValidateNode(n LawbookNode) []string {
 	if strings.TrimSpace(n.DisplayRef) == "" {
 		errs = append(errs, "display_ref is required")
 	}
-	if n.Depth < 0 || n.Depth > 7 {
-		errs = append(errs, fmt.Sprintf("depth %d must be 0-7", n.Depth))
+	if n.Depth < 0 || n.Depth > 32 {
+		errs = append(errs, fmt.Sprintf("depth %d must be 0-32", n.Depth))
 	}
-	if n.NodeType.IsValid() && n.Depth != n.NodeType.Depth() {
+	if n.NodeType.IsValid() && n.NodeType.hasFixedDepth() && n.Depth != n.NodeType.Depth() {
 		errs = append(errs, fmt.Sprintf("depth %d does not match node_type %s (expected %d)", n.Depth, n.NodeType, n.NodeType.Depth()))
+	}
+	if n.SourceSpan != nil {
+		for _, err := range n.SourceSpan.Validate() {
+			errs = append(errs, "source_span: "+err)
+		}
 	}
 	if !ordinalPattern.MatchString(n.OrdinalPath) {
 		errs = append(errs, fmt.Sprintf("ordinal_path %q must match %s", n.OrdinalPath, ordinalPattern.String()))

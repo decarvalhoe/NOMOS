@@ -588,3 +588,85 @@ func TestRBOK_AllIDsUnique(t *testing.T) {
 		seen[n.NodeID] = n.Title
 	}
 }
+
+func TestExtractMarkdown_SourceSpansAndLineLocators(t *testing.T) {
+	src := "# Doc\n\nFirst governed paragraph.\n"
+	result := ExtractMarkdown(src, "portable-doc")
+
+	var paragraph LawbookNode
+	for _, n := range result.Nodes {
+		if n.NodeType == NodeParagraph && strings.Contains(n.Text, "First governed") {
+			paragraph = n
+			break
+		}
+	}
+	if paragraph.NodeID == "" {
+		t.Fatal("expected paragraph node")
+	}
+	if paragraph.SourceSpan == nil {
+		t.Fatal("expected paragraph source_span")
+	}
+	if paragraph.SourceSpan.StartLine == nil || *paragraph.SourceSpan.StartLine != 3 {
+		t.Fatalf("expected start_line 3, got %#v", paragraph.SourceSpan.StartLine)
+	}
+	if paragraph.SourceSpan.StartColumn == nil || *paragraph.SourceSpan.StartColumn != 1 {
+		t.Fatalf("expected start_column 1, got %#v", paragraph.SourceSpan.StartColumn)
+	}
+	if paragraph.SourceSpan.StartByte == nil || *paragraph.SourceSpan.StartByte <= 0 {
+		t.Fatalf("expected positive start_byte, got %#v", paragraph.SourceSpan.StartByte)
+	}
+	if !strings.Contains(paragraph.Locator, "#L3:C1-") {
+		t.Fatalf("expected source line locator, got %q", paragraph.Locator)
+	}
+}
+
+func TestExtractMarkdown_H5H6BecomeDedicatedLegalLevels(t *testing.T) {
+	src := "# Doc\n\n##### Article profond\n\nArticle content.\n\n###### Clause profonde\n\nClause content.\n"
+	result := ExtractMarkdown(src, "portable-doc")
+
+	var h5, h6 LawbookNode
+	for _, n := range result.Nodes {
+		if n.Title == "Article profond" {
+			h5 = n
+		}
+		if n.Title == "Clause profonde" {
+			h6 = n
+		}
+	}
+	if h5.NodeType != LawbookNodeType("clause") {
+		t.Fatalf("expected H5 to become clause, got %s", h5.NodeType)
+	}
+	if h6.NodeType != LawbookNodeType("subclause") {
+		t.Fatalf("expected H6 to become subclause, got %s", h6.NodeType)
+	}
+	if h6.ParentID != h5.NodeID {
+		t.Fatalf("expected H6 parent to be H5, got %q want %q", h6.ParentID, h5.NodeID)
+	}
+}
+
+func TestExtractMarkdown_TypedPortableBlocks(t *testing.T) {
+	src := "# Doc\n\nIntro before content table.\n\n| A | B |\n| --- | --- |\n| C | D |\n\n```cue\nx: string\n```\n\n> [!WARNING]\n> Review required.\n\n![Schema](schema.png)\n\n<div>raw</div>\n"
+	result := ExtractMarkdown(src, "portable-doc")
+
+	for _, typ := range []LawbookNodeType{
+		LawbookNodeType("table"),
+		LawbookNodeType("table_row"),
+		LawbookNodeType("code_block"),
+		LawbookNodeType("callout"),
+		LawbookNodeType("image"),
+		LawbookNodeType("raw_html"),
+	} {
+		if !hasNodeType(result.Nodes, typ) {
+			t.Fatalf("expected typed node %s in extraction", typ)
+		}
+	}
+}
+
+func hasNodeType(nodes []LawbookNode, typ LawbookNodeType) bool {
+	for _, n := range nodes {
+		if n.NodeType == typ {
+			return true
+		}
+	}
+	return false
+}

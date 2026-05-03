@@ -198,15 +198,12 @@ func TestFeedPropagatesNodeErrors(t *testing.T) {
 
 func TestAllNodeTypes(t *testing.T) {
 	types := AllNodeTypes()
-	if len(types) != 7 {
-		t.Fatalf("expected 7 node types, got %d", len(types))
+	if len(types) != 16 {
+		t.Fatalf("expected 16 node types, got %d", len(types))
 	}
-	for i, nt := range types {
+	for _, nt := range types {
 		if !nt.IsValid() {
 			t.Fatalf("expected %s to be valid", nt)
-		}
-		if nt.Depth() != i {
-			t.Fatalf("expected %s depth %d, got %d", nt, i, nt.Depth())
 		}
 	}
 }
@@ -221,6 +218,8 @@ func TestNodeTypeDepths(t *testing.T) {
 		{NodeSection, 2},
 		{NodeSubsection, 3},
 		{NodeArticle, 4},
+		{NodeClause, 5},
+		{NodeSubclause, 6},
 		{NodeParagraph, 5},
 		{NodeAlinea, 6},
 	}

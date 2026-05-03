@@ -177,6 +177,11 @@ func profileSectionEntryCount(flag corpus.OutputFlag, data json.RawMessage) int 
 		if json.Unmarshal(data, &report) == nil {
 			return report.TotalNodes
 		}
+	case corpus.OutputStructureFidelityReport:
+		var report corpus.StructureFidelityReport
+		if json.Unmarshal(data, &report) == nil {
+			return report.SourceBlockCount
+		}
 	case corpus.OutputRAGMetadata, corpus.OutputTraceabilityMatrix,
 		corpus.OutputIndex, corpus.OutputGovernance, corpus.OutputCitation, corpus.OutputImport:
 		var entries []json.RawMessage
