@@ -6,12 +6,6 @@ import (
 	"strings"
 )
 
-// TOCEntry is a flat representation of a TOC item for comparison.
-type TOCEntry struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Depth int    `json:"depth"`
-}
 
 // TOCDrift describes a single difference between source and Nomos TOC.
 type TOCDrift struct {
