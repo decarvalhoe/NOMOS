@@ -1,0 +1,141 @@
+schema_version: "0.1.0"
+document_id: NUF-11.4-TEST-EVIDENCE-PROTOCOL
+title: Test Evidence Protocol
+status: draft
+owner: not_assigned
+effective_date: "2026-05-03"
+
+purpose: >
+  Define the standard protocol for collecting, packaging, and retaining
+  test evidence produced by Nomos fidelity gates. Evidence must be
+  traceable, reproducible, and verifiable.
+
+scope:
+  applies_to:
+    - unit_tests
+    - integration_tests
+    - conformance_harness
+    - validation_packs
+    - aq4_proof_runs
+  environments:
+    - local_dev
+    - ci_pipeline
+    - regulated_release
+
+evidence_requirements:
+  - id: EVD-001
+    name: Test execution record
+    description: Machine-readable record of test execution with pass/fail per case.
+    format: json
+    retention_days: 365
+    required: true
+    fields:
+      - test_suite_id
+      - executed_at
+      - duration_ms
+      - total_tests
+      - passed
+      - failed
+      - skipped
+      - executor
+      - environment
+
+  - id: EVD-002
+    name: Coverage report
+    description: Code coverage report showing lines/functions covered by tests.
+    format: json
+    retention_days: 365
+    required: true
+    fields:
+      - coverage_ratio
+      - lines_covered
+      - lines_total
+      - functions_covered
+      - functions_total
+      - uncovered_files
+
+  - id: EVD-003
+    name: Conformance harness report
+    description: Output of shared adapter conformance harness.
+    format: json
+    retention_days: 365
+    required: true
+    fields:
+      - adapter_id
+      - total_checks
+      - passed
+      - failed
+      - results
+
+  - id: EVD-004
+    name: Validation pack results
+    description: Per-pack validation output with fixture references.
+    format: json
+    retention_days: 365
+    required: true
+    fields:
+      - pack_id
+      - pass
+      - atom_count
+      - failures
+
+  - id: EVD-005
+    name: AQ-4 proof report
+    description: Semantic proof gate output with per-criterion scores.
+    format: json
+    retention_days: 365
+    required: true
+    fields:
+      - pass
+      - score
+      - criteria
+      - total_atoms
+
+  - id: EVD-006
+    name: Artifact integrity manifest
+    description: SHA-256 hashes of all produced artifacts for verification.
+    format: yaml
+    retention_days: 365
+    required: true
+    fields:
+      - artifact_path
+      - sha256_hash
+      - produced_at
+      - producer
+
+collection_protocol:
+  steps:
+    - id: STEP-1
+      action: Execute test suite
+      output: EVD-001
+      automation: ci_workflow
+    - id: STEP-2
+      action: Generate coverage
+      output: EVD-002
+      automation: ci_workflow
+    - id: STEP-3
+      action: Run conformance harness
+      output: EVD-003
+      automation: ci_workflow
+    - id: STEP-4
+      action: Run validation packs
+      output: EVD-004
+      automation: ci_workflow
+    - id: STEP-5
+      action: Run AQ-4 proof
+      output: EVD-005
+      automation: ci_workflow
+    - id: STEP-6
+      action: Hash all artifacts
+      output: EVD-006
+      automation: ci_workflow
+    - id: STEP-7
+      action: Upload evidence pack
+      output: all
+      automation: ci_artifact_upload
+
+integrity_controls:
+  hash_algorithm: sha256
+  chain_required: true
+  tamper_detection: before_after_corpus_snapshot
+  retention_export: required_if_ci_retention_insufficient
