@@ -73,6 +73,25 @@ GitHub Actions gates:
 - regulated documentation gate;
 - regulated evidence pack.
 
+## Claim Boundary
+
+`v0.1.0-ALPHA` currently produces corpus feeds, fidelity proof reports, and attestations. Artifact generation is not, by itself, a proof of source-to-feed fidelity.
+
+Full source-to-feed fidelity is **not yet proven** at the platform level. The blocking proof chain is being implemented under epic `#337` (Source-to-feed integrity and semantic feed hygiene) and depends in particular on:
+
+- `#342` (SFI-04) source integrity gate — coverage, duplicates, junk, unsupported blocks;
+- `#345` (SFI-07) feed quality gate — semantic feed and RAG linkage;
+- `#346` (SFI-08) strict gate and CI wiring of the corpus integrity report.
+
+Until those gates are wired and passing, the literal phrase `full_fidelity_proven` is reserved. It must only be emitted by the platform for a build whose corpus integrity report is present and passing. Today this phrase appears on the RBOK POC line above as the result of the existing strict fidelity gate; that claim is scoped to that specific POC corpus and configuration, not to a general source-to-feed proof.
+
+Distinguish:
+
+- **Artifact generation (today)** — feeds, attestations, fidelity proof report, certified TOC, lexicon, RAG metadata, runtime import artifacts.
+- **Fidelity proof (gated, future)** — full source-to-feed fidelity claim conditioned on a passing corpus integrity report (`#338`, `#342`, `#345`, `#346`).
+
+No public document, attestation, or release artifact may upgrade an artifact-generation result into a fidelity proof until the corpus integrity gate is in place.
+
 ## Known Limitations
 
 - The robust POC target is RBOK lawbook-style Markdown; portability to every legal, regulatory, PDF, DOCX, HTML, table-heavy, image-heavy, or nested annex corpus still requires more validation.

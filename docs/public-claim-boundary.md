@@ -49,3 +49,52 @@ Every public claim must map to one of:
 - a known gap with owner and next action.
 
 If a claim cannot be mapped, it must be removed or rewritten as a roadmap item.
+
+## What NOMOS Proves Today
+
+At `v0.1.0-ALPHA`, NOMOS proves only:
+
+- that it can read a source corpus, build a manifest, and detect drift between source and recorded hashes;
+- that it can generate corpus feed artifacts, certified TOC, governed lexicon output, RAG metadata, runtime import artifacts, fidelity proof reports, and attestations from the configured profile;
+- that, on the specific RBOK lawbook POC corpus and configuration, the existing strict fidelity gate has reported `full_fidelity_proven` for the recorded run.
+
+These are all **artifact-generation** facts and **POC-scoped** facts. They are not, on their own, a platform-wide source-to-feed fidelity proof.
+
+## What NOMOS Does Not Yet Prove
+
+NOMOS does **not** yet prove, at platform scope:
+
+- complete source-to-feed coverage (no silent omissions across arbitrary corpora);
+- absence of parent/child body duplication in extracted units;
+- absence of junk, layout-only, or punctuation-only fragments leaking into feed/RAG content;
+- exact byte/line/column source spans for every active source block;
+- that every feed/RAG chunk is backed by a typed source segment ledger;
+- that attestation counts cannot overclaim by counting artifacts without proving source integrity.
+
+The blocking proof chain for these gaps is epic `#337`, with the gating issues `#342` (SFI-04 source integrity gate), `#345` (SFI-07 feed quality gate), and `#346` (SFI-08 strict gate and CI wiring).
+
+## Claim Levels
+
+NOMOS public claims are organised in increasing assurance order. Each level may only be advertised when the level below it is satisfied.
+
+| Level | Meaning | Gating |
+|---|---|---|
+| `artifact-generated` | NOMOS produced the artifact (feed, attestation, fidelity proof report, TOC, lexicon, RAG metadata) without crashing and with the documented schema. | Existing `validate` and `canonical:check` gates. Active today. |
+| `source-traced` | Generated nodes carry source spans and resolve to a recorded source manifest entry. | Source span emission and manifest hash check. Active today on `rbok-lawbook` profile feeds. |
+| `source-integrity-proven` | The corpus integrity report for this build is present and passes (coverage, duplicate spans, junk content, feed linkage, RAG linkage). | Requires `#342` (SFI-04) and `#345` (SFI-07). **Not active today.** |
+| `full-fidelity-proven` | Source-integrity-proven AND the corpus integrity check is wired into the blocking strict release gate for this build. | Requires `#346` (SFI-08). **Not active today.** |
+
+A build may not advertise a level until the gating evidence for that level is recorded and passing. POC-scoped results may carry the corresponding level only with explicit corpus and configuration scoping.
+
+## Reserved Phrases
+
+The following phrases are **reserved** and may only be written by NOMOS or about NOMOS where the cited evidence exists:
+
+- `full_fidelity_proven` — requires a present and passing corpus integrity report wired into the strict release gate (`#346`). Today this phrase is permitted only as the recorded result of the legacy RBOK POC strict fidelity gate, scoped to that POC; it must not be lifted to platform-wide marketing claims.
+- `full fidelity proven` / `complete fidelity` — same gating as above; not permitted as a platform-wide claim.
+- `validated` (in a regulated sense) — reserved for customer-specific validation against intended use; NOMOS itself is not validated as a platform.
+- `certified` — reserved for evidence of an external certification body decision; NOMOS is not certified.
+- `compliant` (as a platform) — reserved for an explicit compliance decision against a named framework with a recorded record of evidence; not used for NOMOS at this release.
+- `regulated-ready` — permitted with the documented meaning ("regulated-readiness structure and evidence workflow"), never as a synonym for "regulated".
+
+Every emitter of these phrases (release notes, README, attestation text, marketing copy, CLI output) must check this list and the corresponding claim level before publishing.
