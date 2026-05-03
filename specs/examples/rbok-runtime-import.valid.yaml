@@ -1,0 +1,143 @@
+schema_version: "0.1.0"
+feed_format: "nomos.rbok-runtime-feed.v1"
+generated_at: "2026-05-03T12:00:00Z"
+content_hash: "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+
+documents:
+  - document_id: DOC-REF-2026
+    domain: insurance
+    source_path: sources/referentiel.md
+    source_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    node_count: 3
+    layer_id: referentiel
+  - document_id: DOC-HAB-2026
+    domain: insurance-home
+    source_path: sources/habitation.md
+    source_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    node_count: 2
+    layer_id: domaine-habitation
+
+nodes:
+  - node_id: REF-ART-1
+    document_id: DOC-REF-2026
+    node_type: article
+    canonical_ref: ref/article/garantie-eau
+    display_ref: "article: Garantie dommages des eaux"
+    depth: 4
+    ordinal_path: "1.1.1.1.1"
+    source_path: sources/referentiel.md
+    source_hash: "sha256:aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"
+    status: active
+    priority: high
+    domain: insurance
+    title: "Garantie dommages des eaux"
+    text: "Les dommages causes par les eaux sont couverts selon les conditions generales."
+    layer_id: referentiel
+    layer_kind: referentiel
+
+  - node_id: REF-ART-2
+    document_id: DOC-REF-2026
+    node_type: article
+    canonical_ref: ref/article/exclusion-toit
+    display_ref: "article: Exclusion infiltration toiture"
+    depth: 4
+    ordinal_path: "1.1.1.1.2"
+    source_path: sources/referentiel.md
+    source_hash: "sha256:bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222"
+    status: active
+    priority: medium
+    domain: insurance
+    title: "Exclusion infiltration toiture"
+    layer_id: referentiel
+    layer_kind: referentiel
+
+  - node_id: REF-DOC
+    document_id: DOC-REF-2026
+    node_type: document
+    canonical_ref: ref/document/referentiel
+    display_ref: "document: Referentiel general"
+    depth: 0
+    ordinal_path: "1"
+    source_path: sources/referentiel.md
+    source_hash: "sha256:cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333"
+    status: active
+    priority: high
+    domain: insurance
+    title: "Referentiel general"
+    layer_id: referentiel
+    layer_kind: referentiel
+
+  - node_id: HAB-ART-1
+    document_id: DOC-HAB-2026
+    node_type: article
+    canonical_ref: hab/article/franchise
+    display_ref: "article: Franchise habitation"
+    depth: 4
+    ordinal_path: "1.1.1.1.1"
+    source_path: sources/habitation.md
+    source_hash: "sha256:dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444"
+    status: active
+    priority: medium
+    domain: insurance-home
+    title: "Franchise habitation"
+    layer_id: domaine-habitation
+    layer_kind: domaine
+
+  - node_id: HAB-ART-2
+    document_id: DOC-HAB-2026
+    node_type: article
+    canonical_ref: hab/article/plafond
+    display_ref: "article: Plafond garantie"
+    depth: 4
+    ordinal_path: "1.1.1.1.2"
+    source_path: sources/habitation.md
+    source_hash: "sha256:eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555"
+    status: active
+    priority: low
+    domain: insurance-home
+    title: "Plafond garantie"
+    layer_id: domaine-habitation
+    layer_kind: domaine
+
+revisions:
+  - node_id: REF-ART-1
+    source_hash: "sha256:aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"
+    status: active
+    timestamp: "2026-05-03T12:00:00Z"
+    layer_id: referentiel
+  - node_id: REF-ART-2
+    source_hash: "sha256:bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222"
+    status: active
+    timestamp: "2026-05-03T12:00:00Z"
+    layer_id: referentiel
+  - node_id: REF-DOC
+    source_hash: "sha256:cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333"
+    status: active
+    timestamp: "2026-05-03T12:00:00Z"
+    layer_id: referentiel
+  - node_id: HAB-ART-1
+    source_hash: "sha256:dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444"
+    status: active
+    timestamp: "2026-05-03T12:00:00Z"
+    layer_id: domaine-habitation
+  - node_id: HAB-ART-2
+    source_hash: "sha256:eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555"
+    status: active
+    timestamp: "2026-05-03T12:00:00Z"
+    layer_id: domaine-habitation
+
+layer_metadata:
+  - id: referentiel
+    kind: referentiel
+    path: 01_referentiel/
+    domain: insurance
+    priority: 1
+    node_count: 3
+    source_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  - id: domaine-habitation
+    kind: domaine
+    path: 02_domaines/habitation/
+    domain: insurance-home
+    priority: 2
+    node_count: 2
+    source_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
