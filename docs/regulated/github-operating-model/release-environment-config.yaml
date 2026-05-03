@@ -1,0 +1,84 @@
+schema_version: "0.1.0"
+document_id: NOMOS-GH-ENV-001
+status: draft
+owner: devops-owner
+claim_boundary: "Declarative configuration only. Enforcement requires applying via GitHub API or UI."
+
+repository:
+  owner: RBOKproject
+  name: NOMOS
+
+environments:
+  - name: regulated-release
+    description: "Protected environment for regulated release evidence bundles."
+    protection:
+      required_reviewers:
+        # Populate with real GitHub usernames/team slugs when assigned.
+        # Empty list means the gate is declared but not yet enforced.
+        users: []
+        teams: []
+      prevent_self_review: true
+      wait_timer_minutes: 10
+    deployment_branch_policy:
+      protected_branches_only: true
+      custom_branch_policies: []
+    variables:
+      - name: RELEASE_EVIDENCE_REQUIRED
+        value: "true"
+      - name: EVIDENCE_RETENTION_DAYS
+        value: "2555"  # ~7 years for regulated retention
+      - name: QUALITY_LEVEL_GATE
+        value: "NQ-1"  # minimum quality level for release
+
+  - name: staging
+    description: "Pre-release validation environment."
+    protection:
+      required_reviewers:
+        users: []
+        teams: []
+      prevent_self_review: false
+      wait_timer_minutes: 0
+    deployment_branch_policy:
+      protected_branches_only: false
+      custom_branch_policies:
+        - pattern: "release/*"
+        - pattern: "main"
+    variables:
+      - name: RELEASE_EVIDENCE_REQUIRED
+        value: "false"
+
+governance_controls:
+  - id: ENV-SELF-REVIEW
+    description: "Regulated-release environment must prevent self-review."
+    severity: critical
+    blocking: true
+    field: "protection.prevent_self_review"
+    expected: true
+
+  - id: ENV-WAIT-TIMER
+    description: "Regulated-release environment must have a wait timer > 0."
+    severity: high
+    blocking: true
+    field: "protection.wait_timer_minutes"
+    expected_min: 1
+
+  - id: ENV-PROTECTED-BRANCHES
+    description: "Regulated-release must restrict to protected branches only."
+    severity: high
+    blocking: true
+    field: "deployment_branch_policy.protected_branches_only"
+    expected: true
+
+  - id: ENV-REVIEWERS-DECLARED
+    description: "Regulated-release should have at least one reviewer declared."
+    severity: medium
+    blocking: false
+    field: "protection.required_reviewers"
+    expected_min_count: 1
+
+  - id: ENV-EVIDENCE-VAR
+    description: "RELEASE_EVIDENCE_REQUIRED variable must be set to true."
+    severity: high
+    blocking: true
+    field: "variables.RELEASE_EVIDENCE_REQUIRED"
+    expected: "true"
