@@ -48,6 +48,27 @@ Nomos may fetch or snapshot public metadata and the public TOC. Nomos must not f
 | `official_snapshot_allowed_with_hash` | Public official regulations, guidance pages, open standards pages, GitHub documentation. | Snapshot from official URL, hash the content, record retrieval time and tool, then atomize. |
 | `licensed_local_artifact_required` | GAMP 5, ISO standards, paid industry guides, restricted customer standards. | Keep source outside Git, create a sidecar intake record, hash the artifact, process read-only, and commit only allowed manifests/evidence. |
 | `metadata_only_until_licensed` | Public product page or table of contents exists but full text is restricted. | Register metadata and open a gap. No clause-level mapping is allowed. |
+| `public_surrogate_annex` | Temporary bridge for a required licensed bible when authoritative public regulations, regulator guidance, or agency standards cover enough adjacent process scope to keep Nomos work moving. | Process only the public sources named in `public-surrogate-annexes/`. Preserve the licensed gap and block all protected-standard clause, certification, equivalence, and redistribution claims. |
+
+## Public Surrogate Annexes
+
+A public surrogate annex is a legal temporary bypass, not a license bypass.
+
+Nomos may use one only when all conditions are true:
+
+- the required bible is registered and still requires licensed intake;
+- the annex is stored under `docs/regulated/reference-basis/public-surrogate-annexes/`;
+- the annex names official or authoritative public sources;
+- the annex declares a claim boundary and blocked claims;
+- the command is run with `--allow-public-surrogates`;
+- the generated report status is `surrogate_ready_for_processing`, not `ready_for_processing`.
+
+Surrogate processing may generate manifests, hashes, topic indexes, public-source chunks, traceability to public sources, and explicit gap reports to the missing licensed intake. It may not generate ISO/IEC/IEEE/ISPE clause-level coverage, certification evidence, hidden equivalence claims, or reconstructed protected text.
+
+Current temporary annexes:
+
+- `ISO-13485-2016` uses FDA QMSR, the FDA final rule, eCFR 21 CFR Part 820, and ANSI IBR access metadata until ISO 13485:2016 is acquired.
+- `ISO-IEC-IEEE-12207-2026` uses NASA software engineering requirements/handbook material plus NIST SSDF and systems security engineering guidance until ISO/IEC/IEEE 12207:2026 is acquired.
 
 ## Licensed Reference Intake
 
@@ -81,6 +102,12 @@ The canonical report is generated with:
 python scripts/regulated_reference_canon.py --report .regulated-doc-gate/reference-canon-report.json
 ```
 
+Temporary surrogate processing is explicit:
+
+```bash
+python scripts/regulated_reference_canon.py --allow-public-surrogates --report .regulated-doc-gate/reference-canon-report.json
+```
+
 The report may be `requires_evidence` while licensed bibles are absent. That status blocks clause-level claims; it does not block registering the bible itself.
 
 ## Current Local Intake Status
@@ -96,3 +123,5 @@ Missing licensed bibles still expected by the register:
 
 - `ISO-13485-2016`
 - `ISO-IEC-IEEE-12207-2026`
+
+Both missing bibles have temporary public surrogate annexes. The surrogate annexes keep public-source processing available until acquisition, but do not close the licensed-intake gaps.

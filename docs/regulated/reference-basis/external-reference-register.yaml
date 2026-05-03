@@ -88,10 +88,16 @@ references:
     version_or_date: "2016 edition, confirmed current in 2025"
     checked_on: "2026-05-02"
     applicability: "QMS requirements for regulatory purposes in medical device contexts."
+    content_access_policy: licensed_content_required
+    nomos_processing_mode: public_surrogate_annex_allowed_until_licensed_intake
     nomos_alignment: "Quality system structure, process validation, risk management, supplier and record controls."
+    public_surrogate_annex: "docs/regulated/reference-basis/public-surrogate-annexes/ISO-13485-2016.yaml"
+    public_surrogate_scope: "FDA QMSR, Federal Register, eCFR 21 CFR Part 820 and ANSI IBR metadata only until licensed ISO acquisition."
     required_documents:
       - "docs/regulated/quality-system/README.md"
-    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+      - "docs/regulated/reference-basis/public-surrogate-annexes/ISO-13485-2016.yaml"
+      - "templates/regulated/public-surrogate-annex.yaml"
+    evidence_status: "public_surrogate_registered_until_licensed_clause_mapping"
   - id: ISO-IEC-IEEE-12207-2026
     title: "ISO/IEC/IEEE 12207:2026 - Software life cycle processes"
     publisher: "ISO/IEC/IEEE"
@@ -99,11 +105,17 @@ references:
     version_or_date: "Edition 2, published 2026-04"
     checked_on: "2026-05-02"
     applicability: "Software lifecycle across acquisition, supply, development, operation, maintenance, support, and retirement."
+    content_access_policy: licensed_content_required
+    nomos_processing_mode: public_surrogate_annex_allowed_until_licensed_intake
     nomos_alignment: "SDMP, lifecycle controls, maintenance, retirement, acquisition/supplier controls."
+    public_surrogate_annex: "docs/regulated/reference-basis/public-surrogate-annexes/ISO-IEC-IEEE-12207-2026.yaml"
+    public_surrogate_scope: "NASA software engineering requirements/handbook, NIST SSDF, NIST SP 800-160 and IEEE/ISO/IEC public metadata only until licensed ISO/IEC/IEEE acquisition."
     required_documents:
       - "docs/regulated/lifecycle/software-development-management-plan.md"
       - "docs/regulated/lifecycle/release-and-retirement-sop.md"
-    evidence_status: "summary_reference_only_until_licensed_clause_mapping"
+      - "docs/regulated/reference-basis/public-surrogate-annexes/ISO-IEC-IEEE-12207-2026.yaml"
+      - "templates/regulated/public-surrogate-annex.yaml"
+    evidence_status: "public_surrogate_registered_until_licensed_clause_mapping"
   - id: ISO-IEC-25010-2023
     title: "ISO/IEC 25010:2023 - Product quality model"
     publisher: "ISO/IEC"

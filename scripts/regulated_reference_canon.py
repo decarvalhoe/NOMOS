@@ -26,10 +26,15 @@ except ImportError as exc:  # pragma: no cover - exercised in CI setup failure
 
 
 REGISTER_PATH = Path("docs/regulated/reference-basis/external-reference-register.yaml")
+PUBLIC_SURROGATE_PATH = Path("docs/regulated/reference-basis/public-surrogate-annexes")
 LICENSED_PUBLISHERS = ("ISO", "ISPE")
 LICENSED_STATUS_MARKERS = (
     "licensed",
     "summary_reference_only",
+)
+VALID_PUBLIC_SURROGATE_STATUSES = (
+    "temporary_surrogate_until_official_document_acquired",
+    "temporary_surrogate",
 )
 
 
@@ -90,7 +95,60 @@ def intake_path(root: Path, ref_id: str) -> Path:
     return root / "docs/regulated/reference-basis/licensed-intakes" / f"{ref_id}.yaml"
 
 
-def verify_licensed_artifact(root: Path, ref_id: str, licensed_root: Path | None) -> tuple[dict[str, Any], dict[str, str] | None]:
+def public_surrogate_path(root: Path, ref_id: str) -> Path:
+    return root / PUBLIC_SURROGATE_PATH / f"{ref_id}.yaml"
+
+
+def load_public_surrogate(root: Path, ref_id: str) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    sidecar = public_surrogate_path(root, ref_id)
+    if not sidecar.exists():
+        return None, None
+
+    annex = load_yaml(sidecar)
+    if str(annex.get("surrogate_for", "")).strip() != ref_id:
+        return None, {
+            "severity": "error",
+            "path": sidecar.as_posix(),
+            "message": "Public surrogate annex surrogate_for must match the licensed reference id.",
+        }
+    if str(annex.get("status", "")).strip() not in VALID_PUBLIC_SURROGATE_STATUSES:
+        return None, {
+            "severity": "error",
+            "path": sidecar.as_posix(),
+            "message": "Public surrogate annex has an unsupported status.",
+        }
+    if not str(annex.get("claim_boundary", "")).strip():
+        return None, {
+            "severity": "error",
+            "path": sidecar.as_posix(),
+            "message": "Public surrogate annex must declare a claim_boundary.",
+        }
+    sources = annex.get("sources") or []
+    if not isinstance(sources, list) or not sources:
+        return None, {
+            "severity": "error",
+            "path": sidecar.as_posix(),
+            "message": "Public surrogate annex must list at least one public source.",
+        }
+
+    return (
+        {
+            "public_surrogate_status": "available",
+            "surrogate_sidecar": sidecar.as_posix(),
+            "surrogate_processing_allowed": True,
+            "surrogate_source_count": len(sources),
+            "surrogate_claim_boundary": str(annex.get("claim_boundary", "")).strip(),
+            "blocked_claims_until_licensed_intake": annex.get("blocked_claims") or [],
+        },
+        None,
+    )
+
+
+def verify_licensed_artifact(
+    root: Path,
+    ref_id: str,
+    licensed_root: Path | None,
+) -> tuple[dict[str, Any], dict[str, str] | None]:
     if licensed_root is None:
         return (
             {"licensed_artifact_status": "requires_licensed_root"},
@@ -178,16 +236,46 @@ def verify_licensed_artifact(root: Path, ref_id: str, licensed_root: Path | None
     )
 
 
-def gap_for(root: Path, reference: dict[str, Any], bible: dict[str, Any], licensed_root: Path | None) -> dict[str, str] | None:
+def gap_for(
+    root: Path,
+    reference: dict[str, Any],
+    bible: dict[str, Any],
+    licensed_root: Path | None,
+    allow_public_surrogates: bool,
+) -> tuple[dict[str, str] | None, dict[str, str] | None]:
     if bible["content_access_policy"] != "licensed_content_required":
-        return None
+        return None, None
     ref_id = str(reference.get("id", "unknown"))
     verification, gap = verify_licensed_artifact(root, ref_id, licensed_root)
     bible.update(verification)
-    return gap
+    if gap is None:
+        return None, None
+
+    surrogate, finding = load_public_surrogate(root, ref_id)
+    if finding is not None:
+        return gap, finding
+    if surrogate is not None:
+        bible.update(surrogate)
+        if allow_public_surrogates:
+            bible["nomos_processing_policy"] = "public_surrogate_annex_allowed_until_licensed_intake"
+            gap["status"] = "temporarily_mitigated"
+            gap["mitigation"] = "public_surrogate_annex"
+            gap["surrogate_sidecar"] = str(surrogate["surrogate_sidecar"])
+            gap["message"] = (
+                "Licensed canonical bible intake remains missing, but a public surrogate annex "
+                "is explicitly enabled for temporary non-clause-level processing."
+            )
+        else:
+            bible["public_surrogate_status"] = "available_but_not_enabled"
+            bible["surrogate_processing_allowed"] = False
+    return gap, None
 
 
-def build_report(root: Path, licensed_root: Path | None) -> dict[str, Any]:
+def build_report(
+    root: Path,
+    licensed_root: Path | None,
+    allow_public_surrogates: bool = False,
+) -> dict[str, Any]:
     register_path = root / REGISTER_PATH
     if not register_path.exists():
         return {
@@ -219,14 +307,26 @@ def build_report(root: Path, licensed_root: Path | None) -> dict[str, Any]:
         )
 
     bibles = [classify_reference(reference) for reference in references]
-    gaps = [
-        gap
-        for reference, bible in zip(references, bibles, strict=False)
-        if (gap := gap_for(root, reference, bible, licensed_root)) is not None
-    ]
+    gaps = []
+    for reference, bible in zip(references, bibles, strict=False):
+        gap, finding = gap_for(root, reference, bible, licensed_root, allow_public_surrogates)
+        if gap is not None:
+            gaps.append(gap)
+        if finding is not None:
+            findings.append(finding)
     policy_counts = Counter(str(bible["content_access_policy"]) for bible in bibles)
+    surrogate_mitigations = sum(1 for gap in gaps if gap.get("status") == "temporarily_mitigated")
+    unmitigated_gaps = len(gaps) - surrogate_mitigations
 
-    status = "failed" if findings else "requires_evidence" if gaps else "ready_for_processing"
+    status = (
+        "failed"
+        if findings
+        else "requires_evidence"
+        if unmitigated_gaps
+        else "surrogate_ready_for_processing"
+        if surrogate_mitigations
+        else "ready_for_processing"
+    )
     return {
         "schema_version": "0.1.0",
         "status": status,
@@ -238,6 +338,8 @@ def build_report(root: Path, licensed_root: Path | None) -> dict[str, Any]:
             "canonical_bibles": len(bibles),
             "content_access_policies": dict(sorted(policy_counts.items())),
             "licensed_reference_gaps": len(gaps),
+            "surrogate_mitigations": surrogate_mitigations,
+            "unmitigated_licensed_reference_gaps": unmitigated_gaps,
         },
         "bibles": bibles,
         "gaps": gaps,
@@ -258,6 +360,11 @@ def main() -> int:
         default=".regulated-doc-gate/reference-canon-report.json",
         help="JSON report path.",
     )
+    parser.add_argument(
+        "--allow-public-surrogates",
+        action="store_true",
+        help="Allow valid public surrogate annexes to temporarily unblock non-clause-level processing.",
+    )
     parser.add_argument("--strict", action="store_true", help="Return non-zero unless ready for processing.")
     args = parser.parse_args()
 
@@ -268,12 +375,15 @@ def main() -> int:
         report_path = root / report_path
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    report = build_report(root, licensed_root)
+    report = build_report(root, licensed_root, allow_public_surrogates=args.allow_public_surrogates)
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": report["status"], "summary": report.get("summary", {})}, indent=2, sort_keys=True))
     if report["status"] == "failed":
         return 1
-    if args.strict and report["status"] != "ready_for_processing":
+    strict_ready_statuses = {"ready_for_processing"}
+    if args.allow_public_surrogates:
+        strict_ready_statuses.add("surrogate_ready_for_processing")
+    if args.strict and report["status"] not in strict_ready_statuses:
         return 1
     return 0
 

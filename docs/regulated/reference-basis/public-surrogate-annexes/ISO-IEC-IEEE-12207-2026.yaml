@@ -1,0 +1,62 @@
+schema_version: "0.1.0"
+record_type: public_surrogate_annex
+reference_id: ISO-IEC-IEEE-12207-2026
+surrogate_for: ISO-IEC-IEEE-12207-2026
+status: temporary_surrogate_until_official_document_acquired
+claim_boundary: "Public surrogate only. This annex enables temporary non-clause-level software-lifecycle processing and does not authorize ISO/IEC/IEEE full-text processing, clause-level mapping, certification claims, or redistribution of protected standards content."
+reason: "ISO/IEC/IEEE 12207:2026 is required as a Nomos bible, but the official standard has not yet been acquired and reviewed for internal processing rights."
+license_acquisition_contact: "dev@realisons.com"
+official_reference_metadata:
+  url: "https://standards.ieee.org/ieee/12207/11416/"
+  use: "metadata_only_no_machine_processing_of_protected_standard_content"
+  note: "IEEE public metadata describes the 2026 active standard and its software life-cycle process scope; this annex does not reproduce the standard."
+sources:
+  - id: NASA-NPR-7150-2D
+    title: "NASA Software Engineering Requirements"
+    publisher: "NASA"
+    url: "https://www.nasa.gov/intelligent-systems-division/software-management-office/nasa-software-engineering-procedural-requirements-standards-and-related-resources/"
+    authority: official_public_agency_requirement
+    rationale: "NASA publishes software requirements for acquisition, development, maintenance, retirement, operations, and management."
+  - id: NASA-SWEHB
+    title: "NASA Software Engineering Handbook"
+    publisher: "NASA"
+    url: "https://swehb.nasa.gov/"
+    authority: official_public_agency_guidance
+    rationale: "NASA handbook provides implementation guidance for NPR 7150.2 requirements and safe/reliable software practices."
+  - id: NIST-SP-800-218
+    title: "NIST SP 800-218 SSDF Version 1.1"
+    publisher: "NIST"
+    url: "https://csrc.nist.gov/pubs/sp/800/218/final"
+    authority: official_public_standard_guidance
+    rationale: "NIST SSDF supplies secure software development practices that integrate into each SDLC implementation."
+  - id: NIST-SP-800-160-V1R1
+    title: "NIST SP 800-160 Vol. 1 Rev. 1 - Engineering Trustworthy Secure Systems"
+    publisher: "NIST"
+    url: "https://csrc.nist.gov/pubs/sp/800/160/v1/r1/final"
+    authority: official_public_standard_guidance
+    rationale: "NIST provides lifecycle-oriented systems security engineering principles, activities, and tasks."
+allowed_processing:
+  mode: public_surrogate_annex
+  full_text_fetch_allowed: true
+  source_scope:
+    - "NASA public software engineering requirements and handbook pages"
+    - "NIST public SDLC/security engineering publications"
+    - "IEEE/ISO/IEC public metadata only"
+  generated_outputs_allowed:
+    - manifest
+    - source_hash
+    - public_surrogate_chunks
+    - lifecycle_topic_index
+    - traceability_matrix_to_public_sources
+    - gap_report_to_licensed_iso_ieee_intake
+blocked_claims:
+  - iso_iec_ieee_clause_level_mapping
+  - iso_iec_ieee_certification_claim
+  - licensed_full_text_processing_claim
+  - redistribution_of_protected_standard_content
+  - equivalence_claim_beyond_public_sources
+exit_criteria:
+  - "Acquire ISO/IEC/IEEE 12207:2026 through an authorized channel."
+  - "Create docs/regulated/reference-basis/licensed-intakes/ISO-IEC-IEEE-12207-2026.yaml."
+  - "Record license holder, allowed internal processing use, hash, reviewer, and approval status."
+  - "Run Nomos read-only licensed intake and replace this temporary surrogate for ISO/IEC/IEEE-specific clause mapping."

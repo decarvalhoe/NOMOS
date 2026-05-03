@@ -1,11 +1,12 @@
 schema_version: "0.1.0"
 document_id: NOMOS-GH-QMS-BASELINE-001
 version: "0.1.0"
-status: draft
-effective_status: not_effective
-owner: not_assigned
-approver: not_assigned
-claim_boundary: "GitHub QMS control baseline only; no validated eQMS or Part 11 claim."
+status: partially_applied
+effective_status: active_with_external_evidence_gaps
+owner: realisonsdotcom
+approver: yhalt
+claim_boundary: >-
+  GitHub QMS control baseline only; no validated eQMS or Part 11 claim.
 required_controls:
   - id: GH-QMS-LOCAL-001
     name: regulated_issue_forms
@@ -61,3 +62,9 @@ blocked_claims_until_verified:
   - github_validated_operating_model
   - approved_release_evidence
   - part_11_electronic_signature
+open_external_evidence_gaps:
+  - GitHub protected environment reviewer and wait-timer rules require a
+    billing plan that supports those controls.
+  - Organization audit-log export must be collected outside repository files.
+  - Licensed ISO 13485 and ISO/IEC/IEEE 12207 artifacts remain outside the
+    current licensed reference root.

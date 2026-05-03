@@ -1,0 +1,41 @@
+schema_version: "0.1.0"
+record_type: public_surrogate_annex
+reference_id: requires_reference_id
+surrogate_for: requires_licensed_reference_id
+status: temporary_surrogate_until_official_document_acquired
+claim_boundary: "Public surrogate only; no licensed full-text, clause-level, certification, or redistribution claim."
+reason: requires_reason
+license_acquisition_contact: not_assigned
+official_reference_metadata:
+  url: requires_official_metadata_url
+  use: metadata_only_no_machine_processing_of_protected_content
+  note: requires_boundary_note
+sources:
+  - id: requires_source_id
+    title: requires_source_title
+    publisher: requires_source_publisher
+    url: requires_public_url
+    authority: requires_authority_class
+    rationale: requires_surrogate_rationale
+allowed_processing:
+  mode: public_surrogate_annex
+  full_text_fetch_allowed: true
+  source_scope:
+    - requires_public_scope
+  generated_outputs_allowed:
+    - manifest
+    - source_hash
+    - public_surrogate_chunks
+    - topic_index
+    - traceability_matrix_to_public_sources
+    - gap_report_to_licensed_intake
+blocked_claims:
+  - clause_level_mapping
+  - certification_claim
+  - licensed_full_text_processing_claim
+  - redistribution_of_protected_content
+exit_criteria:
+  - "Acquire the official licensed document through an authorized channel."
+  - "Create the licensed intake sidecar."
+  - "Record license holder, allowed use, source hash, reviewer, and approval status."
+  - "Replace the public surrogate with read-only licensed intake processing for protected-reference claims."
