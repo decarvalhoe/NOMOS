@@ -1,0 +1,69 @@
+schema_version: "0.1.0"
+document_id: IUS-NOMOS-001
+title: "Nomos Intended Use Statement"
+status: draft
+owner: product-owner
+effective_date: null
+last_reviewed: "2026-05-03"
+
+product:
+  id: nomos
+  name: "Nomos CLI"
+  version: "0.1.0-dev"
+  classification: "quality-system-tooling"
+
+intended_use:
+  summary: >
+    Nomos is a verification and traceability tool that ensures domain knowledge
+    flows from authoritative sources to product surfaces with machine-checkable
+    evidence. It does not make domain decisions, process patient data, or
+    execute runtime business logic.
+
+  operating_environment:
+    - id: ENV-CI
+      description: "CI/CD pipelines (GitHub Actions, GitLab CI)"
+      risk_context: "Automated gate checks on pull requests and releases."
+    - id: ENV-DEV
+      description: "Developer workstations"
+      risk_context: "Local validation and diagnosis before commit."
+    - id: ENV-AUDIT
+      description: "Compliance review and audit contexts"
+      risk_context: "Evidence generation for regulatory inspection."
+
+  user_roles:
+    - id: ROLE-DEV
+      role: "Developer"
+      access: "Full CLI access"
+      responsibility: "Run checks, fix findings, maintain manifests."
+    - id: ROLE-DOMAIN
+      role: "Domain Owner"
+      access: "Read reports, approve atoms"
+      responsibility: "Validate domain correctness of extracted knowledge."
+    - id: ROLE-COMPLIANCE
+      role: "Compliance Owner"
+      access: "Read evidence packs, approve releases"
+      responsibility: "Verify evidence completeness before promotion."
+
+  exclusions:
+    - "Does NOT process personal or patient data."
+    - "Does NOT execute runtime business logic."
+    - "Does NOT replace human domain judgment."
+    - "Does NOT generate or modify source documents."
+    - "Does NOT connect to production databases."
+
+  risk_classification:
+    level: medium
+    rationale: >
+      Nomos is tooling that produces evidence artifacts. A defect may cause
+      incorrect evidence (false pass/fail) but does not directly cause harm.
+      The risk is mitigated by human review gates and independent audit.
+
+constraints:
+  - id: CONSTRAINT-NO-PUSH
+    description: "Nomos never pushes to source corpus repositories."
+  - id: CONSTRAINT-READ-ONLY
+    description: "Corpus access is read-only with integrity verification."
+  - id: CONSTRAINT-NO-RUNTIME
+    description: "Nomos runs only at build/check time, never at application runtime."
+  - id: CONSTRAINT-EVIDENCE-ONLY
+    description: "Outputs are evidence artifacts, not executable decisions."
