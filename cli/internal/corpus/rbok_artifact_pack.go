@@ -168,6 +168,12 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("close rbok-attestation.json: %w", err)
 	}
 
+	// Emit certified TOC artifact.
+	certifiedTOC := BuildCertifiedTOCFromFeeds(feeds, firstNonEmpty(opts.CorpusID, ProfileRBOKLawbook))
+	if err := WriteCertifiedTOCArtifact(certifiedTOC, outDir); err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write rbok-certified-toc.json: %w", err)
+	}
+
 	artifacts := []string{
 		"rbok-lawbook-feed.json",
 		"rbok-lawbook-index.json",
@@ -175,6 +181,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		"rbok-engine-import.json",
 		"rbok-governance.json",
 		"rbok-attestation.json",
+		"rbok-certified-toc.json",
 	}
 	sort.Strings(artifacts)
 

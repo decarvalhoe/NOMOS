@@ -42,6 +42,7 @@ type ReleaseGateConfig struct {
 	RequireFeed            bool
 	RequireAttestation     bool
 	RequireGovernance      bool
+	RequireCertifiedTOC    bool
 	MaxBlockingFindings    int
 }
 
@@ -60,6 +61,7 @@ func DefaultRBOKLawbookGateConfig(artifactsDir string) ReleaseGateConfig {
 		RequireFeed:            true,
 		RequireAttestation:     true,
 		RequireGovernance:      true,
+		RequireCertifiedTOC:    true,
 		MaxBlockingFindings:    0,
 	}
 }
@@ -98,6 +100,11 @@ func EvaluateReleaseGate(config ReleaseGateConfig) (ReleaseGateResult, error) {
 	// Check 4: Governance report present and not blocked.
 	if config.RequireGovernance {
 		checks = append(checks, checkGovernance(absDir, config.MaxBlockingFindings))
+	}
+
+	// Check 5: Certified TOC artifact present and valid.
+	if config.RequireCertifiedTOC {
+		checks = append(checks, checkCertifiedTOC(absDir))
 	}
 
 	blocking := 0
@@ -451,6 +458,53 @@ func isValidAttestation(path string) bool {
 		return false
 	}
 	return stmt.Type == InTotoStatementType && stmt.PredicateType != ""
+}
+
+func checkCertifiedTOC(dir string) ReleaseGateCheck {
+	tocPath := filepath.Join(dir, "rbok-certified-toc.json")
+	data, err := os.ReadFile(tocPath)
+	if err != nil {
+		return ReleaseGateCheck{
+			Name:    "certified_toc",
+			Verdict: GateFail,
+			Detail:  "CERTIFIED_TOC_ARTIFACT_MISSING: rbok-certified-toc.json not found",
+		}
+	}
+
+	var toc struct {
+		Format        string `json:"format"`
+		StructureHash string `json:"structure_hash"`
+		EntryCount    int    `json:"entry_count"`
+	}
+	if err := json.Unmarshal(data, &toc); err != nil {
+		return ReleaseGateCheck{
+			Name:    "certified_toc",
+			Verdict: GateFail,
+			Detail:  "CERTIFIED_TOC_INVALID: " + err.Error(),
+		}
+	}
+
+	if toc.EntryCount == 0 {
+		return ReleaseGateCheck{
+			Name:    "certified_toc",
+			Verdict: GateFail,
+			Detail:  "CERTIFIED_TOC_EMPTY: certified TOC has 0 entries",
+		}
+	}
+
+	if toc.StructureHash == "" {
+		return ReleaseGateCheck{
+			Name:    "certified_toc",
+			Verdict: GateFail,
+			Detail:  "CERTIFIED_TOC_NO_HASH: structure_hash is empty",
+		}
+	}
+
+	return ReleaseGateCheck{
+		Name:    "certified_toc",
+		Verdict: GatePass,
+		Detail:  fmt.Sprintf("certified TOC: %d entries, hash=%s", toc.EntryCount, toc.StructureHash[:20]+"..."),
+	}
 }
 
 func parseGovernanceFile(path string) (GovernanceResult, error) {
