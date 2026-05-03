@@ -1,0 +1,76 @@
+schema_version: "0.1.0"
+record_type: validation_approval_workflow
+document_id: APPR-NOMOS-001
+version: 0.1.0
+status: pending_approval
+effective_status: not_effective
+owner: quality-owner
+approver: pending_quality_product_technical_owners
+claim_boundary: "Approval workflow only; no validation approval or regulated-grade compliance certification is claimed."
+
+required_roles:
+  - id: quality_owner
+    name: Quality Owner
+    accountability: "Validation adequacy, independent review, deviation handling, approval status, and regulated claim boundary."
+  - id: product_owner
+    name: Product Owner
+    accountability: "Intended use, product risk acceptance, release readiness, and product claim boundary."
+  - id: technical_owner
+    name: Technical Owner
+    accountability: "Implementation evidence, reproducibility, CI evidence, provenance, and operational feasibility."
+
+evidence_channels:
+  protected_pr_review:
+    enabled: true
+    requires_codeowners: true
+    minimum_approvals: 2
+    evidence_kind:
+      - merged_pull_request_url
+      - reviewer_identity
+      - review_state
+      - commit_sha
+  signed_commits_or_tags:
+    required_for_effective_release: true
+    accepted_kind:
+      - signed_release_tag
+      - signed_commit
+      - externally_signed_attestation
+  attestation_artifact:
+    path: docs/regulated/validation-pack/validation-approval-record.yaml
+    accepted_kind:
+      - approval_record_hash
+      - evidence_pack_hash
+      - release_tag
+
+immutability_controls:
+  codeowners_required: true
+  evidence_pack_hashing_required: true
+  immutable_release_tag_required_for_effective_status: true
+  audit_log_export_required_for_effective_status: true
+
+approval_records:
+  - document_id: VMP-NOMOS-001
+    record_path: docs/regulated/validation-pack/validation-master-plan.md
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+  - document_id: TP-NOMOS-001
+    record_path: docs/regulated/validation-pack/TP-NOMOS-001-self-compliance.yaml
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+  - document_id: TP-NOMOS-002-012
+    record_path: docs/regulated/validation-pack/TP-NOMOS-002-012-high-critical-validation-protocols.yaml
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+  - document_id: RBOK-POC-VALIDATION-DOSSIER
+    record_path: docs/rbok-poc-validation-dossier.md
+    approval_status: pending_approval
+    required_roles: [quality_owner, product_owner, technical_owner]
+    evidence_refs: []
+    overclaim_guard: true
+

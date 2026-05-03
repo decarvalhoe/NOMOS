@@ -8,7 +8,7 @@
 | Version | 0.1.0-draft |
 | Status | Draft — not effective |
 | Owner | Quality Owner |
-| Approved by | — (pending) |
+| Approved by | Pending via APPR-NOMOS-001 |
 | Effective date | — (pending) |
 | Review date | — (pending) |
 
@@ -90,4 +90,8 @@ Deviations from this plan require:
 |---|---|---|---|
 | Quality Owner | — | — | — |
 | Product Owner | — | — | — |
-| Regulatory Lead | — | — | — |
+| Technical Owner | — | — | — |
+
+Approval is governed by `approval-workflow.yaml` and remains pending until the
+required human owner evidence is recorded. The presence of this table is not an
+approval claim.

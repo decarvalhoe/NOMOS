@@ -1,0 +1,36 @@
+schema_version: "0.1.0"
+record_type: validation_approval_record
+document_id: APR-NOMOS-VALIDATION-001
+version: 0.1.0
+status: pending_approval
+effective_status: not_effective
+owner: quality-owner
+approver: pending_quality_product_technical_owners
+claim_boundary: "Pending approval record only; no approval or electronic-signature compliance claim is made."
+
+source_workflow: docs/regulated/validation-pack/approval-workflow.yaml
+required_roles:
+  - quality_owner
+  - product_owner
+  - technical_owner
+
+approval_status:
+  aggregate: pending_approval
+  approved_records: 0
+  pending_records:
+    - VMP-NOMOS-001
+    - TP-NOMOS-001
+    - TP-NOMOS-002-012
+    - RBOK-POC-VALIDATION-DOSSIER
+
+required_evidence_before_effective:
+  - protected_pr_url
+  - codeowner_review_approvals
+  - merged_commit_sha
+  - evidence_pack_hash
+  - approval_record_hash
+  - signed_release_tag_or_external_attestation
+  - audit_log_export_ref
+
+signatures: []
+overclaim_guard: true
