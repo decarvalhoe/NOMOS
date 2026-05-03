@@ -3,38 +3,63 @@ document_id: TP-TEMPLATE-001
 status: template
 owner: validation-owner
 
+# Instructions:
+# 1. Copy this template for each validation protocol.
+# 2. Fill protocol metadata linking to validation-inventory.yaml.
+# 3. Define test cases covering functional, boundary, negative, and
+#    challenge categories proportional to risk level.
+# 4. Execute tests and record results with timestamps.
+# 5. Log deviations with root cause and remediation.
+# 6. Compute summary and obtain approval signatures.
+
 protocol:
-  id: ""
-  title: ""
-  version: ""
-  function_under_test: ""
-  intended_use_ref: ""
-  risk_level: ""
-  preconditions: []
+  id: ""                    # Format: TP-NOMOS-NNN
+  title: ""                 # Human-readable protocol title
+  version: "1.0"
+  validation_ref: ""        # Reference to VAL-NNN in validation-inventory.yaml
+  function_under_test: ""   # Package or module under test
+  intended_use_ref: ""      # Reference to IU-FUNC-NNN if applicable
+  risk_level: ""            # low, medium, high, critical
+  preconditions:
+    - "Go 1.22+ installed"
+    - "Repository cloned and clean (git status clean)"
+    - "All dependencies resolved (go mod download)"
+  environment:
+    os: ""                  # ubuntu-latest, macos-latest, windows-latest
+    go_version: ""
+    cgo_enabled: ""         # "0" or "1"
+    commit: ""              # git commit hash at execution time
 
 test_cases:
-  - id: ""
+  - id: ""                  # Format: TC-NNN
     description: ""
-    category: ""  # functional, boundary, negative, regression, challenge
-    inputs: {}
-    expected_outputs: {}
+    category: ""            # functional, boundary, negative, regression, challenge
+    inputs:
+      command: ""           # CLI command or go test invocation
+      fixtures: []          # List of testdata files used
+    expected_outputs:
+      exit_code: 0
+      assertions: []        # List of expected behaviors
     acceptance_criteria: ""
-    risk_coverage: ""
-    status: planned  # planned, passed, failed, blocked, deferred
-    executed_by: ""
-    executed_at: ""
-    evidence_ref: ""
+    risk_coverage: ""       # Which risk this case mitigates
+    status: planned         # planned, passed, failed, blocked, deferred
+    executed_by: ""         # Person or CI pipeline ID
+    executed_at: ""         # RFC3339 timestamp
+    actual_output: ""       # Captured output or summary
+    evidence_ref: ""        # Path to evidence artifact
     notes: ""
 
 deviations: []
-  # - id: ""
-  #   test_case_ref: ""
+  # - id: ""               # Format: DEV-NNN
+  #   test_case_ref: ""    # TC-NNN that failed
   #   description: ""
-  #   severity: ""
+  #   severity: ""         # low, medium, high, critical
   #   root_cause: ""
   #   remediation: ""
   #   owner: ""
-  #   status: ""  # open, resolved, accepted_risk
+  #   status: ""           # open, resolved, accepted_risk
+  #   resolved_at: ""
+  #   decision_ref: ""     # ADR or DEC reference if risk accepted
 
 summary:
   total_cases: 0
@@ -43,7 +68,7 @@ summary:
   blocked: 0
   deferred: 0
   coverage_ratio: 0.0
-  verdict: ""  # passed, failed, incomplete
+  verdict: ""               # passed, failed, incomplete
   reviewer: ""
   review_date: ""
   notes: ""

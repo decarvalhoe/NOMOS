@@ -1,25 +1,28 @@
 schema_version: "0.1.0"
-matrix:
-  id: nomos-control-matrix
-  owner: not_assigned
-  status: not_qualified
-  version: "0.1.0"
-  claim_boundary: >
-    This matrix registers controls only. No regulated-grade claim is
-    allowed until every control reaches verified status and is approved
-    by a named reviewer.
+document_id: NOMOS-CTL-MATRIX-001
+version: "0.2.0"
+status: not_qualified
+owner: not_assigned
+approver: not_assigned
+generated_at: "2026-05-03"
+claim_boundary: >
+  This matrix maps every registered external reference to at least one
+  control. Controls without verified evidence remain not_qualified.
+  No regulated-grade claim is allowed until all required controls reach
+  verified status and are approved by a named reviewer.
 
 controls:
-  # ===================================================================
-  # DATA INTEGRITY
-  # ===================================================================
+  # =================================================================
+  # DATA INTEGRITY & ELECTRONIC RECORDS
+  # =================================================================
   - control_id: CTL-DI-001
     title: Electronic Record Validation
     control_family: data-integrity
-    external_ref: FDA-21CFR11-11.10
+    external_refs:
+      - FDA-21CFR11-11.10
     intended_use: >
-      Ensure electronic records produced by Nomos are accurate, reliable,
-      and discernible from invalid or altered records.
+      Validate systems producing electronic records for accuracy,
+      reliability, and ability to discern invalid or altered records.
     risk_level: high
     owner: not_assigned
     evidence_type: coverage_report
@@ -32,7 +35,9 @@ controls:
   - control_id: CTL-DI-002
     title: Audit Trail
     control_family: data-integrity
-    external_ref: FDA-21CFR11-11.10
+    external_refs:
+      - FDA-21CFR11-11.10
+      - GITHUB-AUDIT-LOG
     intended_use: >
       Maintain secure, computer-generated, time-stamped audit trails
       for all record-creating, modifying, or deleting actions.
@@ -46,59 +51,50 @@ controls:
     current_status: not_qualified
 
   - control_id: CTL-DI-003
-    title: ALCOA+ Attributable
+    title: ALCOA+ Attribution And Accuracy
     control_family: data-integrity
-    external_ref: FDA-DATA-INTEGRITY-CGMP-2018
+    external_refs:
+      - FDA-DATA-INTEGRITY-CGMP-2018
     intended_use: >
-      Every data entry and action is attributable to the person or
-      system that performed it.
+      Every data entry is attributable to its actor. Records are
+      error-free, complete, and truthful. Originals or certified
+      true copies are preserved.
     risk_level: high
     owner: not_assigned
     evidence_type: attestation
     gate_name: strict
     implementation_ref: templates/regulated/alcoa-evidence-envelope.yaml
     verification_ref: nomos report includes run.git.commit and run.environment
-    evidence_artifact: nomos-report.json (run section)
+    evidence_artifact: nomos-report.json
     current_status: not_qualified
 
   - control_id: CTL-DI-004
-    title: ALCOA+ Original And Accurate
+    title: Source Hash Integrity
     control_family: data-integrity
-    external_ref: FDA-DATA-INTEGRITY-CGMP-2018
+    external_refs:
+      - FDA-DATA-INTEGRITY-CGMP-2018
     intended_use: >
-      Original records or certified true copies are preserved.
-      Records are error-free, complete, and truthful.
+      Verify source file integrity via cryptographic hashes.
+      Detect tampering between intake and consumption.
     risk_level: high
     owner: not_assigned
     evidence_type: source_hash
     gate_name: strict
     implementation_ref: docs/canonical/source-manifest.yaml
     verification_ref: nomos sources check (hash verification)
-    evidence_artifact: corpus-evidence.json (source_hash entries)
+    evidence_artifact: corpus-evidence.json
     current_status: not_qualified
 
-  - control_id: CTL-DI-005
-    title: ALCOA+ Contemporaneous And Legible
-    control_family: data-integrity
-    external_ref: FDA-DATA-INTEGRITY-CGMP-2018
-    intended_use: >
-      Records are created at the time of activity and remain readable.
-    risk_level: medium
-    owner: not_assigned
-    evidence_type: ci_run
-    gate_name: strict
-    implementation_ref: .github/workflows/regulated-evidence-pack.yml
-    verification_ref: nomos-report.json timestamps match CI run times
-    evidence_artifact: nomos-report.json (started_at, completed_at)
-    current_status: not_qualified
-
-  # ===================================================================
+  # =================================================================
   # ACCESS CONTROL
-  # ===================================================================
+  # =================================================================
   - control_id: CTL-AC-001
     title: System Access Restriction
     control_family: access-control
-    external_ref: FDA-21CFR11-11.10
+    external_refs:
+      - FDA-21CFR11-11.10
+      - GITHUB-BRANCH-PROTECTION
+      - GITHUB-CODEOWNERS
     intended_use: >
       Limit system access to authorised individuals. Prevent
       unauthorised changes to source records and controlled documents.
@@ -107,52 +103,59 @@ controls:
     evidence_type: manual_review
     gate_name: release
     implementation_ref: docs/regulated/github-operating-model/github-qms-control-baseline.yaml
-    verification_ref: scripts/regulated_github_qms_audit.py (branch protection, CODEOWNERS)
+    verification_ref: scripts/regulated_github_qms_audit.py
     evidence_artifact: github-qms-audit-report
     current_status: not_qualified
 
   - control_id: CTL-AC-002
     title: Protected Environments And Deployment Gates
     control_family: access-control
-    external_ref: GITHUB-ENVIRONMENTS
+    external_refs:
+      - GITHUB-ENVIRONMENTS
+      - GITHUB-RULESETS
     intended_use: >
       Release deployments require named reviewer approval via
-      GitHub protected environments.
+      protected environments and rulesets.
     risk_level: high
     owner: not_assigned
     evidence_type: manual_review
     gate_name: release
     implementation_ref: docs/regulated/github-operating-model/github-qms-control-baseline.yaml
-    verification_ref: scripts/regulated_github_qms_audit.py (protected environments)
-    evidence_artifact: github-qms-audit-report (GH-QMS-LIVE-003)
+    verification_ref: scripts/regulated_github_qms_audit.py
+    evidence_artifact: github-qms-audit-report
     current_status: not_qualified
 
-  # ===================================================================
+  # =================================================================
   # CHANGE CONTROL
-  # ===================================================================
+  # =================================================================
   - control_id: CTL-CC-001
     title: Configuration And Change Control
     control_family: change-control
-    external_ref: EU-EUDRALEX-V4-ANNEX11
+    external_refs:
+      - EU-EUDRALEX-V4-ANNEX11
+      - ISO-IEC-IEEE-12207-2026
     intended_use: >
-      All changes to the validated system are governed by a documented
-      change control process with impact assessment and approval.
+      All changes to the validated system are governed by documented
+      change control with impact assessment and approval.
     risk_level: high
     owner: not_assigned
     evidence_type: decision_record
     gate_name: release
     implementation_ref: docs/regulated/lifecycle/configuration-and-change-control-sop.md
     verification_ref: PR-only merge policy enforced by branch protection
-    evidence_artifact: github-qms-audit-report (GH-QMS-LIVE-001)
+    evidence_artifact: github-qms-audit-report
     current_status: not_qualified
 
   - control_id: CTL-CC-002
     title: Controlled Document Lifecycle
     control_family: change-control
-    external_ref: FDA-21CFR820-QMSR
+    external_refs:
+      - FDA-21CFR820-QMSR
+      - GITHUB-ISSUE-FORMS
     intended_use: >
       Controlled documents follow a governed lifecycle: draft, review,
-      approval, effective, superseded, retired.
+      approval, effective, superseded, retired. Issue forms enforce
+      structured capture.
     risk_level: medium
     owner: not_assigned
     evidence_type: manual_review
@@ -165,10 +168,12 @@ controls:
   - control_id: CTL-CC-003
     title: Deviation And CAPA Management
     control_family: change-control
-    external_ref: ICH-Q10
+    external_refs:
+      - ICH-Q10
+      - FDA-21CFR820-QMSR
     intended_use: >
       Nonconformities are recorded, investigated, and resolved via
-      corrective and preventive actions with owner and closure evidence.
+      CAPA with owner and closure evidence.
     risk_level: high
     owner: not_assigned
     evidence_type: manual_review
@@ -178,15 +183,17 @@ controls:
     evidence_artifact: deviation/CAPA issue records
     current_status: not_qualified
 
-  # ===================================================================
+  # =================================================================
   # VALIDATION
-  # ===================================================================
+  # =================================================================
   - control_id: CTL-VAL-001
     title: Risk-Based Validation Strategy
     control_family: validation
-    external_ref: ISPE-GAMP5-2E-2022
+    external_refs:
+      - ISPE-GAMP5-2E-2022
+      - FDA-GPSV-2002
     intended_use: >
-      Apply a risk-based approach to determine validation effort.
+      Apply risk-based approach to determine validation effort.
       Higher-risk systems require more rigorous verification.
     risk_level: high
     owner: not_assigned
@@ -194,29 +201,32 @@ controls:
     gate_name: strict
     implementation_ref: docs/regulated/lifecycle/validation-master-plan.md
     verification_ref: nomos strict scales check severity by risk_level
-    evidence_artifact: nomos-report.json (verdict + coverage)
+    evidence_artifact: nomos-report.json
     current_status: not_qualified
 
   - control_id: CTL-VAL-002
     title: Risk-Based Testing (CSA)
     control_family: validation
-    external_ref: FDA-CSA-2025
+    external_refs:
+      - FDA-CSA-2025
+      - NASA-NPR-7150-2D
     intended_use: >
-      Use risk-based approaches for testing. High-risk functions
-      require scripted testing; lower-risk may use unscripted.
+      High-risk functions require scripted testing. Lower-risk
+      may use unscripted testing with documented evidence.
     risk_level: high
     owner: not_assigned
     evidence_type: test_result
     gate_name: strict
     implementation_ref: docs/canonical/canonical-intelligence-matrix.yaml
-    verification_ref: nomos matrix check verifies test_refs for high/critical units
-    evidence_artifact: nomos-report.json (matrix coverage)
+    verification_ref: nomos matrix check verifies test_refs for high/critical
+    evidence_artifact: nomos-report.json
     current_status: not_qualified
 
   - control_id: CTL-VAL-003
     title: Nomos Self-Compliance
     control_family: validation
-    external_ref: FDA-CSA-2025
+    external_refs:
+      - FDA-CSA-2025
     intended_use: >
       Nomos can validate itself using its own CLI and produce
       deterministic evidence.
@@ -229,13 +239,33 @@ controls:
     evidence_artifact: docs/self-compliance-report.md
     current_status: not_qualified
 
-  # ===================================================================
+  - control_id: CTL-VAL-004
+    title: Requirements Traceability
+    control_family: validation
+    external_refs:
+      - ISO-IEC-25010-2023
+      - FDA-GPSV-2002
+    intended_use: >
+      Requirements are traced from source through implementation,
+      test, and evidence. Quality attributes drive acceptance criteria.
+    risk_level: high
+    owner: not_assigned
+    evidence_type: coverage_report
+    gate_name: strict
+    implementation_ref: docs/regulated/lifecycle/requirements-and-traceability-sop.md
+    verification_ref: nomos matrix check coverage ratio
+    evidence_artifact: nomos-report.json
+    current_status: not_qualified
+
+  # =================================================================
   # SUPPLY CHAIN
-  # ===================================================================
+  # =================================================================
   - control_id: CTL-SC-001
     title: Supplier Assessment
     control_family: supply-chain
-    external_ref: ISPE-GAMP5-2E-2022
+    external_refs:
+      - ISPE-GAMP5-2E-2022
+      - EU-EUDRALEX-V4-ANNEX11
     intended_use: >
       Assess and document quality capability of suppliers providing
       components or services.
@@ -251,23 +281,28 @@ controls:
   - control_id: CTL-SC-002
     title: Dependency Vulnerability Scanning
     control_family: supply-chain
-    external_ref: NIST-SP-800-218
+    external_refs:
+      - NIST-SP-800-218
+      - GITHUB-CODE-SCANNING
+      - GITHUB-SECRET-SCANNING
     intended_use: >
       Verify third-party components for known vulnerabilities.
-      Produce SBOM at release time.
+      Detect leaked credentials. Produce SBOM at release.
     risk_level: high
     owner: not_assigned
     evidence_type: sbom
     gate_name: release
     implementation_ref: docs/regulated/security-privacy/secure-sdlc-sop.md
-    verification_ref: GitHub code scanning + Dependabot
+    verification_ref: GitHub code scanning + Dependabot + secret scanning
     evidence_artifact: sbom-cyclonedx.json
     current_status: not_qualified
 
   - control_id: CTL-SC-003
     title: Release Provenance
     control_family: supply-chain
-    external_ref: NIST-SP-800-218
+    external_refs:
+      - NIST-SP-800-218
+      - GITHUB-ARTIFACT-ATTESTATIONS
     intended_use: >
       Verify software release integrity via cryptographic provenance
       attestation.
@@ -280,16 +315,18 @@ controls:
     evidence_artifact: slsa-provenance.json
     current_status: not_qualified
 
-  # ===================================================================
-  # DOCUMENTATION
-  # ===================================================================
-  - control_id: CTL-DOC-001
+  # =================================================================
+  # QUALITY SYSTEM & DOCUMENTATION
+  # =================================================================
+  - control_id: CTL-QS-001
     title: Quality Risk Management
-    control_family: documentation
-    external_ref: ICH-Q9R1
+    control_family: quality-system
+    external_refs:
+      - ICH-Q9R1
+      - ISO-13485-2016
     intended_use: >
-      Perform risk assessment identifying hazards, analysing and
-      evaluating associated risks. Document risk control measures.
+      Perform risk assessment, control, communication, and review.
+      Document risk control measures and residual risk.
     risk_level: high
     owner: not_assigned
     evidence_type: manual_review
@@ -299,26 +336,29 @@ controls:
     evidence_artifact: risk-assessment-record
     current_status: not_qualified
 
-  - control_id: CTL-DOC-002
-    title: Training And Competence
-    control_family: documentation
-    external_ref: FDA-21CFR820-QMSR
+  - control_id: CTL-QS-002
+    title: Quality Manual And System Structure
+    control_family: quality-system
+    external_refs:
+      - ISO-13485-2016
+      - FDA-21CFR820-QMSR
     intended_use: >
-      Personnel performing regulated tasks are trained and competence
-      is documented.
+      Maintain a quality manual defining QMS scope, processes, and
+      responsibilities.
     risk_level: medium
     owner: not_assigned
     evidence_type: manual_review
     gate_name: release
-    implementation_ref: docs/regulated/quality-system/training-and-competence-sop.md
-    verification_ref: training records per role
-    evidence_artifact: training-records
+    implementation_ref: docs/regulated/quality-system/quality-manual.md
+    verification_ref: quality manual reviewed and effective
+    evidence_artifact: quality-manual-review-record
     current_status: not_qualified
 
-  - control_id: CTL-DOC-003
+  - control_id: CTL-QS-003
     title: Management Review
-    control_family: documentation
-    external_ref: ICH-Q10
+    control_family: quality-system
+    external_refs:
+      - ICH-Q10
     intended_use: >
       Periodic management review of quality system effectiveness,
       audit findings, deviations, and improvement opportunities.
@@ -329,4 +369,152 @@ controls:
     implementation_ref: docs/regulated/quality-system/management-review-sop.md
     verification_ref: management review meeting records
     evidence_artifact: management-review-record
+    current_status: not_qualified
+
+  - control_id: CTL-QS-004
+    title: Training And Competence
+    control_family: quality-system
+    external_refs:
+      - FDA-21CFR820-QMSR
+    intended_use: >
+      Personnel performing regulated tasks are trained and
+      competence is documented.
+    risk_level: medium
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/quality-system/training-and-competence-sop.md
+    verification_ref: training records per role
+    evidence_artifact: training-records
+    current_status: not_qualified
+
+  - control_id: CTL-QS-005
+    title: Internal Audit
+    control_family: quality-system
+    external_refs:
+      - ISO-13485-2016
+    intended_use: >
+      Planned internal audits verify QMS conformance and effectiveness.
+    risk_level: medium
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/quality-system/internal-audit-sop.md
+    verification_ref: audit schedule and findings records
+    evidence_artifact: internal-audit-record
+    current_status: not_qualified
+
+  # =================================================================
+  # LIFECYCLE
+  # =================================================================
+  - control_id: CTL-LC-001
+    title: Software Development Management Plan
+    control_family: lifecycle
+    external_refs:
+      - ISO-IEC-IEEE-12207-2026
+      - NASA-NPR-7150-2D
+    intended_use: >
+      Define lifecycle processes, roles, tools, environments, and
+      tailoring for the software project.
+    risk_level: high
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/lifecycle/software-development-management-plan.md
+    verification_ref: SDMP reviewed and effective
+    evidence_artifact: sdmp-review-record
+    current_status: not_qualified
+
+  - control_id: CTL-LC-002
+    title: Release And Retirement
+    control_family: lifecycle
+    external_refs:
+      - ISO-IEC-IEEE-12207-2026
+    intended_use: >
+      Govern release approval, deployment, and retirement of software.
+    risk_level: medium
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/lifecycle/release-and-retirement-sop.md
+    verification_ref: release checklist and retirement plan
+    evidence_artifact: release-record
+    current_status: not_qualified
+
+  # =================================================================
+  # SECURITY & PRIVACY
+  # =================================================================
+  - control_id: CTL-SEC-001
+    title: Security And Privacy Controls
+    control_family: security
+    external_refs:
+      - NIST-SP-800-53R5
+    intended_use: >
+      Implement access control, audit/accountability, configuration
+      management, incident response, and system integrity controls.
+    risk_level: high
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/security-privacy/README.md
+    verification_ref: security control review
+    evidence_artifact: security-review-record
+    current_status: not_qualified
+
+  - control_id: CTL-SEC-002
+    title: Vulnerability And Incident Management
+    control_family: security
+    external_refs:
+      - NIST-SP-800-53R5
+      - GITHUB-SECRET-SCANNING
+    intended_use: >
+      Detect, triage, and respond to security vulnerabilities and
+      incidents. Manage leaked credential alerts.
+    risk_level: high
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md
+    verification_ref: incident response records
+    evidence_artifact: incident-response-record
+    current_status: not_qualified
+
+  # =================================================================
+  # AI/RAG GOVERNANCE
+  # =================================================================
+  - control_id: CTL-AI-001
+    title: AI And RAG Risk Governance
+    control_family: ai-governance
+    external_refs:
+      - NIST-AI-RMF-1
+    intended_use: >
+      Govern AI-assisted extraction and RAG usage with citation/refusal
+      evals, prompt-injection controls, and human oversight.
+    risk_level: high
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/ai-rag-governance/README.md
+    verification_ref: AI governance review and eval results
+    evidence_artifact: ai-governance-review-record
+    current_status: not_qualified
+
+  # =================================================================
+  # EVIDENCE MANAGEMENT
+  # =================================================================
+  - control_id: CTL-EV-001
+    title: Evidence Retention And Export
+    control_family: evidence
+    external_refs:
+      - GITHUB-WORKFLOW-ARTIFACTS
+    intended_use: >
+      Regulated evidence produced by CI workflows is retained and
+      exportable per governed retention policy.
+    risk_level: medium
+    owner: not_assigned
+    evidence_type: manual_review
+    gate_name: release
+    implementation_ref: docs/regulated/evidence-index/README.md
+    verification_ref: .github/workflows/regulated-evidence-pack.yml
+    evidence_artifact: evidence-pack-artifact
     current_status: not_qualified

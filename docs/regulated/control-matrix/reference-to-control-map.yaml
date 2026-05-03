@@ -1,0 +1,138 @@
+schema_version: "0.1.0"
+document_id: NOMOS-REF-CTL-MAP-001
+version: "0.2.0"
+generated_at: "2026-05-03"
+status: not_qualified
+claim_boundary: >
+  Complete mapping of all 25 registered references to controls.
+  Every reference has at least one mapped control.
+  All controls are not_qualified until evidence is verified.
+
+# Total: 25 references → 27 controls
+# Coverage: 25/25 references mapped (100%)
+
+reference_map:
+  # --- FDA ---
+  - reference_id: FDA-21CFR11-11.10
+    controls: [CTL-DI-001, CTL-DI-002, CTL-AC-001]
+    coverage: mapped
+
+  - reference_id: FDA-21CFR820-QMSR
+    controls: [CTL-CC-002, CTL-CC-003, CTL-QS-002, CTL-QS-004]
+    coverage: mapped
+
+  - reference_id: FDA-CSA-2025
+    controls: [CTL-VAL-002, CTL-VAL-003]
+    coverage: mapped
+
+  - reference_id: FDA-GPSV-2002
+    controls: [CTL-VAL-001, CTL-VAL-004]
+    coverage: mapped
+
+  - reference_id: FDA-DATA-INTEGRITY-CGMP-2018
+    controls: [CTL-DI-003, CTL-DI-004]
+    coverage: mapped
+
+  # --- EU ---
+  - reference_id: EU-EUDRALEX-V4-ANNEX11
+    controls: [CTL-CC-001, CTL-SC-001]
+    coverage: mapped
+
+  # --- ISO ---
+  - reference_id: ISO-13485-2016
+    controls: [CTL-QS-001, CTL-QS-002, CTL-QS-005]
+    coverage: mapped
+
+  - reference_id: ISO-IEC-IEEE-12207-2026
+    controls: [CTL-CC-001, CTL-LC-001, CTL-LC-002]
+    coverage: mapped
+
+  - reference_id: ISO-IEC-25010-2023
+    controls: [CTL-VAL-004]
+    coverage: mapped
+
+  # --- NASA ---
+  - reference_id: NASA-NPR-7150-2D
+    controls: [CTL-VAL-002, CTL-LC-001]
+    coverage: mapped
+
+  # --- NIST ---
+  - reference_id: NIST-SP-800-218
+    controls: [CTL-SC-002, CTL-SC-003]
+    coverage: mapped
+
+  - reference_id: NIST-SP-800-53R5
+    controls: [CTL-SEC-001, CTL-SEC-002]
+    coverage: mapped
+
+  - reference_id: NIST-AI-RMF-1
+    controls: [CTL-AI-001]
+    coverage: mapped
+
+  # --- ISPE ---
+  - reference_id: ISPE-GAMP5-2E-2022
+    controls: [CTL-VAL-001, CTL-SC-001]
+    coverage: mapped
+
+  # --- ICH ---
+  - reference_id: ICH-Q9R1
+    controls: [CTL-QS-001]
+    coverage: mapped
+
+  - reference_id: ICH-Q10
+    controls: [CTL-CC-003, CTL-QS-003]
+    coverage: mapped
+
+  # --- GitHub ---
+  - reference_id: GITHUB-ISSUE-FORMS
+    controls: [CTL-CC-002]
+    coverage: mapped
+
+  - reference_id: GITHUB-BRANCH-PROTECTION
+    controls: [CTL-AC-001]
+    coverage: mapped
+
+  - reference_id: GITHUB-RULESETS
+    controls: [CTL-AC-002]
+    coverage: mapped
+
+  - reference_id: GITHUB-CODEOWNERS
+    controls: [CTL-AC-001]
+    coverage: mapped
+
+  - reference_id: GITHUB-ENVIRONMENTS
+    controls: [CTL-AC-002]
+    coverage: mapped
+
+  - reference_id: GITHUB-WORKFLOW-ARTIFACTS
+    controls: [CTL-EV-001]
+    coverage: mapped
+
+  - reference_id: GITHUB-ARTIFACT-ATTESTATIONS
+    controls: [CTL-SC-003]
+    coverage: mapped
+
+  - reference_id: GITHUB-AUDIT-LOG
+    controls: [CTL-DI-002]
+    coverage: mapped
+
+  - reference_id: GITHUB-CODE-SCANNING
+    controls: [CTL-SC-002]
+    coverage: mapped
+
+  - reference_id: GITHUB-SECRET-SCANNING
+    controls: [CTL-SC-002, CTL-SEC-002]
+    coverage: mapped
+
+summary:
+  total_references: 25
+  mapped_references: 25
+  unmapped_references: 0
+  total_controls: 27
+  controls_not_qualified: 27
+  controls_verified: 0
+  coverage_ratio: 1.0
+  qualification_ratio: 0.0
+  next_action: >
+    Assign owners to controls, implement evidence generation,
+    verify via gates, and progress from not_qualified to verified.
