@@ -1,0 +1,34 @@
+schema_version: "0.1.0"
+workflows:
+  # Negative fixture: this workflow declares mode=direct_push under a
+  # regulated risk_class but provides no controlled_decision waiver
+  # reference. The conditional invariant in #PublishSpec rejects it,
+  # so `cue vet` must fail with a non-zero exit and a message naming
+  # the missing `controlled_decision` field. NGW-01 (#386).
+  - id: rbok-lawbook-unsafe-direct-push
+    description: Unsafe direct push without an explicit controlled-decision waiver.
+    source:
+      repo: RBOKproject/realisons-business
+      base_branch: main
+      paths:
+        - 01_rbok/**
+    output:
+      repo: corpus
+      branch: main
+      path: rbok-lawbook/
+    nomos:
+      corpus_id: rbok-lawbook
+      project_id: rbok
+      commands:
+        - scan
+        - feed
+    publish:
+      mode: direct_push
+      target_repo: output
+      target_branch: main
+      target_path: rbok-lawbook/
+      branch_strategy: fixed
+      risk_class: regulated
+    notify:
+      source_pr_comment:
+        enabled: false

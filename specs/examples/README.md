@@ -86,3 +86,64 @@ All Nomos schemas type-check together with:
 ```bash
 cue vet ./specs/...
 ```
+
+## NGW-001 (#386) — GitHub workflow descriptor
+
+The fixtures below mirror the configuration contract for
+`.nomos/corpus-workflows.yaml` defined by `specs/nomos-github-workflow.cue`.
+They describe how a NOMOS-driven workflow declares the corpus source,
+the artifact output, the NOMOS command sequence, the publication
+policy, and the source PR comment policy. There is no Go struct in
+this PR — schema only; downstream NGW tickets read the schema and
+build the runtime around it.
+
+### `nomos-github-workflow.source-owned.valid.yaml`
+
+Source-owned configuration: the file lives in the corpus repository,
+points to the same repo via `source.repo`, and publishes generated
+output to a separate output repository via a pull request. Mirrors
+the design doc's `Configuration Contract` example (RBOK lawbook
+scope, `pull_request` mode, `medium` risk, source PR comment enabled
+with `summary` mode).
+
+```bash
+cue vet specs/nomos-github-workflow.cue \
+        specs/examples/nomos-github-workflow.source-owned.valid.yaml \
+        -d '#NomosGitHubWorkflowConfig'
+```
+
+### `nomos-github-workflow.output-owned.valid.yaml`
+
+Output-owned configuration: the file lives in the output repository.
+`source.repo` points at the corpus repo, `output.repo: corpus`
+expresses "the other one" relative to where the workflow is checked
+in, and the workflow uses `direct_push` under `risk_class: low` with
+`branch_strategy: fixed`. The notify block disables source PR
+comments because output-owned workflows often skip them.
+
+```bash
+cue vet specs/nomos-github-workflow.cue \
+        specs/examples/nomos-github-workflow.output-owned.valid.yaml \
+        -d '#NomosGitHubWorkflowConfig'
+```
+
+### `nomos-github-workflow.invalid.yaml` (intentional negative fixture)
+
+Demonstrates that the conditional invariant in `#PublishSpec` is
+enforced: the fixture declares `mode: direct_push` AND
+`risk_class: regulated` AND omits `controlled_decision`. The schema
+rejects it. This fixture is documentation only; it MUST NOT enter a
+green CI step.
+
+Expected `cue vet` error substring:
+
+```
+workflows.0.publish.controlled_decision: incomplete value !="":
+```
+
+```bash
+cue vet specs/nomos-github-workflow.cue \
+        specs/examples/nomos-github-workflow.invalid.yaml \
+        -d '#NomosGitHubWorkflowConfig'
+# expected: non-zero exit; controlled_decision flagged as required.
+```
