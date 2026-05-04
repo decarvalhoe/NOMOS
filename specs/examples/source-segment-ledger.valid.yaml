@@ -1,0 +1,81 @@
+source_id: DOC-INTRO-001
+source_path: docs/intro.md
+source_hash: "sha256:c3b2a4d8e1f5a7b9c0d2e4f6a8b1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7"
+ingestion_version: nomos-cli/0.1.0-alpha
+segments:
+  - segment_id: "seg:DOC-INTRO-001:0-12:heading"
+    source_id: DOC-INTRO-001
+    source_path: docs/intro.md
+    kind: heading
+    disposition: structure_only
+    start_byte: 0
+    end_byte: 12
+    start_line: 1
+    start_column: 1
+    end_line: 1
+    end_column: 12
+    raw_text_hash: "sha256:1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1aa1"
+    include_in_feed: false
+    include_in_rag: false
+
+  - segment_id: "seg:DOC-INTRO-001:12-13:blank"
+    source_id: DOC-INTRO-001
+    source_path: docs/intro.md
+    kind: blank
+    disposition: coverage_only
+    start_byte: 12
+    end_byte: 13
+    start_line: 2
+    start_column: 1
+    end_line: 2
+    end_column: 1
+    raw_text_hash: "sha256:2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2bb2"
+    include_in_feed: false
+    include_in_rag: false
+
+  - segment_id: "seg:DOC-INTRO-001:13-67:paragraph"
+    source_id: DOC-INTRO-001
+    source_path: docs/intro.md
+    kind: paragraph
+    disposition: canonical_atom
+    start_byte: 13
+    end_byte: 67
+    start_line: 3
+    start_column: 1
+    end_line: 3
+    end_column: 54
+    raw_text_hash: "sha256:3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3cc3"
+    normalized_text_hash: "sha256:4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4dd4"
+    canonical_unit_id: UNIT-INTRO-PARA-1
+    include_in_feed: true
+    include_in_rag: true
+
+  - segment_id: "seg:DOC-INTRO-001:67-68:blank"
+    source_id: DOC-INTRO-001
+    source_path: docs/intro.md
+    kind: blank
+    disposition: coverage_only
+    start_byte: 67
+    end_byte: 68
+    start_line: 4
+    start_column: 1
+    end_line: 4
+    end_column: 1
+    raw_text_hash: "sha256:5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5ee5"
+    include_in_feed: false
+    include_in_rag: false
+
+  - segment_id: "seg:DOC-INTRO-001:68-72:decorative_separator"
+    source_id: DOC-INTRO-001
+    source_path: docs/intro.md
+    kind: decorative_separator
+    disposition: coverage_only
+    start_byte: 68
+    end_byte: 72
+    start_line: 5
+    start_column: 1
+    end_line: 5
+    end_column: 4
+    raw_text_hash: "sha256:6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6ff6"
+    include_in_feed: false
+    include_in_rag: false

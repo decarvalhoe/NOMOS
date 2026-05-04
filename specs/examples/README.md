@@ -26,3 +26,63 @@ ils doivent echouer avec `cue vet specs/canonical-matrix.cue <fixture> -d
 
 Les fichiers `nomos-report.*.json` doivent rester compatibles avec
 `specs/nomos-report.schema.json`.
+
+## SFI-09 (#347) — corpus integrity examples
+
+The fixtures below mirror the Go-side artifacts produced by the
+source-to-feed integrity pipeline (SFI-01 through SFI-07). They are
+versioned alongside the schemas so a regulated reviewer can replay
+the contract without running the CLI.
+
+### `source-segment-ledger.valid.yaml`
+
+Mirrors `[]corpus.SourceSegment` (see
+`cli/internal/corpus/source_segment.go`) packaged as a
+`#SourceSegmentLedger` envelope. It contains a heading
+(`structure_only`), two blanks and one decorative separator
+(`coverage_only`), and one paragraph (`canonical_atom`, with both
+`raw_text_hash` and `normalized_text_hash`). Byte spans are
+non-overlapping and contiguous.
+
+Validate with:
+
+```bash
+cue vet specs/examples/source-segment-ledger.valid.yaml \
+        specs/source-segment-ledger.cue -d '#SourceSegmentLedger'
+```
+
+### `corpus-integrity-report.valid.yaml`
+
+Mirrors `corpus.IntegrityReport` (see
+`cli/internal/corpus/source_integrity_gate.go`). A passing report
+with `status: pass`, non-zero counts, and no findings. Validate with:
+
+```bash
+cue vet specs/examples/corpus-integrity-report.valid.yaml \
+        specs/corpus-integrity-report.cue -d '#IntegrityReport'
+```
+
+### `source-segment-ledger.invalid.yaml` (intentional negative fixture)
+
+Demonstrates schema strictness: a single canonical_atom segment is
+emitted **without** `raw_text_hash` or `normalized_text_hash`. The
+conditional invariant on `#SourceSegment` rejects it. This file is
+documentation only; it MUST fail `cue vet` and MUST NOT be wired into
+any green CI step.
+
+Demonstration:
+
+```bash
+cue vet specs/examples/source-segment-ledger.invalid.yaml \
+        specs/source-segment-ledger.cue -d '#SourceSegmentLedger'
+# expected: non-zero exit with messages on missing raw_text_hash
+# and normalized_text_hash for the canonical_atom segment.
+```
+
+### Whole-tree validation
+
+All Nomos schemas type-check together with:
+
+```bash
+cue vet ./specs/...
+```

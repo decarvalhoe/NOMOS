@@ -9,7 +9,16 @@ package nomos
 	"file_inventory" |
 	"confidentiality_tag" |
 	"owner_assignment" |
-	"read_only_proof"
+	"read_only_proof" |
+	// SFI-09 (#347) — corpus-integrity evidence types. These cover the
+	// SourceSegment ledger and the source/feed integrity gates added
+	// by SFI-01..SFI-07. Their schemas live in
+	// `specs/source-segment-ledger.cue` and
+	// `specs/corpus-integrity-report.cue`.
+	"source_segment_ledger" |
+	"source_feed_integrity" |
+	"feed_quality" |
+	"rag_source_linkage"
 
 // #CorpusEvidence is a single evidence entry collected during corpus checks.
 #CorpusEvidence: {
