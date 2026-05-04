@@ -26,7 +26,9 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
+import ntpath
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -53,7 +55,12 @@ def _validate_target_path(target_path: str) -> None:
     """
     if not target_path:
         raise ValueError("target_path must be non-empty")
-    if os.path.isabs(target_path):
+    target_slash = target_path.replace("\\", "/")
+    if (
+        os.path.isabs(target_path)
+        or posixpath.isabs(target_slash)
+        or ntpath.isabs(target_path)
+    ):
         raise ValueError(f"target_path must be relative: {target_path!r}")
     if len(target_path) >= 2 and target_path[1] == ":":
         raise ValueError(f"target_path must not contain a drive letter: {target_path!r}")
@@ -66,7 +73,12 @@ def _is_violating(candidate: str, norm_target: str) -> tuple[bool, str]:
     """Return ``(is_violation, reason)`` for one candidate path."""
     if not candidate:
         return True, "empty path"
-    if os.path.isabs(candidate):
+    candidate_slash = candidate.replace("\\", "/")
+    if (
+        os.path.isabs(candidate)
+        or posixpath.isabs(candidate_slash)
+        or ntpath.isabs(candidate)
+    ):
         return True, "absolute path"
     if len(candidate) >= 2 and candidate[1] == ":":
         return True, "windows drive letter"

@@ -98,3 +98,18 @@ jobs:
       - run: |
           pip install --quiet yamllint
           yamllint -d relaxed specs/examples/ examples/ templates/
+
+  python-tests:
+    name: Python workflow tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet pyyaml
+      - run: python -m unittest discover -s tests -v

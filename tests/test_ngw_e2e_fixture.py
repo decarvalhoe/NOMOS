@@ -58,13 +58,13 @@ FROZEN_TIME = "2026-05-04T12:00:00Z"
 
 
 def _snapshot_corpus() -> str:
-    out = subprocess.run(
-        ["find", str(CORPUS_DIR), "-type", "f", "-printf", "%p %s\n"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    lines = sorted(out.stdout.splitlines())
+    lines: list[str] = []
+    for dirpath, _dirnames, filenames in os.walk(CORPUS_DIR):
+        for filename in filenames:
+            path = Path(dirpath) / filename
+            rel = path.relative_to(CORPUS_DIR).as_posix()
+            lines.append(f"{rel} {path.stat().st_size}")
+    lines.sort()
     return "\n".join(lines)
 
 
@@ -80,6 +80,8 @@ def _build_nomos_bin() -> str:
     global _NOMOS_BIN
     if _NOMOS_BIN and os.path.isfile(_NOMOS_BIN):
         return _NOMOS_BIN
+    if shutil.which("go") is None:
+        raise unittest.SkipTest("go not on PATH; skipping NOMOS CLI fixture tests")
     bin_dir = Path(tempfile.mkdtemp(prefix="ngw-e2e-bin-"))
     bin_path = bin_dir / "nomos"
     proc = subprocess.run(
