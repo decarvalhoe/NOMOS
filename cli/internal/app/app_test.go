@@ -481,7 +481,7 @@ func TestRunCorpusManifestAndValidateSidecar(t *testing.T) {
 
 func TestRunCorpusFeedBuildsRealBundleWithoutMutatingCorpus(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\nBody\n")
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n\nA meaningful body paragraph survives the semantic atom filter.\n")
 	initGitRepo(t, root)
 
 	outDir := t.TempDir()
@@ -550,6 +550,215 @@ func TestRunCorpusFeedBuildsRealBundleWithoutMutatingCorpus(t *testing.T) {
 		if !strings.Contains(raw, expected) {
 			t.Fatalf("expected feed to contain %s, got %s", expected, raw)
 		}
+	}
+}
+
+func TestRunStrictCommandTopLevel(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := Run([]string{
+		"strict",
+		"--format", "json",
+		"--project", "testdata/gate-project.yaml",
+		"--sources", "testdata/gate-sources.yaml",
+		"--matrix", "testdata/gate-matrix.yaml",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected strict top-level command to pass, got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"valid": true`) {
+		t.Fatalf("expected strict JSON result, got %s", stdout.String())
+	}
+}
+
+func TestRunCorpusBodyLedgerWritesArtifactWithoutMutatingCorpus(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n\nBody paragraph.\n")
+	initGitRepo(t, root)
+
+	outDir := t.TempDir()
+	snapshotPath := filepath.Join(outDir, "snapshot.json")
+	manifestPath := filepath.Join(outDir, "source-manifest.yaml")
+	bodyLedgerPath := filepath.Join(outDir, "body-ledger.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"corpus", "scan", "--root", root, "--out", snapshotPath, "--ext", ".md"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("scan failed: code=%d stderr=%q", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "manifest",
+		"--snapshot", snapshotPath,
+		"--out", manifestPath,
+		"--domain", "rbok",
+		"--owner", "domain-owner@example.com",
+		"--id-prefix", "RBOK",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("manifest failed: code=%d stderr=%q", code, stderr.String())
+	}
+
+	before := gitStatusText(t, root)
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "body-ledger",
+		"--root", root,
+		"--manifest", manifestPath,
+		"--out", bodyLedgerPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("body-ledger failed: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	after := gitStatusText(t, root)
+	if before != after {
+		t.Fatalf("corpus mutated: before=%q after=%q", before, after)
+	}
+
+	var ledger corpus.CorpusBodyLedger
+	if err := json.Unmarshal([]byte(readFileAbs(t, bodyLedgerPath)), &ledger); err != nil {
+		t.Fatalf("decode body ledger: %v", err)
+	}
+	if ledger.Format != corpus.BodyLedgerFormat {
+		t.Fatalf("Format = %q", ledger.Format)
+	}
+	if ledger.SourceCount != 1 || len(ledger.Sources) != 1 {
+		t.Fatalf("expected one source, got %#v", ledger)
+	}
+	if len(ledger.Sources[0].Segments) == 0 {
+		t.Fatalf("expected markdown source segments, got %#v", ledger.Sources[0])
+	}
+}
+
+func TestRunStrictWithGeneratedFeedUsesManifestSourceIDs(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md",
+		"# Rule\n\nClean and meaningful paragraph generated through the feed pipeline.\n")
+	initGitRepo(t, root)
+
+	outDir := t.TempDir()
+	snapshotPath := filepath.Join(outDir, "snapshot.json")
+	manifestPath := filepath.Join(outDir, "source-manifest.yaml")
+	feedPath := filepath.Join(outDir, "feed.json")
+	ragPath := filepath.Join(outDir, "rag.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"corpus", "scan", "--root", root, "--out", snapshotPath, "--ext", ".md"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("scan failed: code=%d stderr=%q", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "manifest",
+		"--snapshot", snapshotPath,
+		"--out", manifestPath,
+		"--domain", "rbok",
+		"--owner", "domain-owner@example.com",
+		"--id-prefix", "RBOK",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("manifest failed: code=%d stderr=%q", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"corpus", "feed",
+		"--root", root,
+		"--snapshot", snapshotPath,
+		"--manifest", manifestPath,
+		"--out", feedPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("feed failed: code=%d stderr=%q stdout=%q", code, stderr.String(), stdout.String())
+	}
+	var feed corpus.Feed
+	if err := json.Unmarshal([]byte(readFileAbs(t, feedPath)), &feed); err != nil {
+		t.Fatalf("decode feed: %v", err)
+	}
+	ragJSON, err := json.Marshal(feed.RAGMetadata)
+	if err != nil {
+		t.Fatalf("marshal rag: %v", err)
+	}
+	if err := os.WriteFile(ragPath, ragJSON, 0o600); err != nil {
+		t.Fatalf("write rag: %v", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"strict",
+		"--format", "json",
+		"--corpus-integrity-source", root,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("strict should resolve feed segment IDs from the manifest source IDs; code=%d stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+}
+
+func TestRunStrictWithGeneratedJSONFeedResolvesStructuredSegments(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "contracts/rules.json",
+		`{"rules":[{"id":"R1","text":"La regle JSON conserve un segment source exact."}]}`)
+	initGitRepo(t, root)
+
+	outDir := t.TempDir()
+	manifestPath := filepath.Join(outDir, "source-manifest.yaml")
+	feedPath := filepath.Join(outDir, "feed.json")
+	writeTestFile(t, outDir, "source-manifest.yaml", `
+schema_version: "0.1.0"
+sources:
+  - id: SRC-JSON
+    path: contracts/rules.json
+    type: source_code
+    domain: rbok
+    priority: primary
+    status: active
+    hash: "sha256:json"
+    owner: Alice
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+      - vector_index
+    admission_status: admitted
+    atomization_status: atomized
+    source_role: canonical
+    format_support: supported
+`)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"corpus", "feed",
+		"--root", root,
+		"--manifest", manifestPath,
+		"--out", feedPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("feed failed: code=%d stderr=%q stdout=%q", code, stderr.String(), stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"strict",
+		"--format", "json",
+		"--corpus-integrity-source", root,
+		"--corpus-integrity-feed", feedPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("strict should resolve structured JSON source segment IDs; code=%d stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
 	}
 }
 

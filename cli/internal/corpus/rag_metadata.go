@@ -522,6 +522,7 @@ const (
 	ChunkStrategySingleAtom   ChunkCompositionStrategy = "single_atom"
 	ChunkStrategyTableRow     ChunkCompositionStrategy = "table_row"
 	ChunkStrategyYAMLScalar   ChunkCompositionStrategy = "yaml_scalar"
+	ChunkStrategyStructured   ChunkCompositionStrategy = "structured_scalar"
 	ChunkStrategyHeadingGroup ChunkCompositionStrategy = "heading_group"
 )
 
@@ -769,7 +770,7 @@ func composeOneRAGChunk(
 		ContextTableID:           u.TableID,
 		ContextRowIndex:          u.RowIndex,
 		ContextColumnHeaders:     contextHeaders,
-		ContextYAMLPath:          u.YAMLPath,
+		ContextYAMLPath:          firstNonEmptyTrim(u.YAMLPath, u.StructuredPath),
 		ContextSourceRole:        role,
 		DomainTags:               domainTags,
 		ChunkText:                chunkText,
@@ -786,20 +787,23 @@ func pickCompositionStrategy(u FeedUnit) ChunkCompositionStrategy {
 	if strings.TrimSpace(u.YAMLPath) != "" {
 		return ChunkStrategyYAMLScalar
 	}
+	if strings.TrimSpace(u.StructuredPath) != "" {
+		return ChunkStrategyStructured
+	}
 	return ChunkStrategySingleAtom
 }
 
 // composeBody returns the body text (without heading prefix) for the chosen
 // strategy. For table_row, FSQ-03 already populated BusinessRule with
-// "Col=Val; ..."; we trust it. For yaml_scalar, we format
-// "<YAMLPath> = <DecodedValue>" so the key path is co-located with the
-// retrievable text.
+// "Col=Val; ..."; we trust it. For yaml_scalar / structured_scalar, we
+// format "<structured path> = <decoded value>" so the key path is
+// co-located with the retrievable text.
 func composeBody(u FeedUnit, strategy ChunkCompositionStrategy) string {
 	switch strategy {
 	case ChunkStrategyTableRow:
 		return strings.TrimSpace(u.BusinessRule)
-	case ChunkStrategyYAMLScalar:
-		path := strings.TrimSpace(u.YAMLPath)
+	case ChunkStrategyYAMLScalar, ChunkStrategyStructured:
+		path := firstNonEmptyTrim(u.YAMLPath, u.StructuredPath)
 		value := strings.TrimSpace(u.DecodedValue)
 		if value == "" {
 			value = strings.TrimSpace(u.BusinessRule)
@@ -859,6 +863,8 @@ func strategyKindKey(strategy ChunkCompositionStrategy, seg SourceSegment) strin
 	case ChunkStrategyTableRow:
 		return "table_row"
 	case ChunkStrategyYAMLScalar:
+		return profileKindDefault
+	case ChunkStrategyStructured:
 		return profileKindDefault
 	default:
 		if k := strings.TrimSpace(seg.Kind); k != "" {

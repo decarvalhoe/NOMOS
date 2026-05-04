@@ -100,6 +100,44 @@ func TestFSQ03_PlainDataTable_RowCanonicalText(t *testing.T) {
 	}
 }
 
+func TestFSQ07_PlaceholderOnlyTableRowCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"| Code | Nom client | Service lie | Statut |\n" +
+		"| --- | --- | --- | --- |\n" +
+		"| ... | ... | ... | ... |\n" +
+		"| PAR_SRV_SITEWEB | Mon site internet | Creation de site web | A concevoir |\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+
+	var rows []SourceSegment
+	for _, s := range segs {
+		if s.Kind == KindTableRow {
+			rows = append(rows, s)
+		}
+	}
+	if len(rows) != 2 {
+		t.Fatalf("expected 2 data table_row segments, got %d", len(rows))
+	}
+
+	placeholder := rows[0]
+	if placeholder.Disposition != DispositionCoverageOnly {
+		t.Fatalf("placeholder-only row disposition=%s, want coverage_only; row=%+v",
+			placeholder.Disposition, placeholder)
+	}
+	if placeholder.IncludeInFeed || placeholder.IncludeInRAG {
+		t.Fatalf("placeholder-only row must not enter feed/RAG: %+v", placeholder)
+	}
+
+	real := rows[1]
+	if real.Disposition != DispositionCanonicalAtom {
+		t.Fatalf("real row disposition=%s, want canonical_atom; row=%+v", real.Disposition, real)
+	}
+	if !real.IncludeInFeed || !real.IncludeInRAG {
+		t.Fatalf("real row should enter feed/RAG: %+v", real)
+	}
+}
+
 func TestFSQ03_MetadataTable_FrenchHeaders(t *testing.T) {
 	t.Parallel()
 	content := "" +

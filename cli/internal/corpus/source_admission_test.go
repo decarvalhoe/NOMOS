@@ -184,6 +184,13 @@ func TestDefaultClassificationByExtension(t *testing.T) {
 	}{
 		{"docs/intro.md", AdmissionRoleCanonical, FormatSupported, AtomizationAtomized, false},
 		{"profiles/parcours.yaml", AdmissionRoleCanonical, FormatSupported, AtomizationAtomized, false},
+		{"00_meta/parcours-template-approfondi.yaml", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"03_parcours/ai-config/ai-behavior-config-aligned.md", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"policies/config/rules.json", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"03_parcours/testdata/PAR_ACC_DEM_EXI_TESTDATA.yaml", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"03_parcours/generated/md/PAR_ACC_DEM.md", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"03_parcours/generated/workbooks/PAR_ACC_DEM.md", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
+		{"98_references/archive/previous-standard.md", AdmissionRoleReference, FormatSupported, AtomizationNotAtomized, true},
 		{"data/payload.json", AdmissionRoleMetadata, FormatPartial, AtomizationNotAtomized, true},
 		{"refs/standard.pdf", AdmissionRoleReference, FormatUnsupported, AtomizationUnsupported, true},
 		{"refs/spec.html", AdmissionRoleReference, FormatUnsupported, AtomizationUnsupported, true},
@@ -320,6 +327,50 @@ sources:
 	}
 	if got.FormatSupport != FormatUnsupported {
 		t.Fatalf("format_support: want unsupported, got %q", got.FormatSupport)
+	}
+}
+
+func TestFeedSkipsNotAtomizedMarkdownSources(t *testing.T) {
+	root := t.TempDir()
+	sourcePath := filepath.Join("03_parcours", "generated", "md", "PAR_ACC_ADMIN.md")
+	if err := os.MkdirAll(filepath.Join(root, filepath.Dir(sourcePath)), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, sourcePath), []byte("# Generated workbook\n\nThis generated derivative text must not become a canonical feed unit.\n"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	manifestYAML := []byte(`
+schema_version: "0.1.0"
+sources:
+  - id: GENERATED-MD
+    path: 03_parcours/generated/md/PAR_ACC_ADMIN.md
+    type: markdown
+    domain: rbok
+    priority: primary
+    status: active
+    hash: "sha256:generated"
+    owner: Alice
+    license: internal
+    confidentiality: internal
+    allowed_uses:
+      - citation_internal
+`)
+	feed, err := GenerateFeed(FeedInput{
+		ManifestYAML: manifestYAML,
+		Root:         root,
+		GeneratedAt:  time.Date(2026, 5, 4, 0, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatalf("expected feed to generate, got %v", err)
+	}
+	if feed.UnitCount != 0 {
+		t.Fatalf("not_atomized markdown must emit 0 units, got %d", feed.UnitCount)
+	}
+	if len(feed.Sources) != 1 {
+		t.Fatalf("expected source entry to remain present, got %d", len(feed.Sources))
+	}
+	if feed.Sources[0].AtomizationStatus != AtomizationNotAtomized {
+		t.Fatalf("atomization_status: want %q, got %q", AtomizationNotAtomized, feed.Sources[0].AtomizationStatus)
 	}
 }
 

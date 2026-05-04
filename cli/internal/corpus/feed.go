@@ -55,6 +55,8 @@ type FeedUnit struct {
 	RawText          string `json:"raw_text,omitempty"`
 	DecodedValue     string `json:"decoded_value,omitempty"`
 	YAMLPath         string `json:"yaml_path,omitempty"`
+	StructuredPath   string `json:"structured_path,omitempty"`
+	StructuredFormat string `json:"structured_format,omitempty"`
 	NodeKind         string `json:"node_kind,omitempty"`
 	SchemaRole       string `json:"schema_role,omitempty"`
 	BusinessRuleMode string `json:"business_rule_mode,omitempty"`
@@ -232,13 +234,15 @@ type matrixContract struct {
 
 type extractedFeedUnit struct {
 	FeedUnit
-	Content      string
-	SourceID     string
-	SourcePath   string
-	SourceHash   string
-	Priority     string
-	SourceStatus string
-	Locator      string
+	Content          string
+	SourceID         string
+	SourcePath       string
+	SourceHash       string
+	Priority         string
+	SourceStatus     string
+	Locator          string
+	SourceSegment    SourceSegment
+	HasSourceSegment bool
 }
 
 // GenerateFeed produces a consumer feed from a canonical matrix and source manifest.
@@ -351,7 +355,7 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 	if err != nil {
 		return Feed{}, err
 	}
-	rag, err := buildRAGMetadata(extracted, ts)
+	rag, err := buildRAGMetadata(extracted, sources, ts)
 	if err != nil {
 		return Feed{}, err
 	}
@@ -429,6 +433,9 @@ func extractFeedUnits(root string, manifest SidecarManifest) ([]extractedFeedUni
 		if source.Status != "" && source.Status != "active" && source.Status != "needs_review" {
 			continue
 		}
+		if !shouldExtractSourceUnits(source) {
+			continue
+		}
 		absPath := filepath.Join(root, filepath.FromSlash(source.Path))
 		ext := strings.ToLower(filepath.Ext(source.Path))
 		switch {
@@ -444,8 +451,20 @@ func extractFeedUnits(root string, manifest SidecarManifest) ([]extractedFeedUni
 			result = append(result, units...)
 		case ext == ".yaml" || ext == ".yml":
 			units, err := extractParcoursFeedUnits(absPath, source)
+			if err != nil || len(units) == 0 {
+				units, err = extractStructuredFeedUnits(absPath, source)
+				if err != nil {
+					return nil, err
+				}
+			}
+			for _, unit := range units {
+				unit.UnitID = uniqueFeedUnitID(unit.UnitID, seenUnitIDs)
+				result = append(result, unit)
+			}
+		case ext == ".json":
+			units, err := extractStructuredFeedUnits(absPath, source)
 			if err != nil {
-				continue
+				return nil, err
 			}
 			for _, unit := range units {
 				unit.UnitID = uniqueFeedUnitID(unit.UnitID, seenUnitIDs)
@@ -467,37 +486,228 @@ func extractParcoursFeedUnits(path string, source ManifestSource) ([]extractedFe
 		if content == "" {
 			content = unit.Name
 		}
+		if !isStructuredScalarTextFeedCandidate(content) {
+			continue
+		}
+		segment, hasSegment := parcoursUnitSourceSegment(source, unit, content)
+		headingPath := parcoursUnitHeadingPath(result, unit)
+		feedUnit := FeedUnit{
+			UnitID:       unit.UnitID,
+			Name:         unit.Name,
+			Domain:       feedDomain(firstNonEmpty(unit.Domain, source.Domain)),
+			UnitType:     unit.UnitType,
+			Criticality:  feedCriticality(unit.Criticality),
+			Status:       "partial",
+			BusinessRule: content,
+			SourceIDs:    []string{source.ID},
+			Gaps:         []string{"Extracted from parcours YAML; requires human canonical review."},
+			// FSQ-04 (#367) YAML scalar provenance, propagated from the
+			// extractor so consumers can re-prove which YAML key fed
+			// BusinessRule and re-read its raw bytes.
+			RawText:          unit.RawText,
+			DecodedValue:     unit.DecodedValue,
+			YAMLPath:         unit.YAMLPath,
+			StructuredPath:   unit.YAMLPath,
+			StructuredFormat: StructuredFormatYAML,
+			NodeKind:         unit.NodeKind,
+			SchemaRole:       unit.SchemaRole,
+			BusinessRuleMode: unit.BusinessRuleMode,
+			HeadingPath:      headingPath,
+		}
+		if hasSegment {
+			feedUnit.SourceSegmentID = segment.SegmentID
+			feedUnit.SourceID = source.ID
+			feedUnit.SourcePath = source.Path
+			feedUnit.StartByte = segment.StartByte
+			feedUnit.EndByte = segment.EndByte
+			feedUnit.StartLine = segment.StartLine
+			feedUnit.EndLine = segment.EndLine
+			feedUnit.NormalizedTextHash = segment.NormalizedTextHash
+			feedUnit.BodyLedgerSegmentIDs = []string{segment.SegmentID}
+		}
 		units = append(units, extractedFeedUnit{
-			FeedUnit: FeedUnit{
-				UnitID:       unit.UnitID,
-				Name:         unit.Name,
-				Domain:       feedDomain(firstNonEmpty(unit.Domain, source.Domain)),
-				UnitType:     unit.UnitType,
-				Criticality:  feedCriticality(unit.Criticality),
-				Status:       "partial",
-				BusinessRule: content,
-				SourceIDs:    []string{source.ID},
-				Gaps:         []string{"Extracted from parcours YAML; requires human canonical review."},
-				// FSQ-04 (#367) YAML scalar provenance, propagated from the
-				// extractor so consumers can re-prove which YAML key fed
-				// BusinessRule and re-read its raw bytes.
-				RawText:          unit.RawText,
-				DecodedValue:     unit.DecodedValue,
-				YAMLPath:         unit.YAMLPath,
-				NodeKind:         unit.NodeKind,
-				SchemaRole:       unit.SchemaRole,
-				BusinessRuleMode: unit.BusinessRuleMode,
-			},
-			Content:      content,
-			SourceID:     source.ID,
-			SourcePath:   source.Path,
-			SourceHash:   source.Hash,
-			Priority:     feedPriority(source.Priority),
-			SourceStatus: feedSourceStatus(source.Status),
-			Locator:      source.Path + "#" + unit.UnitID,
+			FeedUnit:         feedUnit,
+			Content:          content,
+			SourceID:         source.ID,
+			SourcePath:       source.Path,
+			SourceHash:       source.Hash,
+			Priority:         feedPriority(source.Priority),
+			SourceStatus:     feedSourceStatus(source.Status),
+			Locator:          source.Path + "#" + unit.UnitID,
+			SourceSegment:    segment,
+			HasSourceSegment: hasSegment,
 		})
 	}
 	return units, nil
+}
+
+func extractStructuredFeedUnits(path string, source ManifestSource) ([]extractedFeedUnit, error) {
+	format, ok := StructuredFormatForPath(source.Path)
+	if !ok {
+		return nil, nil
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read structured %s: %w", source.Path, err)
+	}
+	scan, err := ScanStructuredScalars(source, content, format)
+	if err != nil {
+		return nil, fmt.Errorf("scan structured %s: %w", source.Path, err)
+	}
+	units := make([]extractedFeedUnit, 0, len(scan.Scalars))
+	for _, scalar := range scan.Scalars {
+		value := strings.TrimSpace(scalar.DecodedValue)
+		if !isStructuredScalarFeedCandidate(scalar) {
+			continue
+		}
+		unitID := scalar.Segment.CanonicalUnitID
+		yamlPath := ""
+		if format == StructuredFormatYAML {
+			yamlPath = scalar.Path
+		}
+		feedUnit := FeedUnit{
+			UnitID:               unitID,
+			Name:                 scalar.Path,
+			Domain:               feedDomain(source.Domain),
+			UnitType:             "structured_scalar",
+			Criticality:          "medium",
+			Status:               "partial",
+			BusinessRule:         value,
+			SourceIDs:            []string{source.ID},
+			Gaps:                 []string{"Extracted from structured scalar; requires human canonical review."},
+			SourceSegmentID:      scalar.Segment.SegmentID,
+			SourceID:             source.ID,
+			SourcePath:           source.Path,
+			StartByte:            scalar.StartByte,
+			EndByte:              scalar.EndByte,
+			StartLine:            scalar.StartLine,
+			EndLine:              scalar.EndLine,
+			NormalizedTextHash:   scalar.Segment.NormalizedTextHash,
+			HeadingPath:          structuredHeadingPath(source, scalar),
+			RawText:              scalar.RawText,
+			DecodedValue:         scalar.DecodedValue,
+			YAMLPath:             yamlPath,
+			StructuredPath:       scalar.Path,
+			StructuredFormat:     format,
+			NodeKind:             scalar.NodeKind,
+			SchemaRole:           "structured_scalar",
+			BusinessRuleMode:     "decoded",
+			BodyLedgerSegmentIDs: []string{scalar.Segment.SegmentID},
+		}
+		units = append(units, extractedFeedUnit{
+			FeedUnit:         feedUnit,
+			Content:          value,
+			SourceID:         source.ID,
+			SourcePath:       source.Path,
+			SourceHash:       source.Hash,
+			Priority:         feedPriority(source.Priority),
+			SourceStatus:     feedSourceStatus(source.Status),
+			Locator:          source.Path + "#" + scalar.Path,
+			SourceSegment:    scalar.Segment,
+			HasSourceSegment: true,
+		})
+	}
+	return units, nil
+}
+
+func isStructuredScalarFeedCandidate(scalar StructuredScalar) bool {
+	value := strings.TrimSpace(scalar.DecodedValue)
+	if scalar.NodeKind != "scalar_string" {
+		return false
+	}
+	return isStructuredScalarTextFeedCandidate(value)
+}
+
+func isStructuredScalarTextFeedCandidate(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" || isJunkSemantic([]byte(value)) {
+		return false
+	}
+	return tokenCountSemantic(value) >= 3 && runeCount(value) >= 20
+}
+
+func shouldExtractSourceUnits(source ManifestSource) bool {
+	return source.AdmissionStatus == AdmissionAdmitted &&
+		source.AtomizationStatus == AtomizationAtomized
+}
+
+func structuredHeadingPath(source ManifestSource, scalar StructuredScalar) []string {
+	var out []string
+	if source.Path != "" {
+		out = append(out, source.Path)
+	}
+	if scalar.Path != "" {
+		out = append(out, scalar.Path)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func parcoursUnitSourceSegment(source ManifestSource, unit ParcoursUnit, content string) (SourceSegment, bool) {
+	if unit.EndByte <= unit.StartByte {
+		return SourceSegment{}, false
+	}
+	startLine := unit.StartLine
+	if startLine == 0 {
+		startLine = 1
+	}
+	endLine := unit.EndLine
+	if endLine < startLine {
+		endLine = startLine
+	}
+	raw := unit.RawText
+	if raw == "" {
+		raw = content
+	}
+	normalized := firstNonEmpty(content, unit.DecodedValue, unit.RawText)
+	seg := SourceSegment{
+		SegmentID:          segmentID(source.ID, unit.StartByte, unit.EndByte, KindYAMLScalar),
+		SourceID:           source.ID,
+		SourcePath:         source.Path,
+		Kind:               KindYAMLScalar,
+		Disposition:        DispositionCanonicalAtom,
+		StartByte:          unit.StartByte,
+		EndByte:            unit.EndByte,
+		StartLine:          startLine,
+		StartColumn:        unit.StartColumn,
+		EndLine:            endLine,
+		EndColumn:          unit.StartColumn + len([]rune(raw)),
+		RawTextHash:        ComputeRawTextHash([]byte(raw)),
+		NormalizedTextHash: ComputeNormalizedTextHash(normalized),
+		CanonicalUnitID:    unit.UnitID,
+		IncludeInFeed:      true,
+		IncludeInRAG:       true,
+	}
+	if seg.StartColumn == 0 {
+		seg.StartColumn = 1
+	}
+	if seg.EndColumn <= seg.StartColumn {
+		seg.EndColumn = seg.StartColumn + 1
+	}
+	return seg, true
+}
+
+func parcoursUnitHeadingPath(result ExtractResult, unit ParcoursUnit) []string {
+	var out []string
+	add := func(v string) {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			return
+		}
+		if len(out) > 0 && out[len(out)-1] == v {
+			return
+		}
+		out = append(out, v)
+	}
+	add(result.ParcoursName)
+	add(unit.EtapeName)
+	add(unit.Name)
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func verifyFeedLockfile(lockfile *Lockfile, snapshot *Snapshot) (*FeedLockfileStatus, error) {
@@ -519,11 +729,18 @@ func verifyFeedLockfile(lockfile *Lockfile, snapshot *Snapshot) (*FeedLockfileSt
 	return status, nil
 }
 
-func buildRAGMetadata(units []extractedFeedUnit, generatedAt time.Time) ([]ChunkMetadata, error) {
+func buildRAGMetadata(units []extractedFeedUnit, sources []FeedSource, generatedAt time.Time) ([]ChunkMetadata, error) {
 	metadata := make([]ChunkMetadata, 0, len(units))
+	var sourceBacked []FeedUnit
+	var sourceSegments []SourceSegment
 	for _, unit := range units {
 		content := strings.TrimSpace(unit.Content)
 		if content == "" {
+			continue
+		}
+		if unit.HasSourceSegment && strings.TrimSpace(unit.SourceSegmentID) != "" {
+			sourceBacked = append(sourceBacked, unit.FeedUnit)
+			sourceSegments = append(sourceSegments, unit.SourceSegment)
 			continue
 		}
 		meta, err := Enrich(ChunkInput{
@@ -547,7 +764,35 @@ func buildRAGMetadata(units []extractedFeedUnit, generatedAt time.Time) ([]Chunk
 		}
 		metadata = append(metadata, meta)
 	}
+	if len(sourceBacked) > 0 {
+		chunks, err := ComposeRAGChunks(RAGComposeInput{
+			FeedUnits: sourceBacked,
+			Sources:   sources,
+			Segments:  sourceSegments,
+			Profile:   feedRAGComposeProfile(),
+			BaseConfig: RAGBuildInput{
+				Priority:   "primary",
+				Status:     "active",
+				Confidence: "medium",
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		metadata = append(metadata, chunks...)
+	}
 	return metadata, nil
+}
+
+func feedRAGComposeProfile() SemanticQualityProfile {
+	return SemanticQualityProfile{
+		MinTokensByKind: map[string]int{
+			profileKindDefault: 1,
+		},
+		MinCharsByKind: map[string]int{
+			profileKindDefault: 1,
+		},
+	}
 }
 
 func buildCorpusIndex(manifest SidecarManifest, units []FeedUnit, chunks []ChunkMetadata, generatedAt time.Time) *CorpusIndex {
@@ -794,14 +1039,16 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 			fu.BodyLedgerSegmentIDs = []string{seg.SegmentID}
 		}
 		out = append(out, extractedFeedUnit{
-			FeedUnit:     fu,
-			Content:      display,
-			SourceID:     source.ID,
-			SourcePath:   source.Path,
-			SourceHash:   source.Hash,
-			Priority:     feedPriority(source.Priority),
-			SourceStatus: feedSourceStatus(source.Status),
-			Locator:      fmt.Sprintf("%s:%d", source.Path, seg.StartLine),
+			FeedUnit:         fu,
+			Content:          display,
+			SourceID:         source.ID,
+			SourcePath:       source.Path,
+			SourceHash:       source.Hash,
+			Priority:         feedPriority(source.Priority),
+			SourceStatus:     feedSourceStatus(source.Status),
+			Locator:          fmt.Sprintf("%s:%d", source.Path, seg.StartLine),
+			SourceSegment:    seg,
+			HasSourceSegment: true,
 		})
 	}
 	return out

@@ -29,6 +29,9 @@ const (
 	KindImageRef            = "image_ref"
 	KindMetadata            = "metadata"
 	KindUnsupportedBlock    = "unsupported_block"
+	KindYAMLScalar          = "yaml_scalar"
+	KindJSONScalar          = "json_scalar"
+	KindStructuredCoverage  = "structured_coverage"
 )
 
 // ScanMarkdown walks the given Markdown content once and emits a typed
@@ -119,6 +122,10 @@ var (
 	mdScanBlockquoteStrip  = regexp.MustCompile(`^\s*>\s?`)
 	mdScanCalloutPrefixRe  = regexp.MustCompile(`^\s*>\s*\[!([A-Za-z]+)\]`)
 	mdScanInlineRefRe      = regexp.MustCompile(`(!?)\[([^\]\n]*)\]\(([^)\n]*)\)`)
+	mdScanTOCOnlyLinkRe    = regexp.MustCompile(`^\s*(?:\d+[.)]\s*)?\[[^\]\n]+\]\(\s*#[^)]+\)\s*$`)
+	mdScanStrongLabelRe    = regexp.MustCompile(`^\s*(?:\*\*|__)[^*_]{1,120}(?:\*\*|__)\s*:?\s*$`)
+	mdScanPlaceholderRe    = regexp.MustCompile(`^\s*(?:\*\*)?\[[^\]\n]+\](?:\*\*)?\s*(?:[-—–:])?\s*$`)
+	mdScanChapterRefRe     = regexp.MustCompile(`(?i)^\s*(chapitre|chapter)\s+\d+\s*[-—–]`)
 )
 
 // decorativeChars enumerates the punctuation characters that may compose a
@@ -413,7 +420,9 @@ func (s *mdScanner) emitTable(start int) int {
 			// not retrievable doctrine. Rows stay in the ledger but do not
 			// enter the feed.
 			rowSeg.Disposition = DispositionCoverageOnly
-		case rowSeg.RowCanonicalText != "" && !isJunkSemantic([]byte(rowSeg.RowCanonicalText)):
+		case rowSeg.RowCanonicalText != "" &&
+			!isPlaceholderOnlyTableRow(rowCells) &&
+			!isJunkSemantic([]byte(rowSeg.RowCanonicalText)):
 			rowSeg.Disposition = DispositionCanonicalAtom
 			rowSeg.NormalizedTextHash = ComputeNormalizedTextHash(rowSeg.RowCanonicalText)
 			rowSeg.IncludeInFeed = true
@@ -544,6 +553,41 @@ func buildRowCanonicalText(headers, cells []string) string {
 	return b.String()
 }
 
+func isPlaceholderOnlyTableRow(cells []string) bool {
+	nonEmpty := 0
+	for _, cell := range cells {
+		clean := strings.TrimSpace(cell)
+		if clean == "" {
+			continue
+		}
+		nonEmpty++
+		if !isPlaceholderCell(clean) {
+			return false
+		}
+	}
+	return nonEmpty > 0
+}
+
+func isPlaceholderCell(cell string) bool {
+	clean := strings.ToLower(strings.TrimSpace(cell))
+	clean = strings.Trim(clean, "`*_ ")
+	if clean == "" {
+		return true
+	}
+	if strings.Trim(clean, ".…-—–_ ") == "" {
+		return true
+	}
+	switch clean {
+	case "n/a", "na", "nd", "tbd", "todo",
+		"a definir", "à définir",
+		"a creer", "à créer",
+		"a concevoir", "à concevoir":
+		return true
+	default:
+		return false
+	}
+}
+
 // classifyTableRole tags two-column tables whose header is a
 // (Field/Champ/Key/Property, Value/Valeur/Setting/Statut) pair. Such tables
 // describe document properties rather than retrievable doctrine; their data
@@ -597,12 +641,16 @@ func (s *mdScanner) emitBlockquote(start int) int {
 
 	if mdScanCalloutPrefixRe.MatchString(s.lines[start].text) {
 		seg := s.makeBlockSegment(start, end-1, KindCallout, "")
-		seg.Disposition = DispositionCanonicalAtom
 		raw := []byte(s.sliceText(start, end-1))
 		seg.RawTextHash = ComputeRawTextHash(raw)
-		seg.NormalizedTextHash = ComputeNormalizedTextHash(string(raw))
-		seg.IncludeInFeed = true
-		seg.IncludeInRAG = true
+		if canonical, ok := canonicalMarkdownAtomText(stripBlockquoteMarkers(string(raw))); ok {
+			seg.Disposition = DispositionCanonicalAtom
+			seg.NormalizedTextHash = ComputeNormalizedTextHash(canonical)
+			seg.IncludeInFeed = true
+			seg.IncludeInRAG = true
+		} else {
+			seg.Disposition = DispositionCoverageOnly
+		}
 		s.append(seg)
 		return end
 	}
@@ -613,12 +661,16 @@ func (s *mdScanner) emitBlockquote(start int) int {
 	s.append(bq)
 
 	inner := s.makeBlockSegment(start, end-1, KindParagraph, bq.SegmentID)
-	inner.Disposition = DispositionCanonicalAtom
 	raw := []byte(s.sliceText(start, end-1))
 	inner.RawTextHash = ComputeRawTextHash(raw)
-	inner.NormalizedTextHash = ComputeNormalizedTextHash(stripBlockquoteMarkers(string(raw)))
-	inner.IncludeInFeed = true
-	inner.IncludeInRAG = true
+	if canonical, ok := canonicalMarkdownAtomText(stripBlockquoteMarkers(string(raw))); ok {
+		inner.Disposition = DispositionCanonicalAtom
+		inner.NormalizedTextHash = ComputeNormalizedTextHash(canonical)
+		inner.IncludeInFeed = true
+		inner.IncludeInRAG = true
+	} else {
+		inner.Disposition = DispositionCoverageOnly
+	}
 	s.append(inner)
 	return end
 }
@@ -657,13 +709,13 @@ func (s *mdScanner) emitList(start int) int {
 		body := listItemBody(s.lines[i].text)
 		raw := s.lineBytes(i)
 		item.RawTextHash = ComputeRawTextHash(raw)
-		if strings.TrimSpace(body) == "" {
-			item.Disposition = DispositionCoverageOnly
-		} else {
+		if canonical, ok := canonicalMarkdownAtomText(body); ok {
 			item.Disposition = DispositionCanonicalAtom
-			item.NormalizedTextHash = ComputeNormalizedTextHash(body)
+			item.NormalizedTextHash = ComputeNormalizedTextHash(canonical)
 			item.IncludeInFeed = true
 			item.IncludeInRAG = true
+		} else {
+			item.Disposition = DispositionCoverageOnly
 		}
 		s.append(item)
 		s.emitInlineRefsInLine(i, item.SegmentID)
@@ -702,18 +754,124 @@ func (s *mdScanner) emitParagraph(start int) int {
 		end++
 	}
 	seg := s.makeBlockSegment(start, end-1, KindParagraph, "")
-	seg.Disposition = DispositionCanonicalAtom
 	raw := []byte(s.sliceText(start, end-1))
 	seg.RawTextHash = ComputeRawTextHash(raw)
-	seg.NormalizedTextHash = ComputeNormalizedTextHash(string(raw))
-	seg.IncludeInFeed = true
-	seg.IncludeInRAG = true
+	if canonical, ok := canonicalMarkdownAtomText(string(raw)); ok {
+		seg.Disposition = DispositionCanonicalAtom
+		seg.NormalizedTextHash = ComputeNormalizedTextHash(canonical)
+		seg.IncludeInFeed = true
+		seg.IncludeInRAG = true
+	} else {
+		seg.Disposition = DispositionCoverageOnly
+	}
 	s.append(seg)
 
 	for i := start; i < end; i++ {
 		s.emitInlineRefsInLine(i, seg.SegmentID)
 	}
 	return end
+}
+
+func canonicalMarkdownAtomText(raw string) (string, bool) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", false
+	}
+	if mdScanTOCOnlyLinkRe.MatchString(trimmed) {
+		return "", false
+	}
+	if mdScanPlaceholderRe.MatchString(trimmed) {
+		return "", false
+	}
+	plain := markdownPlainText(trimmed)
+	if strings.TrimSpace(plain) == "" {
+		return "", false
+	}
+	if mdScanStrongLabelRe.MatchString(trimmed) {
+		return "", false
+	}
+	if isReferenceOnlySemanticLine(plain) {
+		return "", false
+	}
+	if isPlaceholderSemantic(plain) {
+		return "", false
+	}
+	if isIntroductoryLeadIn(plain) {
+		return "", false
+	}
+	if semanticTokenCountMarkdown(plain) <= 2 {
+		return "", false
+	}
+	if isJunkSemantic([]byte(plain)) {
+		return "", false
+	}
+	return strings.TrimSpace(trimmed), true
+}
+
+func semanticTokenCountMarkdown(s string) int {
+	count := 0
+	inToken := false
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			if !inToken {
+				count++
+				inToken = true
+			}
+			continue
+		}
+		inToken = false
+	}
+	return count
+}
+
+func markdownPlainText(s string) string {
+	s = mdScanInlineRefRe.ReplaceAllString(s, "$2")
+	replacer := strings.NewReplacer(
+		"`", "",
+		"**", "",
+		"__", "",
+		"*", "",
+		"_", "",
+	)
+	s = replacer.Replace(s)
+	return strings.Join(strings.Fields(s), " ")
+}
+
+func isReferenceOnlySemanticLine(s string) bool {
+	folded := foldLatinLight(strings.ToLower(strings.TrimSpace(s)))
+	folded = strings.TrimLeft(folded, "-*+0123456789.) ")
+	if strings.HasPrefix(folded, "statut :") ||
+		strings.HasPrefix(folded, "status :") {
+		return true
+	}
+	return mdScanChapterRefRe.MatchString(folded)
+}
+
+func isPlaceholderSemantic(s string) bool {
+	folded := foldLatinLight(strings.ToLower(strings.TrimSpace(s)))
+	return strings.Contains(folded, "section a completer") ||
+		strings.Contains(folded, "a completer lors de la prochaine revision") ||
+		strings.Contains(folded, "to be completed")
+}
+
+func isIntroductoryLeadIn(s string) bool {
+	folded := foldLatinLight(strings.ToLower(strings.TrimSpace(s)))
+	if !strings.HasSuffix(folded, ":") {
+		return false
+	}
+	return semanticTokenCountMarkdown(folded) >= 3
+}
+
+func foldLatinLight(s string) string {
+	replacer := strings.NewReplacer(
+		"à", "a", "â", "a", "ä", "a",
+		"é", "e", "è", "e", "ê", "e", "ë", "e",
+		"î", "i", "ï", "i",
+		"ô", "o", "ö", "o",
+		"ù", "u", "û", "u", "ü", "u",
+		"ç", "c",
+	)
+	return replacer.Replace(s)
 }
 
 // ----------------------------------------------------------------------------

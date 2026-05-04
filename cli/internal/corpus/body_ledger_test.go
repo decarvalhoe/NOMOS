@@ -36,11 +36,11 @@ func fsq05ScanFixture(t *testing.T, sourceID, sourcePath, body string) (BodyLedg
 	return BodyLedgerSourceInput{Source: src, Content: content, Segments: segs}, content
 }
 
-// 1. Markdown source full coverage: a 2-paragraph markdown source
-//    fully covers its bytes; semantic_bytes > 0; uncovered_bytes == 0.
+//  1. Markdown source full coverage: a 2-paragraph markdown source
+//     fully covers its bytes; semantic_bytes > 0; uncovered_bytes == 0.
 func TestFSQ05BodyLedgerMarkdownFullCoverage(t *testing.T) {
 	in, content := fsq05ScanFixture(t, "RULE", "docs/rule.md",
-		"# Rule A\n\nFirst paragraph.\n\n# Rule B\n\nSecond paragraph.\n")
+		"# Rule A\n\nFirst paragraph carries enough semantic test content.\n\n# Rule B\n\nSecond paragraph carries different semantic test content.\n")
 	ledger, err := BuildCorpusBodyLedger(BodyLedgerInput{
 		CorpusRoot:  "/tmp/corpus",
 		GeneratedAt: fsq05BodyLedgerNow,
@@ -74,12 +74,12 @@ func TestFSQ05BodyLedgerMarkdownFullCoverage(t *testing.T) {
 	}
 }
 
-// 2. Mixed admitted text + reference: both appear in the ledger; the
-//    .pdf has zero segments and BinaryBytes == size; covers_full body
-//    holds because no admitted text source has uncovered bytes.
+//  2. Mixed admitted text + reference: both appear in the ledger; the
+//     .pdf has zero segments and BinaryBytes == size; covers_full body
+//     holds because no admitted text source has uncovered bytes.
 func TestFSQ05BodyLedgerMixedTextAndReference(t *testing.T) {
 	textIn, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
-		"# Rule\n\nBody paragraph.\n")
+		"# Rule\n\nBody paragraph carries enough semantic test content.\n")
 	pdfIn := BodyLedgerSourceInput{
 		Source: ManifestSource{
 			ID:                "REF",
@@ -128,11 +128,11 @@ func TestFSQ05BodyLedgerMixedTextAndReference(t *testing.T) {
 	}
 }
 
-// 3. Uncovered text bytes: drop a segment so its byte range is not
-//    covered → UncoveredBytes > 0 and CoversFullSourceBody == false.
+//  3. Uncovered text bytes: drop a segment so its byte range is not
+//     covered → UncoveredBytes > 0 and CoversFullSourceBody == false.
 func TestFSQ05BodyLedgerUncoveredTextBytes(t *testing.T) {
 	in, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
-		"# Rule\n\nFirst.\n\n# Other\n\nSecond.\n")
+		"# Rule\n\nFirst paragraph carries enough semantic test content.\n\n# Other\n\nSecond paragraph carries enough semantic test content.\n")
 	if len(in.Segments) < 2 {
 		t.Fatalf("need at least 2 root-level segments; got %d", len(in.Segments))
 	}
@@ -171,8 +171,8 @@ func TestFSQ05BodyLedgerUncoveredTextBytes(t *testing.T) {
 	}
 }
 
-// 4. Excluded source: no segments expected; bytes counted under
-//    BySourceStatus["excluded"] only.
+//  4. Excluded source: no segments expected; bytes counted under
+//     BySourceStatus["excluded"] only.
 func TestFSQ05BodyLedgerExcludedSource(t *testing.T) {
 	excluded := BodyLedgerSourceInput{
 		Source: ManifestSource{
@@ -210,11 +210,11 @@ func TestFSQ05BodyLedgerExcludedSource(t *testing.T) {
 	}
 }
 
-// 5. Feed unit linkage: a feed unit derived from a paragraph segment
-//    must carry BodyLedgerSegmentIDs = [SourceSegmentID].
+//  5. Feed unit linkage: a feed unit derived from a paragraph segment
+//     must carry BodyLedgerSegmentIDs = [SourceSegmentID].
 func TestFSQ05FeedUnitLinkage(t *testing.T) {
 	root := t.TempDir()
-	writeFeedTestFile(t, root, "docs/rule.md", "# Rule\n\nBody paragraph.\n")
+	writeFeedTestFile(t, root, "docs/rule.md", "# Rule\n\nBody paragraph carries enough semantic test content.\n")
 	feed, err := GenerateFeed(FeedInput{
 		ManifestYAML: []byte(sfi05ManifestRule),
 		Root:         root,
@@ -236,7 +236,8 @@ func TestFSQ05FeedUnitLinkage(t *testing.T) {
 }
 
 // 5b. Composed table_row feed unit: BodyLedgerSegmentIDs lists the row
-//     segment plus its child table_cell segments.
+//
+//	segment plus its child table_cell segments.
 func TestFSQ05FeedUnitTableRowLinkage(t *testing.T) {
 	root := t.TempDir()
 	doc := "# Tarif\n" +
@@ -273,11 +274,11 @@ func TestFSQ05FeedUnitTableRowLinkage(t *testing.T) {
 	}
 }
 
-// 6. Determinism: building the ledger twice with the same inputs and
-//    GeneratedAt produces byte-identical JSON.
+//  6. Determinism: building the ledger twice with the same inputs and
+//     GeneratedAt produces byte-identical JSON.
 func TestFSQ05BodyLedgerDeterministic(t *testing.T) {
 	in, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
-		"# Rule A\n\nFirst paragraph.\n\n## Rule B\n\nSecond paragraph.\n")
+		"# Rule A\n\nFirst paragraph carries enough semantic test content.\n\n## Rule B\n\nSecond paragraph carries different semantic test content.\n")
 	build := func() []byte {
 		l, err := BuildCorpusBodyLedger(BodyLedgerInput{
 			CorpusRoot:  "/tmp/corpus",
@@ -300,12 +301,12 @@ func TestFSQ05BodyLedgerDeterministic(t *testing.T) {
 	}
 }
 
-// 7. Attestation claim coverage: when a body ledger with zero uncovered
-//    bytes is supplied, the predicate carries CoversFullSourceBody=true.
-//    When no body ledger is supplied, ClaimCoverage is omitted.
+//  7. Attestation claim coverage: when a body ledger with zero uncovered
+//     bytes is supplied, the predicate carries CoversFullSourceBody=true.
+//     When no body ledger is supplied, ClaimCoverage is omitted.
 func TestFSQ05AttestationClaimCoverage(t *testing.T) {
 	in, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
-		"# Rule\n\nBody.\n")
+		"# Rule\n\nBody paragraph carries enough semantic test content.\n")
 	ledger, err := BuildCorpusBodyLedger(BodyLedgerInput{
 		GeneratedAt: fsq05BodyLedgerNow,
 		Sources:     []BodyLedgerSourceInput{in},

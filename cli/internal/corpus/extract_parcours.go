@@ -111,6 +111,9 @@ type ParcoursUnit struct {
 	BusinessRuleMode string `json:"business_rule_mode,omitempty" yaml:"business_rule_mode,omitempty"`
 	StartByte        int    `json:"start_byte,omitempty"         yaml:"start_byte,omitempty"`
 	EndByte          int    `json:"end_byte,omitempty"           yaml:"end_byte,omitempty"`
+	StartLine        int    `json:"start_line,omitempty"         yaml:"start_line,omitempty"`
+	EndLine          int    `json:"end_line,omitempty"           yaml:"end_line,omitempty"`
+	StartColumn      int    `json:"start_column,omitempty"       yaml:"start_column,omitempty"`
 }
 
 // ExtractResult holds extracted units and metadata.
@@ -304,6 +307,9 @@ func applyYAMLScalarMeta(unit *ParcoursUnit, scalars map[string]yamlScalarInfo, 
 	unit.NodeKind = loc.NodeKind
 	unit.StartByte = loc.StartByte
 	unit.EndByte = loc.EndByte
+	unit.StartLine = loc.StartLine
+	unit.EndLine = loc.StartLine + strings.Count(loc.RawText, "\n")
+	unit.StartColumn = loc.StartColumn
 }
 
 func makeParcoursUnitID(parcoursID string, etapeID string, critereID string) string {
@@ -584,6 +590,10 @@ func scanPlainScalarEnd(data []byte, start int) int {
 // the parcours flow we only need the bytes to round-trip the raw form, not
 // to re-parse the YAML grammar.
 func scanBlockScalarEnd(data []byte, start, startCol int) int {
+	indicatorIndentCol := lineIndentColumnAt(data, start)
+	if indicatorIndentCol <= 0 {
+		indicatorIndentCol = startCol
+	}
 	// Skip the rest of the indicator line (starts with '|' or '>').
 	i := start
 	for i < len(data) && data[i] != '\n' {
@@ -592,8 +602,34 @@ func scanBlockScalarEnd(data []byte, start, startCol int) int {
 	if i < len(data) {
 		i++ // consume the newline
 	}
+	blockIndent := 0
+	probe := i
+	for probe < len(data) {
+		lineStart := probe
+		col := 1
+		for probe < len(data) && data[probe] == ' ' {
+			probe++
+			col++
+		}
+		if probe >= len(data) {
+			break
+		}
+		if data[probe] == '\r' || data[probe] == '\n' {
+			probe = scanToNextLine(data, probe)
+			continue
+		}
+		if col <= indicatorIndentCol {
+			return lineStart
+		}
+		blockIndent = col
+		break
+	}
+	if blockIndent == 0 {
+		return i
+	}
 	for i < len(data) {
 		// Measure indentation of the current line.
+		lineStart := i
 		col := 1
 		for i < len(data) && data[i] == ' ' {
 			i++
@@ -606,10 +642,12 @@ func scanBlockScalarEnd(data []byte, start, startCol int) int {
 			i++
 			continue
 		}
-		if col < startCol {
-			// Trim back the consumed indentation so the returned offset
-			// sits at the start of the dedented line.
-			return i - (col - 1)
+		if data[i] == '\r' && i+1 < len(data) && data[i+1] == '\n' {
+			i += 2
+			continue
+		}
+		if col < blockIndent {
+			return lineStart
 		}
 		for i < len(data) && data[i] != '\n' {
 			i++
@@ -619,6 +657,35 @@ func scanBlockScalarEnd(data []byte, start, startCol int) int {
 		}
 	}
 	return i
+}
+
+func scanToNextLine(data []byte, i int) int {
+	for i < len(data) && data[i] != '\n' {
+		i++
+	}
+	if i < len(data) {
+		i++
+	}
+	return i
+}
+
+func lineIndentColumnAt(data []byte, offset int) int {
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > len(data) {
+		offset = len(data)
+	}
+	lineStart := offset
+	for lineStart > 0 && data[lineStart-1] != '\n' {
+		lineStart--
+	}
+	col := 1
+	for lineStart < len(data) && data[lineStart] == ' ' {
+		lineStart++
+		col++
+	}
+	return col
 }
 
 // computeYAMLLineOffsets returns a slice where index i is the byte offset
