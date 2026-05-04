@@ -28,6 +28,15 @@ if SCRIPTS_DIR not in sys.path:
 import nomos_github_publish as publisher  # noqa: E402
 
 
+def _symlink_or_skip(testcase: unittest.TestCase, source: str, link_name: str) -> None:
+    try:
+        os.symlink(source, link_name)
+    except (OSError, NotImplementedError) as exc:
+        if getattr(exc, "winerror", None) == 1314:
+            testcase.skipTest("Windows symlink privilege is unavailable")
+        testcase.skipTest(f"symlink creation unavailable: {exc}")
+
+
 @contextmanager
 def _chdir(path: str):
     old = os.getcwd()
@@ -82,7 +91,11 @@ class PathGuardTests(unittest.TestCase):
             os.makedirs("rbok-lawbook")
             with open("outside.txt", "w", encoding="utf-8") as fh:
                 fh.write("outside")
-            os.symlink(os.path.join(tmp, "outside.txt"), "rbok-lawbook/evil.md")
+            _symlink_or_skip(
+                self,
+                os.path.join(tmp, "outside.txt"),
+                "rbok-lawbook/evil.md",
+            )
             violations = publisher.validate_path_guard(
                 "rbok-lawbook",
                 ["rbok-lawbook/evil.md", "rbok-lawbook/safe.md"],
@@ -277,7 +290,11 @@ class DirectPushGuardTests(unittest.TestCase):
             os.makedirs(outputs)
             with open(os.path.join(tmp, "outside.txt"), "w", encoding="utf-8") as fh:
                 fh.write("x")
-            os.symlink(os.path.join(tmp, "outside.txt"), os.path.join(outputs, "evil.md"))
+            _symlink_or_skip(
+                self,
+                os.path.join(tmp, "outside.txt"),
+                os.path.join(outputs, "evil.md"),
+            )
             with self.assertRaises(ValueError) as ctx:
                 publisher.publish_direct_push(
                     publish_mode="direct_push",
@@ -370,7 +387,8 @@ class CLITests(unittest.TestCase):
             # any publishing is attempted.
             with open(os.path.join(tmp, "outside.txt"), "w", encoding="utf-8") as fh:
                 fh.write("x")
-            os.symlink(
+            _symlink_or_skip(
+                self,
                 os.path.join(tmp, "outside.txt"),
                 os.path.join(paths["outputs"], "evil.md"),
             )
