@@ -240,4 +240,3 @@ questions:
 8. Quel gate autorise ou refuse la publication?
 9. Quel output une application downstream peut importer?
 10. Quelle claim publique est supportee?
-
