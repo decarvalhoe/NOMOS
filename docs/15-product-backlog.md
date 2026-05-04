@@ -166,6 +166,17 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 
 - SFI-11 (#349) shipped: dossier + command sequence; real run blocked on corpus access at `/root/repos/realisons-business/01_rbok`.
 
+## FSQ Wave Status (epic #363)
+
+- FSQ-01 (#364) shipped: feed audit (`cli/internal/corpus/cmd/feed-audit/`).
+- FSQ-02 (#365) shipped: explicit source admission and non-atomization policy.
+- FSQ-03 (#366) shipped: table-row units replace bare table-cell leaks.
+- FSQ-04 (#367) shipped: YAML raw/decoded key-path scalar provenance.
+- FSQ-05 (#368) shipped: corpus body ledger separate from curated feed.
+- FSQ-06 (#369) shipped: semantic quality gate (`CheckSemanticQuality`).
+- FSQ-07 (#370) shipped: context-rich RAG chunk composer (`ComposeRAGChunks`).
+- FSQ-08 (#371) shipped 7/8 + dossier+runner ready: `scripts/rbok-poc-integrity.sh` extended through stage 13, `docs/rbok-poc-validation-dossier.md` converted to AQ-3 dossier; **real run blocked on corpus access** at `/root/repos/realisons-business/01_rbok`. The AQ-3 bounded claim is templated and not advertised until a passing run is recorded.
+
 ## Non-Goals For The Alpha
 
 The alpha backlog does not include:
