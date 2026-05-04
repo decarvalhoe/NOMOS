@@ -26,7 +26,7 @@ As checked during release preparation on 2026-05-03, open Nomos issues are:
 | `#193` | Reference bibles | Acquire and intake ISO/IEC/IEEE 12207:2026. | Blocks lifecycle-standard clause closure. |
 | `#194` | Reference bibles | Complete license review for GAMP 5 and ISO/IEC 25010. | Blocks licensed-standard processing and redistribution decisions. |
 | `#196` | Reference bibles | Process public and licensed bibles with Nomos. | Depends on licensed/public reference readiness; blocks higher assurance reference-to-control proof. |
-| `#337` | SFI epic — source-to-feed integrity | Umbrella epic for source-to-feed fidelity and semantic feed hygiene (children `#338`–`#349`). | In progress; claim boundary pending all SFI children. Blocks any platform-wide `full_fidelity_proven` claim until the corpus integrity gate is wired and passing. |
+| `#337` | SFI epic — source-to-feed integrity | Umbrella epic for source-to-feed fidelity and semantic feed hygiene (children `#338`–`#349`). | In progress. Shipped: `#338` (claim boundary), `#339` (source-segment ledger), `#340` (typed Markdown scanner), `#341` (no parent/child duplication), `#342` (SFI-04 source-integrity gate), `#343` (feed-from-canonical-atoms), `#344` (source-backed RAG metadata), `#345` (SFI-07 feed-quality gate), `#346` (SFI-08 strict-gate wiring), `#347` (CUE schemas + evidence examples). In flight: `#348` (this PR — SFI-10 method documentation and operator review). Pending: `#349` (SFI-11 RBOK POC re-run with the source-to-feed integrity report). The platform-wide `full_fidelity_proven` claim becomes writable once `#349` records a passing corpus-integrity report under the strict release gate. |
 
 ## Delivered Alpha Capabilities
 

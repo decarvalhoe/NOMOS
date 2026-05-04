@@ -100,3 +100,45 @@ Avant d'adopter un outil, répondre :
 
 Outil lourd sans discipline = dette. Fichier simple avec discipline = déjà utile.
 
+## Source-To-Feed Integrity (SFI Reference Baseline)
+
+Cette section regroupe les références citées par
+[`docs/21-source-feed-integrity-engine.md`](21-source-feed-integrity-engine.md)
+(épopée `#337`). Les entrées sont **étudiées comme inspiration et
+vocabulaire partagé**, pas adoptées comme dépendances ni comme
+certifications. Cf. la liste détaillée et les boundary statements
+dans le document SFI.
+
+### Lawbook Et Modélisation Documentaire
+
+| Outil/projet | À étudier pour |
+|---|---|
+| OASIS Akoma Ntoso | vocabulaire XML pour textes juridiques. |
+| TEI P5 | guidelines d'encodage de texte structuré. |
+
+### Provenance, Spans Et Lineage
+
+| Outil/projet | À étudier pour |
+|---|---|
+| RFC 5147 | URI fragments `text/plain` (modèle des spans `[start_byte, end_byte)` SFI). |
+| W3C Web Annotation Data Model | ancrage de fragments de texte avec provenance. |
+| W3C PROV | modèle de données de provenance. |
+| OpenLineage | événements lineage jobs/datasets, complément aux spans intra-document. |
+
+### RAG Et Qualité De Données
+
+| Outil/projet | À étudier pour |
+|---|---|
+| Ragas | métriques RAG (déjà cité plus haut, repris ici comme référence SFI). |
+| RAPTOR | retrieval récursif abstrait. |
+| GraphRAG | retrieval augmenté par graphe. |
+| Great Expectations | gate-as-test pour la qualité de données. |
+| Soda | data-quality checks déclaratifs. |
+| Deequ | tests de qualité de données pour pipelines Spark. |
+| W3C SHACL | contrats de forme RDF, point de comparaison schéma-contrat. |
+
+Ces références ne sont **pas** redistribuées, ne sont **pas**
+embarquées comme dépendances, et n'autorisent **aucune** revendication
+de certification ou de conformité externe (cf.
+`docs/public-claim-boundary.md`).
+
