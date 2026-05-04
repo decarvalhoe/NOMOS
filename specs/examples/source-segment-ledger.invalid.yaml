@@ -1,0 +1,21 @@
+source_id: DOC-BAD-001
+source_path: docs/bad.md
+source_hash: "sha256:badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb"
+ingestion_version: nomos-cli/0.1.0-alpha
+segments:
+  # Negative fixture: this canonical_atom segment is missing
+  # raw_text_hash and normalized_text_hash. The conditional invariant
+  # in #SourceSegment should reject it. SFI-09 (#347).
+  - segment_id: "seg:DOC-BAD-001:0-42:paragraph"
+    source_id: DOC-BAD-001
+    source_path: docs/bad.md
+    kind: paragraph
+    disposition: canonical_atom
+    start_byte: 0
+    end_byte: 42
+    start_line: 1
+    start_column: 1
+    end_line: 1
+    end_column: 42
+    include_in_feed: true
+    include_in_rag: true

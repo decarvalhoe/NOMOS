@@ -1,0 +1,9 @@
+status: pass
+source_count: 1
+segment_count: 5
+semantic_segment_count: 1
+uncovered_ranges: []
+duplicate_semantic_ranges: []
+junk_semantic_segments: []
+unsupported_blocking_segments: []
+findings: []
