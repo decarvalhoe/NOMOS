@@ -226,6 +226,13 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 - FSQ-07 (#370) shipped: context-rich RAG chunk composer (`ComposeRAGChunks`).
 - FSQ-08 (#371 / #379 / #380) shipped: `scripts/rbok-poc-integrity.sh` was extended through the integrity stages, `docs/rbok-poc-validation-dossier.md` records the AQ-3 bounded POC dossier, and the alpha release notes record the passing evidence pack. Remaining future work is not the FSQ epic itself; it is the stronger portable fidelity backlog above, including short critical atom reconciliation, broader adapter fixtures, repeated CI evidence, and attestation `claim_coverage` wiring.
 
+## NGW Wave Status (GitHub workflow integration)
+
+- NGW-01 (#386) shipped: workflow config schema (`specs/nomos-github-workflow.cue`).
+- NGW-02 (#387) shipped: trace manifest schema (`specs/nomos-trace-manifest.cue`).
+- NGW-03 (#388) shipped: scoped diff planner + `nomos github plan` command.
+- NGW-04 (#389) shipped: reusable GitHub Actions workflow (`.github/workflows/nomos-corpus-workflow.yml`) plus two caller templates (`templates/github-workflows/nomos-source-pr.yml`, `nomos-output-dispatch.yml`). Read-only corpus checkout (`persist-credentials: false` AND push remote DISABLED). NGW-04 reads + plans + uploads only; publication is NGW-005 / #390 territory.
+
 ## Non-Goals For The Alpha
 
 The alpha backlog does not include:

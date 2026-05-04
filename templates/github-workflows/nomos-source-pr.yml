@@ -1,0 +1,43 @@
+# NOMOS scoped check — source-corpus side caller template.
+#
+# Drop this file into a SOURCE corpus repository at
+# `.github/workflows/nomos.yml` (or any other name). It calls the
+# reusable workflow that lives in RBOKproject/Nomos and runs the
+# scoped diff planner over the PR's changed paths. NOMOS reads the
+# corpus read-only; nothing is committed or pushed back from this
+# workflow (publication is NGW-005 / #390 territory and uses a
+# separate token + workflow).
+#
+# Required secret in the source repo:
+#   GITHUB_TOKEN       — provided automatically by GitHub Actions; the
+#                        reusable workflow uses it for the corpus
+#                        checkout (read-only) and disables push.
+#
+# This template lives under `templates/github-workflows/` in the
+# Nomos repository so GitHub does NOT auto-run it as an Actions
+# workflow against Nomos itself. Copy it into `.github/workflows/`
+# inside the corpus repo for it to take effect.
+
+name: NOMOS scoped check
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  nomos:
+    uses: RBOKproject/Nomos/.github/workflows/nomos-corpus-workflow.yml@main
+    with:
+      config_owner: corpus
+      config_path: .nomos/corpus-workflows.yaml
+      corpus_repository: ${{ github.repository }}
+      corpus_ref: ${{ github.event.pull_request.head.sha }}
+      base_ref: ${{ github.event.pull_request.base.ref }}
+      head_ref: ${{ github.event.pull_request.head.ref }}
+    secrets:
+      NOMOS_CORPUS_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
