@@ -1,0 +1,424 @@
+name: NOMOS Corpus Workflow (Reusable)
+
+# NGW-04 (#389): the reusable workflow other repositories `uses:` to run
+# NOMOS scoped diff planning over a source corpus PR. This v0.1 wires
+# the planner from #388: it reads the corpus, runs `nomos github plan`,
+# uploads the diff plan as an artifact, AND when no scope is impacted
+# emits a placeholder nomos-trace.{yaml,json} with `impacted: false` and
+# stops cleanly. Publication itself (writes) is owned by NGW-005 (#390);
+# NGW-04 only reads + plans + uploads.
+#
+# The corpus checkout is read-only by construction: `persist-credentials:
+# false` AND `git remote set-url --push origin DISABLED`. Both are
+# applied; either alone is insufficient.
+
+on:
+  workflow_call:
+    inputs:
+      config_owner:
+        type: string
+        required: true
+        description: '"corpus" or "output" — who owns the workflow config file'
+      config_path:
+        type: string
+        required: true
+        description: 'Path to .nomos/corpus-workflows.yaml inside the config-owning repo'
+      corpus_repository:
+        type: string
+        required: true
+        description: 'owner/name of the source corpus repository (read-only)'
+      corpus_ref:
+        type: string
+        required: true
+        description: 'Branch or SHA to check out from the source corpus'
+      base_ref:
+        type: string
+        required: false
+        default: main
+      head_ref:
+        type: string
+        required: false
+        default: ''
+      changed_paths_artifact:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional name of an Actions artifact (in the same workflow run) carrying a newline-delimited list of changed paths. When empty, the workflow computes the list via `git diff origin/<base_ref>...HEAD`.'
+      output_repository:
+        type: string
+        required: false
+        default: ''
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+    outputs:
+      impacted:
+        description: 'true when one or more workflows match the changed paths'
+        value: ${{ jobs.plan.outputs.impacted }}
+      diff_artifact_name:
+        description: 'name of the uploaded nomos-diff artifact (empty in the no-impact path)'
+        value: ${{ jobs.plan.outputs.diff_artifact_name }}
+    secrets:
+      NOMOS_CORPUS_READ_TOKEN:
+        required: true
+      NOMOS_OUTPUT_WRITE_TOKEN:
+        # Declared but unused in NGW-04. NGW-005 (#390) will wire
+        # publication; until then this secret is not consumed.
+        required: false
+
+# NGW-04 explicitly does NOT request write permissions. NGW-006 (#391)
+# will add `pull-requests: write` for the source-PR commenter; NGW-005
+# (#390) will add `contents: write` to the OUTPUT repo via a separate
+# token, never to the source corpus.
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  plan:
+    name: nomos github plan
+    runs-on: ubuntu-latest
+    outputs:
+      impacted: ${{ steps.inspect.outputs.impacted }}
+      diff_artifact_name: ${{ steps.inspect.outputs.diff_artifact_name }}
+    env:
+      NOMOS_CHECKOUT_PATH: nomos
+      CORPUS_CHECKOUT_PATH: corpus
+    steps:
+      # ----------------------------------------------------------------------
+      # 1. Check out the NOMOS repository so we can build the CLI.
+      #
+      # Known limitation (NGW-04 v0.1): we pin the NOMOS source to `main`
+      # rather than the SHA of the called workflow file. GitHub does not
+      # expose a context value that resolves to "the ref of the called
+      # workflow" inside a workflow_call, so callers that pin
+      # `uses: RBOKproject/Nomos/.../...@<sha>` will run a CLI built from
+      # `main` rather than from `<sha>`. A follow-up may add a
+      # `nomos_ref` input to lift this; for v0.1 we accept the drift.
+      # ----------------------------------------------------------------------
+      - name: Checkout NOMOS (workflow source)
+        uses: actions/checkout@v4
+        with:
+          repository: RBOKproject/Nomos
+          ref: main
+          path: ${{ env.NOMOS_CHECKOUT_PATH }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.mod
+          cache-dependency-path: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.sum
+
+      - name: Build NOMOS CLI
+        working-directory: ${{ env.NOMOS_CHECKOUT_PATH }}/cli
+        run: |
+          set -euo pipefail
+          mkdir -p ../../bin
+          go build -o ../../bin/nomos .
+          ../../bin/nomos version || true
+          ../../bin/nomos help    || true
+
+      # ----------------------------------------------------------------------
+      # 2. Check out the source corpus READ-ONLY.
+      #
+      # Both `persist-credentials: false` AND the explicit push-remote
+      # disable are required by the NGW design's Security section. Either
+      # alone is insufficient: persist-credentials=false strips the
+      # auth header from the local git config, but a malicious step could
+      # still attempt a push using the runner's GITHUB_TOKEN. Disabling
+      # the push URL prevents any later step (or any future workflow
+      # change) from accidentally writing to the source corpus.
+      # ----------------------------------------------------------------------
+      - name: Checkout source corpus (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
+          persist-credentials: false
+          path: ${{ env.CORPUS_CHECKOUT_PATH }}
+          fetch-depth: 0
+
+      - name: Disable corpus push remote (read-only enforcement)
+        run: |
+          set -euo pipefail
+          git -C "$CORPUS_CHECKOUT_PATH" remote set-url --push origin DISABLED
+          echo "post-disable remotes:"
+          git -C "$CORPUS_CHECKOUT_PATH" remote -v
+
+      # ----------------------------------------------------------------------
+      # 3. Resolve the changed-paths list. Either an artifact (same
+      #    workflow run) or `git diff origin/<base_ref>...HEAD`.
+      # ----------------------------------------------------------------------
+      - name: Download changed-paths artifact (optional)
+        if: inputs.changed_paths_artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.changed_paths_artifact }}
+          path: ${{ runner.temp }}/changed-paths-artifact
+
+      - name: Resolve changed paths
+        id: changed
+        env:
+          BASE_REF: ${{ inputs.base_ref }}
+          ARTIFACT_NAME: ${{ inputs.changed_paths_artifact }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/changed-paths.txt"
+          if [ -n "$ARTIFACT_NAME" ]; then
+            # Take the first regular file inside the downloaded artifact
+            # directory; this is the contract callers commit to when they
+            # upload a single newline-delimited list.
+            src="$(find "$RUNNER_TEMP/changed-paths-artifact" -type f | head -n 1)"
+            if [ -z "$src" ]; then
+              echo "::error::changed_paths_artifact $ARTIFACT_NAME contained no files" >&2
+              exit 1
+            fi
+            cp "$src" "$out"
+          else
+            git -C "$CORPUS_CHECKOUT_PATH" fetch origin "$BASE_REF" --depth=1 || true
+            git -C "$CORPUS_CHECKOUT_PATH" diff --name-only \
+              "origin/$BASE_REF...HEAD" > "$out"
+          fi
+          echo "wrote $(wc -l < "$out") line(s) to $out"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # 4. Resolve the workflow-config path.
+      #
+      # Known limitation (NGW-04 v0.1): when `config_owner == "output"`
+      # we expect the caller workflow to have pre-staged the config at
+      # `${{ inputs.config_path }}` inside the runner workspace (e.g. via
+      # an additional checkout step). Cross-repo checkout of the OUTPUT
+      # repo would require a second token (NOMOS_OUTPUT_READ_TOKEN);
+      # NGW-04 does not declare that secret. NGW-005 (#390) will revisit
+      # the policy when it wires publication.
+      # ----------------------------------------------------------------------
+      - name: Resolve config path
+        id: config
+        env:
+          OWNER: ${{ inputs.config_owner }}
+          REL: ${{ inputs.config_path }}
+        run: |
+          set -euo pipefail
+          case "$OWNER" in
+            corpus)
+              path="$GITHUB_WORKSPACE/$CORPUS_CHECKOUT_PATH/$REL"
+              ;;
+            output)
+              # The caller is expected to have staged the config at
+              # $GITHUB_WORKSPACE/$REL before invoking this reusable
+              # workflow; see template comment block.
+              path="$GITHUB_WORKSPACE/$REL"
+              ;;
+            *)
+              echo "::error::unknown config_owner=$OWNER (expected corpus|output)" >&2
+              exit 1
+              ;;
+          esac
+          if [ ! -f "$path" ]; then
+            echo "::error::config not found at $path (config_owner=$OWNER)" >&2
+            exit 1
+          fi
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # 5. Run `nomos github plan`.
+      # ----------------------------------------------------------------------
+      - name: nomos github plan
+        id: plan
+        env:
+          CONFIG_PATH: ${{ steps.config.outputs.path }}
+          CHANGED_PATHS_PATH: ${{ steps.changed.outputs.path }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/nomos-diff.json"
+          ./bin/nomos github plan \
+            --config "$CONFIG_PATH" \
+            --changed-paths "$CHANGED_PATHS_PATH" \
+            --out "$out" \
+            --format json
+          echo "plan_path=$out" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # 6. Inspect plan: count impacted scopes.
+      # ----------------------------------------------------------------------
+      - name: Inspect plan
+        id: inspect
+        env:
+          PLAN_PATH: ${{ steps.plan.outputs.plan_path }}
+        run: |
+          set -euo pipefail
+          n="$(jq '.impacted | length' "$PLAN_PATH")"
+          echo "impacted_count=$n"
+          if [ "$n" = "0" ]; then
+            echo "impacted=false"            >> "$GITHUB_OUTPUT"
+            echo "diff_artifact_name="       >> "$GITHUB_OUTPUT"
+          else
+            echo "impacted=true"             >> "$GITHUB_OUTPUT"
+            echo "diff_artifact_name=nomos-diff" >> "$GITHUB_OUTPUT"
+          fi
+          echo "impacted_count=$n"           >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # 7a. No-impact path: emit placeholder trace manifest. The trace
+      #     MUST validate against specs/nomos-trace-manifest.cue (#387).
+      #     We use scope.id="no-impact" with paths=["**"] (the schema
+      #     requires a non-empty paths list); diff.changed_paths carries
+      #     the full list and diff.impacted=false.
+      # ----------------------------------------------------------------------
+      - name: Emit no-impact trace manifest
+        if: steps.inspect.outputs.impacted == 'false'
+        env:
+          EVENT: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          CORPUS_REPO: ${{ inputs.corpus_repository }}
+          BASE_REF: ${{ inputs.base_ref }}
+          HEAD_REF_INPUT: ${{ inputs.head_ref }}
+          CORPUS_REF: ${{ inputs.corpus_ref }}
+          OUTPUT_REPO_INPUT: ${{ inputs.output_repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CHANGED_PATHS_PATH: ${{ steps.changed.outputs.path }}
+        run: |
+          set -euo pipefail
+          base_sha="$(git -C "$CORPUS_CHECKOUT_PATH" rev-parse "origin/$BASE_REF" 2>/dev/null \
+            || git -C "$CORPUS_CHECKOUT_PATH" rev-parse HEAD)"
+          head_sha="$(git -C "$CORPUS_CHECKOUT_PATH" rev-parse HEAD)"
+          head_ref="${HEAD_REF_INPUT:-$CORPUS_REF}"
+          output_repo="${OUTPUT_REPO_INPUT:-$CORPUS_REPO}"
+          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          # Build changed_paths JSON array deterministically.
+          changed_json="$(python3 -c '
+          import json, sys
+          with open(sys.argv[1]) as fh:
+              paths = [ln.strip() for ln in fh if ln.strip()]
+          json.dump(paths, sys.stdout)
+          ' "$CHANGED_PATHS_PATH")"
+
+          # Build the YAML trace manifest.
+          trace_yaml="$RUNNER_TEMP/nomos-trace.yaml"
+          {
+            echo "schema_version: \"0.1.0\""
+            echo "run:"
+            echo "  event: \"$EVENT\""
+            echo "  workflow_run_id: \"$RUN_ID\""
+            echo "  generated_at: \"$now\""
+            echo "corpus:"
+            echo "  repo: \"$CORPUS_REPO\""
+            echo "  base_ref: \"$BASE_REF\""
+            echo "  base_sha: \"$base_sha\""
+            echo "  head_ref: \"$head_ref\""
+            echo "  head_sha: \"$head_sha\""
+            if [ -n "${PR_NUMBER:-}" ]; then
+              echo "  pull_request: $PR_NUMBER"
+            fi
+            echo "scope:"
+            echo "  id: \"no-impact\""
+            echo "  paths:"
+            echo "    - \"**\""
+            echo "diff:"
+            echo "  changed_paths: $changed_json"
+            echo "  impacted: false"
+            echo "output:"
+            echo "  repo: \"$output_repo\""
+            echo "  path: \"no-impact\""
+            echo "artifacts: {}"
+            echo "policy:"
+            echo "  publish_mode: \"artifact_only\""
+            echo "  risk_class: \"low\""
+            echo "  generated_path_guard: \"skipped\""
+            echo "  source_read_only_guard: \"pass\""
+          } > "$trace_yaml"
+
+          # Mirror to JSON.
+          trace_json="$RUNNER_TEMP/nomos-trace.json"
+          python3 -c '
+          import json, sys, yaml
+          json.dump(yaml.safe_load(open(sys.argv[1])), sys.stdout, indent=2)
+          ' "$trace_yaml" > "$trace_json"
+
+          echo "trace_yaml_path=$trace_yaml" >> "$GITHUB_OUTPUT"
+          echo "trace_json_path=$trace_json" >> "$GITHUB_OUTPUT"
+
+          # Optional: validate against specs/nomos-trace-manifest.cue
+          # if `cue` is on PATH. The action does not install cue by
+          # default; this is best-effort validation.
+          if command -v cue >/dev/null 2>&1; then
+            cue vet \
+              "$NOMOS_CHECKOUT_PATH/specs/nomos-trace-manifest.cue" \
+              "$trace_yaml" \
+              -d '#NomosTraceManifest' \
+              || { echo "::error::no-impact trace manifest failed cue vet" >&2; exit 1; }
+          else
+            echo "cue not on PATH; skipping schema validation (best-effort only)"
+          fi
+
+      - name: Upload no-impact trace artifact
+        if: steps.inspect.outputs.impacted == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomos-trace
+          path: |
+            ${{ runner.temp }}/nomos-trace.yaml
+            ${{ runner.temp }}/nomos-trace.json
+          if-no-files-found: error
+
+      # ----------------------------------------------------------------------
+      # 7b. Impact path: upload the diff plan as an artifact. Actual
+      #     regeneration + publication is NGW-005 (#390); NGW-04 stops
+      #     here.
+      # ----------------------------------------------------------------------
+      - name: Upload nomos-diff artifact
+        if: steps.inspect.outputs.impacted == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomos-diff
+          path: ${{ steps.plan.outputs.plan_path }}
+          if-no-files-found: error
+
+      # ----------------------------------------------------------------------
+      # 8. Always upload diagnostics so the operator can prove the
+      #    corpus checkout was read-only and the CLI version that ran.
+      # ----------------------------------------------------------------------
+      - name: Capture diagnostics
+        if: always()
+        env:
+          ARTIFACT_NAME: ${{ inputs.changed_paths_artifact }}
+          IMPACTED_COUNT: ${{ steps.inspect.outputs.impacted_count }}
+        run: |
+          set -euo pipefail
+          diag="$RUNNER_TEMP/nomos-diagnostics"
+          mkdir -p "$diag"
+          ./bin/nomos version > "$diag/nomos-version.txt" 2>&1 || true
+          ./bin/nomos help    > "$diag/nomos-help.txt"    2>&1 || true
+          {
+            echo "## corpus remotes"
+            git -C "$CORPUS_CHECKOUT_PATH" remote -v || true
+            echo
+            echo "## corpus status"
+            git -C "$CORPUS_CHECKOUT_PATH" status --short || true
+            echo
+            echo "## corpus HEAD"
+            git -C "$CORPUS_CHECKOUT_PATH" rev-parse HEAD || true
+          } > "$diag/corpus-readonly-proof.txt"
+          echo "config_owner=${{ inputs.config_owner }}"           > "$diag/inputs.txt"
+          echo "config_path=${{ inputs.config_path }}"            >> "$diag/inputs.txt"
+          echo "corpus_repository=${{ inputs.corpus_repository }}" >> "$diag/inputs.txt"
+          echo "corpus_ref=${{ inputs.corpus_ref }}"              >> "$diag/inputs.txt"
+          echo "base_ref=${{ inputs.base_ref }}"                  >> "$diag/inputs.txt"
+          echo "head_ref=${{ inputs.head_ref }}"                  >> "$diag/inputs.txt"
+          echo "changed_paths_artifact=$ARTIFACT_NAME"             >> "$diag/inputs.txt"
+          echo "output_repository=${{ inputs.output_repository }}" >> "$diag/inputs.txt"
+          echo "dry_run=${{ inputs.dry_run }}"                     >> "$diag/inputs.txt"
+          echo "impacted_count=$IMPACTED_COUNT"                    >> "$diag/inputs.txt"
+
+      - name: Upload diagnostics artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomos-diagnostics
+          path: ${{ runner.temp }}/nomos-diagnostics
+          if-no-files-found: warn

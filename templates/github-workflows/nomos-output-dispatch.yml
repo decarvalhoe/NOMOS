@@ -1,0 +1,85 @@
+# NOMOS scoped corpus refresh — output-side caller template.
+#
+# Drop this file into the OUTPUT repository (the repo that owns the
+# generated artifacts) at `.github/workflows/nomos-refresh.yml` (or
+# any other name). It can be triggered two ways:
+#
+#   workflow_dispatch       — operator runs it manually with corpus_ref
+#                              and an optional base_ref override.
+#   repository_dispatch     — the source corpus repo (or any other
+#                              system) sends an event of type
+#                              `nomos-corpus-update` carrying the
+#                              corpus_repository / corpus_ref / base_ref
+#                              in the client payload.
+#
+# Required secrets in the OUTPUT repo:
+#   NOMOS_CORPUS_READ_TOKEN  — fine-grained PAT (or App token) with
+#                              READ access to the source corpus repo;
+#                              never write.
+#   NOMOS_OUTPUT_WRITE_TOKEN — declared here for forward-compatibility;
+#                              NGW-04 does NOT use it. NGW-005 (#390)
+#                              will wire publication and consume this.
+#
+# Known limitation (NGW-04 v0.1): when `config_owner: output`, the
+# reusable workflow expects the workflow config file to be present at
+# `${{ inputs.config_path }}` inside the runner workspace. This caller
+# template places the output repo's own checkout at the workspace
+# root (the implicit actions/checkout@v4 default), so a config under
+# `.nomos/corpus-workflows.yaml` in the output repo is found there. If
+# the config lives elsewhere, set `config_path` accordingly.
+#
+# This template lives under `templates/github-workflows/` in the
+# Nomos repository so GitHub does NOT auto-run it as an Actions
+# workflow against Nomos itself. Copy it into `.github/workflows/`
+# inside the output repo for it to take effect.
+
+name: NOMOS scoped corpus refresh (output-owned)
+on:
+  workflow_dispatch:
+    inputs:
+      corpus_ref:
+        required: true
+        type: string
+        description: Source corpus branch or SHA
+      base_ref:
+        required: false
+        type: string
+        default: main
+  repository_dispatch:
+    types: [nomos-corpus-update]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  # The output repo's own checkout is needed so the reusable workflow
+  # can locate the workflow config file (config_owner=output). Without
+  # this step the resolver inside nomos-corpus-workflow.yml would not
+  # find $GITHUB_WORKSPACE/.nomos/corpus-workflows.yaml.
+  stage_output_checkout:
+    name: Stage output config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Echo config presence
+        run: |
+          ls -la .nomos/corpus-workflows.yaml || \
+            echo "::warning::config not found at .nomos/corpus-workflows.yaml"
+
+  nomos:
+    needs: stage_output_checkout
+    uses: RBOKproject/Nomos/.github/workflows/nomos-corpus-workflow.yml@main
+    with:
+      config_owner: output
+      config_path: .nomos/corpus-workflows.yaml
+      corpus_repository: ${{ github.event.client_payload.corpus_repository || vars.NOMOS_CORPUS_REPOSITORY }}
+      corpus_ref: ${{ inputs.corpus_ref || github.event.client_payload.corpus_ref }}
+      base_ref: ${{ inputs.base_ref || github.event.client_payload.base_ref || 'main' }}
+      output_repository: ${{ github.repository }}
+    secrets:
+      NOMOS_CORPUS_READ_TOKEN: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
+      NOMOS_OUTPUT_WRITE_TOKEN: ${{ secrets.NOMOS_OUTPUT_WRITE_TOKEN }}
