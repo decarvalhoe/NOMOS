@@ -1,0 +1,53 @@
+# NGW-10 (#395) synthetic E2E fixture: two scopes, mixed publish modes.
+schema_version: "0.1.0"
+workflows:
+  - id: scope-a
+    source:
+      repo: ngw-e2e/synthetic
+      base_branch: main
+      paths: [area-a/**]
+      extensions: [.md, .yaml]
+    output:
+      repo: output
+      branch: main
+      path: output/scope-a/
+    nomos:
+      corpus_id: ngw-e2e-scope-a
+      project_id: ngw-e2e
+      commands: [scan, manifest, feed]
+    publish:
+      mode: pull_request
+      target_repo: output
+      target_branch: main
+      target_path: output/scope-a/
+      branch_strategy: per_pr
+      risk_class: low
+    notify:
+      source_pr_comment:
+        enabled: true
+        mode: summary
+        include: [changed_scopes, diff_summary, output_location, trace_manifest, gate_status]
+  - id: scope-b
+    source:
+      repo: ngw-e2e/synthetic
+      base_branch: main
+      paths: [area-b/**]
+      extensions: [.md]
+    output:
+      repo: output
+      branch: main
+      path: output/scope-b/
+    nomos:
+      corpus_id: ngw-e2e-scope-b
+      project_id: ngw-e2e
+      commands: [scan, manifest, feed]
+    publish:
+      mode: direct_push
+      target_repo: output
+      target_branch: main
+      target_path: output/scope-b/
+      branch_strategy: fixed
+      risk_class: low
+    notify:
+      source_pr_comment:
+        enabled: false

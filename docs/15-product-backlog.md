@@ -233,6 +233,7 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 - NGW-03 (#388) shipped: scoped diff planner + `nomos github plan` command.
 - NGW-04 (#389) shipped: reusable GitHub Actions workflow (`.github/workflows/nomos-corpus-workflow.yml`) plus two caller templates (`templates/github-workflows/nomos-source-pr.yml`, `nomos-output-dispatch.yml`). Read-only corpus checkout (`persist-credentials: false` AND push remote DISABLED). NGW-04 reads + plans + uploads only; publication is NGW-005 / #390 territory.
 - NGW-08 (#393) shipped: source-owned and output-owned setup docs (`docs/31-github-workflow-setup.md`) — config-owner choice, secrets matrix, permissions, branch-protection expectations, publication-mode tradeoffs, step-by-step install, verification checklist, troubleshooting. Forward-references `docs/32-github-app-readiness-boundary.md` (NGW-09 / #394, parallel).
+- NGW-10 (#395): E2E fixture workflow shipped — synthetic ≤2KB corpus + output pair under `tests/fixtures/ngw-e2e/`, 14 Python unittest cases (`tests/test_ngw_e2e_fixture.py`) and a bash driver (`scripts/ngw-e2e-fixture.sh`) exercising the planner + all three publication modes (`artifact_only`, `pull_request`, `direct_push`) in dry-run, with trace-manifest cue-validation per mode and a fixture-corpus read-only invariant (pre/post snapshot diff).
 
 ## Non-Goals For The Alpha
 

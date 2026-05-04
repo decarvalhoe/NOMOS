@@ -1,0 +1,2 @@
+output/scope-a/feed.json
+output/scope-b/feed.json

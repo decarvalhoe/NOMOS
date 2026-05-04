@@ -1,0 +1,2 @@
+area-a/sample-a.md
+area-b/sample-b.md
