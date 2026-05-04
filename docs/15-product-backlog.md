@@ -12,6 +12,12 @@ The implementation issue list for the next releases lives in
 Create the GitHub child issues from that document before coding a
 release wave.
 
+The GitHub workflow integration issue list lives in
+[`docs/30-github-workflow-integration-issue-list.md`](30-github-workflow-integration-issue-list.md).
+It covers source-PR triggered NOMOS runs, output-owned workflows,
+risk-based publication, mandatory trace manifests, optional source PR
+comments, and GitHub App readiness.
+
 Each active backlog item must have:
 
 - an owner or GitHub issue;
