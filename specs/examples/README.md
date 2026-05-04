@@ -147,3 +147,45 @@ cue vet specs/nomos-github-workflow.cue \
         -d '#NomosGitHubWorkflowConfig'
 # expected: non-zero exit; controlled_decision flagged as required.
 ```
+
+## NGW-002 (#387) — Trace manifest
+
+Each NOMOS GitHub workflow run emits a trace manifest
+(`nomos-trace.yaml` / `nomos-trace.json`) regardless of publication
+mode. The contract is `specs/nomos-trace-manifest.cue` and its
+`policy.publish_mode` / `policy.risk_class` enums mirror NGW-01's
+`#PublishSpec` exactly so the two schemas cannot drift.
+
+### `nomos-trace-manifest.valid.yaml`
+
+Mirrors the design doc's manifest example (RBOK lawbook scope,
+`direct_push` mode, `risk_class: low`, both safety guards `pass`).
+Every mandatory field is populated and the `artifacts` block lists
+the five well-known NOMOS artifact filenames. Validate with:
+
+```bash
+cue vet specs/nomos-trace-manifest.cue \
+        specs/examples/nomos-trace-manifest.valid.yaml \
+        -d '#NomosTraceManifest'
+```
+
+### `nomos-trace-manifest.invalid.yaml` (intentional negative fixture)
+
+Demonstrates that the conditional invariant on `#NomosTraceManifest`
+is enforced: the fixture declares `policy.publish_mode: pull_request`
+but omits `output.commit_sha`. The schema rejects it. This fixture
+is documentation only; it MUST NOT enter a green CI step.
+
+Expected `cue vet` error substring:
+
+```
+output.commit_sha: incomplete value =~"^[0-9a-f]{7,40}$":
+```
+
+```bash
+cue vet specs/nomos-trace-manifest.cue \
+        specs/examples/nomos-trace-manifest.invalid.yaml \
+        -d '#NomosTraceManifest'
+# expected: non-zero exit; output.commit_sha flagged as required by
+# the publish_mode=pull_request conditional.
+```

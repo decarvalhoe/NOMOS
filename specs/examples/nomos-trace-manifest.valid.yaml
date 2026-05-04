@@ -1,0 +1,44 @@
+schema_version: "0.1.0"
+# NGW-02 (#387) — Valid trace manifest fixture.
+#
+# Mirrors the example in
+# `docs/superpowers/specs/2026-05-04-nomos-github-workflow-integration-design.md`
+# (Traceability Contract section). The run published a low risk-class
+# RBOK lawbook scope via direct_push, so output.branch and
+# output.commit_sha are populated; both safety guards passed.
+run:
+  event: pull_request
+  workflow_run_id: "16842073921"
+  generated_at: "2026-05-04T10:30:42.512Z"
+corpus:
+  repo: RBOKproject/realisons-business
+  base_ref: main
+  base_sha: "1f9d2c8b07e3a4f5d6c7b8a9e0d1c2b3a4f5d6c7"
+  head_ref: feature/update-guide
+  head_sha: "9b2a3c4d5e6f7081923a4b5c6d7e8f90a1b2c3d4"
+  pull_request: 123
+scope:
+  id: rbok-lawbook
+  paths:
+    - "01_rbok/**"
+diff:
+  changed_paths:
+    - "01_rbok/chapter-1.md"
+    - "01_rbok/chapter-2.md"
+  impacted: true
+output:
+  repo: RBOKproject/nomos-rbok-artifacts
+  branch: main
+  path: rbok-lawbook/
+  commit_sha: "a1b2c3d4e5f6708192a3b4c5d6e7f8091a2b3c4d"
+artifacts:
+  feed: feed.json
+  body_ledger: corpus-body-ledger.json
+  rag_metadata: rag-metadata.json
+  attestation: attestation.json
+  diff_report: nomos-diff.json
+policy:
+  publish_mode: direct_push
+  risk_class: low
+  generated_path_guard: pass
+  source_read_only_guard: pass
