@@ -83,6 +83,8 @@ Full source-to-feed fidelity is **not yet proven** at the platform level. The bl
 - `#345` (SFI-07) feed quality gate — semantic feed and RAG linkage;
 - `#346` (SFI-08) strict gate and CI wiring of the corpus integrity report.
 
+The FSQ epic (`#363`) extends the chain with semantic feed-quality gates (FSQ-06 `#369`), context-rich RAG composition (FSQ-07 `#370`), the corpus body ledger (FSQ-05 `#368`), and the FSQ-08 (`#371`) AQ-3 evidence pack. The AQ-3 evidence pack is **ready** when `scripts/rbok-poc-integrity.sh` runs green against `realisons-business/01_rbok`; until a real run is recorded the AQ-3 bounded claim in `docs/rbok-poc-validation-dossier.md` is templated and **not** advertised. AQ-3 does **not** establish AQ-4 (regulated validation) or AQ-5 (certification).
+
 Until those gates are wired and passing, the literal phrase `full_fidelity_proven` is reserved. It must only be emitted by the platform for a build whose corpus integrity report is present and passing. Today this phrase appears on the RBOK POC line above as the result of the existing strict fidelity gate; that claim is scoped to that specific POC corpus and configuration, not to a general source-to-feed proof.
 
 Distinguish:
