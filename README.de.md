@@ -34,9 +34,9 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Produkt | Authority-to-product Engine fuer gesteuerte Software, KI und RAG. |
 | Release | `v0.1.0-ALPHA`. |
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
-| Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> Feed -> RAG-Metadaten -> Gates -> Attestation. |
-| Bekannte Grenze | Der Alpha-Feed ist noch keine perfekte semantische Rekonstruktion aller Dokumente. |
-| Naechste Haertung | Feed Semantic Quality: nuetzliche Chunks, explizite Quellenabdeckung, kohärente Tabellen, modelliertes YAML, vollstaendiger Ledger. |
+| Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation. |
+| Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. |
+| Naechste Haertung | Wiederholte CI-Evidenz, Attestation `claim_coverage`, zusaetzliche Dokumentformate, Kunden-Validation-Packs. |
 | Claim Boundary | Kein zertifiziertes eQMS, kein validiertes GxP-System, keine regulatorische Zertifizierung. |
 
 ## Warum Nomos Existiert
@@ -101,13 +101,15 @@ Nomos ist fuer Teams gedacht, die source-backed Softwareverhalten, source-backed
 Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer canonical-first Projekte:
 
 - Repository-Diagnose und Project-Admission-Checks;
-- `corpus scan`, `diff`, `manifest`, `validate-sidecar`, `feed` und `attest` Befehle;
+- `strict`, `corpus scan`, `diff`, `manifest`, `validate-sidecar`, `feed`, `body-ledger` und `attest` Befehle;
 - read-only Guards fuer Corpus-Verarbeitung;
 - `rbok-lawbook` Profil fuer strukturierte Markdown-Referenzcorpora;
+- generischer YAML/JSON Structured Scanner mit strukturierten Pfaden und exakten Source-Spans;
 - zertifizierte Inhaltsstruktur;
 - Source-Spans und typisierte semantische Knoten fuer Tabellen, Links, Callouts, Codebloecke und Bilder;
 - Extraktion eines gesteuerten Lexikons;
-- RAG-Metadaten und Runtime-Importartefakte;
+- source-backed RAG-Metadaten und Runtime-Importartefakte;
+- vollstaendiger Source Body Ledger, der semantischen Inhalt, Struktur, Coverage, Unsupported und Binary Bytes trennt;
 - Strict Fidelity Gate und Release-Gate-Integration;
 - Attestation-Ausgabe im in-toto Stil;
 - regulated-by-design Dokumentationsskelett, Evidence Templates und Control Records;
@@ -117,10 +119,11 @@ Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer
 
 Nomos v0.1.0-ALPHA wurde auf dem echten privaten `realisons-business/01_rbok` Corpus in read-only Clones getestet. RBOK ist der erste Proof-Corpus; er ist nicht der Produktscope.
 
-Zwei Evidenzrecords sind relevant:
+Drei Evidenzrecords sind relevant:
 
-1. der historische Alpha-Lawbook-Pipeline-Record; und
-2. der neuere Source-to-Feed Integrity POC, der auch wichtige semantische Feed-Quality-Gaps sichtbar gemacht hat.
+1. der historische Alpha-Lawbook-Pipeline-Record;
+2. das initiale Source-to-Feed Audit, das wichtige semantische Feed-Quality-Gaps sichtbar gemacht hat; und
+3. der aktuelle strukturierte Source-to-Feed POC, der diese blocking Gaps im aufgezeichneten Run beseitigt.
 
 Historischer Alpha-Lawbook-Pipeline-Record:
 
@@ -139,7 +142,7 @@ Historischer Alpha-Lawbook-Pipeline-Record:
 
 Dieser Record beweist, dass die aktuelle Pipeline einen echten strukturierten fachlichen Referenzcorpus verarbeiten kann, ohne in das Source-Repository zu schreiben. Er beweist keine universelle Fidelity fuer jedes Dokumentformat oder jeden regulierten Kundenworkflow.
 
-Neuerer Source-to-Feed Integrity POC:
+Initiales Source-to-Feed Audit vor FSQ-Haertung:
 
 | Evidenzpunkt | Ergebnis |
 |---|---:|
@@ -151,7 +154,7 @@ Neuerer Source-to-Feed Integrity POC:
 | Strict Source/Feed Summary | `source_integrity=pass (0 findings); feed_quality=pass (0 findings)` |
 | Source Mutation Check | keine Source-Mutation erkannt |
 
-Die direkte Inspektion des erzeugten `feed.json` zeigte aber auch, dass der aktuelle Feed semantisch noch nicht als finaler Doktrin-/RAG-Korpus bereit ist:
+Die direkte Inspektion des erzeugten `feed.json` zeigte, dass dieser Feed semantisch noch nicht als finaler Doktrin-/RAG-Korpus bereit war:
 
 | Feed-Quality-Beobachtung | Ergebnis |
 |---|---:|
@@ -161,7 +164,26 @@ Die direkte Inspektion des erzeugten `feed.json` zeigte aber auch, dass der aktu
 | Einheiten mit <= 10 Zeichen | 2195 / 9500 |
 | Einheiten in duplizierten Textgruppen | 3704 |
 
-Diese Unterscheidung ist entscheidend. Die Alpha beweist sinnvolle Source-to-Artifact-Traceability, aber noch nicht, dass jeder erzeugte RAG-Chunk semantisch nuetzlich ist. Die aktive Haertung laeuft unter dem Epic **Feed Semantic Quality**: Tabellenzeilen statt isolierter Tabellenzellen, explizite Source-Admission-Gruende, raw/decoded YAML-Modellierung, vollstaendiger Source-Body-Ledger, semantisches Feed-Quality-Gate und kontextreiche RAG-Chunk-Komposition.
+Aktueller strukturierter Source-to-Feed POC:
+
+| Evidenzpunkt | Ergebnis |
+|---|---:|
+| Lokales Evidence Pack | `C:\Dev\nomos-rbok-poc-run-20260504-structured-universal-9` |
+| Corpus Commit | `ea003e8fe3c35993731c3708a3787df6a3a690df` |
+| Deklarierte Corpus-Quellen | 240 |
+| Feed-Einheiten erzeugt | 3024 |
+| RAG-Chunks erzeugt | 3024 |
+| Source-backed Feed-Einheiten | 3024 / 3024 |
+| Source-backed RAG-Chunks | 3024 / 3024 |
+| `table_cell` Feed-Einheiten | 0 |
+| Einheiten <= 10 Zeichen | 0 |
+| Blocking Duplicate Groups | 0 |
+| Semantic Quality | `warn`, 0 blocking findings, 6 reviewbare Warnings |
+| Body Ledger | 0 uncovered bytes |
+| Strict Gate | `pass`, exit code 0 |
+| Source Mutation Check | keine Source-Mutation erkannt |
+
+Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, Attestation `claim_coverage` ist noch nicht verdrahtet, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt. Die naechste Haertung zielt auf CI-Wiederholbarkeit, zusaetzliche Dokumentformate, Kundenvalidierung und breitere Universal-Fidelity-Evidenz.
 
 ## Regulated-Ready Posture
 
@@ -183,6 +205,7 @@ Der ehrliche Status:
 - **nicht beansprucht:** formale regulatorische Zertifizierung, Part-11-validierter Plattformstatus, GxP-Produktionsvalidierung, NASA/mission-critical Qualifikation oder universelle Rechtskonformitaet.
 
 Siehe [docs/public-claim-boundary.md](docs/public-claim-boundary.md) und [docs/regulated/README.md](docs/regulated/README.md).
+Siehe auch [docs/release-v0.1.0-alpha.md](docs/release-v0.1.0-alpha.md) fuer Release Notes und Publication Gate.
 
 ## Marktkontext
 
@@ -321,7 +344,7 @@ Nomos macht ein LLM nicht autoritaer. In der Zielarchitektur bleiben determinist
 
 Nomos ersetzt keine Validierung. In regulierten Umgebungen brauchen Kunden weiterhin Intended-Use-Definition, Risk Assessment, Validation Planning, Testevidenz, Change Control, Supplier Assessment, Security Review und Approval Records.
 
-Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit Tabellenmodellierung, low-value Chunks, Source-Admission-Gruende, raw/decoded YAML-Modellierung, vollstaendigen Source-Body-Ledger und kontextreiche RAG-Chunk-Komposition.
+Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit nicht unterstuetzte Dokumentformate, verbleibende semantische Warnings, Attestation `claim_coverage`, Kunden-Validation-Packs und CI-Wiederholbarkeit auf privaten Corpora.
 
 ## Release Roadmap
 

@@ -8,10 +8,11 @@ Nomos may claim that it:
 
 - implements a canonical-first method for source-to-product traceability;
 - provides a Go CLI for project diagnosis and corpus processing;
-- can scan, manifest, diff, validate sidecars, feed, and attest source corpora;
+- can scan, manifest, diff, validate sidecars, feed, produce a body ledger, run strict gates, and attest source corpora;
 - has a working `rbok-lawbook` profile for structured Markdown reference corpora;
-- can produce certified TOC artifacts, governed lexicon output, RAG metadata, runtime import artifacts, release gate results, fidelity proof reports, and attestations;
-- has been validated on a real RBOK lawbook POC with 7191 feed nodes and a green strict fidelity gate;
+- can produce certified TOC artifacts, governed lexicon output, source-backed RAG metadata, runtime import artifacts, body-ledger evidence, release gate results, fidelity proof reports, and attestations;
+- has been exercised on a real RBOK lawbook POC with 7191 feed nodes and a green strict fidelity gate;
+- has been exercised on a bounded RBOK `01_rbok` source-to-feed POC with 3024 feed units, 3024 RAG chunks, 3024/3024 source-backed units/chunks, zero uncovered body-ledger bytes, and zero semantic blocking findings;
 - includes regulated-readiness documentation, templates, evidence-pack automation, and a GitHub operating model.
 
 ## Conditional Claims
@@ -20,6 +21,7 @@ Nomos may claim the following only with context:
 
 - **"Regulated-ready"** means the project has a regulated-readiness structure and evidence workflow; it does not mean certified or validated for a customer's regulated use.
 - **"Full fidelity proven"** applies to a specific POC output and gate configuration, not every possible corpus and document format.
+- **"Source-integrity-proven"** applies only to a recorded run whose source integrity, feed quality, semantic blocking count, body ledger, and strict gate all pass.
 - **"Read-only corpus processing"** applies when the guard runs against a clean source repository and the source mutation check passes.
 - **"RAG-ready"** means traceable metadata exists; it does not mean production vector-store retrieval and LLM behavior have been validated.
 
@@ -55,8 +57,9 @@ If a claim cannot be mapped, it must be removed or rewritten as a roadmap item.
 At `v0.1.0-ALPHA`, NOMOS proves only:
 
 - that it can read a source corpus, build a manifest, and detect drift between source and recorded hashes;
-- that it can generate corpus feed artifacts, certified TOC, governed lexicon output, RAG metadata, runtime import artifacts, fidelity proof reports, and attestations from the configured profile;
-- that, on the specific RBOK lawbook POC corpus and configuration, the existing strict fidelity gate has reported `full_fidelity_proven` for the recorded run.
+- that it can generate corpus feed artifacts, certified TOC, governed lexicon output, source-backed RAG metadata, runtime import artifacts, body-ledger evidence, fidelity proof reports, and attestations from the configured profile;
+- that, on the specific RBOK lawbook POC corpus and configuration, the existing strict fidelity gate has reported `full_fidelity_proven` for the recorded run;
+- that, on the recorded RBOK `01_rbok` source-to-feed POC (`C:\Dev\nomos-rbok-poc-run-20260504-structured-universal-9`), source integrity, feed quality, body ledger, and strict gate passed with zero semantic blocking findings.
 
 These are all **artifact-generation** facts and **POC-scoped** facts. They are not, on their own, a platform-wide source-to-feed fidelity proof.
 
@@ -64,14 +67,13 @@ These are all **artifact-generation** facts and **POC-scoped** facts. They are n
 
 NOMOS does **not** yet prove, at platform scope:
 
-- complete source-to-feed coverage (no silent omissions across arbitrary corpora);
-- absence of parent/child body duplication in extracted units;
-- absence of junk, layout-only, or punctuation-only fragments leaking into feed/RAG content;
-- exact byte/line/column source spans for every active source block;
-- that every feed/RAG chunk is backed by a typed source segment ledger;
-- that attestation counts cannot overclaim by counting artifacts without proving source integrity.
+- complete source-to-feed coverage across arbitrary corpora;
+- absence of all semantic warnings across arbitrary corpora;
+- support for every PDF, DOCX, scanned document, image, legal code, regulation, rule book, or customer-specific format;
+- that attestation `claim_coverage` is fully wired to the body ledger;
+- customer-specific regulated validation, intended-use approval, supplier qualification, or certification.
 
-The blocking proof chain for these gaps is epic `#337`, with the gating issues `#342` (SFI-04 source integrity gate), `#345` (SFI-07 feed quality gate), and `#346` (SFI-08 strict gate and CI wiring).
+The remaining proof chain is release-scoped: repeated CI evidence on private corpora, attestation `claim_coverage` wiring, broader document-format adapters, and customer validation packs.
 
 ## Claim Levels
 
@@ -81,8 +83,8 @@ NOMOS public claims are organised in increasing assurance order. Each level may 
 |---|---|---|
 | `artifact-generated` | NOMOS produced the artifact (feed, attestation, fidelity proof report, TOC, lexicon, RAG metadata) without crashing and with the documented schema. | Existing `validate` and `canonical:check` gates. Active today. |
 | `source-traced` | Generated nodes carry source spans and resolve to a recorded source manifest entry. | Source span emission and manifest hash check. Active today on `rbok-lawbook` profile feeds. |
-| `source-integrity-proven` | The corpus integrity report for this build is present and passes (coverage, duplicate spans, junk content, feed linkage, RAG linkage). | Requires `#342` (SFI-04) and `#345` (SFI-07). **Not active today.** |
-| `full-fidelity-proven` | Source-integrity-proven AND the corpus integrity check is wired into the blocking strict release gate for this build. | Requires `#346` (SFI-08). **Not active today.** |
+| `source-integrity-proven` | The corpus integrity report for this build is present and passes (coverage, duplicate spans, junk content, feed linkage, RAG linkage). | Active for recorded POC runs that carry the passing evidence pack; not a platform-wide claim. |
+| `full-fidelity-proven` | Source-integrity-proven AND the corpus integrity check is wired into the blocking strict release gate for this build. | Active only for recorded POC runs where the strict gate evidence explicitly supports it; not a platform-wide claim. |
 
 A build may not advertise a level until the gating evidence for that level is recorded and passing. POC-scoped results may carry the corresponding level only with explicit corpus and configuration scoping.
 
