@@ -51,6 +51,8 @@ func corpusCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return corpusDiffCommand(args[1:], stdout, stderr)
 	case "feed":
 		return corpusFeedDispatch(args[1:], stdout, stderr)
+	case "body-ledger":
+		return corpusBodyLedgerCommand(args[1:], stdout, stderr)
 	case "attest":
 		return corpusAttestCommand(args[1:], stdout, stderr)
 	case "diagnose":
@@ -73,6 +75,7 @@ func corpusHelp(stdout io.Writer) int {
 	fmt.Fprintln(stdout, "  nomos corpus validate-sidecar --root <corpus> --manifest <source-manifest.yaml>")
 	fmt.Fprintln(stdout, "  nomos corpus diff --old <snapshot.json> --new <snapshot.json>")
 	fmt.Fprintln(stdout, "  nomos corpus feed --root <corpus> --snapshot <snapshot.json> --manifest <source-manifest.yaml> [--matrix <canonical-matrix.yaml>] [--lockfile <corpus.lock.json>]")
+	fmt.Fprintln(stdout, "  nomos corpus body-ledger --root <corpus> --manifest <source-manifest.yaml> --out <body-ledger.json>")
 	fmt.Fprintln(stdout, "  nomos corpus attest --snapshot <snapshot.json> --corpus-id <id> --project-id <id>")
 	fmt.Fprintln(stdout, "  nomos corpus feed --profile rbok-lawbook --root <corpus> [--outputs index,governance] [--format json|text]")
 	fmt.Fprintln(stdout, "  nomos corpus diagnose --profile rbok-lawbook --root <corpus> [--format json|text]")
@@ -415,6 +418,135 @@ func corpusFeedCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		}
 	}
 	return 0
+}
+
+func corpusBodyLedgerCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("corpus body-ledger", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	root := flags.String("root", "", "source corpus root")
+	manifestPath := flags.String("manifest", "", "source manifest YAML path")
+	out := flags.String("out", "", "body ledger output path outside the source corpus root")
+	flags.StringVar(out, "output", "", "body ledger output path outside the source corpus root")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *root == "" || *manifestPath == "" {
+		fmt.Fprintln(stderr, "corpus body-ledger: --root and --manifest are required")
+		return 2
+	}
+	if err := validateOutputPath(*root, *out); err != nil {
+		fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+		return 2
+	}
+	before, hadSnapshot, err := readOnlyBefore(*root)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+		return 2
+	}
+
+	manifest, err := corpus.ParseSidecarManifest(*manifestPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+		return 1
+	}
+	ledger, err := buildCorpusBodyLedgerFromManifest(*root, manifest)
+	if err != nil {
+		fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+		return 1
+	}
+	if *out == "" {
+		data, err := corpus.MarshalCorpusBodyLedger(ledger)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+			return 1
+		}
+		if _, err := stdout.Write(append(data, '\n')); err != nil {
+			fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+			return 1
+		}
+	} else if err := writeFile(*out, func(w io.Writer) error {
+		data, err := corpus.MarshalCorpusBodyLedger(ledger)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(data)
+		return err
+	}); err != nil {
+		fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+		return 1
+	}
+	if hadSnapshot {
+		if err := guard.GuardReadOnly(before); err != nil {
+			fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+			return 1
+		}
+	}
+	if *out != "" {
+		fmt.Fprintf(stdout, "wrote body ledger %s\n", filepath.Clean(*out))
+	}
+	return 0
+}
+
+func buildCorpusBodyLedgerFromManifest(root string, manifest corpus.SidecarManifest) (corpus.CorpusBodyLedger, error) {
+	inputs := make([]corpus.BodyLedgerSourceInput, 0, len(manifest.Sources))
+	for _, source := range manifest.Sources {
+		src := source
+		adm := src.Admission()
+		corpus.BackfillAdmission(&adm, src.Path)
+		src.AdmissionStatus = adm.AdmissionStatus
+		src.AtomizationStatus = adm.AtomizationStatus
+		src.ExclusionReason = adm.ExclusionReason
+		src.SourceRole = adm.SourceRole
+		src.FormatSupport = adm.FormatSupport
+		src.DerivativeOf = adm.DerivativeOf
+		if err := src.Validate(); err != nil {
+			return corpus.CorpusBodyLedger{}, fmt.Errorf("manifest source %q: %w", src.ID, err)
+		}
+
+		absPath := filepath.Join(root, filepath.FromSlash(src.Path))
+		info, err := os.Stat(absPath)
+		if err != nil {
+			return corpus.CorpusBodyLedger{}, fmt.Errorf("stat %s: %w", src.Path, err)
+		}
+
+		var content []byte
+		var segments []corpus.SourceSegment
+		if isBodyLedgerTextSource(src) {
+			content, err = os.ReadFile(absPath)
+			if err != nil {
+				return corpus.CorpusBodyLedger{}, fmt.Errorf("read %s: %w", src.Path, err)
+			}
+			segments, err = corpus.ScanMarkdown(src.ID, src.Path, content)
+			if err != nil {
+				return corpus.CorpusBodyLedger{}, fmt.Errorf("scan %s: %w", src.Path, err)
+			}
+		} else if format, ok := corpus.StructuredFormatForPath(src.Path); ok {
+			content, err = os.ReadFile(absPath)
+			if err != nil {
+				return corpus.CorpusBodyLedger{}, fmt.Errorf("read %s: %w", src.Path, err)
+			}
+			scan, err := corpus.ScanStructuredScalars(src, content, format)
+			if err != nil {
+				return corpus.CorpusBodyLedger{}, fmt.Errorf("scan structured %s: %w", src.Path, err)
+			}
+			segments = scan.Segments
+		}
+		inputs = append(inputs, corpus.BodyLedgerSourceInput{
+			Source:    src,
+			Content:   content,
+			Segments:  segments,
+			SizeBytes: info.Size(),
+		})
+	}
+	return corpus.BuildCorpusBodyLedger(corpus.BodyLedgerInput{
+		CorpusRoot: root,
+		Sources:    inputs,
+	})
+}
+
+func isBodyLedgerTextSource(source corpus.ManifestSource) bool {
+	ext := strings.ToLower(filepath.Ext(source.Path))
+	return source.Type == "markdown" || ext == ".md" || ext == ".mdx" || ext == ".txt"
 }
 
 func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int {

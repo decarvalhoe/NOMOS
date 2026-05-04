@@ -215,6 +215,15 @@ func ValidateAtomizedAgainstUnitCount(s SourceAdmission, sourceID string, unitCo
 // extension-based default.
 func DefaultAdmissionForPath(path string) SourceAdmission {
 	ext := strings.ToLower(filepath.Ext(path))
+	if isReferenceTemplatePath(path) {
+		return SourceAdmission{
+			AdmissionStatus:   AdmissionAdmitted,
+			AtomizationStatus: AtomizationNotAtomized,
+			ExclusionReason:   "reference/template/generated/archive/config source not atomized by default",
+			SourceRole:        AdmissionRoleReference,
+			FormatSupport:     FormatSupported,
+		}
+	}
 	switch ext {
 	case ".md", ".mdx":
 		return SourceAdmission{
@@ -283,6 +292,53 @@ func DefaultAdmissionForPath(path string) SourceAdmission {
 		SourceRole:        AdmissionRoleReference,
 		FormatSupport:     FormatUnsupported,
 	}
+}
+
+func isReferenceTemplatePath(path string) bool {
+	clean := strings.ToLower(filepath.ToSlash(path))
+	replacer := strings.NewReplacer(
+		"à", "a",
+		"â", "a",
+		"ä", "a",
+		"é", "e",
+		"è", "e",
+		"ê", "e",
+		"ë", "e",
+		"î", "i",
+		"ï", "i",
+		"ô", "o",
+		"ö", "o",
+		"ù", "u",
+		"û", "u",
+		"ü", "u",
+		"ç", "c",
+	)
+	clean = replacer.Replace(clean)
+	for _, marker := range []string{
+		"template",
+		"schema",
+		"schemas",
+		"config",
+		"configs",
+		"configuration",
+		"exemple",
+		"example",
+		"sample",
+		"fixture",
+		"testdata",
+		"test-data",
+		"modele",
+		"generated",
+		"archive",
+		"archives",
+		"workbook",
+		"workbooks",
+	} {
+		if strings.Contains(clean, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // BackfillAdmission fills empty fields of dst from the heuristic default

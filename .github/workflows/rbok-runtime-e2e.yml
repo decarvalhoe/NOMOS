@@ -49,9 +49,21 @@ jobs:
           mkdir -p /tmp/test-corpus/02_parcours/habitation
           mkdir -p /tmp/test-corpus/03_workbooks
           mkdir -p /tmp/test-corpus/98_schemas
-          echo "glossaire: []" > /tmp/test-corpus/00_meta/glossaire.yaml
-          echo "# Garanties habitation" > /tmp/test-corpus/01_rbok/referentiel/garanties.md
-          echo "parcours: {id: souscription}" > /tmp/test-corpus/02_parcours/habitation/souscription.yaml
+          cat > /tmp/test-corpus/00_meta/glossaire.yaml <<'YAML'
+          glossaire:
+            - terme: Garantie habitation
+              definition: Une garantie habitation formalise une promesse contractuelle vérifiable.
+          YAML
+          cat > /tmp/test-corpus/01_rbok/referentiel/garanties.md <<'MD'
+          # Garanties habitation
+
+          Une garantie habitation décrit les conditions métier applicables à une couverture client.
+          MD
+          cat > /tmp/test-corpus/02_parcours/habitation/souscription.yaml <<'YAML'
+          parcours:
+            id: souscription
+            description: Le parcours de souscription collecte les informations nécessaires à la qualification métier.
+          YAML
           echo "generated: true" > /tmp/test-corpus/03_workbooks/report.json
           echo '{"type": "object"}' > /tmp/test-corpus/98_schemas/schema.json
 

@@ -55,13 +55,13 @@ type GateError struct {
 // as BodyLedgerFindings. The ledger itself is NOT attached as a separate
 // section; per dispatch, the ledger is evidence consumed by this section.
 type CorpusIntegrityCheck struct {
-	Status             string                          `json:"status"`
-	SourceIntegrity    *corpus.IntegrityReport         `json:"source_integrity"`
-	FeedQuality        *corpus.FeedQualityReport       `json:"feed_quality"`
-	SemanticQuality    *corpus.SemanticQualityReport   `json:"semantic_quality,omitempty"`
-	BodyLedgerFindings []corpus.IntegrityFinding       `json:"body_ledger_findings,omitempty"`
-	AggregateFindings  []GateError                     `json:"aggregate_findings,omitempty"`
-	Summary            string                          `json:"summary"`
+	Status             string                        `json:"status"`
+	SourceIntegrity    *corpus.IntegrityReport       `json:"source_integrity"`
+	FeedQuality        *corpus.FeedQualityReport     `json:"feed_quality"`
+	SemanticQuality    *corpus.SemanticQualityReport `json:"semantic_quality,omitempty"`
+	BodyLedgerFindings []corpus.IntegrityFinding     `json:"body_ledger_findings,omitempty"`
+	AggregateFindings  []GateError                   `json:"aggregate_findings,omitempty"`
+	Summary            string                        `json:"summary"`
 }
 
 // FindingSemanticQualityFailed is the stable aggregate code added to
@@ -527,6 +527,127 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePa
 	if !info.IsDir() {
 		return nil, nil, nil, fmt.Errorf("--corpus-integrity-source %s: not a directory", sourceDir)
 	}
+
+	var fq *corpus.FeedQualityReport
+	var sq *corpus.SemanticQualityReport
+	var feedUnits []corpus.FeedUnit
+	var feedSources []corpus.FeedSource
+	var chunks []corpus.ChunkMetadata
+	if feedPath != "" || ragPath != "" {
+		if feedPath != "" {
+			data, err := os.ReadFile(feedPath)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
+			}
+			feedUnits, feedSources, err = parseFeedFile(data)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
+			}
+		}
+		if ragPath != "" {
+			data, err := os.ReadFile(ragPath)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("read rag %s: %w", ragPath, err)
+			}
+			if err := json.Unmarshal(data, &chunks); err != nil {
+				return nil, nil, nil, fmt.Errorf("parse rag %s: %w", ragPath, err)
+			}
+		}
+	}
+
+	sources, allSegments, err := scanIntegritySources(sourceDir, feedSources)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	si := corpus.CheckSourceIntegrity(sources, allSegments)
+
+	if feedPath != "" || ragPath != "" {
+		r := corpus.CheckFeedQuality(corpus.FeedQualityInput{
+			FeedUnits: feedUnits,
+			Chunks:    chunks,
+			Segments:  allSegments,
+		})
+		fq = &r
+
+		if feedPath != "" && ragPath != "" {
+			profile, err := loadSemanticProfile(semanticProfilePath)
+			if err != nil {
+				return &si, fq, nil, fmt.Errorf("load semantic profile %s: %w", semanticProfilePath, err)
+			}
+			s := corpus.CheckSemanticQuality(corpus.SemanticQualityInput{
+				Feed:     feedUnits,
+				Chunks:   chunks,
+				Segments: allSegments,
+				Sources:  feedSources,
+				Profile:  profile,
+			})
+			sq = &s
+		}
+	}
+	return &si, fq, sq, nil
+}
+
+func scanIntegritySources(sourceDir string, feedSources []corpus.FeedSource) ([]corpus.SourceInput, []corpus.SourceSegment, error) {
+	if hasResolvableFeedSources(sourceDir, feedSources) {
+		return scanIntegritySourcesFromFeed(sourceDir, feedSources)
+	}
+	return scanIntegritySourcesByWalking(sourceDir)
+}
+
+func hasResolvableFeedSources(sourceDir string, feedSources []corpus.FeedSource) bool {
+	foundScannable := false
+	for _, source := range feedSources {
+		if !isFeedSourceScannableForIntegrity(source) {
+			continue
+		}
+		foundScannable = true
+		path := filepath.Join(sourceDir, filepath.FromSlash(source.Path))
+		if _, err := os.Stat(path); err != nil {
+			return false
+		}
+	}
+	return foundScannable
+}
+
+func scanIntegritySourcesFromFeed(sourceDir string, feedSources []corpus.FeedSource) ([]corpus.SourceInput, []corpus.SourceSegment, error) {
+	var sources []corpus.SourceInput
+	var allSegments []corpus.SourceSegment
+	for _, source := range feedSources {
+		if !isFeedSourceScannableForIntegrity(source) {
+			continue
+		}
+		rel := filepath.FromSlash(source.Path)
+		path := filepath.Join(sourceDir, rel)
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil, nil, fmt.Errorf("read %s: %w", source.Path, err)
+		}
+		var segs []corpus.SourceSegment
+		if isFeedSourceTextForIntegrity(source) {
+			segs, err = corpus.ScanMarkdown(source.ID, source.Path, content)
+			if err != nil {
+				return nil, nil, fmt.Errorf("scan %s: %w", source.Path, err)
+			}
+		} else {
+			manifestSource := manifestSourceFromFeedSource(source)
+			format, _ := corpus.StructuredFormatForPath(source.Path)
+			scan, err := corpus.ScanStructuredScalars(manifestSource, content, format)
+			if err != nil {
+				return nil, nil, fmt.Errorf("scan structured %s: %w", source.Path, err)
+			}
+			segs = scan.Segments
+		}
+		sources = append(sources, corpus.SourceInput{
+			SourceID: source.ID,
+			Path:     source.Path,
+			Content:  content,
+		})
+		allSegments = append(allSegments, segs...)
+	}
+	return sources, allSegments, nil
+}
+
+func scanIntegritySourcesByWalking(sourceDir string) ([]corpus.SourceInput, []corpus.SourceSegment, error) {
 	var sources []corpus.SourceInput
 	var allSegments []corpus.SourceSegment
 	walkErr := filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
@@ -561,58 +682,41 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePa
 		return nil
 	})
 	if walkErr != nil {
-		return nil, nil, nil, walkErr
+		return nil, nil, walkErr
 	}
-	si := corpus.CheckSourceIntegrity(sources, allSegments)
+	return sources, allSegments, nil
+}
 
-	var fq *corpus.FeedQualityReport
-	var sq *corpus.SemanticQualityReport
-	if feedPath != "" || ragPath != "" {
-		var feedUnits []corpus.FeedUnit
-		var feedSources []corpus.FeedSource
-		var chunks []corpus.ChunkMetadata
-		if feedPath != "" {
-			data, err := os.ReadFile(feedPath)
-			if err != nil {
-				return &si, nil, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
-			}
-			feedUnits, feedSources, err = parseFeedFile(data)
-			if err != nil {
-				return &si, nil, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
-			}
-		}
-		if ragPath != "" {
-			data, err := os.ReadFile(ragPath)
-			if err != nil {
-				return &si, nil, nil, fmt.Errorf("read rag %s: %w", ragPath, err)
-			}
-			if err := json.Unmarshal(data, &chunks); err != nil {
-				return &si, nil, nil, fmt.Errorf("parse rag %s: %w", ragPath, err)
-			}
-		}
-		r := corpus.CheckFeedQuality(corpus.FeedQualityInput{
-			FeedUnits: feedUnits,
-			Chunks:    chunks,
-			Segments:  allSegments,
-		})
-		fq = &r
+func isFeedSourceTextForIntegrity(source corpus.FeedSource) bool {
+	ext := strings.ToLower(filepath.Ext(source.Path))
+	return source.Type == "markdown" || ext == ".md" || ext == ".mdx" || ext == ".txt"
+}
 
-		if feedPath != "" && ragPath != "" {
-			profile, err := loadSemanticProfile(semanticProfilePath)
-			if err != nil {
-				return &si, fq, nil, fmt.Errorf("load semantic profile %s: %w", semanticProfilePath, err)
-			}
-			s := corpus.CheckSemanticQuality(corpus.SemanticQualityInput{
-				Feed:     feedUnits,
-				Chunks:   chunks,
-				Segments: allSegments,
-				Sources:  feedSources,
-				Profile:  profile,
-			})
-			sq = &s
-		}
+func isFeedSourceScannableForIntegrity(source corpus.FeedSource) bool {
+	if isFeedSourceTextForIntegrity(source) {
+		return true
 	}
-	return &si, fq, sq, nil
+	_, ok := corpus.StructuredFormatForPath(source.Path)
+	return ok
+}
+
+func manifestSourceFromFeedSource(source corpus.FeedSource) corpus.ManifestSource {
+	return corpus.ManifestSource{
+		ID:                source.ID,
+		Path:              source.Path,
+		Type:              source.Type,
+		Domain:            source.Domain,
+		Status:            source.Status,
+		Hash:              source.Hash,
+		Owner:             source.Owner,
+		Confidentiality:   source.Confidentiality,
+		AdmissionStatus:   source.AdmissionStatus,
+		AtomizationStatus: source.AtomizationStatus,
+		ExclusionReason:   source.ExclusionReason,
+		SourceRole:        source.SourceRole,
+		FormatSupport:     source.FormatSupport,
+		DerivativeOf:      source.DerivativeOf,
+	}
 }
 
 // parseFeedFile accepts either a top-level []FeedUnit array (the legacy

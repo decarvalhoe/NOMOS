@@ -23,7 +23,8 @@ For `v0.1.0-ALPHA`, the most important evidence themes are:
 
 - release validation runs CLI, E2E, Python, regulated documentation, and evidence-pack gates;
 - RBOK lawbook POC produces a full artifact pack from a read-only clone;
-- strict fidelity gate is release-gated;
+- RBOK `01_rbok` source-to-feed POC records 3024 feed units, 3024 RAG chunks, 3024/3024 source-backed units/chunks, zero uncovered body-ledger bytes, and zero semantic blocking findings;
+- strict fidelity and source-to-feed gates are release-gated for the recorded POC scope;
 - regulated documentation exists as a baseline but is not a certification;
 - public claims are limited by [public-claim-boundary.md](public-claim-boundary.md).
 

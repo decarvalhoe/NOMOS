@@ -43,11 +43,11 @@ func sfi05Feed(t *testing.T, body string) Feed {
 	return feed
 }
 
-// 1. Headings + paragraphs: each canonical paragraph yields exactly one
-//    feed unit; each unit carries SourceSegmentID, byte/line spans, and
-//    the correct HeadingPath.
+//  1. Headings + paragraphs: each canonical paragraph yields exactly one
+//     feed unit; each unit carries SourceSegmentID, byte/line spans, and
+//     the correct HeadingPath.
 func TestSFI05FeedHeadingsAndParagraphs(t *testing.T) {
-	feed := sfi05Feed(t, "# Rule A\nBody A\n\n## Rule B\nBody B\n")
+	feed := sfi05Feed(t, "# Rule A\nBody A carries enough semantic meaning.\n\n## Rule B\nBody B carries distinct semantic meaning.\n")
 
 	if feed.UnitCount != 2 {
 		t.Fatalf("expected 2 feed units, got %d", feed.UnitCount)
@@ -91,10 +91,10 @@ func TestSFI05FeedHeadingsAndParagraphs(t *testing.T) {
 	}
 }
 
-// 2. Markdown table: feed surfaces row-level canonical text (FSQ-03 #366)
-//    but never the "| --- | --- |" separator row. Header words here are
-//    "Offre"/"Prix" — outside the metadata-table key/value heuristic — so
-//    data rows produce real feed units.
+//  2. Markdown table: feed surfaces row-level canonical text (FSQ-03 #366)
+//     but never the "| --- | --- |" separator row. Header words here are
+//     "Offre"/"Prix" — outside the metadata-table key/value heuristic — so
+//     data rows produce real feed units.
 func TestSFI05FeedExcludesTableSeparator(t *testing.T) {
 	doc := "# Rules\n" +
 		"| Offre | Prix |\n" +
@@ -116,10 +116,10 @@ func TestSFI05FeedExcludesTableSeparator(t *testing.T) {
 	}
 }
 
-// 3. Decorative thematic breaks ("---" between paragraphs) never produce
-//    a feed unit.
+//  3. Decorative thematic breaks ("---" between paragraphs) never produce
+//     a feed unit.
 func TestSFI05FeedExcludesDecorativeSeparator(t *testing.T) {
-	doc := "# Rules\n\nFirst paragraph.\n\n---\n\nSecond paragraph.\n"
+	doc := "# Rules\n\nFirst paragraph carries enough semantic meaning.\n\n---\n\nSecond paragraph carries enough semantic meaning.\n"
 	feed := sfi05Feed(t, doc)
 
 	if feed.UnitCount != 2 {
@@ -132,10 +132,10 @@ func TestSFI05FeedExcludesDecorativeSeparator(t *testing.T) {
 	}
 }
 
-// 4. Front-matter / metadata blocks and blank-line gaps never produce
-//    feed units.
+//  4. Front-matter / metadata blocks and blank-line gaps never produce
+//     feed units.
 func TestSFI05FeedExcludesFrontMatterAndBlanks(t *testing.T) {
-	doc := "---\ntitle: Spec\nowner: alice\n---\n\n# Rules\n\nOnly paragraph.\n"
+	doc := "---\ntitle: Spec\nowner: alice\n---\n\n# Rules\n\nOnly paragraph carries enough semantic meaning.\n"
 	feed := sfi05Feed(t, doc)
 
 	if feed.UnitCount != 1 {
@@ -150,9 +150,9 @@ func TestSFI05FeedExcludesFrontMatterAndBlanks(t *testing.T) {
 	}
 }
 
-// 5. A synthetic canonical_atom whose raw text is "---" (i.e. junk) must
-//    cause feed generation to fail. We exercise the helper directly so
-//    we can construct the segment slice.
+//  5. A synthetic canonical_atom whose raw text is "---" (i.e. junk) must
+//     cause feed generation to fail. We exercise the helper directly so
+//     we can construct the segment slice.
 func TestSFI05FeedRejectsJunkCanonicalAtom(t *testing.T) {
 	content := []byte("---\n")
 	source := ManifestSource{ID: "S1", Path: "junk.md", Hash: "sha256:0", Domain: "rbok", Status: "active"}
@@ -190,8 +190,8 @@ func TestSFI05FeedRejectsJunkCanonicalAtom(t *testing.T) {
 	}
 }
 
-// 6. A canonical_atom missing its hashes is an integrity-gate failure
-//    and feed generation must surface it as an error.
+//  6. A canonical_atom missing its hashes is an integrity-gate failure
+//     and feed generation must surface it as an error.
 func TestSFI05FeedRejectsCanonicalAtomMissingHash(t *testing.T) {
 	content := []byte("Body text.\n")
 	source := ManifestSource{ID: "S2", Path: "missing-hash.md", Hash: "sha256:0", Domain: "rbok", Status: "active"}
@@ -227,15 +227,15 @@ func TestSFI05FeedRejectsCanonicalAtomMissingHash(t *testing.T) {
 	}
 }
 
-// 7. Source-derived feed units must always quote their canonical-atom
-//    NormalizedTextHash (not the unrelated raw_text_hash).
+//  7. Source-derived feed units must always quote their canonical-atom
+//     NormalizedTextHash (not the unrelated raw_text_hash).
 func TestSFI05FeedUnitNormalizedHashMatchesSegment(t *testing.T) {
-	feed := sfi05Feed(t, "# Rule A\nBody A\n")
+	feed := sfi05Feed(t, "# Rule A\nBody A carries enough semantic meaning.\n")
 	if feed.UnitCount != 1 {
 		t.Fatalf("expected 1 feed unit, got %d", feed.UnitCount)
 	}
 	u := feed.Units[0]
-	want := ComputeNormalizedTextHash("Body A")
+	want := ComputeNormalizedTextHash("Body A carries enough semantic meaning.")
 	if u.NormalizedTextHash != want {
 		t.Fatalf("NormalizedTextHash = %q, want %q (matching ComputeNormalizedTextHash of paragraph body)",
 			u.NormalizedTextHash, want)

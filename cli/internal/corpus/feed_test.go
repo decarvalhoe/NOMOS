@@ -262,7 +262,7 @@ units:
 
 func TestGenerateFeedRealCorpusArtifactsFromMarkdown(t *testing.T) {
 	root := t.TempDir()
-	writeFeedTestFile(t, root, "docs/rule.md", "# Rule A\nBody A\n\n## Rule B\nBody B\n")
+	writeFeedTestFile(t, root, "docs/rule.md", "# Rule A\nBody A carries enough semantic meaning.\n\n## Rule B\nBody B carries distinct semantic meaning.\n")
 
 	snapshot := Snapshot{
 		Format:     "nomos.corpus-snapshot.v1",

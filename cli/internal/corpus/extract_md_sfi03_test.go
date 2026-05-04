@@ -146,7 +146,7 @@ func TestSFI03HeadingAncestryRetained(t *testing.T) {
 // one semantic leaf per list item (not a single concatenated body on
 // the heading).
 func TestSFI03ListItemsAreSemanticLeaves(t *testing.T) {
-	doc := "# Items\n\n- alpha item\n- beta item\n- gamma item\n"
+	doc := "# Items\n\n- alpha semantic item\n- beta semantic item\n- gamma semantic item\n"
 	units, err := ExtractMarkdownUnitsFromReader("docs/sfi03_list.md", strings.NewReader(doc))
 	if err != nil {
 		t.Fatalf("extract: %v", err)
@@ -158,13 +158,13 @@ func TestSFI03ListItemsAreSemanticLeaves(t *testing.T) {
 			continue
 		}
 		// The list item body should round-trip into the leaf content.
-		for _, want := range []string{"alpha item", "beta item", "gamma item"} {
+		for _, want := range []string{"alpha semantic item", "beta semantic item", "gamma semantic item"} {
 			if strings.Contains(u.Content, want) {
 				leafContents[want]++
 			}
 		}
 	}
-	for _, want := range []string{"alpha item", "beta item", "gamma item"} {
+	for _, want := range []string{"alpha semantic item", "beta semantic item", "gamma semantic item"} {
 		if leafContents[want] != 1 {
 			t.Fatalf("list item %q must appear exactly once as a list_item leaf, got %d",
 				want, leafContents[want])
@@ -173,7 +173,7 @@ func TestSFI03ListItemsAreSemanticLeaves(t *testing.T) {
 
 	// The heading entry must not own the list bodies.
 	for _, u := range filterHeadingEntries(units) {
-		for _, body := range []string{"alpha item", "beta item", "gamma item"} {
+		for _, body := range []string{"alpha semantic item", "beta semantic item", "gamma semantic item"} {
 			if strings.Contains(u.Content, body) {
 				t.Fatalf("heading %q swallowed list body %q", u.Title, body)
 			}

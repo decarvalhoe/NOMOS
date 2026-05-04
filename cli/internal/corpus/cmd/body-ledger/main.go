@@ -1,7 +1,7 @@
 // Command body-ledger emits a CorpusBodyLedger JSON artifact (FSQ-05
-// #368) for the source manifest at --manifest, scanning markdown
-// sources under --corpus-root with the typed scanner and leaving
-// non-text sources unscanned (their bytes go to BinaryBytes /
+// #368) for the source manifest at --manifest, scanning markdown and
+// supported structured sources under --corpus-root with typed scanners
+// and leaving other non-text sources unscanned (their bytes go to BinaryBytes /
 // UnsupportedBytes per FSQ-02 admission). Output is written to --out.
 //
 // This is the body-ledger generator the FSQ-08 (#371) RBOK POC runner
@@ -83,6 +83,20 @@ func run(args []string, _, stderr *os.File) int {
 			}
 			in.Content = content
 			in.Segments = segs
+			in.SizeBytes = int64(len(content))
+		} else if format, ok := corpus.StructuredFormatForPath(src.Path); ok {
+			content, err := os.ReadFile(abs)
+			if err != nil {
+				fmt.Fprintf(stderr, "read source %s: %v\n", abs, err)
+				return 1
+			}
+			scan, err := corpus.ScanStructuredScalars(src, content, format)
+			if err != nil {
+				fmt.Fprintf(stderr, "scan structured %s: %v\n", abs, err)
+				return 1
+			}
+			in.Content = content
+			in.Segments = scan.Segments
 			in.SizeBytes = int64(len(content))
 		} else {
 			info, err := os.Stat(abs)

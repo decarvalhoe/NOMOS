@@ -218,7 +218,7 @@ func TestUnitIDDeterministic(t *testing.T) {
 
 func TestExtractMarkdownUnitsFromFile(t *testing.T) {
 	root := t.TempDir()
-	content := "# File Test\n\nBody content.\n\n## Section\n\nMore text.\n"
+	content := "# File Test\n\nBody content carries enough semantic meaning.\n\n## Section\n\nMore text carries enough semantic meaning.\n"
 	writeTestFile(t, root, "doc.md", content)
 
 	units, err := ExtractMarkdownUnits(root + "/doc.md")

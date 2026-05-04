@@ -1,137 +1,287 @@
 # Nomos
 
-**Canonical Product Intelligence for systems that must stay faithful to their source of authority.**
+<p align="center">
+  <strong>Le moteur authority-to-product pour les logiciels et les IA qui doivent rester fidèles à leurs sources gouvernées.</strong>
+</p>
 
-Nomos turns business, legal, regulatory, procedural, or technical reference material into traceable product evidence: structured source inventories, canonical units, document trees, typed artifacts, release gates, RAG metadata, attestations, and validation records.
+<p align="center">
+  <a href="./README.md"><strong>Français</strong></a>
+  ·
+  <a href="./README.en.md">English</a>
+  ·
+  <a href="./README.de.md">Deutsch</a>
+</p>
 
-The short version: Nomos helps teams prove what a product knows, where it came from, how it changed, and whether the shipped output still matches the governed reference.
+<p align="center">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
+  <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
+  <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
+</p>
 
-## Release Status
+Nomos transforme des références d'autorité en actifs produit contrôlés, traçables et auditables. Une référence d'autorité peut être une base de connaissance métier, une norme, une réglementation, une procédure qualité, un corpus juridique, un manuel technique, un livre de règles, une doctrine produit ou tout ensemble documentaire qui définit ce qu'un système a le droit de savoir, dire ou faire.
 
-Current release: **v0.1.0-ALPHA**.
+La version courte : **Nomos aide une équipe à prouver ce qu'un logiciel ou une IA sait, d'où vient ce savoir, comment il a été structuré, comment il a changé, ce qui a été ignoré, et si l'output livré reste aligné avec la référence gouvernée.**
 
-This is an alpha release. It is suitable for pilots, corpus assessment, architecture validation, regulated-readiness work, and internal proof-of-concept pipelines. It is not a certified quality-management system, not an eQMS, not a validated GxP system, and not a substitute for customer-side validation, legal review, security review, or regulated supplier qualification.
+Nomos ne remplace pas les experts métier, les responsables juridiques, les responsables qualité ou la source officielle. Il fournit la couche de transformation et de preuve qui maintient les applications, automatisations et systèmes IA/RAG alignés sur des références approuvées.
 
-## Why Nomos Exists
+> Nomos ne rend pas une IA "autoritaire". Il rend explicite, testable et gouvernable le lien entre une source d'autorité et les artefacts que le logiciel ou l'IA consomme.
 
-Many business applications are technically clean and still wrong. The failure mode is usually not the framework. It is hidden drift between the product and the reference material:
+## En Un Coup D'oeil
 
-- business rules copied into code without a source;
-- RAG chunks without provenance;
-- UI or API behavior driven by samples or demos;
-- LLM answers that summarize away a critical nuance;
-- source documents updated without downstream traceability;
-- tests proving code execution but not business authority.
+| Dimension | Position actuelle |
+|---|---|
+| Produit | Moteur authority-to-product pour logiciels, IA et RAG gouvernés. |
+| Release | `v0.1.0-ALPHA`. |
+| Preuve actuelle | POC alpha sur un vrai corpus privé, traité en lecture seule. |
+| Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation. |
+| Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. |
+| Prochain durcissement | Evidence CI répétée, `claim_coverage` dans l'attestation, formats documentaires additionnels, validation packs clients. |
+| Claim boundary | Pas un eQMS certifié, pas un système GxP validé, pas une certification réglementaire. |
 
-Nomos addresses that gap by making the reference corpus the first-class product dependency.
+## Pourquoi Nomos Existe
+
+Beaucoup d'applications et de systèmes IA sont techniquement propres et pourtant faux. Le problème vient rarement du framework ou du modèle. Il vient d'une dérive invisible entre le système livré et la référence qu'il prétend appliquer :
+
+- des règles métier copiées dans le code sans source ;
+- des chunks RAG sans provenance ;
+- des interfaces ou API pilotées par des exemples plutôt que par la doctrine ;
+- des réponses LLM qui simplifient une nuance critique ;
+- des documents sources modifiés sans traçabilité descendante ;
+- des tests qui prouvent l'exécution technique mais pas l'autorité métier.
+
+Nomos traite ce problème en faisant du corpus de référence une dépendance produit de premier ordre.
 
 ```mermaid
 flowchart LR
-  Source["Authority sources"] --> Scan["Read-only scan"]
-  Scan --> AST["Structure-aware extraction"]
-  AST --> TOC["Certified table of contents"]
-  AST --> Atoms["Canonical nodes and atoms"]
-  Atoms --> Matrix["Traceability matrix"]
-  Atoms --> RAG["RAG metadata with provenance"]
-  Atoms --> Engine["Runtime import contract"]
-  Matrix --> Gate["Release and fidelity gates"]
+  Source["Sources d'autorité"] --> Scan["Scan lecture seule"]
+  Scan --> AST["Extraction structure-aware"]
+  AST --> TOC["Table des matières certifiée"]
+  AST --> Atoms["Noeuds et atomes canoniques"]
+  Atoms --> Matrix["Matrice de traçabilité"]
+  Atoms --> RAG["Métadonnées RAG avec provenance"]
+  Atoms --> Engine["Contrat d'import runtime"]
+  Matrix --> Gate["Release et fidelity gates"]
   RAG --> Gate
   TOC --> Gate
-  Gate --> Evidence["Evidence pack and attestation"]
+  Gate --> Evidence["Evidence pack et attestation"]
 ```
 
-## What v0.1.0-ALPHA Delivers
+## Positionnement Produit
 
-The current release provides a working CLI and evidence pipeline for canonical-first projects:
+Nomos n'est ni un simple parseur documentaire, ni un pipeline RAG classique.
 
-- repository diagnosis and project admission checks;
-- corpus scan, manifest, diff, sidecar validation, feed, and attestation commands;
-- read-only corpus processing guards;
-- RBOK lawbook profile for structured Markdown reference corpora;
-- certified table-of-contents generation;
-- source spans and typed semantic nodes for tables, links, callouts, code blocks, and images;
-- governed lexicon extraction;
-- RAG metadata and runtime import artifacts;
-- strict fidelity gate and release gate integration;
-- in-toto style attestation output;
-- regulated-by-design documentation skeleton, evidence templates, and control records;
-- CI workflows for Go, CUE, corpus, RBOK lawbook E2E, runtime E2E, fidelity proof reports, regulated documentation, and evidence pack generation.
+Un pipeline RAG conventionnel indexe des documents. Nomos contrôle et prouve la transformation avant que le logiciel ou l'IA la consomme :
 
-## Evidence From The Alpha POC
+- quelles sources d'autorité ont été admises ;
+- si elles ont été traitées en lecture seule ;
+- quelle structure a été détectée ;
+- quelles unités canoniques ont été extraites ;
+- quelles lignes, plages, hashes et locators supportent chaque unité ;
+- ce qui a été exclu, ignoré, non supporté ou seulement partiellement couvert ;
+- quels chunks sont utilisables pour le RAG et lesquels ne sont que de la preuve de ledger source ;
+- quelle affirmation publique peut être défendue à partir de la preuve disponible.
 
-Nomos v0.1.0-ALPHA was tested on the real `realisons-business/01_rbok` corpus in a read-only clone.
+Nomos est donc une couche de gouvernance et d'evidence pour les logiciels et IA ancrés dans des références d'autorité.
 
-Observed POC output:
+## Cas D'usage Cibles
 
-| Evidence point | Result |
-|---|---|
-| Corpus files scanned | 240 |
-| Feed nodes generated | 7191 |
-| Certified TOC entries | 1090 |
-| Source-spanned nodes | 7191 / 7191 |
-| Table nodes | 65 |
-| Code block nodes | 25 |
-| Link nodes | 137 |
+Nomos est conçu pour les équipes qui ont besoin de comportements logiciels, réponses IA ou preuves d'audit appuyés par des sources :
+
+- convertir une documentation métier en règles produit et contrats runtime ;
+- gouverner des systèmes IA/RAG pour que chaque contenu exploité soit source-backed et versionné ;
+- produire des matrices de traçabilité depuis des normes, procédures, politiques, lois ou corpus métier ;
+- détecter la dérive entre documentation, implémentation, tests et output livré ;
+- préparer des dossiers de validation, supplier packs ou evidence packs pour environnements exigeants ;
+- exécuter des assessments de corpus en lecture seule avant import client ;
+- documenter explicitement les limites au lieu de sur-vendre une fidélité non prouvée.
+
+## Ce Que Livre v0.1.0-ALPHA
+
+La release actuelle fournit une CLI et une chaîne d'evidence fonctionnelle pour les projets canonical-first :
+
+- diagnostic de repository et contrôles d'admission projet ;
+- commandes `strict`, `corpus scan`, `diff`, `manifest`, `validate-sidecar`, `feed`, `body-ledger` et `attest` ;
+- guards de traitement corpus en lecture seule ;
+- profil `rbok-lawbook` pour corpus Markdown structurés ;
+- scanner structuré générique YAML/JSON avec chemins structurés et spans source exacts ;
+- génération de table des matières certifiée ;
+- spans source et noeuds sémantiques typés pour tables, liens, callouts, blocs de code et images ;
+- extraction de lexique gouverné ;
+- métadonnées RAG source-backed et artefacts d'import runtime ;
+- ledger complet du corps source séparant contenu sémantique, structure, couverture, unsupported et binaire ;
+- strict fidelity gate et intégration release gate ;
+- sortie d'attestation de style in-toto ;
+- squelette documentaire regulated-by-design, templates d'evidence et control records ;
+- workflows CI pour Go, CUE, corpus, RBOK lawbook E2E, runtime E2E, fidelity proof reports, documentation régulée et evidence pack.
+
+## Preuves Du POC Alpha
+
+Nomos v0.1.0-ALPHA a été testé sur le vrai corpus privé `realisons-business/01_rbok`, dans des clones en lecture seule. RBOK est le premier corpus de preuve ; ce n'est pas le scope produit.
+
+Trois enregistrements de preuve sont pertinents :
+
+1. le record historique de la chaine lawbook alpha ;
+2. l'audit source-to-feed initial, qui a exposé des gaps importants de qualité sémantique du feed ;
+3. le POC source-to-feed structuré actuel, qui corrige ces gaps bloquants sur le run enregistré.
+
+Record historique de la chaîne lawbook alpha :
+
+| Point de preuve | Résultat |
+|---|---:|
+| Fichiers corpus scannés | 240 |
+| Noeuds feed générés | 7191 |
+| Entrées TOC certifiées | 1090 |
+| Noeuds avec source span | 7191 / 7191 |
+| Noeuds table | 65 |
+| Noeuds bloc de code | 25 |
+| Noeuds lien | 137 |
 | Strict fidelity gate | pass, 0 blocking findings, 0 findings |
 | Fidelity proof | `full_fidelity_proven` |
-| Source mutation check | no source mutation detected |
+| Contrôle mutation source | aucune mutation détectée |
 
-This proves the current pipeline can process a real structured business reference corpus without writing into the source repository. It does not prove universal fidelity for every document format or every regulated customer workflow.
+Ce record prouve que la chaîne actuelle peut traiter un vrai corpus de référence métier structuré sans écrire dans le repository source. Il ne prouve pas une fidélité universelle pour tous les formats documentaires ou tous les workflows clients régulés.
 
-## Regulated-Readiness Position
+Audit source-to-feed initial, avant durcissement FSQ :
 
-Nomos is built for teams that operate near regulated, audited, or high-integrity IT environments. The repository contains a growing regulated-by-design operating structure covering:
+| Point de preuve | Résultat |
+|---|---:|
+| Sources corpus déclarées | 240 |
+| Unités feed générées | 9500 |
+| Chunks RAG générés | 9500 |
+| Unités feed source-backed | 9500 / 9500 |
+| Chunks RAG source-backed | 9500 / 9500 |
+| Résumé strict source/feed | `source_integrity=pass (0 findings); feed_quality=pass (0 findings)` |
+| Contrôle mutation source | aucune mutation détectée |
 
-- quality manual and SOP baselines;
-- software development and validation lifecycle documents;
-- ALCOA+ evidence metadata;
-- electronic records and signature policy baseline;
-- GitHub-native evidence and QMS operating model;
-- AI/RAG governance controls;
-- validation-pack and supplier-pack templates;
-- reference-basis management for licensed standards such as GAMP 5 and ISO references.
+L'inspection directe du `feed.json` généré avait montré que le feed n'était pas sémantiquement prêt comme corps doctrinal/RAG final :
 
-The honest status is:
+| Observation qualité feed | Résultat |
+|---|---:|
+| Sources avec unités générées | 88 / 240 |
+| Unités `table_cell` | 3230 / 9500 |
+| Unités avec <= 2 tokens | 3344 / 9500 |
+| Unités avec <= 10 caractères | 2195 / 9500 |
+| Unités dans des groupes de texte dupliqué | 3704 |
 
-- **implemented:** evidence-oriented tooling, regulated documentation skeletons, gates, templates, and RBOK POC evidence;
-- **partially implemented:** reference-to-control closure, customer-facing validation pack maturity, long-term operational records;
-- **not claimed:** formal regulatory certification, Part 11 validated platform status, GxP production validation, NASA/mission-critical qualification, or universal legal compliance.
+POC source-to-feed structuré actuel :
 
-See [docs/public-claim-boundary.md](docs/public-claim-boundary.md) and [docs/regulated/README.md](docs/regulated/README.md).
+| Point de preuve | Résultat |
+|---|---:|
+| Evidence pack local | `C:\Dev\nomos-rbok-poc-run-20260504-structured-universal-9` |
+| Commit corpus | `ea003e8fe3c35993731c3708a3787df6a3a690df` |
+| Sources corpus déclarées | 240 |
+| Unités feed générées | 3024 |
+| Chunks RAG générés | 3024 |
+| Unités feed source-backed | 3024 / 3024 |
+| Chunks RAG source-backed | 3024 / 3024 |
+| `table_cell` dans le feed | 0 |
+| Unités <= 10 caractères | 0 |
+| Groupes dupliqués bloquants | 0 |
+| Semantic quality | `warn`, 0 finding bloquant, 6 warnings reviewables |
+| Body ledger | 0 byte non couvert |
+| Strict gate | `pass`, exit code 0 |
+| Contrôle mutation source | aucune mutation détectée |
 
-## Core Concepts
+Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, `claim_coverage` n'est pas encore câblé dans l'attestation, et cette preuve reste bornée au corpus, commit et build enregistrés. Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle.
 
-- **Authority source:** a document, standard, regulation, contract, catalog, codebase, or corpus that has product authority.
-- **Canonical node:** a structured unit extracted from a source with identity, source path, source hash, locator, parent chain, status, and domain.
-- **Certified TOC:** a reconstructed document tree with verifiable structure hash.
-- **Traceability matrix:** the link between sources, canonical units, contracts, implementation, tests, and evidence.
-- **RAG metadata:** retrieval metadata that preserves source identity and governance context.
-- **Strict fidelity gate:** a release gate that fails on missing proof, missing spans, untyped critical structure, invalid TOC, or other blocking evidence gaps.
-- **Claim boundary:** the public statement of what the evidence supports and what it does not.
+## Posture Regulated-Ready
 
-## CLI Quick Start
+Nomos est construit pour les équipes qui opèrent près d'environnements IT régulés, audités ou à haute intégrité. Le repository contient une structure operated-by-design couvrant :
 
-Build the CLI:
+- quality manual et bases SOP ;
+- cycle de développement et validation logiciel ;
+- métadonnées d'evidence ALCOA+ ;
+- baseline electronic records / electronic signatures ;
+- modele GitHub-native d'evidence et QMS operationnel ;
+- contrôles de gouvernance IA/RAG ;
+- templates validation pack et supplier pack ;
+- gestion des références licenciées comme GAMP 5 et références ISO.
+
+Le statut honnête :
+
+- **implémenté :** outillage orienté evidence, squelettes documentaires régulés, gates, templates et preuves POC RBOK ;
+- **partiellement implémenté :** fermeture reference-to-control, maturité des packs validation client, records opérationnels long terme ;
+- **non revendiqué :** certification réglementaire formelle, plateforme Part 11 validée, validation GxP production, qualification mission-critical/NASA ou conformité légale universelle.
+
+Voir [docs/public-claim-boundary.md](docs/public-claim-boundary.md) et [docs/regulated/README.md](docs/regulated/README.md).
+Voir aussi [docs/release-v0.1.0-alpha.md](docs/release-v0.1.0-alpha.md) pour les notes de release et le gate de publication.
+
+## Contexte Marche
+
+Nomos se situe à l'intersection de plusieurs catégories logicielles établies :
+
+| Catégorie marché | Pourquoi c'est important |
+|---|---|
+| Content control et document control régulés | Les organisations paient pour des contenus contrôlés, révisables et auditables. |
+| QMS et validation lifecycle management | Les équipes régulées doivent prouver que logiciels et processus restent fit-for-intended-use. |
+| Gouvernance IA et RAG | Les entreprises doivent prouver ce que l'IA peut utiliser, citer, conserver et restituer. |
+| Vertical SaaS pour industries régulées | Les logiciels spécialisés prennent une valeur stratégique lorsqu'ils deviennent intégrés aux opérations. |
+
+Références utiles :
+
+- [Veeva QualityDocs](https://www.veeva.com/products/vault-qualitydocs/) positionne le content management qualité régulé comme une catégorie logicielle GxP mature.
+- [La capitalisation boursière de Veeva Systems](https://stockanalysis.com/stocks/veev/market-cap/) était rapportée autour de 28.03 milliards USD le 1er mai 2026. Veeva n'est pas un comparable direct de Nomos, mais illustre la valeur possible des logiciels qualité, contenu et life sciences.
+- [ValGenesis](https://www.valgenesis.com/) illustre le marché validation lifecycle management pour organisations GxP et life sciences.
+- [FDA Computer Software Assurance guidance](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software-0) formalise une approche risk-based pour établir la confiance dans les logiciels de production et de systèmes qualité.
+- [21 CFR Part 11](https://www.law.cornell.edu/cfr/text/21/part-11) est une référence centrale pour les electronic records et electronic signatures en environnement FDA.
+- [IAS 38 Intangible Assets](https://www.ifrs.org/issued-standards/list-of-standards/ias-38-intangible-assets/) et [Swiss GAAP FER 10](https://www.fer.ch/en/standards/swiss-gaap-fer-10-immaterielle-werte/) donnent un cadre comptable pour la reconnaissance d'actifs immatériels développés en interne.
+
+Pour les multiples de valorisation, les benchmarks SaaS publics et privés 2026 placent souvent les SaaS privés médians autour de 4-5x ARR, avec une dispersion forte selon croissance, net revenue retention, marge brute, profitabilité, concentration client et valeur stratégique. Voir [SaaS Valuation Multiples 2026](https://saasvaluationmultiple.com/). Ces multiples ne deviennent pertinents qu'une fois le revenu récurrent établi ; ils ne justifient pas de valoriser une alpha comme un SaaS mature.
+
+## Position Commerciale Et Capitalisable
+
+Nomos doit être évalué selon deux angles distincts :
+
+1. **Capitalisation comptable.** Une idée ne se capitalise pas. Les coûts de développement peuvent être capitalisés uniquement lorsque les critères applicables sont remplis : faisabilité technique, intention de terminer, capacité à utiliser ou vendre, bénéfices économiques futurs probables, ressources disponibles et mesure fiable des coûts. Les preuves éligibles peuvent inclure temps de développement, architecture, tests, documentation, CI, validation records et outillage ou infrastructure directement attribuables.
+2. **Valorisation business/IP.** La valeur économique peut dépasser le coût capitalisé, mais elle doit être soutenue par la maturité, des démonstrations, pilotes clients, usages, barrières de reproductibilité, revenus ou lettres d'intention.
+
+Cadre interne réaliste pour la maturité actuelle :
+
+| Stade de maturité | Fourchette défendable |
+|---|---:|
+| Concept seul | faible ; difficile à défendre |
+| POC technique avec preuve limitée | CHF 50k-150k |
+| Alpha POC avec evidence source-backed, documentation, CI et vrai corpus de preuve | CHF 100k-300k |
+| Alpha utilisable sur plusieurs corpus complexes | CHF 300k-800k |
+| Produit intégré à un workflow critique ou soutenu par pilote payant / LOI | CHF 800k-1.5M+ |
+| Produit avec revenu récurrent | ARR multiplié par un multiple SaaS approprié |
+
+Ces fourchettes ne sont pas un conseil financier et ne doivent pas être utilisées comme valorisation formelle sans comptable, auditeur ou conseil corporate finance. Elles servent de cadrage pragmatique pour stratégie produit, discussions de capitalisation et priorisation roadmap.
+
+## Concepts Clefs
+
+- **Source d'autorité :** document, norme, réglementation, contrat, catalogue, codebase ou corpus ayant autorité produit.
+- **Noeud canonique :** unité structurée extraite d'une source avec identité, source path, source hash, locator, parent chain, statut et domaine.
+- **TOC certifiée :** arbre documentaire reconstruit avec hash de structure vérifiable.
+- **Matrice de traçabilité :** lien entre sources, unités canoniques, contrats, implémentation, tests et preuves.
+- **Métadonnées RAG :** métadonnées de retrieval préservant identité source et contexte de gouvernance.
+- **Strict fidelity gate :** gate de release qui échoue sur absence de preuve, spans manquants, structure critique non typée, TOC invalide ou gaps bloquants.
+- **Claim boundary :** énoncé public de ce que les preuves soutiennent et de ce qu'elles ne soutiennent pas.
+
+## Quick Start CLI
+
+Construire la CLI :
 
 ```bash
 cd cli
 go build -o ../nomos .
 ```
 
-Print help:
+Afficher l'aide :
 
 ```bash
 ./nomos help
 ./nomos corpus help
 ```
 
-Diagnose a project:
+Diagnostiquer un projet :
 
 ```bash
 ./nomos diagnose --root . --format json
 ```
 
-Run a corpus profile:
+Exécuter un profil corpus :
 
 ```bash
 ./nomos corpus diagnose --profile rbok-lawbook --root /path/to/01_rbok --format json
@@ -143,7 +293,7 @@ Run a corpus profile:
   --project-id rbok
 ```
 
-Run the RBOK lawbook E2E script:
+Exécuter le script E2E RBOK lawbook :
 
 ```bash
 bash scripts/rbok-lawbook-e2e.sh \
@@ -151,62 +301,64 @@ bash scripts/rbok-lawbook-e2e.sh \
   --out /path/to/out
 ```
 
-On Windows, the local E2E gate is:
+Sur Windows, le gate E2E local est :
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 ```
 
-## Repository Map
+## Carte Du Repository
 
-| Path | Purpose |
+| Chemin | Role |
 |---|---|
-| `cli/` | Go CLI and corpus/fidelity/compliance engines. |
-| `specs/` | CUE and JSON contracts for project manifests, corpus evidence, feed artifacts, TOC, AI/RAG controls, provenance, and validation inventory. |
-| `docs/` | Method, architecture, operating model, regulated-readiness documents, ADRs, and validation dossiers. |
-| `docs/regulated/` | Regulated-by-design operating structure and controlled-document baseline. |
-| `templates/` | Copyable project, regulated, validation, evidence, and governance templates. |
-| `examples/` | Domain examples for applying the canonical-first method. |
-| `adapters/` | Adapter contract and early adapter profiles for Node/TypeScript, Python, and JVM ecosystems. |
-| `ci/` | Reusable CI integration documentation. |
-| `control-plane/` | Optional Go control-plane packages for dashboard, registry, and storage. |
-| `scripts/` | E2E, evidence, regulated documentation, and automation helpers. |
-| `reports/` | Generated local evidence artifacts. |
-| `references/` | Methodological and external reference register material. |
+| `cli/` | CLI Go et moteurs corpus/fidelity/compliance. |
+| `specs/` | Contrats CUE et JSON pour manifests projet, preuves corpus, feeds, TOC, contrôles IA/RAG, provenance et inventaire de validation. |
+| `docs/` | Méthode, architecture, operating model, regulated-readiness, ADRs et dossiers de validation. |
+| `docs/regulated/` | Structure regulated-by-design et baseline documentaire contrôlée. |
+| `templates/` | Templates projet, réglementaires, validation, evidence et gouvernance. |
+| `examples/` | Exemples de domaines appliquant la méthode canonical-first. |
+| `adapters/` | Contrats adapter et profils initiaux Node/TypeScript, Python et JVM. |
+| `ci/` | Documentation d'intégration CI réutilisable. |
+| `control-plane/` | Packages Go optionnels pour dashboard, registry et storage. |
+| `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation. |
+| `reports/` | Artefacts locaux générés. |
+| `references/` | Registre de références méthodologiques et externes. |
 
-## Quality Gates
+## Gates Qualité
 
-The release process currently uses:
+Le processus de release utilise actuellement :
 
 ```bash
-go test ./...                 # from cli/
+go test ./...                 # depuis cli/
 powershell -File scripts/e2e.ps1
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions additionally run CI, corpus tests on Linux/macOS/Windows, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, regulated documentation gate, and regulated evidence pack jobs.
+GitHub Actions execute aussi CI, tests corpus Linux/macOS/Windows, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, regulated documentation gate et regulated evidence pack jobs.
 
-## What Nomos Does Not Claim
+## Ce Que Nomos Ne Revendique Pas
 
-Nomos does not claim that a source is true, lawful, complete, licensed, or applicable. It records where source material came from, how it was transformed, what was covered, what was skipped, what evidence exists, and what still requires review.
+Nomos ne prétend pas qu'une source est vraie, légale, complète, licenciée ou applicable. Il enregistre d'où vient la source, comment elle a été transformée, ce qui est couvert, ce qui est ignoré, quelles preuves existent et ce qui doit encore être revu.
 
-Nomos does not make an LLM authoritative. In the intended architecture, deterministic contracts and source-backed artifacts remain authoritative; LLM and RAG layers cite, explain, retrieve, and assist under governance.
+Nomos ne rend pas un LLM autoritaire. Dans l'architecture visée, les contrats déterministes et artefacts source-backed restent autoritaires ; les couches LLM et RAG citent, expliquent, récupèrent et assistent sous gouvernance.
 
-Nomos does not remove the need for validation. In regulated environments, customers still need intended-use definition, risk assessment, validation planning, test evidence, change control, supplier assessment, security review, and approval records.
+Nomos ne supprime pas le besoin de validation. En environnement régulé, les clients doivent toujours définir intended use, risk assessment, validation plan, preuves de test, change control, supplier assessment, security review et approval records.
 
-## Release Roadmap
+Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, le câblage `claim_coverage` dans l'attestation, les validation packs clients et la répétabilité CI sur corpus privés.
 
-| Version | Target |
+## Roadmap Release
+
+| Version | Cible |
 |---|---|
-| `v0.1.0-ALPHA` | Prove the canonical corpus pipeline, strict fidelity gate, RBOK POC, and regulated-readiness documentation baseline. |
-| `v0.2.x` | Harden portable atomization beyond RBOK Markdown, improve structured YAML/JSON and document adapter coverage, expand validation packs. |
-| `v0.3.x` | Stabilize adapter contracts, evidence export, customer validation workflow, and RAG governance interfaces. |
-| `v1.0` | Production-grade release candidate with documented support model, compatibility policy, validation evidence, and audited claim boundary. |
+| `v0.1.0-ALPHA` | Prouver la chaîne canonical corpus, le strict fidelity gate, le POC RBOK et la baseline documentaire regulated-readiness. |
+| `v0.2.x` | Durcir l'atomisation portable au-delà du Markdown RBOK, améliorer la couverture YAML/JSON structurée et adapters documentaires, et étendre les validation packs. |
+| `v0.3.x` | Stabiliser les contrats adapters, l'export evidence, le workflow validation client et les interfaces de gouvernance RAG. |
+| `v1.0` | Release candidate production-grade avec support model, compatibility policy, evidence de validation et claim boundary audité. |
 
-## Governance
+## Gouvernance
 
-Changes that affect claims, release gates, corpus fidelity, regulated-readiness posture, or evidence format must be reviewed through issues, PRs, tests, and updated documentation. See [GOVERNANCE.md](GOVERNANCE.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+Les changements qui affectent les claims, release gates, corpus fidelity, posture regulated-readiness ou formats d'evidence doivent passer par issues, PRs, tests et documentation mise à jour. Voir [GOVERNANCE.md](GOVERNANCE.md) et [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## License And Commercial Use
+## Licence Et Usage Commercial
 
-This repository currently does not grant an open-source license. Treat the code, documentation, templates, and examples as proprietary unless a separate written license or commercial agreement says otherwise.
+Ce repository ne fournit actuellement pas de licence open source. Le code, la documentation, les templates et les exemples doivent être considérés propriétaires sauf licence écrite séparée ou accord commercial explicite.

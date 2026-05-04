@@ -388,14 +388,9 @@ func TestStrictGateCorpusIntegrity_ComputeOnTheFlyPasses(t *testing.T) {
 	}
 }
 
-func TestStrictGateCorpusIntegrity_ComputeOnTheFlyFailsOnJunk(t *testing.T) {
+func TestStrictGateCorpusIntegrity_ComputeOnTheFlyFailsOnUnsupportedHTML(t *testing.T) {
 	dir := t.TempDir()
-	// A line of pipes is not a heading, list, blockquote, or decorative
-	// separator (decorative-separator runes are *-_.~+ \t — pipes excluded),
-	// so the typed scanner emits it as a canonical_atom paragraph; the SFI-04
-	// junk rule then flags it because every non-whitespace rune is in the
-	// punctuation/layout set.
-	if err := os.WriteFile(filepath.Join(dir, "junk.md"), []byte("||||\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "unsupported.md"), []byte("<div>unsupported raw html</div>\n"), 0o600); err != nil {
 		t.Fatalf("write fixture: %v", err)
 	}
 
@@ -405,7 +400,7 @@ func TestStrictGateCorpusIntegrity_ComputeOnTheFlyFailsOnJunk(t *testing.T) {
 		"--corpus-integrity-source", dir,
 	}, &stdout, &stderr)
 	if code == 0 {
-		t.Fatalf("expected non-zero exit on junk-only source; got 0; stdout=%q",
+		t.Fatalf("expected non-zero exit on unsupported HTML source; got 0; stdout=%q",
 			stdout.String())
 	}
 	var result GateResult
@@ -413,7 +408,7 @@ func TestStrictGateCorpusIntegrity_ComputeOnTheFlyFailsOnJunk(t *testing.T) {
 		t.Fatalf("expected valid JSON: %v", err)
 	}
 	if result.Valid {
-		t.Fatalf("expected valid=false on junk-only source")
+		t.Fatalf("expected valid=false on unsupported HTML source")
 	}
 	if result.CorpusIntegrityCheck == nil ||
 		result.CorpusIntegrityCheck.Status != "fail" {

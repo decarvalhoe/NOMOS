@@ -146,12 +146,9 @@ log "step 3: source segment ledger — TODO(SFI-02 / SFI-08); ledger embedded in
 # ---- step 4: source integrity gate (SFI-04, #342) --------------------------
 
 log "step 4: source integrity gate (SFI-04 / #342)"
-# TODO(SFI-08 / #346): once `nomos strict` is wired into the top-level
-# command map (cli/internal/app/app.go::Run), replace the `go run`
-# invocation below with: nomos strict --corpus-integrity-source ...
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
     --format json ) > "$RUN_DIR/integrity-source.json"
 step4_rc=$?
@@ -193,9 +190,9 @@ jq '.units        // []' "$RUN_DIR/feed.json" > "$RUN_DIR/feed-units.json"
 log "step 7: feed quality gate (SFI-07 / #345)"
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
-    --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
+    --corpus-integrity-feed   "$RUN_DIR/feed.json" \
     --corpus-integrity-rag    "$RUN_DIR/rag-metadata.json" \
     --format json ) > "$RUN_DIR/integrity-feed.json"
 step7_rc=$?
@@ -243,9 +240,9 @@ log "step 10: semantic quality gate (FSQ-06 / #369) — emitted as part of stric
 log "step 11: strict gate (SFI-08 / #346 + FSQ-05 + FSQ-06)"
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
-    --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
+    --corpus-integrity-feed   "$RUN_DIR/feed.json" \
     --corpus-integrity-rag    "$RUN_DIR/rag-metadata.json" \
     --corpus-body-ledger      "$RUN_DIR/corpus-body-ledger.json" \
     --format json ) > "$RUN_DIR/strict-gate.json"
@@ -255,10 +252,10 @@ log "step 11 strict gate exit code: $strict_rc -> $RUN_DIR/strict-gate.json"
 
 # ---- step 12: attestation (bounded AQ-3 claim) -----------------------------
 #
-# FSQ-08 (#371): the attestation is generated WITH the body ledger, so
-# the predicate carries claim_coverage{covers_full_source_body,
-# covers_curated_feed, summary_status}. The bounded-claim text below is
-# templated; only the recorded run may advertise it as proven.
+# FSQ-08 (#371): the bounded claim is generated only after the strict
+# gate consumes the body ledger. The attest CLI does not yet pass the
+# body ledger into the predicate, so claim_coverage remains a recorded
+# WARN until that CLI wiring lands.
 
 log "step 12: nomos corpus attest (bounded AQ-3 claim)"
 ( cd "$NOMOS_CLI_PKG_DIR" && \
@@ -281,7 +278,7 @@ universal-corpus fidelity.
 Specifically, on this run:
   - SFI-04 source integrity gate: status=pass, 0 findings.
   - SFI-07 feed quality gate:     status=pass, 0 findings.
-  - FSQ-06 semantic quality gate: status=pass, 0 blocking findings.
+  - FSQ-06 semantic quality gate: 0 blocking findings; warnings are reviewable.
   - FSQ-05 body ledger:           every admitted text source has uncovered_bytes=0.
   - SFI-08 strict release gate:   exit 0.
   - Corpus working tree clean before AND after the run.

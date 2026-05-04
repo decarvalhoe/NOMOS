@@ -342,13 +342,13 @@ func TestScanMarkdown_FencedCodeBlock(t *testing.T) {
 func TestScanMarkdown_ListsAndNestedItems(t *testing.T) {
 	t.Parallel()
 	content := "" +
-		"- top one\n" +
-		"  - nested one\n" +
-		"  - nested two\n" +
-		"- top two\n" +
+		"- top semantic one\n" +
+		"  - nested semantic one\n" +
+		"  - nested semantic two\n" +
+		"- top semantic two\n" +
 		"\n" +
-		"1. first\n" +
-		"2. second\n"
+		"1. first semantic item\n" +
+		"2. second semantic item\n"
 	segs := scanOK(t, content)
 	assertCoverageAndIntegrity(t, content, segs)
 	assertSliceMatchesHash(t, content, segs)
@@ -364,6 +364,174 @@ func TestScanMarkdown_ListsAndNestedItems(t *testing.T) {
 		if s.Kind == KindListItem && s.Disposition != DispositionCanonicalAtom {
 			t.Fatalf("list_item must be canonical_atom (non-empty), got %s for %q", s.Disposition, s.SegmentID)
 		}
+	}
+}
+
+func TestScanMarkdown_TOCOnlyListItemsAreCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"# Domain\n\n" +
+		"## Table des matières\n\n" +
+		"1. [Finalité du domaine](#1-finalite-du-domaine)\n" +
+		"2. [Concepts fondamentaux](#2-concepts-fondamentaux)\n" +
+		"\n" +
+		"## Body\n\n" +
+		"- The body list item contains enough semantic text to become retrievable.\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+	assertSliceMatchesHash(t, content, segs)
+
+	var tocItems, canonicalItems int
+	for _, s := range segs {
+		if s.Kind != KindListItem {
+			continue
+		}
+		switch s.Disposition {
+		case DispositionCoverageOnly:
+			tocItems++
+		case DispositionCanonicalAtom:
+			canonicalItems++
+		}
+	}
+	if tocItems != 2 {
+		t.Fatalf("expected 2 TOC list items as coverage_only, got %d", tocItems)
+	}
+	if canonicalItems != 1 {
+		t.Fatalf("expected 1 semantic list item as canonical_atom, got %d", canonicalItems)
+	}
+}
+
+func TestScanMarkdown_MetadataReferenceAndPlaceholderListItemsAreCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"# Structure\n\n" +
+		"- Statut : ✅ Existant\n" +
+		"- Chapitre 3 — Principes fondamentaux\n" +
+		"- **[Risque 6]** —\n" +
+		"- A semantic list item with enough doctrine remains retrievable.\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+
+	var coverage, canonical int
+	for _, s := range segs {
+		if s.Kind != KindListItem {
+			continue
+		}
+		switch s.Disposition {
+		case DispositionCoverageOnly:
+			coverage++
+		case DispositionCanonicalAtom:
+			canonical++
+		}
+	}
+	if coverage != 3 {
+		t.Fatalf("expected 3 metadata/reference/placeholder list items as coverage_only, got %d", coverage)
+	}
+	if canonical != 1 {
+		t.Fatalf("expected 1 semantic list item as canonical_atom, got %d", canonical)
+	}
+}
+
+func TestScanMarkdown_LabelAndShortScalarParagraphsAreCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"# Config\n\n" +
+		"**Description**\n\n" +
+		"60\n\n" +
+		"A complete paragraph with enough semantic content remains a canonical atom.\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+	assertSliceMatchesHash(t, content, segs)
+
+	var canonicalParagraphs int
+	for _, s := range segs {
+		if s.Kind != KindParagraph {
+			continue
+		}
+		text := strings.TrimSpace(content[s.StartByte:s.EndByte])
+		switch text {
+		case "**Description**", "60":
+			if s.Disposition != DispositionCoverageOnly {
+				t.Fatalf("%q must be coverage_only, got %s", text, s.Disposition)
+			}
+			if s.IncludeInFeed || s.IncludeInRAG {
+				t.Fatalf("%q must not enter feed/RAG", text)
+			}
+		default:
+			if s.Disposition == DispositionCanonicalAtom {
+				canonicalParagraphs++
+			}
+		}
+	}
+	if canonicalParagraphs != 1 {
+		t.Fatalf("expected 1 canonical paragraph, got %d", canonicalParagraphs)
+	}
+}
+
+func TestScanMarkdown_IntroductoryLeadInParagraphIsCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"# Outputs\n\n" +
+		"À l'issue du travail dans ce domaine, le client dispose des éléments suivants :\n\n" +
+		"- A semantic list item with enough doctrine remains retrievable.\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+
+	var leadInCoverage, canonicalList int
+	for _, s := range segs {
+		text := strings.TrimSpace(content[s.StartByte:s.EndByte])
+		if strings.Contains(text, "éléments suivants") {
+			if s.Disposition != DispositionCoverageOnly {
+				t.Fatalf("introductory lead-in must be coverage_only, got %s", s.Disposition)
+			}
+			if s.IncludeInFeed || s.IncludeInRAG {
+				t.Fatalf("introductory lead-in must not enter feed/RAG")
+			}
+			leadInCoverage++
+		}
+		if s.Kind == KindListItem && s.Disposition == DispositionCanonicalAtom {
+			canonicalList++
+		}
+	}
+	if leadInCoverage != 1 {
+		t.Fatalf("expected one coverage-only lead-in, got %d", leadInCoverage)
+	}
+	if canonicalList != 1 {
+		t.Fatalf("expected one canonical list item, got %d", canonicalList)
+	}
+}
+
+func TestScanMarkdown_PlaceholderBlockquoteIsCoverageOnly(t *testing.T) {
+	t.Parallel()
+	content := "" +
+		"# Draft\n\n" +
+		"> ⚠️ Section à compléter lors de la prochaine révision du référentiel.\n\n" +
+		"> A quoted business rule with enough semantic content remains retrievable.\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+
+	var coverage, canonical int
+	for _, s := range segs {
+		if s.Kind != KindParagraph {
+			continue
+		}
+		text := content[s.StartByte:s.EndByte]
+		if strings.Contains(text, "Section à compléter") {
+			if s.Disposition != DispositionCoverageOnly {
+				t.Fatalf("placeholder blockquote inner paragraph must be coverage_only, got %s", s.Disposition)
+			}
+			coverage++
+			continue
+		}
+		if s.Disposition == DispositionCanonicalAtom {
+			canonical++
+		}
+	}
+	if coverage != 1 {
+		t.Fatalf("expected 1 placeholder coverage paragraph, got %d", coverage)
+	}
+	if canonical != 1 {
+		t.Fatalf("expected 1 canonical quoted paragraph, got %d", canonical)
 	}
 }
 
