@@ -232,6 +232,7 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 - NGW-02 (#387) shipped: trace manifest schema (`specs/nomos-trace-manifest.cue`).
 - NGW-03 (#388) shipped: scoped diff planner + `nomos github plan` command.
 - NGW-04 (#389) shipped: reusable GitHub Actions workflow (`.github/workflows/nomos-corpus-workflow.yml`) plus two caller templates (`templates/github-workflows/nomos-source-pr.yml`, `nomos-output-dispatch.yml`). Read-only corpus checkout (`persist-credentials: false` AND push remote DISABLED). NGW-04 reads + plans + uploads only; publication is NGW-005 / #390 territory.
+- NGW-08 (#393) shipped: source-owned and output-owned setup docs (`docs/31-github-workflow-setup.md`) — config-owner choice, secrets matrix, permissions, branch-protection expectations, publication-mode tradeoffs, step-by-step install, verification checklist, troubleshooting. Forward-references `docs/32-github-app-readiness-boundary.md` (NGW-09 / #394, parallel).
 
 ## Non-Goals For The Alpha
 

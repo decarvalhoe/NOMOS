@@ -16,6 +16,8 @@ This directory contains the method, product architecture, regulated-readiness ba
 | [Atomization process](26-structure-aware-atomization-process.md) | Structure-aware atomization and fidelity certification approach. |
 | [AAA+ regulated document set](27-aaa-regulated-it-document-set.md) | Target document set and non-invention rule. |
 | [Compliance closure plan](28-regulated-compliance-closure-plan.md) | Current closure plan for regulated-readiness gaps. |
+| [GitHub workflow setup](31-github-workflow-setup.md) | Source-owned and output-owned install guide for the reusable NOMOS GitHub workflow (NGW). |
+| [GitHub App readiness boundary](32-github-app-readiness-boundary.md) | Future GitHub App boundary and event-mapping contract (lands in #394 / NGW-09). |
 
 ## Current Release Evidence
 
