@@ -22,6 +22,7 @@ This directory contains the method, product architecture, regulated-readiness ba
 | [Nomos user manual](34-nomos-user-manual.md) | Operator manual for local use, POC runs, artifact reading, verification, and troubleshooting. |
 | [Nomos integration manual](35-nomos-integration-manual.md) | End-to-end integration guide for source repo, NOMOS workflow, output repo/path, and downstream application runtime. |
 | [RBOK integration recommendation plan](36-rbok-integration-recommendation-plan.md) | Downstream implementation plan and dependency tree for RBOK without modifying that repo from NOMOS. |
+| [RBOK NOMOS recommendations implementation plan](37-rbok-nomos-recommendations-implementation-plan.md) | Task-by-task downstream implementation plan for importer, runtime RAG, conversation policy, YAML/JSON status, and POC evidence. |
 
 ## Current Release Evidence
 

@@ -46,7 +46,8 @@ Les guides d'exploitation et d'integration sont centralises dans [`docs/`](./doc
 - [`33-nomos-documentation-guide.md`](./docs/33-nomos-documentation-guide.md) : vue generale de NOMOS, audiences, artefacts, claim boundary et consommation downstream ;
 - [`34-nomos-user-manual.md`](./docs/34-nomos-user-manual.md) : manuel utilisateur pour operer NOMOS, lire les outputs et verifier un run ;
 - [`35-nomos-integration-manual.md`](./docs/35-nomos-integration-manual.md) : manuel d'integration GitHub/workflow/output/downstream application ;
-- [`36-rbok-integration-recommendation-plan.md`](./docs/36-rbok-integration-recommendation-plan.md) : plan downstream RBOK, sans modification du repo RBOK depuis NOMOS.
+- [`36-rbok-integration-recommendation-plan.md`](./docs/36-rbok-integration-recommendation-plan.md) : plan downstream RBOK, sans modification du repo RBOK depuis NOMOS ;
+- [`37-rbok-nomos-recommendations-implementation-plan.md`](./docs/37-rbok-nomos-recommendations-implementation-plan.md) : plan d'implementation detaille des recommandations RBOK.
 
 ## Pourquoi Nomos Existe
 
