@@ -1,0 +1,45 @@
+schema_version: "0.1.0"
+workflows:
+  - id: rbok-lawbook
+    description: RBOK lawbook canonical output
+    source:
+      repo: RBOKproject/realisons-business
+      base_branch: main
+      paths:
+        - 01_rbok/**
+      extensions:
+        - .md
+        - .yaml
+        - .json
+      profile: rbok-lawbook
+    output:
+      repo: RBOKproject/nomos-rbok-artifacts
+      branch: main
+      path: rbok-lawbook/
+    nomos:
+      corpus_id: rbok-lawbook
+      project_id: rbok
+      commands:
+        - scan
+        - manifest
+        - feed
+        - body-ledger
+        - attest
+        - strict
+    publish:
+      mode: pull_request
+      target_repo: output
+      target_branch: main
+      target_path: rbok-lawbook/
+      branch_strategy: per_pr
+      risk_class: medium
+    notify:
+      source_pr_comment:
+        enabled: true
+        mode: summary
+        include:
+          - changed_scopes
+          - diff_summary
+          - output_location
+          - trace_manifest
+          - gate_status
