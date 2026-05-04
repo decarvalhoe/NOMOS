@@ -58,6 +58,14 @@ type FeedUnit struct {
 	NodeKind         string `json:"node_kind,omitempty"`
 	SchemaRole       string `json:"schema_role,omitempty"`
 	BusinessRuleMode string `json:"business_rule_mode,omitempty"`
+
+	// FSQ-03 (#366) table-context linkage. Set on units derived from
+	// table_row data segments so RAG composers can reconstruct the row's
+	// column context without re-parsing the source.
+	TableID       string   `json:"table_id,omitempty"`
+	TableRole     string   `json:"table_role,omitempty"`
+	RowIndex      int      `json:"row_index,omitempty"`
+	ColumnHeaders []string `json:"column_headers,omitempty"`
 }
 
 // FeedContractRef is a simplified contract reference for consumers.
@@ -653,34 +661,54 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 		}
 		ancestors := cloneAncestry()
 		title := stack[len(stack)-1].title
-		text := strings.TrimRight(string(content[seg.StartByte:seg.EndByte]), "\n")
-		display := strings.TrimSpace(text)
+		// FSQ-03 (#366): table_row data segments carry pre-assembled
+		// "Col1=Val1; Col2=Val2; ..." canonical text on RowCanonicalText.
+		// Using the raw line bytes here would surface "| Val | Val |" pipe
+		// noise into the feed and downstream RAG.
+		var display string
+		unitType := "rule"
+		if seg.Kind == KindTableRow && strings.TrimSpace(seg.RowCanonicalText) != "" {
+			display = strings.TrimSpace(seg.RowCanonicalText)
+			unitType = "table_row"
+		} else {
+			text := strings.TrimRight(string(content[seg.StartByte:seg.EndByte]), "\n")
+			display = strings.TrimSpace(text)
+		}
 		if display == "" {
 			display = title
 		}
 		leafID := unitIDLeaf(source.Path, title, seg.Kind, seg.StartLine)
 		unitID := uniqueFeedUnitID(toUpperSlug("RBOK-MD-"+source.ID+"-"+leafID), seenUnitIDs)
+		fu := FeedUnit{
+			UnitID:             unitID,
+			Name:               title,
+			Domain:             feedDomain(source.Domain),
+			UnitType:           unitType,
+			Criticality:        "medium",
+			Status:             "partial",
+			BusinessRule:       display,
+			SourceIDs:          []string{source.ID},
+			Gaps:               []string{"Extracted from corpus text; requires human canonical review."},
+			SourceSegmentID:    seg.SegmentID,
+			SourceID:           source.ID,
+			SourcePath:         source.Path,
+			StartByte:          seg.StartByte,
+			EndByte:            seg.EndByte,
+			StartLine:          seg.StartLine,
+			EndLine:            seg.EndLine,
+			NormalizedTextHash: seg.NormalizedTextHash,
+			HeadingPath:        ancestors,
+		}
+		if seg.Kind == KindTableRow {
+			fu.TableID = seg.TableID
+			fu.TableRole = seg.TableRole
+			fu.RowIndex = seg.RowIndex
+			if len(seg.ColumnHeaders) > 0 {
+				fu.ColumnHeaders = append([]string(nil), seg.ColumnHeaders...)
+			}
+		}
 		out = append(out, extractedFeedUnit{
-			FeedUnit: FeedUnit{
-				UnitID:             unitID,
-				Name:               title,
-				Domain:             feedDomain(source.Domain),
-				UnitType:           "rule",
-				Criticality:        "medium",
-				Status:             "partial",
-				BusinessRule:       display,
-				SourceIDs:          []string{source.ID},
-				Gaps:               []string{"Extracted from corpus text; requires human canonical review."},
-				SourceSegmentID:    seg.SegmentID,
-				SourceID:           source.ID,
-				SourcePath:         source.Path,
-				StartByte:          seg.StartByte,
-				EndByte:            seg.EndByte,
-				StartLine:          seg.StartLine,
-				EndLine:            seg.EndLine,
-				NormalizedTextHash: seg.NormalizedTextHash,
-				HeadingPath:        ancestors,
-			},
+			FeedUnit:     fu,
 			Content:      display,
 			SourceID:     source.ID,
 			SourcePath:   source.Path,

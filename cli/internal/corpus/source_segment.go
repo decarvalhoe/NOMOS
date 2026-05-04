@@ -54,6 +54,17 @@ type SourceSegment struct {
 	IncludeInFeed      bool
 	IncludeInRAG       bool
 	UnsupportedReason  string
+
+	// FSQ-03 (#366): optional table-context fields. Set on table_row data
+	// segments (and partially on table containers / table_header) to let
+	// downstream consumers reconstruct row-level canonical text without
+	// re-parsing the source. None of these alter validation invariants;
+	// they are descriptive metadata only.
+	RowCanonicalText string   `json:"row_canonical_text,omitempty"`
+	ColumnHeaders    []string `json:"column_headers,omitempty"`
+	RowIndex         int      `json:"row_index,omitempty"`
+	TableID          string   `json:"table_id,omitempty"`
+	TableRole        string   `json:"table_role,omitempty"`
 }
 
 // validDispositions enumerates the allowed Disposition values for fast
