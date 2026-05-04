@@ -1,0 +1,7 @@
+schema_version: "0.1.0"
+parcours:
+  modules:
+    - id: synthetic-module
+      questions:
+        - id: q1
+          help_text: Synthetic help text used by the NGW-10 fixture.
