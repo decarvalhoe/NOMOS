@@ -1,6 +1,7 @@
 package corpus
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -307,5 +308,276 @@ func TestExtractParcoursSpecificUnitID(t *testing.T) {
 	expected := "RBOK-PARCOURS-ASSURANCE-HABITATION-SOUSCRIPTION-SURFACE-HABITABLE"
 	if result.Units[0].UnitID != expected {
 		t.Fatalf("expected %q, got %q", expected, result.Units[0].UnitID)
+	}
+}
+
+// ----------------------------------------------------------------------------
+// FSQ-04 (#367) — YAML raw / decoded / key-path provenance.
+// ----------------------------------------------------------------------------
+
+// TestExtractParcoursFSQ04QuotedVsUnquoted asserts that a double-quoted
+// scalar carries its quotes in RawText while DecodedValue is the unquoted
+// string, and that an adjacent unquoted scalar carries no quotes.
+func TestExtractParcoursFSQ04QuotedVsUnquoted(t *testing.T) {
+	data := []byte("parcours:\n" +
+		"  id: q-vs-uq\n" +
+		"  domain: test\n" +
+		"  owner: t@t.t\n" +
+		"  status: active\n" +
+		"  etapes:\n" +
+		"    - id: e1\n" +
+		"      name: E1\n" +
+		"      description: Step\n" +
+		"      ordre: 1\n" +
+		"      objectifs:\n" +
+		"        - id: o1\n" +
+		"          description: Obj\n" +
+		"          criteres:\n" +
+		"            - id: c1\n" +
+		"              description: \"actif >= 18 ans\"\n" +
+		"              type: rule\n" +
+		"              criticality: high\n" +
+		"            - id: c2\n" +
+		"              description: actif >= 18\n" +
+		"              type: rule\n" +
+		"              criticality: high\n")
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(result.Units) != 2 {
+		t.Fatalf("expected 2 units; got %d", len(result.Units))
+	}
+	c1 := result.Units[0]
+	c2 := result.Units[1]
+	if c1.RawText != "\"actif >= 18 ans\"" {
+		t.Fatalf("expected quoted raw_text; got %q", c1.RawText)
+	}
+	if c1.DecodedValue != "actif >= 18 ans" {
+		t.Fatalf("expected decoded c1=%q; got %q", "actif >= 18 ans", c1.DecodedValue)
+	}
+	if c2.RawText != "actif >= 18" {
+		t.Fatalf("expected unquoted raw_text; got %q", c2.RawText)
+	}
+	if c2.DecodedValue != "actif >= 18" {
+		t.Fatalf("expected decoded c2=%q; got %q", "actif >= 18", c2.DecodedValue)
+	}
+	if c1.NodeKind != "scalar_string" || c2.NodeKind != "scalar_string" {
+		t.Fatalf("expected node_kind=scalar_string for both; got %q %q",
+			c1.NodeKind, c2.NodeKind)
+	}
+}
+
+// TestExtractParcoursFSQ04DuplicateValuesDistinctPaths verifies that two
+// scalars with identical decoded values but different YAML key paths bind
+// to distinct units. This is the core regression guard against the old
+// "first-unused-value" matching that this ticket replaces.
+func TestExtractParcoursFSQ04DuplicateValuesDistinctPaths(t *testing.T) {
+	data := []byte("parcours:\n" +
+		"  id: dup\n" +
+		"  domain: test\n" +
+		"  owner: t@t.t\n" +
+		"  status: active\n" +
+		"  etapes:\n" +
+		"    - id: e1\n" +
+		"      name: E1\n" +
+		"      description: Step\n" +
+		"      ordre: 1\n" +
+		"      objectifs:\n" +
+		"        - id: o1\n" +
+		"          description: Obj\n" +
+		"          criteres:\n" +
+		"            - id: c1\n" +
+		"              description: same value\n" +
+		"              type: rule\n" +
+		"              criticality: high\n" +
+		"            - id: c2\n" +
+		"              description: same value\n" +
+		"              type: rule\n" +
+		"              criticality: high\n")
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(result.Units) != 2 {
+		t.Fatalf("expected 2 distinct units; got %d", len(result.Units))
+	}
+	if result.Units[0].DecodedValue != result.Units[1].DecodedValue {
+		t.Fatalf("expected identical decoded values; got %q vs %q",
+			result.Units[0].DecodedValue, result.Units[1].DecodedValue)
+	}
+	if result.Units[0].YAMLPath == result.Units[1].YAMLPath {
+		t.Fatalf("expected distinct yaml_path values; both = %q",
+			result.Units[0].YAMLPath)
+	}
+	if result.Units[0].YAMLPath != "parcours.etapes[0].objectifs[0].criteres[0].description" {
+		t.Fatalf("unexpected yaml_path[0] = %q", result.Units[0].YAMLPath)
+	}
+	if result.Units[1].YAMLPath != "parcours.etapes[0].objectifs[0].criteres[1].description" {
+		t.Fatalf("unexpected yaml_path[1] = %q", result.Units[1].YAMLPath)
+	}
+	if result.Units[0].UnitID == result.Units[1].UnitID {
+		t.Fatalf("duplicate value collapsed two units into one: %q",
+			result.Units[0].UnitID)
+	}
+}
+
+// TestExtractParcoursFSQ04EscapeSequences asserts that a YAML scalar with
+// escape sequences exposes the raw bytes (with backslashes) in RawText and
+// the resolved string in DecodedValue.
+func TestExtractParcoursFSQ04EscapeSequences(t *testing.T) {
+	data := []byte("parcours:\n" +
+		"  id: esc\n" +
+		"  domain: test\n" +
+		"  owner: t@t.t\n" +
+		"  status: active\n" +
+		"  etapes:\n" +
+		"    - id: e1\n" +
+		"      name: E1\n" +
+		"      description: Step\n" +
+		"      ordre: 1\n" +
+		"      objectifs:\n" +
+		"        - id: o1\n" +
+		"          description: Obj\n" +
+		"          criteres:\n" +
+		"            - id: c1\n" +
+		"              description: \"line\\nwith\\\"escapes\"\n" +
+		"              type: rule\n" +
+		"              criticality: high\n")
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(result.Units) != 1 {
+		t.Fatalf("expected 1 unit; got %d", len(result.Units))
+	}
+	u := result.Units[0]
+	if !strings.Contains(u.RawText, "\\n") || !strings.Contains(u.RawText, "\\\"") {
+		t.Fatalf("expected raw_text to retain backslash escapes; got %q", u.RawText)
+	}
+	if u.DecodedValue != "line\nwith\"escapes" {
+		t.Fatalf("expected decoded to resolve escapes; got %q", u.DecodedValue)
+	}
+}
+
+// TestExtractParcoursFSQ04SequenceIndexedPath checks that yaml_path
+// includes [N] sequence indices for nested module/objective/question
+// scalars (e.g. parcours.modules[2].questions[7].help_text).
+func TestExtractParcoursFSQ04SequenceIndexedPath(t *testing.T) {
+	data := []byte("parcours:\n" +
+		"  code: PAR_SEQ\n" +
+		"  modules:\n" +
+		"    - code: M0\n" +
+		"      name: Mod 0\n" +
+		"      type: conversational\n" +
+		"      ai_instructions: zero\n" +
+		"      objectives: []\n" +
+		"    - code: M1\n" +
+		"      name: Mod 1\n" +
+		"      type: conversational\n" +
+		"      ai_instructions: one\n" +
+		"      objectives: []\n" +
+		"    - code: M2\n" +
+		"      name: Mod 2\n" +
+		"      type: conversational\n" +
+		"      objectives:\n" +
+		"        - key: o0\n" +
+		"          titre: Objective 0\n" +
+		"          description: Objective desc 0\n" +
+		"          questions: []\n" +
+		"        - key: o1\n" +
+		"          titre: Objective 1\n" +
+		"          description: Objective desc 1\n" +
+		"          questions:\n" +
+		"            - key: q0\n" +
+		"              label: Q0\n" +
+		"              type: text\n" +
+		"              help_text: Help 0\n" +
+		"            - key: q1\n" +
+		"              label: Q1\n" +
+		"              type: text\n" +
+		"              help_text: Help 1\n" +
+		"            - key: q2\n" +
+		"              label: Q2\n" +
+		"              type: text\n" +
+		"              help_text: Help 2\n")
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	var q1Path string
+	for _, u := range result.Units {
+		if u.UnitID == "RBOK-PARCOURS-PAR-SEQ-M2-Q1" {
+			q1Path = u.YAMLPath
+			break
+		}
+	}
+	if q1Path == "" {
+		t.Fatalf("could not locate question q1 unit in result.Units (n=%d)",
+			len(result.Units))
+	}
+	expected := "parcours.modules[2].objectives[1].questions[1].help_text"
+	if q1Path != expected {
+		t.Fatalf("expected yaml_path=%q; got %q", expected, q1Path)
+	}
+}
+
+// TestExtractParcoursFSQ04BusinessRuleModeAlwaysSet asserts every emitted
+// unit declares its BusinessRuleMode. For the parcours flow this is
+// always "decoded" — the BusinessRule field carries the YAML-decoded
+// scalar value (what yaml.Unmarshal produced).
+func TestExtractParcoursFSQ04BusinessRuleModeAlwaysSet(t *testing.T) {
+	result, err := ExtractParcours(filepath.Join("testdata", "parcours-assurance-habitation.yaml"))
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(result.Units) == 0 {
+		t.Fatalf("expected at least one unit")
+	}
+	for _, u := range result.Units {
+		if u.BusinessRuleMode == "" {
+			t.Fatalf("unit %s has empty BusinessRuleMode", u.UnitID)
+		}
+		if u.BusinessRuleMode != "decoded" {
+			t.Fatalf("unit %s has unexpected BusinessRuleMode=%q (want decoded)",
+				u.UnitID, u.BusinessRuleMode)
+		}
+		if u.DecodedValue != "" && u.DecodedValue != u.BusinessRule {
+			t.Fatalf("unit %s: BusinessRuleMode=decoded should imply DecodedValue==BusinessRule; got %q vs %q",
+				u.UnitID, u.DecodedValue, u.BusinessRule)
+		}
+	}
+}
+
+// TestExtractParcoursFSQ04SpanRoundTripsRawText asserts the [start_byte,
+// end_byte) slice of the original YAML reconstructs RawText exactly. This
+// is the integrity guarantee callers rely on to re-prove which bytes fed
+// the unit.
+func TestExtractParcoursFSQ04SpanRoundTripsRawText(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "parcours-assurance-habitation.yaml"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	result, err := ExtractParcoursFromBytes(data)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	checked := 0
+	for _, u := range result.Units {
+		if u.RawText == "" {
+			continue
+		}
+		if u.StartByte < 0 || u.EndByte > len(data) || u.StartByte >= u.EndByte {
+			t.Fatalf("unit %s has invalid span [%d,%d) over %d bytes",
+				u.UnitID, u.StartByte, u.EndByte, len(data))
+		}
+		got := string(data[u.StartByte:u.EndByte])
+		if got != u.RawText {
+			t.Fatalf("unit %s: span slice %q != raw_text %q", u.UnitID, got, u.RawText)
+		}
+		checked++
+	}
+	if checked == 0 {
+		t.Fatalf("expected at least one unit with raw_text/span populated")
 	}
 }

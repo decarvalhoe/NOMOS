@@ -45,6 +45,19 @@ type FeedUnit struct {
 	EndLine            int      `json:"end_line,omitempty"`
 	NormalizedTextHash string   `json:"normalized_text_hash,omitempty"`
 	HeadingPath        []string `json:"heading_path,omitempty"`
+
+	// FSQ-04 (#367) YAML scalar provenance. Optional; populated for parcours
+	// (YAML)-derived units. RawText is the byte slice of the YAML source as
+	// it appears (with quotes if quoted); DecodedValue is the decoded scalar
+	// value. YAMLPath is the key path (e.g. "parcours.modules[2].questions[7].help_text").
+	// BusinessRuleMode states how the BusinessRule field is to be interpreted
+	// ("raw" | "decoded" | "normalized"); for the parcours flow it is "decoded".
+	RawText          string `json:"raw_text,omitempty"`
+	DecodedValue     string `json:"decoded_value,omitempty"`
+	YAMLPath         string `json:"yaml_path,omitempty"`
+	NodeKind         string `json:"node_kind,omitempty"`
+	SchemaRole       string `json:"schema_role,omitempty"`
+	BusinessRuleMode string `json:"business_rule_mode,omitempty"`
 }
 
 // FeedContractRef is a simplified contract reference for consumers.
@@ -379,6 +392,15 @@ func extractParcoursFeedUnits(path string, source ManifestSource) ([]extractedFe
 				BusinessRule: content,
 				SourceIDs:    []string{source.ID},
 				Gaps:         []string{"Extracted from parcours YAML; requires human canonical review."},
+				// FSQ-04 (#367) YAML scalar provenance, propagated from the
+				// extractor so consumers can re-prove which YAML key fed
+				// BusinessRule and re-read its raw bytes.
+				RawText:          unit.RawText,
+				DecodedValue:     unit.DecodedValue,
+				YAMLPath:         unit.YAMLPath,
+				NodeKind:         unit.NodeKind,
+				SchemaRole:       unit.SchemaRole,
+				BusinessRuleMode: unit.BusinessRuleMode,
 			},
 			Content:      content,
 			SourceID:     source.ID,
