@@ -1,6 +1,7 @@
 package githubworkflow
 
 import (
+	pathpkg "path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -220,7 +221,7 @@ func matchSourcePaths(patterns, paths []string) []string {
 //     boundary (suffix itself may contain `*` and `?`).
 //   - `prefix/**/suffix` matches paths under `prefix` whose tail matches
 //     `suffix`.
-//   - Patterns without `**` are matched with `path/filepath.Match`
+//   - Patterns without `**` are matched with `path.Match`
 //     semantics (`*` does not cross `/`; `?` matches any single non-`/`
 //     rune).
 //
@@ -235,7 +236,7 @@ func matchGlob(pattern, path string) bool {
 		return path == ""
 	}
 	if !strings.Contains(pattern, "**") {
-		ok, _ := filepath.Match(pattern, path)
+		ok, _ := pathpkg.Match(pattern, path)
 		return ok
 	}
 	if pattern == "**" {
@@ -265,7 +266,7 @@ func matchGlob(pattern, path string) bool {
 			continue
 		}
 		tail := rest[i:]
-		if ok, _ := filepath.Match(suffix, tail); ok {
+		if ok, _ := pathpkg.Match(suffix, tail); ok {
 			return true
 		}
 		if strings.Contains(suffix, "**") {
