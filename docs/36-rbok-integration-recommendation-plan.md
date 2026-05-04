@@ -30,6 +30,52 @@ Points verifies:
 - zero fragments courts `<= 10` caracteres dans le feed structure;
 - strict gate passant sur le scope enregistre.
 
+## Snapshot Audit RBOK Develop
+
+Snapshot d'audit repris pour cadrer le POC downstream:
+
+- repo: `RBOKproject/RBOK`;
+- branche: `develop`;
+- commit local audite: `9b4f3db4`;
+- worktree local audite: propre;
+- CI observee: derniere `Deploy DEV` verte;
+- PR ouvertes vers `develop` au moment de l'audit: aucune.
+
+Elements RBOK deja presents:
+
+| Surface | Fichier downstream observe |
+|---|---|
+| Modeles doctrine NOMOS | `backend/app/models/nomos_doctrine.py` |
+| Retrieval doctrine/RAG | `backend/app/services/doctrine_rag_retrieval.py` |
+| Bindings step -> doctrine | `backend/app/models/step_doctrine_binding.py` |
+| Guard anti-edition canonique in-app | `backend/app/api/v1/rbok.py` |
+
+Bloquants observes:
+
+| Bloquant | Fichier downstream observe | Impact |
+|---|---|---|
+| Importeur NOMOS ancien format plat (`source_hash`, `units`, `chunks`) | `backend/app/services/nomos_importer.py` | Incompatible avec le feed NOMOS courant. |
+| Prompt runtime pas encore branche sur `DoctrineRAGRetriever` | `backend/app/services/module_prompt_builder.py` | La conversation utilise encore RAG generique + references legacy. |
+| Admin traceability reference des champs non alignes (`unit_count`, `chunk_count`, `import_id`, `unit_key`) | `backend/app/api/v1/admin/doctrine_traceability.py` | Les vues/admin tests ne prouvent pas le format reel. |
+
+Tests downstream observes:
+
+| Test | Etat observe |
+|---|---|
+| `tests/test_doctrine_retrieval.py --no-cov` | passe |
+| `tests/test_doctrine_binding.py --no-cov` | passe |
+| `tests/test_nomos_importer_service.py --no-cov` | echoue |
+| `tests/test_doctrine_traceability.py --no-cov` | echoue |
+
+Tickets downstream existants:
+
+| Ticket | Etat a requalifier |
+|---|---|
+| `RBOK#2168` | Epic Doctrine Runtime v2 ouvert. |
+| `RBOK#2700` | Epic import NOMOS feed ouvert. |
+| `RBOK#2701` | Epic conversation engine NOMOS RAG ouvert. |
+| `RBOK#2702`, `#2703`, `#2704`, `#2706`, `#2707`, `#2708`, `#2710`, `#2711` | fermes, mais `#2704`/`#2711` ne doivent pas etre consideres valides tant que les tests importer/traceability echouent. |
+
 Gaps downstream RBOK:
 
 - l'importeur RBOK actuel attend un format ancien et ne sait pas
