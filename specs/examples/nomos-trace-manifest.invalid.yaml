@@ -1,0 +1,43 @@
+schema_version: "0.1.0"
+# NGW-02 (#387) — Negative fixture: this manifest declares
+# `policy.publish_mode: pull_request` but omits `output.commit_sha`.
+# The conditional invariant on `#NomosTraceManifest` requires
+# `output.commit_sha` to match `^[0-9a-f]{7,40}$` whenever the publish
+# mode commits to a branch (pull_request OR direct_push), so `cue vet`
+# must fail with a non-zero exit and a message naming the missing
+# `commit_sha` field.
+#
+# This fixture is documentation only. It MUST NOT be wired into any
+# green CI step.
+run:
+  event: pull_request
+  workflow_run_id: "16842073922"
+  generated_at: "2026-05-04T10:31:00Z"
+corpus:
+  repo: RBOKproject/realisons-business
+  base_ref: main
+  base_sha: "1f9d2c8b07e3a4f5d6c7b8a9e0d1c2b3a4f5d6c7"
+  head_ref: feature/update-guide
+  head_sha: "9b2a3c4d5e6f7081923a4b5c6d7e8f90a1b2c3d4"
+  pull_request: 124
+scope:
+  id: rbok-lawbook
+  paths:
+    - "01_rbok/**"
+diff:
+  changed_paths:
+    - "01_rbok/chapter-1.md"
+  impacted: true
+output:
+  repo: RBOKproject/nomos-rbok-artifacts
+  branch: nomos/rbok-lawbook/pr-124
+  path: rbok-lawbook/
+  # commit_sha intentionally absent — the conditional invariant must
+  # reject this manifest because publish_mode is pull_request.
+artifacts:
+  feed: feed.json
+policy:
+  publish_mode: pull_request
+  risk_class: low
+  generated_path_guard: pass
+  source_read_only_guard: pass
