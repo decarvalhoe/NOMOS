@@ -424,6 +424,161 @@ jobs:
           if-no-files-found: warn
 
   # --------------------------------------------------------------------------
+  # NGW-07 (#392): mandatory trace manifest job. Runs after the planner on
+  # the impact path and BEFORE the publisher / commenter so they consume a
+  # real `nomos-trace.{yaml,json}` instead of synthesising their own
+  # placeholders. The no-impact path is unchanged: the planner itself still
+  # emits the placeholder trace artifact (Option B of the NGW-07 dispatch:
+  # minimise diff in the planner job).
+  #
+  # v0.1 limitation: this job records `policy.publish_mode: artifact_only`
+  # regardless of the config-declared mode, because the trace runs BEFORE
+  # the publisher and therefore has no `output.commit_sha` to record. Real
+  # pull_request / direct_push trace generation lands with NGW-010 (#395),
+  # which will wire a post-publisher trace step that carries the commit SHA.
+  # --------------------------------------------------------------------------
+  trace-manifest:
+    name: nomos trace manifest
+    needs: [plan]
+    if: needs.plan.outputs.impacted == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NOMOS_CHECKOUT_PATH: nomos
+      CORPUS_CHECKOUT_PATH: corpus
+    outputs:
+      trace_artifact_name: nomos-trace
+    steps:
+      - name: Checkout NOMOS (generator script source)
+        uses: actions/checkout@v4
+        with:
+          repository: RBOKproject/Nomos
+          ref: main
+          path: ${{ env.NOMOS_CHECKOUT_PATH }}
+
+      - name: Checkout source corpus (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
+          persist-credentials: false
+          path: ${{ env.CORPUS_CHECKOUT_PATH }}
+          fetch-depth: 0
+
+      - name: Disable corpus push remote (read-only enforcement)
+        run: |
+          set -euo pipefail
+          git -C "$CORPUS_CHECKOUT_PATH" remote set-url --push origin DISABLED
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+
+      - name: Download diff plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.plan.outputs.diff_artifact_name }}
+          path: ${{ runner.temp }}/diff
+
+      - name: Resolve trace inputs
+        id: tin
+        env:
+          DIFF_DIR: ${{ runner.temp }}/diff
+          BASE_REF: ${{ inputs.base_ref }}
+          HEAD_REF_INPUT: ${{ inputs.head_ref }}
+          CORPUS_REF: ${{ inputs.corpus_ref }}
+          OUTPUT_REPO_INPUT: ${{ inputs.output_repository }}
+          CORPUS_REPO: ${{ inputs.corpus_repository }}
+        run: |
+          set -euo pipefail
+          plan="$(find "$DIFF_DIR" -type f -name '*.json' | head -n 1)"
+          if [ -z "$plan" ]; then
+            echo "::error::no diff plan JSON found under $DIFF_DIR" >&2
+            exit 1
+          fi
+          # First impacted scope drives the trace manifest in v0.1.
+          workflow_id="$(jq -r '.impacted[0].workflow_id' "$plan")"
+          if [ -z "$workflow_id" ] || [ "$workflow_id" = "null" ]; then
+            echo "::error::diff plan carries no impacted[0].workflow_id" >&2
+            exit 1
+          fi
+          base_sha="$(git -C "$CORPUS_CHECKOUT_PATH" rev-parse "origin/$BASE_REF" 2>/dev/null \
+            || git -C "$CORPUS_CHECKOUT_PATH" rev-parse HEAD)"
+          head_sha="$(git -C "$CORPUS_CHECKOUT_PATH" rev-parse HEAD)"
+          head_ref="${HEAD_REF_INPUT:-$CORPUS_REF}"
+          output_repo="${OUTPUT_REPO_INPUT:-$CORPUS_REPO}"
+          {
+            echo "plan_path=$plan"
+            echo "workflow_id=$workflow_id"
+            echo "base_sha=$base_sha"
+            echo "head_sha=$head_sha"
+            echo "head_ref=$head_ref"
+            echo "output_repo=$output_repo"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate mandatory trace manifest
+        env:
+          PLAN_PATH: ${{ steps.tin.outputs.plan_path }}
+          WORKFLOW_ID: ${{ steps.tin.outputs.workflow_id }}
+          EVENT: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          CORPUS_REPO: ${{ inputs.corpus_repository }}
+          BASE_REF: ${{ inputs.base_ref }}
+          BASE_SHA: ${{ steps.tin.outputs.base_sha }}
+          HEAD_REF: ${{ steps.tin.outputs.head_ref }}
+          HEAD_SHA: ${{ steps.tin.outputs.head_sha }}
+          OUTPUT_REPO: ${{ steps.tin.outputs.output_repo }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          out_yaml="$RUNNER_TEMP/nomos-trace.yaml"
+          out_json="$RUNNER_TEMP/nomos-trace.json"
+          # NGW-07 v0.1: always artifact_only; NGW-10 (#395) will route
+          # pull_request / direct_push once the publisher exposes commit SHA.
+          args=(
+            --diff-plan "$PLAN_PATH"
+            --workflow-id "$WORKFLOW_ID"
+            --event "$EVENT"
+            --workflow-run-id "$RUN_ID"
+            --corpus-repo "$CORPUS_REPO"
+            --corpus-base-ref "$BASE_REF"
+            --corpus-base-sha "$BASE_SHA"
+            --corpus-head-ref "$HEAD_REF"
+            --corpus-head-sha "$HEAD_SHA"
+            --output-repo "$OUTPUT_REPO"
+            --output-path "rbok-lawbook/"
+            --publish-mode "artifact_only"
+            --risk-class "low"
+            --generated-path-guard "skipped"
+            --source-read-only-guard "pass"
+            --artifact-diff-report "nomos-diff.json"
+            --out-yaml "$out_yaml"
+            --out-json "$out_json"
+          )
+          if [ -n "${PR_NUMBER:-}" ]; then
+            args+=( --pull-request "$PR_NUMBER" )
+          fi
+          python3 "$NOMOS_CHECKOUT_PATH/scripts/nomos_trace_manifest.py" "${args[@]}"
+
+      - name: Upload trace manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomos-trace
+          path: |
+            ${{ runner.temp }}/nomos-trace.yaml
+            ${{ runner.temp }}/nomos-trace.json
+          if-no-files-found: error
+
+  # --------------------------------------------------------------------------
   # NGW-005 (#390): publish job. Runs ONLY when the planner found at least
   # one impacted scope AND the caller did not request a dry-run. The
   # publisher is invoked in --dry-run mode for v0.1; the script's real-run
@@ -436,7 +591,7 @@ jobs:
   # --------------------------------------------------------------------------
   nomos-publish:
     name: nomos github publish
-    needs: [plan]
+    needs: [plan, trace-manifest]
     if: needs.plan.outputs.impacted == 'true' && inputs.dry_run == false
     runs-on: ubuntu-latest
     permissions:
@@ -462,10 +617,18 @@ jobs:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/nomos-diff
 
-      # TODO(NGW-007 #392 / NGW-010 #395): pull the actual generated NOMOS
-      # outputs once end-to-end generation is wired. For NGW-005 v0.1 the
-      # publisher accepts an empty outputs-dir and routes only the diff
-      # plan + (placeholder) trace through the artifact_only path.
+      # NGW-07 (#392): consume the real trace manifest produced by the
+      # trace-manifest job instead of synthesising a placeholder inline.
+      - name: Download trace manifest artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.trace-manifest.outputs.trace_artifact_name }}
+          path: ${{ runner.temp }}/nomos-trace
+
+      # TODO(NGW-010 #395): pull the actual generated NOMOS outputs once
+      # end-to-end generation is wired. For NGW-005 v0.1 the publisher
+      # accepts an empty outputs-dir and routes only the diff plan + the
+      # trace manifest through the artifact_only path.
       - name: Stage outputs directory (placeholder)
         run: |
           set -euo pipefail
@@ -518,15 +681,13 @@ jobs:
           GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          # Synthesise a placeholder trace manifest so the publisher always
-          # has one to route. NGW-007 (#392) replaces this with the real
-          # generator output.
-          trace="$RUNNER_TEMP/nomos-trace.yaml"
-          {
-            echo "schema_version: \"0.1.0\""
-            echo "scope:"
-            echo "  id: \"$SCOPE_ID\""
-          } > "$trace"
+          # NGW-07 (#392): use the durable trace manifest produced by the
+          # trace-manifest job, not an inline placeholder.
+          trace="$(find "$RUNNER_TEMP/nomos-trace" -type f -name '*.yaml' | head -n 1)"
+          if [ -z "$trace" ]; then
+            echo "::error::no trace manifest YAML downloaded under $RUNNER_TEMP/nomos-trace" >&2
+            exit 1
+          fi
 
           python3 "$NOMOS_CHECKOUT_PATH/scripts/nomos_github_publish.py" \
             --config /dev/null \
@@ -571,7 +732,7 @@ jobs:
   # ----------------------------------------------------------------------
   comment:
     name: nomos source PR comment
-    needs: [plan]
+    needs: [plan, trace-manifest]
     if: github.event_name == 'pull_request' && needs.plan.outputs.impacted == 'true'
     runs-on: ubuntu-latest
     permissions:
