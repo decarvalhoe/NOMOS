@@ -1,11 +1,11 @@
 # 15 - Nomos Product Backlog
 
-Date: 2026-05-03
-Current release target: `v0.1.0-ALPHA`
+Date: 2026-05-04
+Current release target: post-`v0.1.0-ALPHA`
 
 ## Backlog Rule
 
-This file reflects the active product backlog state for the alpha release. Historical issue waves are not repeated here as open work once they have been merged.
+This file reflects the active product backlog state after the alpha release. Historical issue waves are not repeated here as open work once they have been merged.
 
 Each active backlog item must have:
 
@@ -16,7 +16,7 @@ Each active backlog item must have:
 
 ## Current GitHub Open Items
 
-As checked during release preparation on 2026-05-03, open Nomos issues are:
+As checked on 2026-05-04, open Nomos issues are:
 
 | Issue | Area | Role in dependency tree | Release impact |
 |---|---|---|---|
@@ -26,7 +26,7 @@ As checked during release preparation on 2026-05-03, open Nomos issues are:
 | `#193` | Reference bibles | Acquire and intake ISO/IEC/IEEE 12207:2026. | Blocks lifecycle-standard clause closure. |
 | `#194` | Reference bibles | Complete license review for GAMP 5 and ISO/IEC 25010. | Blocks licensed-standard processing and redistribution decisions. |
 | `#196` | Reference bibles | Process public and licensed bibles with Nomos. | Depends on licensed/public reference readiness; blocks higher assurance reference-to-control proof. |
-| `#337` | SFI epic — source-to-feed integrity | Umbrella epic for source-to-feed fidelity and semantic feed hygiene (children `#338`–`#349`). | In progress. Shipped: `#338` (claim boundary), `#339` (source-segment ledger), `#340` (typed Markdown scanner), `#341` (no parent/child duplication), `#342` (SFI-04 source-integrity gate), `#343` (feed-from-canonical-atoms), `#344` (source-backed RAG metadata), `#345` (SFI-07 feed-quality gate), `#346` (SFI-08 strict-gate wiring), `#347` (CUE schemas + evidence examples). In flight: `#348` (this PR — SFI-10 method documentation and operator review). Pending: `#349` (SFI-11 RBOK POC re-run with the source-to-feed integrity report). The platform-wide `full_fidelity_proven` claim becomes writable once `#349` records a passing corpus-integrity report under the strict release gate. |
+| `#382` | FSQ future | Short critical atom reconciliation. | Blocks stronger fidelity claims where short strings carry standalone regulatory, operational, legal, or game-rule meaning. |
 
 ## Delivered Alpha Capabilities
 
@@ -86,12 +86,50 @@ Work:
 - Exact line/column/byte spans for every active source block.
 - Golden fixtures for legal text, regulatory text, technical standard, business corpus, game rules, YAML, and JSON.
 - Explicit unsupported-block records where support is not implemented.
+- Short critical atom reconciliation: prove that short but meaningful fragments such as `GxP`, `ALCOA+`, `21 CFR`, `SOP-01`, `P0`, `Yes/No`, status values, thresholds, and identifiers are either represented with their parent context, promoted into governed lexicon/value/identifier atoms, or explicitly classified as non-semantic. They must not become orphan RAG chunks, but they also must not disappear without a disposition.
 
 Exit gate:
 
 ```text
 No active source block is silently dropped, and every generated node has a source span or explicit unsupported status.
 ```
+
+#### Future item - Short Critical Atom Reconciliation (#382)
+
+Owner / issue: `#382`.
+
+Problem statement:
+
+`v0.1.0-ALPHA` records `0` feed units <= 10 characters. That is a useful noise-control result, because punctuation-only and separator-only fragments should not enter the curated feed or RAG. It is not, by itself, a proof that every short critical term was semantically represented. Regulated and operational corpora often carry high-value meaning in short strings: acronyms, clause references, severity labels, status values, yes/no answers, IDs, thresholds, units, and option codes.
+
+Dependency relationship:
+
+```text
+Source segment ledger
+  -> short-fragment inventory
+  -> criticality classifier
+  -> disposition report
+  -> lexicon/value/identifier promotion where required
+  -> semantic quality gate
+  -> RAG/context proof
+```
+
+Required work:
+
+- Emit a `short-critical-atoms.json` report for every processed corpus, covering excluded short fragments with source id, source span, parent chain, table/YAML/JSON path where applicable, surrounding context, and current disposition.
+- Classify each short fragment as `non_semantic`, `contextualized_in_parent`, `lexicon_atom`, `identifier_atom`, `normative_value_atom`, or `requires_review`.
+- Promote critical short strings into governed lexicon/value/identifier artifacts when they carry standalone meaning, without creating orphan <=10-character RAG chunks.
+- Add fixtures for Markdown paragraphs, lists, tables, callouts, YAML, JSON, legal/regulatory clauses, technical standards, business corpora, and game rules.
+- Make the semantic quality gate fail closed when a short critical fragment remains `requires_review` or has no disposition.
+
+Definition of done:
+
+- Body ledger still reports `0` uncovered bytes for admitted text sources.
+- Curated feed/RAG still reports `0` junk or orphan <=10-character units.
+- Every critical short fragment has a machine-readable disposition and a human-reviewable source span.
+- RAG chunks containing critical short terms include enough parent context to be useful and citable.
+- Regression fixtures cover at least `GxP`, `ALCOA+`, `21 CFR`, `SOP-01`, `P0`, `Yes`, `No`, threshold values, status labels, table cells, and structured YAML/JSON scalars.
+- The strict gate exposes unresolved short-critical findings as blocking evidence.
 
 ### EPIC B - Reference Bible Governance
 
@@ -164,7 +202,7 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 
 ## SFI Wave Status
 
-- SFI-11 (#349) shipped: dossier + command sequence; real run blocked on corpus access at `/root/repos/realisons-business/01_rbok`.
+- SFI-11 (#349) shipped: dossier + command sequence. The alpha release records a bounded RBOK `01_rbok` evidence pack; this does not promote Nomos to universal-fidelity or regulated-validation status.
 
 ## FSQ Wave Status (epic #363)
 
@@ -175,7 +213,7 @@ Joint Nomos/Praxis claims are backed by a shared contract and both products decl
 - FSQ-05 (#368) shipped: corpus body ledger separate from curated feed.
 - FSQ-06 (#369) shipped: semantic quality gate (`CheckSemanticQuality`).
 - FSQ-07 (#370) shipped: context-rich RAG chunk composer (`ComposeRAGChunks`).
-- FSQ-08 (#371) shipped 7/8 + dossier+runner ready: `scripts/rbok-poc-integrity.sh` extended through stage 13, `docs/rbok-poc-validation-dossier.md` converted to AQ-3 dossier; **real run blocked on corpus access** at `/root/repos/realisons-business/01_rbok`. The AQ-3 bounded claim is templated and not advertised until a passing run is recorded.
+- FSQ-08 (#371 / #379 / #380) shipped: `scripts/rbok-poc-integrity.sh` was extended through the integrity stages, `docs/rbok-poc-validation-dossier.md` records the AQ-3 bounded POC dossier, and the alpha release notes record the passing evidence pack. Remaining future work is not the FSQ epic itself; it is the stronger portable fidelity backlog above, including short critical atom reconciliation, broader adapter fixtures, repeated CI evidence, and attestation `claim_coverage` wiring.
 
 ## Non-Goals For The Alpha
 
