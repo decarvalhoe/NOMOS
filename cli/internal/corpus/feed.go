@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,6 +16,11 @@ import (
 const FeedFormat = "nomos.corpus-feed.v1"
 
 // FeedUnit is a unit entry in the consumer feed.
+//
+// SFI-05 (#343): source-derived feed units (built from a canonical_atom
+// SourceSegment) carry exact byte/line spans, the segment id, and the
+// normalized-text hash so downstream consumers can re-prove provenance.
+// Matrix-derived units leave these fields empty (omitempty).
 type FeedUnit struct {
 	UnitID       string           `json:"unit_id"`
 	Name         string           `json:"name"`
@@ -27,6 +33,18 @@ type FeedUnit struct {
 	TestRefs     []string         `json:"test_refs,omitempty"`
 	Gaps         []string         `json:"gaps,omitempty"`
 	Contract     *FeedContractRef `json:"contract,omitempty"`
+
+	// SFI-05 (#343) canonical-atom segment linkage. Optional; only
+	// populated for source-derived units.
+	SourceSegmentID    string   `json:"source_segment_id,omitempty"`
+	SourceID           string   `json:"source_id,omitempty"`
+	SourcePath         string   `json:"source_path,omitempty"`
+	StartByte          int      `json:"start_byte,omitempty"`
+	EndByte            int      `json:"end_byte,omitempty"`
+	StartLine          int      `json:"start_line,omitempty"`
+	EndLine            int      `json:"end_line,omitempty"`
+	NormalizedTextHash string   `json:"normalized_text_hash,omitempty"`
+	HeadingPath        []string `json:"heading_path,omitempty"`
 }
 
 // FeedContractRef is a simplified contract reference for consumers.
@@ -316,44 +334,15 @@ func extractFeedUnits(root string, manifest SidecarManifest) ([]extractedFeedUni
 		ext := strings.ToLower(filepath.Ext(source.Path))
 		switch {
 		case source.Type == "markdown" || ext == ".md" || ext == ".mdx":
-			units, err := ExtractMarkdownUnits(absPath)
+			content, err := os.ReadFile(absPath)
 			if err != nil {
-				return nil, fmt.Errorf("extract markdown %s: %w", source.Path, err)
+				return nil, fmt.Errorf("read markdown %s: %w", source.Path, err)
 			}
-			for _, unit := range units {
-				// SFI-03 (#341): structural heading entries carry no
-				// body bytes, so they do not produce a feed unit on
-				// their own — the canonical semantic leaves under
-				// each heading do.
-				if unit.Kind == HeadingUnitKindHeading {
-					continue
-				}
-				content := strings.TrimSpace(unit.Content)
-				if content == "" {
-					content = unit.Title
-				}
-				unitID := uniqueFeedUnitID(toUpperSlug("RBOK-MD-"+source.ID+"-"+unit.ID), seenUnitIDs)
-				result = append(result, extractedFeedUnit{
-					FeedUnit: FeedUnit{
-						UnitID:       unitID,
-						Name:         unit.Title,
-						Domain:       feedDomain(source.Domain),
-						UnitType:     "rule",
-						Criticality:  "medium",
-						Status:       "partial",
-						BusinessRule: content,
-						SourceIDs:    []string{source.ID},
-						Gaps:         []string{"Extracted from corpus text; requires human canonical review."},
-					},
-					Content:      content,
-					SourceID:     source.ID,
-					SourcePath:   source.Path,
-					SourceHash:   source.Hash,
-					Priority:     feedPriority(source.Priority),
-					SourceStatus: feedSourceStatus(source.Status),
-					Locator:      fmt.Sprintf("%s:%d", source.Path, unit.Line),
-				})
+			units, err := markdownFeedUnitsFromBytes(content, source, seenUnitIDs)
+			if err != nil {
+				return nil, err
 			}
+			result = append(result, units...)
 		case ext == ".yaml" || ext == ".yml":
 			units, err := extractParcoursFeedUnits(absPath, source)
 			if err != nil {
@@ -561,4 +550,123 @@ func uniqueFeedUnitID(base string, seen map[string]int) string {
 		return base
 	}
 	return fmt.Sprintf("%s-%02d", base, count+1)
+}
+
+// markdownFeedUnitsFromBytes is the SFI-05 (#343) entry point for
+// markdown-source-derived feed units. It scans the source bytes once,
+// then defers to feedUnitsFromSegments for gating and emission.
+func markdownFeedUnitsFromBytes(content []byte, source ManifestSource, seenUnitIDs map[string]int) ([]extractedFeedUnit, error) {
+	if len(content) == 0 {
+		return nil, nil
+	}
+	segments, err := ScanMarkdown(source.ID, source.Path, content)
+	if err != nil {
+		return nil, fmt.Errorf("scan markdown %s: %w", source.Path, err)
+	}
+	return feedUnitsFromSegments(content, segments, source, seenUnitIDs)
+}
+
+// feedUnitsFromSegments runs the SFI-04 source integrity gate over the
+// supplied (content, segments) pair and emits one feed unit per
+// canonical_atom segment. It fails closed: if the gate would reject
+// the ledger, no feed unit is produced and a non-nil error including
+// the finding count and the first finding's stable code is returned.
+func feedUnitsFromSegments(content []byte, segments []SourceSegment, source ManifestSource, seenUnitIDs map[string]int) ([]extractedFeedUnit, error) {
+	report := CheckSourceIntegrity(
+		[]SourceInput{{SourceID: source.ID, Path: source.Path, Content: content}},
+		segments,
+	)
+	if report.Status != "pass" {
+		first := report.Findings[0]
+		return nil, fmt.Errorf(
+			"feed: source integrity gate failed for %s: %d finding(s); first=%s: %s",
+			source.Path, len(report.Findings), first.Code, first.Message,
+		)
+	}
+	return buildFeedUnitsFromSegments(content, segments, source, seenUnitIDs), nil
+}
+
+// buildFeedUnitsFromSegments walks segments in order, maintains a
+// heading stack so each canonical_atom inherits the enclosing
+// HeadingPath, and emits one feed unit per canonical_atom. Caller
+// must have already proved integrity via CheckSourceIntegrity.
+func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source ManifestSource, seenUnitIDs map[string]int) []extractedFeedUnit {
+	type frame struct {
+		level int
+		title string
+	}
+	var stack []frame
+	cloneAncestry := func() []string {
+		if len(stack) == 0 {
+			return nil
+		}
+		out := make([]string, len(stack))
+		for i, f := range stack {
+			out[i] = f.title
+		}
+		return out
+	}
+
+	var out []extractedFeedUnit
+	for _, seg := range segments {
+		if seg.Kind == KindHeading && seg.ParentSegmentID == "" {
+			level, title := parseHeadingLevelTitle(string(content[seg.StartByte:seg.EndByte]))
+			if level < 1 || level > 6 || strings.TrimSpace(title) == "" {
+				continue
+			}
+			for len(stack) > 0 && stack[len(stack)-1].level >= level {
+				stack = stack[:len(stack)-1]
+			}
+			stack = append(stack, frame{level: level, title: title})
+			continue
+		}
+		if seg.Disposition != DispositionCanonicalAtom {
+			continue
+		}
+		// SFI-03 (#341) parity: only emit canonical-atom feed units
+		// that sit inside a heading scope. Pre-heading text would
+		// surface as a coverage finding, not a feed unit.
+		if len(stack) == 0 {
+			continue
+		}
+		ancestors := cloneAncestry()
+		title := stack[len(stack)-1].title
+		text := strings.TrimRight(string(content[seg.StartByte:seg.EndByte]), "\n")
+		display := strings.TrimSpace(text)
+		if display == "" {
+			display = title
+		}
+		leafID := unitIDLeaf(source.Path, title, seg.Kind, seg.StartLine)
+		unitID := uniqueFeedUnitID(toUpperSlug("RBOK-MD-"+source.ID+"-"+leafID), seenUnitIDs)
+		out = append(out, extractedFeedUnit{
+			FeedUnit: FeedUnit{
+				UnitID:             unitID,
+				Name:               title,
+				Domain:             feedDomain(source.Domain),
+				UnitType:           "rule",
+				Criticality:        "medium",
+				Status:             "partial",
+				BusinessRule:       display,
+				SourceIDs:          []string{source.ID},
+				Gaps:               []string{"Extracted from corpus text; requires human canonical review."},
+				SourceSegmentID:    seg.SegmentID,
+				SourceID:           source.ID,
+				SourcePath:         source.Path,
+				StartByte:          seg.StartByte,
+				EndByte:            seg.EndByte,
+				StartLine:          seg.StartLine,
+				EndLine:            seg.EndLine,
+				NormalizedTextHash: seg.NormalizedTextHash,
+				HeadingPath:        ancestors,
+			},
+			Content:      display,
+			SourceID:     source.ID,
+			SourcePath:   source.Path,
+			SourceHash:   source.Hash,
+			Priority:     feedPriority(source.Priority),
+			SourceStatus: feedSourceStatus(source.Status),
+			Locator:      fmt.Sprintf("%s:%d", source.Path, seg.StartLine),
+		})
+	}
+	return out
 }
