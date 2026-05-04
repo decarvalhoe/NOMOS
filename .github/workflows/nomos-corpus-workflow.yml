@@ -422,3 +422,133 @@ jobs:
           name: nomos-diagnostics
           path: ${{ runner.temp }}/nomos-diagnostics
           if-no-files-found: warn
+
+  # --------------------------------------------------------------------------
+  # NGW-005 (#390): publish job. Runs ONLY when the planner found at least
+  # one impacted scope AND the caller did not request a dry-run. The
+  # publisher is invoked in --dry-run mode for v0.1; the script's real-run
+  # paths (gh / git push) are wired by NGW-007 (#392) and NGW-010 (#395).
+  #
+  # Permissions are declared at the JOB level (not workflow-level): for
+  # v0.1 the only mode the job exercises is artifact_only, which needs
+  # contents:read. When NGW-007/NGW-010 enable real PR/push paths they
+  # will introduce a separate write-permission job.
+  # --------------------------------------------------------------------------
+  nomos-publish:
+    name: nomos github publish
+    needs: [plan]
+    if: needs.plan.outputs.impacted == 'true' && inputs.dry_run == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NOMOS_CHECKOUT_PATH: nomos
+    steps:
+      - name: Checkout NOMOS (publisher script source)
+        uses: actions/checkout@v4
+        with:
+          repository: RBOKproject/Nomos
+          ref: main
+          path: ${{ env.NOMOS_CHECKOUT_PATH }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download diff plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.plan.outputs.diff_artifact_name }}
+          path: ${{ runner.temp }}/nomos-diff
+
+      # TODO(NGW-007 #392 / NGW-010 #395): pull the actual generated NOMOS
+      # outputs once end-to-end generation is wired. For NGW-005 v0.1 the
+      # publisher accepts an empty outputs-dir and routes only the diff
+      # plan + (placeholder) trace through the artifact_only path.
+      - name: Stage outputs directory (placeholder)
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/nomos-outputs"
+
+      # Resolve publish parameters from the workflow config. NGW-005 v0.1
+      # reads them via `nomos github publish-plan` once that command exists
+      # (NGW-007); for now, surface them as job-level inputs the caller
+      # template fills in. Until the resolver lands, default to artifact_only.
+      - name: Resolve publish parameters
+        id: pp
+        env:
+          DIFF_DIR: ${{ runner.temp }}/nomos-diff
+        run: |
+          set -euo pipefail
+          # Pick the first JSON file under the diff artifact dir.
+          plan="$(find "$DIFF_DIR" -type f -name '*.json' | head -n 1)"
+          if [ -z "$plan" ]; then
+            echo "::error::no diff plan JSON found under $DIFF_DIR" >&2
+            exit 1
+          fi
+          # First impacted scope drives the publish parameters in v0.1.
+          scope_id="$(jq -r '.impacted[0].id' "$plan")"
+          target_repo="$(jq -r '.impacted[0].publish.target_repo' "$plan")"
+          target_branch="$(jq -r '.impacted[0].publish.target_branch' "$plan")"
+          target_path="$(jq -r '.impacted[0].publish.target_path' "$plan")"
+          mode="$(jq -r '.impacted[0].publish.mode' "$plan")"
+          branch_strategy="$(jq -r '.impacted[0].publish.branch_strategy // "fixed"' "$plan")"
+          {
+            echo "plan_path=$plan"
+            echo "scope_id=$scope_id"
+            echo "target_repo=$target_repo"
+            echo "target_branch=$target_branch"
+            echo "target_path=$target_path"
+            echo "mode=$mode"
+            echo "branch_strategy=$branch_strategy"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run NOMOS publisher (dry-run)
+        env:
+          PLAN_PATH: ${{ steps.pp.outputs.plan_path }}
+          SCOPE_ID: ${{ steps.pp.outputs.scope_id }}
+          TARGET_REPO: ${{ steps.pp.outputs.target_repo }}
+          TARGET_BRANCH: ${{ steps.pp.outputs.target_branch }}
+          TARGET_PATH: ${{ steps.pp.outputs.target_path }}
+          MODE: ${{ steps.pp.outputs.mode }}
+          BRANCH_STRATEGY: ${{ steps.pp.outputs.branch_strategy }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # Synthesise a placeholder trace manifest so the publisher always
+          # has one to route. NGW-007 (#392) replaces this with the real
+          # generator output.
+          trace="$RUNNER_TEMP/nomos-trace.yaml"
+          {
+            echo "schema_version: \"0.1.0\""
+            echo "scope:"
+            echo "  id: \"$SCOPE_ID\""
+          } > "$trace"
+
+          python3 "$NOMOS_CHECKOUT_PATH/scripts/nomos_github_publish.py" \
+            --config /dev/null \
+            --workflow-id "$SCOPE_ID" \
+            --diff-plan "$PLAN_PATH" \
+            --outputs-dir "$RUNNER_TEMP/nomos-outputs" \
+            --trace-manifest "$trace" \
+            --mode "$MODE" \
+            --target-repo "$TARGET_REPO" \
+            --target-branch "$TARGET_BRANCH" \
+            --target-path "$TARGET_PATH" \
+            --branch-strategy "$BRANCH_STRATEGY" \
+            --source-sha "$SOURCE_SHA" \
+            --dest-dir "$RUNNER_TEMP/nomos-publish" \
+            --dry-run \
+            > "$RUNNER_TEMP/nomos-publish-plan.json"
+
+      - name: Upload publish plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomos-publish-plan
+          path: |
+            ${{ runner.temp }}/nomos-publish-plan.json
+            ${{ runner.temp }}/nomos-trace.yaml
+          if-no-files-found: error
