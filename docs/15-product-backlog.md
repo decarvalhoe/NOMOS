@@ -7,6 +7,11 @@ Current release target: post-`v0.1.0-ALPHA`
 
 This file reflects the active product backlog state after the alpha release. Historical issue waves are not repeated here as open work once they have been merged.
 
+The implementation issue list for the next releases lives in
+[`docs/29-post-alpha-release-issue-list.md`](29-post-alpha-release-issue-list.md).
+Create the GitHub child issues from that document before coding a
+release wave.
+
 Each active backlog item must have:
 
 - an owner or GitHub issue;
