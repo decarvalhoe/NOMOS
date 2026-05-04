@@ -282,7 +282,11 @@ this run pass".
 | 10 | Post-run git status capture      | 0 | `corpus-status-after.txt` | 0 | PASS — no corpus mutation |
 
 Recorded local evidence path:
-`C:\Dev\nomos-rbok-poc-run-20260504-sfi-7`.
+`C:\Dev\nomos-rbok-poc-run-20260504-sfi-8`.
+
+Recorded NOMOS revision:
+`f899d9c4b7d929187826af20e2b66c4b6136b5d1` on
+`codex/rbok-poc-restart-20260504`.
 
 Recorded corpus revision:
 `ea003e8fe3c35993731c3708a3787df6a3a690df` from the clean
