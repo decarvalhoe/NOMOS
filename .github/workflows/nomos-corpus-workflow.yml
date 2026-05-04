@@ -552,3 +552,177 @@ jobs:
             ${{ runner.temp }}/nomos-publish-plan.json
             ${{ runner.temp }}/nomos-trace.yaml
           if-no-files-found: error
+
+
+  # ----------------------------------------------------------------------
+  # NGW-06 (#391) source PR commenter.
+  #
+  # Posts (or updates the existing sticky) comment on the source PR with
+  # the impacted scopes, diff summary, output location, trace manifest
+  # reference, and gate status — gated by `notify.source_pr_comment`
+  # in the workflow's NGW-01 config (#386). The comment script
+  # short-circuits when the block is missing or `enabled: false`.
+  #
+  # Job-level permissions only: `pull-requests: write` is scoped here
+  # so the workflow-level block stays read-only and the planner job
+  # cannot accidentally inherit write access. The job runs only on
+  # pull_request events when the planner reported impact, so push and
+  # workflow_dispatch runs never comment.
+  # ----------------------------------------------------------------------
+  comment:
+    name: nomos source PR comment
+    needs: [plan]
+    if: github.event_name == 'pull_request' && needs.plan.outputs.impacted == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      actions: read
+    env:
+      NOMOS_CHECKOUT_PATH: nomos
+      CORPUS_CHECKOUT_PATH: corpus
+    steps:
+      # We need the script + (when config_owner == "corpus") the workflow
+      # config out of the source corpus tree. Both checkouts mirror the
+      # planner's; the corpus checkout stays read-only by the same two
+      # rules (persist-credentials false + push remote DISABLED).
+      - name: Checkout NOMOS (workflow source)
+        uses: actions/checkout@v4
+        with:
+          repository: RBOKproject/Nomos
+          ref: main
+          path: ${{ env.NOMOS_CHECKOUT_PATH }}
+
+      - name: Checkout source corpus (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.corpus_repository }}
+          ref: ${{ inputs.corpus_ref }}
+          token: ${{ secrets.NOMOS_CORPUS_READ_TOKEN }}
+          persist-credentials: false
+          path: ${{ env.CORPUS_CHECKOUT_PATH }}
+          fetch-depth: 1
+
+      - name: Disable corpus push remote (read-only enforcement)
+        run: |
+          set -euo pipefail
+          git -C "$CORPUS_CHECKOUT_PATH" remote set-url --push origin DISABLED
+
+      - name: Resolve config path
+        id: config
+        env:
+          OWNER: ${{ inputs.config_owner }}
+          REL: ${{ inputs.config_path }}
+        run: |
+          set -euo pipefail
+          case "$OWNER" in
+            corpus)
+              path="$GITHUB_WORKSPACE/$CORPUS_CHECKOUT_PATH/$REL"
+              ;;
+            output)
+              path="$GITHUB_WORKSPACE/$REL"
+              ;;
+            *)
+              echo "::error::unknown config_owner=$OWNER" >&2
+              exit 1
+              ;;
+          esac
+          if [ ! -f "$path" ]; then
+            echo "::error::config not found at $path" >&2
+            exit 1
+          fi
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+
+      - name: Download diff plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.plan.outputs.diff_artifact_name }}
+          path: ${{ runner.temp }}/diff
+        continue-on-error: true
+
+      - name: Download trace manifest artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nomos-trace
+          path: ${{ runner.temp }}/trace
+        continue-on-error: true
+
+      - name: Resolve scope ids from config
+        id: scopes
+        env:
+          CONFIG_PATH: ${{ steps.config.outputs.path }}
+        run: |
+          set -euo pipefail
+          ids="$(python3 -c '
+          import os, sys, yaml
+          cfg = yaml.safe_load(open(os.environ["CONFIG_PATH"])) or {}
+          for w in cfg.get("workflows") or []:
+              wid = (w or {}).get("id")
+              if wid:
+                  print(wid)
+          ')"
+          {
+            echo "ids<<EOF"
+            echo "$ids"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # The commenter is per-scope (one sticky comment per workflow id
+      # so multi-scope configs do not collide). We loop scopes here in
+      # bash; the script itself is idempotent.
+      - name: Post or update source PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFIG_PATH: ${{ steps.config.outputs.path }}
+          SCOPE_IDS: ${{ steps.scopes.outputs.ids }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          script="$NOMOS_CHECKOUT_PATH/scripts/nomos_github_comment.py"
+
+          # Pick the (single) diff plan and trace manifest files dropped
+          # by the download steps. Both directories may be empty when the
+          # corresponding artifact wasn't produced by `plan`.
+          diff_plan=""
+          if [ -d "$RUNNER_TEMP/diff" ]; then
+            diff_plan="$(find "$RUNNER_TEMP/diff" -type f -name '*.json' | head -n 1 || true)"
+          fi
+          trace_manifest=""
+          if [ -d "$RUNNER_TEMP/trace" ]; then
+            trace_manifest="$(find "$RUNNER_TEMP/trace" -type f -name '*.yaml' | head -n 1 || true)"
+          fi
+
+          # NGW-06 v0.1: gate_status is reported as "skipped" until the
+          # publication / strict gate is wired (NGW-05 / NGW-07). The
+          # script accepts this value and renders accordingly.
+          gate_status="skipped"
+
+          while IFS= read -r scope_id; do
+            [ -n "$scope_id" ] || continue
+            args=(
+              --config "$CONFIG_PATH"
+              --workflow-id "$scope_id"
+              --gate-status "$gate_status"
+              --pr-number "$PR_NUMBER"
+              --repo "$REPO"
+            )
+            if [ -n "$diff_plan" ]; then
+              args+=( --diff-plan "$diff_plan" )
+            fi
+            if [ -n "$trace_manifest" ]; then
+              args+=( --trace-manifest "$trace_manifest" )
+            fi
+            python3 "$script" "${args[@]}"
+          done <<< "$SCOPE_IDS"
