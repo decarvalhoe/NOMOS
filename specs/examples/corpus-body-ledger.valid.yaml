@@ -1,0 +1,101 @@
+format: nomos.corpus-body-ledger.v1
+generated_at: "2026-05-04T00:00:00Z"
+corpus_root: /tmp/rbok-poc
+source_count: 2
+admitted_count: 2
+sources:
+  - source_id: DOC-INTRO-001
+    path: docs/intro.md
+    size_bytes: 72
+    hash: "sha256:c3b2a4d8e1f5a7b9c0d2e4f6a8b1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7"
+    admission_status: admitted
+    atomization_status: atomized
+    source_role: canonical
+    format_support: supported
+    segments:
+      - segment_id: "seg:DOC-INTRO-001:0-12:heading"
+        source_id: DOC-INTRO-001
+        source_path: docs/intro.md
+        kind: heading
+        disposition: structure_only
+        start_byte: 0
+        end_byte: 12
+        start_line: 1
+        end_line: 1
+      - segment_id: "seg:DOC-INTRO-001:12-13:blank"
+        source_id: DOC-INTRO-001
+        source_path: docs/intro.md
+        kind: blank
+        disposition: coverage_only
+        start_byte: 12
+        end_byte: 13
+        start_line: 2
+        end_line: 2
+      - segment_id: "seg:DOC-INTRO-001:13-67:paragraph"
+        source_id: DOC-INTRO-001
+        source_path: docs/intro.md
+        kind: paragraph
+        disposition: canonical_atom
+        start_byte: 13
+        end_byte: 67
+        start_line: 3
+        end_line: 3
+      - segment_id: "seg:DOC-INTRO-001:67-68:blank"
+        source_id: DOC-INTRO-001
+        source_path: docs/intro.md
+        kind: blank
+        disposition: coverage_only
+        start_byte: 67
+        end_byte: 68
+        start_line: 4
+        end_line: 4
+      - segment_id: "seg:DOC-INTRO-001:68-72:decorative_separator"
+        source_id: DOC-INTRO-001
+        source_path: docs/intro.md
+        kind: decorative_separator
+        disposition: coverage_only
+        start_byte: 68
+        end_byte: 72
+        start_line: 5
+        end_line: 5
+    byte_coverage:
+      total_bytes: 72
+      semantic_bytes: 54
+      structure_bytes: 12
+      coverage_only_bytes: 6
+      metadata_bytes: 0
+      unsupported_bytes: 0
+      binary_bytes: 0
+      uncovered_bytes: 0
+  - source_id: REF-SPEC-001
+    path: refs/external-spec.pdf
+    size_bytes: 524288
+    hash: "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+    admission_status: admitted
+    atomization_status: unsupported
+    source_role: reference
+    format_support: unsupported
+    exclusion_reason: "format not yet supported by canonical scanners"
+    byte_coverage:
+      total_bytes: 524288
+      semantic_bytes: 0
+      structure_bytes: 0
+      coverage_only_bytes: 0
+      metadata_bytes: 0
+      unsupported_bytes: 524288
+      binary_bytes: 0
+      uncovered_bytes: 0
+coverage_summary:
+  total_bytes: 524360
+  semantic_bytes: 54
+  structure_bytes: 12
+  coverage_only_bytes: 6
+  metadata_bytes: 0
+  unsupported_bytes: 524288
+  binary_bytes: 0
+  uncovered_bytes: 0
+  by_source_role:
+    canonical: 72
+    reference: 524288
+  by_source_status:
+    admitted: 524360

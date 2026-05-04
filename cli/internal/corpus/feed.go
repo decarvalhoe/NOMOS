@@ -66,6 +66,13 @@ type FeedUnit struct {
 	TableRole     string   `json:"table_role,omitempty"`
 	RowIndex      int      `json:"row_index,omitempty"`
 	ColumnHeaders []string `json:"column_headers,omitempty"`
+
+	// FSQ-05 (#368) body-ledger linkage. Lists the SourceSegment IDs that
+	// compose this feed unit. For single-segment source-derived units
+	// this is [SourceSegmentID]; for composed table_row units it is the
+	// row segment's id followed by its child table_cell segment ids.
+	// Matrix-derived units leave it empty (omitempty).
+	BodyLedgerSegmentIDs []string `json:"body_ledger_segment_ids,omitempty"`
 }
 
 // FeedContractRef is a simplified contract reference for consumers.
@@ -777,6 +784,14 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 			if len(seg.ColumnHeaders) > 0 {
 				fu.ColumnHeaders = append([]string(nil), seg.ColumnHeaders...)
 			}
+			// FSQ-05 (#368): a table_row composed unit subsumes the row
+			// segment plus every child table_cell, so the body-ledger
+			// linkage must list all of them.
+			fu.BodyLedgerSegmentIDs = collectBodyLedgerSegmentIDs(seg.SegmentID, segments)
+		} else {
+			// FSQ-05 (#368): single-segment source-derived units link to
+			// exactly one body-ledger segment.
+			fu.BodyLedgerSegmentIDs = []string{seg.SegmentID}
 		}
 		out = append(out, extractedFeedUnit{
 			FeedUnit:     fu,
@@ -788,6 +803,21 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 			SourceStatus: feedSourceStatus(source.Status),
 			Locator:      fmt.Sprintf("%s:%d", source.Path, seg.StartLine),
 		})
+	}
+	return out
+}
+
+// collectBodyLedgerSegmentIDs returns the row segment id followed by every
+// child segment id (in source order). FSQ-05 (#368): a composed table_row
+// feed unit subsumes the row segment plus its child table_cell segments,
+// so the body-ledger linkage must enumerate all of them. The lookup walks
+// the supplied segments slice once; it is O(n).
+func collectBodyLedgerSegmentIDs(rowID string, segments []SourceSegment) []string {
+	out := []string{rowID}
+	for _, s := range segments {
+		if s.ParentSegmentID == rowID {
+			out = append(out, s.SegmentID)
+		}
 	}
 	return out
 }

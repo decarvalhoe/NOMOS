@@ -46,6 +46,29 @@ type CorpusPredicate struct {
 	Diagnosis      *DiagnoseVerdict `json:"diagnosis,omitempty"`
 	Policy         *AttestPolicy    `json:"policy,omitempty"`
 	Metadata       map[string]any   `json:"metadata,omitempty"`
+
+	// FSQ-05 (#368) claim-coverage scoping. Populated only when a body
+	// ledger is supplied to the attestation generator; omitted otherwise
+	// to preserve backward compatibility with consumers that have never
+	// seen the field.
+	ClaimCoverage *ClaimCoverage `json:"claim_coverage,omitempty"`
+}
+
+// ClaimCoverage records the scope of evidence backing this attestation.
+// FSQ-05 (#368) splits the curated feed (canonical_atom only) from the
+// full source body ledger (every byte of every admitted source); this
+// struct is the explicit machine-checkable answer to "what does this
+// attestation actually cover?".
+//
+// CoversFullSourceBody is true ONLY when the supplied body ledger has
+// zero uncovered bytes across all admitted sources. CoversCuratedFeed is
+// true when the attestation reports at least one extracted feed unit.
+// SummaryStatus is one of "feed_only", "body_only", "feed_and_body",
+// "incomplete".
+type ClaimCoverage struct {
+	CoversFullSourceBody bool   `json:"covers_full_source_body"`
+	CoversCuratedFeed    bool   `json:"covers_curated_feed"`
+	SummaryStatus        string `json:"summary_status"`
 }
 
 // AttestPolicy captures which glob policy was active during the scan.
@@ -69,6 +92,12 @@ type CorpusAttestationOptions struct {
 	Policy         *Policy
 	Metadata       map[string]any
 	Now            time.Time
+
+	// FSQ-05 (#368) optional body ledger. When non-nil, the generator
+	// emits CorpusPredicate.ClaimCoverage with covers_full_source_body
+	// derived from the ledger and covers_curated_feed derived from
+	// UnitsExtracted. When nil the predicate omits ClaimCoverage entirely.
+	BodyLedger *CorpusBodyLedger
 }
 
 // GenerateCorpusAttestation creates an in-toto statement attesting a corpus scan.
@@ -119,6 +148,9 @@ func GenerateCorpusAttestation(opts CorpusAttestationOptions) (CorpusAttestation
 		Diagnosis:      opts.Diagnosis,
 		Policy:         attestPolicy,
 		Metadata:       opts.Metadata,
+	}
+	if opts.BodyLedger != nil {
+		predicate.ClaimCoverage = computeClaimCoverage(*opts.BodyLedger, opts.UnitsExtracted)
 	}
 
 	predicateJSON, err := json.Marshal(predicate)
@@ -177,6 +209,41 @@ func WriteAttestation(w io.Writer, stmt CorpusAttestationStatement) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(stmt)
+}
+
+// computeClaimCoverage derives the FSQ-05 (#368) claim-coverage scoping
+// from a body ledger and the unit-extraction count. Pure function: no
+// I/O, no mutation. CoversFullSourceBody is true ONLY when every
+// admitted source in the ledger has zero uncovered bytes; binary and
+// reference sources record their bytes under BinaryBytes/UnsupportedBytes
+// (not UncoveredBytes), so they pass this check trivially.
+func computeClaimCoverage(ledger CorpusBodyLedger, unitsExtracted int) *ClaimCoverage {
+	full := true
+	for _, src := range ledger.Sources {
+		if src.AdmissionStatus != AdmissionAdmitted {
+			continue
+		}
+		if src.ByteCoverage.UncoveredBytes > 0 {
+			full = false
+			break
+		}
+	}
+	feed := unitsExtracted > 0
+	cc := &ClaimCoverage{
+		CoversFullSourceBody: full,
+		CoversCuratedFeed:    feed,
+	}
+	switch {
+	case full && feed:
+		cc.SummaryStatus = "feed_and_body"
+	case full && !feed:
+		cc.SummaryStatus = "body_only"
+	case !full && feed:
+		cc.SummaryStatus = "feed_only"
+	default:
+		cc.SummaryStatus = "incomplete"
+	}
+	return cc
 }
 
 // computeSnapshotHash produces a deterministic hash of the scanned file list.

@@ -49,12 +49,26 @@ type GateError struct {
 // integrity gate (#342) and the SFI-07 feed quality gate (#345). Either
 // sub-report may be nil if its inputs were not supplied. Status is "pass"
 // when every supplied sub-report passed, "fail" otherwise.
+//
+// FSQ-05 (#368): when a body ledger is supplied via --corpus-body-ledger,
+// any uncovered text bytes for an admitted+atomized source surface here
+// as BodyLedgerFindings. The ledger itself is NOT attached as a separate
+// section; per dispatch, the ledger is evidence consumed by this section.
 type CorpusIntegrityCheck struct {
-	Status          string                    `json:"status"`
-	SourceIntegrity *corpus.IntegrityReport   `json:"source_integrity"`
-	FeedQuality     *corpus.FeedQualityReport `json:"feed_quality"`
-	Summary         string                    `json:"summary"`
+	Status             string                    `json:"status"`
+	SourceIntegrity    *corpus.IntegrityReport   `json:"source_integrity"`
+	FeedQuality        *corpus.FeedQualityReport `json:"feed_quality"`
+	BodyLedgerFindings []corpus.IntegrityFinding `json:"body_ledger_findings,omitempty"`
+	Summary            string                    `json:"summary"`
 }
+
+// FindingBodyLedgerUncoveredTextSource is the stable code emitted when a
+// body ledger reports uncovered bytes for a source that the operator
+// declared admitted+atomized (or admitted+coverage_only). FSQ-05 (#368):
+// the dispatch fixes this exact code, distinct from the SFI-04
+// SOURCE_UNCOVERED_RANGE finding so consumers can tell ledger-vs-segment
+// fidelity defects apart.
+const FindingBodyLedgerUncoveredTextSource = "BODY_LEDGER_UNCOVERED_TEXT_SOURCE"
 
 // StrictGateCommand implements the aggregated "nomos strict" release gate.
 // It runs all blocking checks in sequence and reports a unified result.
@@ -71,6 +85,7 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	integritySourceDir := flags.String("corpus-integrity-source", "", "path to a directory of *.md source files; computes the source integrity report on the fly")
 	integrityFeedPath := flags.String("corpus-integrity-feed", "", "path to a JSON []FeedUnit; combined with --corpus-integrity-source to compute the feed quality report")
 	integrityRAGPath := flags.String("corpus-integrity-rag", "", "path to a JSON []ChunkMetadata; combined with --corpus-integrity-source to compute the feed quality report")
+	bodyLedgerPath := flags.String("corpus-body-ledger", "", "path to a JSON CorpusBodyLedger (FSQ-05 #368); when supplied, uncovered text bytes for admitted+atomized sources fail the integrity check")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -78,7 +93,8 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	integrityRequested := *integrityReportPath != "" ||
 		*integritySourceDir != "" ||
 		*integrityFeedPath != "" ||
-		*integrityRAGPath != ""
+		*integrityRAGPath != "" ||
+		*bodyLedgerPath != ""
 
 	if *projectPath == "" && *sourcesPath == "" && *matrixPath == "" && !integrityRequested {
 		fmt.Fprintln(stderr, "strict: at least one of --project, --sources, --matrix, or --corpus-integrity-* is required")
@@ -94,6 +110,9 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 			*integrityFeedPath,
 			*integrityRAGPath,
 		)
+		if *bodyLedgerPath != "" {
+			applyBodyLedgerToIntegrityCheck(check, *bodyLedgerPath)
+		}
 		result.CorpusIntegrityCheck = check
 		if check.Status == "fail" {
 			result.Valid = false
@@ -353,6 +372,69 @@ func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath string) *C
 		check.Summary = strings.Join(parts, "; ")
 	}
 	return check
+}
+
+// applyBodyLedgerToIntegrityCheck loads the FSQ-05 body ledger from path,
+// then appends a BODY_LEDGER_UNCOVERED_TEXT_SOURCE finding for every source
+// that has admission_status=admitted, atomization_status in {atomized,
+// coverage_only}, and uncovered_bytes > 0. The check's Status is set to
+// "fail" if any such finding is appended (or if the ledger fails to parse).
+// The Summary string is augmented with a body-ledger sentence so the
+// strict-gate text output explains the failure cause.
+func applyBodyLedgerToIntegrityCheck(check *CorpusIntegrityCheck, path string) {
+	if check == nil {
+		return
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		check.Status = "fail"
+		check.Summary = appendSummary(check.Summary, fmt.Sprintf("body_ledger=fail (read %s: %v)", path, err))
+		return
+	}
+	var ledger corpus.CorpusBodyLedger
+	if err := json.Unmarshal(raw, &ledger); err != nil {
+		check.Status = "fail"
+		check.Summary = appendSummary(check.Summary, fmt.Sprintf("body_ledger=fail (parse %s: %v)", path, err))
+		return
+	}
+	for _, src := range ledger.Sources {
+		if src.AdmissionStatus != corpus.AdmissionAdmitted {
+			continue
+		}
+		if src.AtomizationStatus != corpus.AtomizationAtomized &&
+			src.AtomizationStatus != corpus.AtomizationCoverageOnly {
+			continue
+		}
+		if src.ByteCoverage.UncoveredBytes <= 0 {
+			continue
+		}
+		check.BodyLedgerFindings = append(check.BodyLedgerFindings, corpus.IntegrityFinding{
+			Code:     FindingBodyLedgerUncoveredTextSource,
+			SourceID: src.SourceID,
+			Message: fmt.Sprintf(
+				"source %q has %d uncovered byte(s); admission=%s atomization=%s",
+				src.SourceID, src.ByteCoverage.UncoveredBytes,
+				src.AdmissionStatus, src.AtomizationStatus,
+			),
+		})
+	}
+	if len(check.BodyLedgerFindings) > 0 {
+		check.Status = "fail"
+		check.Summary = appendSummary(check.Summary, fmt.Sprintf(
+			"body_ledger=fail (%d uncovered text source(s))", len(check.BodyLedgerFindings),
+		))
+	} else {
+		check.Summary = appendSummary(check.Summary, "body_ledger=pass")
+	}
+}
+
+// appendSummary joins a new summary fragment to an existing summary
+// string with the same "; "-separator the source/feed sub-reports use.
+func appendSummary(existing, fragment string) string {
+	if strings.TrimSpace(existing) == "" {
+		return fragment
+	}
+	return existing + "; " + fragment
 }
 
 // loadIntegrityReportFile parses the JSON file produced by an upstream run

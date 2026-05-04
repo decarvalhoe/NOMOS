@@ -438,6 +438,93 @@ func TestStrictGateCorpusIntegrity_OnlyIntegrityFlagIsAllowed(t *testing.T) {
 	}
 }
 
+// FSQ-05 (#368): an --corpus-body-ledger that reports uncovered bytes
+// for an admitted+atomized source must fail the integrity check with a
+// BODY_LEDGER_UNCOVERED_TEXT_SOURCE finding, even though the on-the-fly
+// SFI-04 source-integrity gate sees no SOURCE_UNCOVERED_RANGE finding
+// (the ledger evidence trumps the in-memory scan).
+func TestStrictGateBodyLedger_UncoveredFails(t *testing.T) {
+	dir := t.TempDir()
+	cleanDoc := "# Heading\n\nClean paragraph used by the FSQ-05 body-ledger test.\n"
+	if err := os.WriteFile(filepath.Join(dir, "doc.md"), []byte(cleanDoc), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	ledger := corpus.CorpusBodyLedger{
+		Format:        corpus.BodyLedgerFormat,
+		GeneratedAt:   "2026-05-04T00:00:00Z",
+		SourceCount:   1,
+		AdmittedCount: 1,
+		Sources: []corpus.BodyLedgerSource{{
+			SourceID:          "doc.md",
+			Path:              "doc.md",
+			SizeBytes:         100,
+			AdmissionStatus:   corpus.AdmissionAdmitted,
+			AtomizationStatus: corpus.AtomizationAtomized,
+			SourceRole:        corpus.AdmissionRoleCanonical,
+			FormatSupport:     corpus.FormatSupported,
+			ByteCoverage: corpus.ByteCoverageReport{
+				TotalBytes:     100,
+				SemanticBytes:  60,
+				UncoveredBytes: 40,
+			},
+		}},
+		CoverageSummary: corpus.CoverageSummary{
+			TotalBytes:     100,
+			SemanticBytes:  60,
+			UncoveredBytes: 40,
+			BySourceRole:   map[string]int64{corpus.AdmissionRoleCanonical: 100},
+			BySourceStatus: map[string]int64{corpus.AdmissionAdmitted: 100},
+		},
+	}
+	ledgerPath := filepath.Join(dir, "body-ledger.json")
+	raw, err := json.MarshalIndent(ledger, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal ledger: %v", err)
+	}
+	if err := os.WriteFile(ledgerPath, raw, 0o600); err != nil {
+		t.Fatalf("write ledger: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-body-ledger", ledgerPath,
+	}, &stdout, &stderr)
+	if code == 0 {
+		t.Fatalf("expected non-zero exit when body ledger reports uncovered bytes; got 0; stdout=%q",
+			stdout.String())
+	}
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("expected valid JSON: %v\nstdout=%q", err, stdout.String())
+	}
+	if result.Valid {
+		t.Fatalf("expected valid=false")
+	}
+	if result.CorpusIntegrityCheck == nil ||
+		result.CorpusIntegrityCheck.Status != "fail" {
+		t.Fatalf("expected corpus_integrity_check.status=fail; got %+v",
+			result.CorpusIntegrityCheck)
+	}
+	if len(result.CorpusIntegrityCheck.BodyLedgerFindings) == 0 {
+		t.Fatalf("expected at least one body_ledger_findings entry; got %+v",
+			result.CorpusIntegrityCheck)
+	}
+	got := result.CorpusIntegrityCheck.BodyLedgerFindings[0]
+	if got.Code != FindingBodyLedgerUncoveredTextSource {
+		t.Fatalf("finding code = %q, want %q", got.Code, FindingBodyLedgerUncoveredTextSource)
+	}
+	if got.SourceID != "doc.md" {
+		t.Fatalf("finding source_id = %q, want %q", got.SourceID, "doc.md")
+	}
+	if !strings.Contains(result.CorpusIntegrityCheck.Summary, "body_ledger=fail") {
+		t.Fatalf("expected summary to mention body_ledger=fail; got %q",
+			result.CorpusIntegrityCheck.Summary)
+	}
+}
+
 func TestStrictGateCorpusIntegrity_BadReportFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "broken.json")
 	if err := os.WriteFile(path, []byte("not-valid-json"), 0o600); err != nil {
