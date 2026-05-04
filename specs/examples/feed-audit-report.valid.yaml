@@ -1,0 +1,74 @@
+schema_version: fsq-audit-v1
+generated_at: "2026-05-04T12:00:00Z"
+feed_path: /tmp/feed.json
+rag_path: /tmp/rag.json
+corpus_root: /tmp/corpus
+totals:
+  feed_unit_count: 10
+  chunk_count: 4
+  source_backed_unit_count: 10
+  source_backed_chunk_count: 4
+  sources_declared_active: 2
+  sources_with_zero_units: 1
+unit_kind_distribution:
+  paragraph: 5
+  table_cell: 5
+chunk_kind_distribution:
+  paragraph: 1
+  table_cell: 3
+length_distribution:
+  tokens:
+    le_2: 5
+    le_10: 8
+    le_25: 8
+    le_100: 8
+    gt_100: 2
+  characters:
+    le_10: 5
+    le_50: 8
+    le_200: 8
+    le_1000: 8
+    gt_1000: 2
+duplicate_normalized_text:
+  group_count: 1
+  duplicated_unit_count: 2
+  top_groups:
+    - normalized_hash: norm-cell-dup
+      occurrences: 2
+      sample_text: shared
+      examples:
+        - unit_id: RBOK-CELL-3
+          source_path: docs/noisy.md
+          line: 4
+        - unit_id: RBOK-CELL-4
+          source_path: docs/noisy.md
+          line: 5
+table_cell_ratio:
+  table_cell_unit_count: 5
+  total_unit_count: 10
+  ratio: 0.5
+yaml_raw_decoded_mismatch:
+  yaml_unit_count: 0
+  raw_decoded_mismatch: 0
+  examples: []
+source_coverage:
+  by_extension:
+    ".md":
+      sources: 2
+      with_units: 1
+      byte_coverage_pct: 42.5
+  sources_with_zero_units:
+    - path: docs/orphan.md
+      size_bytes: 14
+top_offenders:
+  very_short_units:
+    - unit_id: RBOK-CELL-0
+      source_path: docs/noisy.md
+      line: 1
+      char_count: 1
+      text: x
+  duplicated_units:
+    - unit_id: RBOK-CELL-3
+      source_path: docs/noisy.md
+      line: 4
+      normalized_hash: norm-cell-dup
