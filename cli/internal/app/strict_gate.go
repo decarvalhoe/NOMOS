@@ -55,12 +55,21 @@ type GateError struct {
 // as BodyLedgerFindings. The ledger itself is NOT attached as a separate
 // section; per dispatch, the ledger is evidence consumed by this section.
 type CorpusIntegrityCheck struct {
-	Status             string                    `json:"status"`
-	SourceIntegrity    *corpus.IntegrityReport   `json:"source_integrity"`
-	FeedQuality        *corpus.FeedQualityReport `json:"feed_quality"`
-	BodyLedgerFindings []corpus.IntegrityFinding `json:"body_ledger_findings,omitempty"`
-	Summary            string                    `json:"summary"`
+	Status             string                          `json:"status"`
+	SourceIntegrity    *corpus.IntegrityReport         `json:"source_integrity"`
+	FeedQuality        *corpus.FeedQualityReport       `json:"feed_quality"`
+	SemanticQuality    *corpus.SemanticQualityReport   `json:"semantic_quality,omitempty"`
+	BodyLedgerFindings []corpus.IntegrityFinding       `json:"body_ledger_findings,omitempty"`
+	AggregateFindings  []GateError                     `json:"aggregate_findings,omitempty"`
+	Summary            string                          `json:"summary"`
 }
+
+// FindingSemanticQualityFailed is the stable aggregate code added to
+// CorpusIntegrityCheck.AggregateFindings when the FSQ-06 (#369) semantic
+// gate produces at least one blocking finding. Operators get a single
+// grep target across the whole strict-gate JSON without having to walk
+// the per-rule findings list.
+const FindingSemanticQualityFailed = "SEMANTIC_QUALITY_FAILED"
 
 // FindingBodyLedgerUncoveredTextSource is the stable code emitted when a
 // body ledger reports uncovered bytes for a source that the operator
@@ -86,6 +95,7 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	integrityFeedPath := flags.String("corpus-integrity-feed", "", "path to a JSON []FeedUnit; combined with --corpus-integrity-source to compute the feed quality report")
 	integrityRAGPath := flags.String("corpus-integrity-rag", "", "path to a JSON []ChunkMetadata; combined with --corpus-integrity-source to compute the feed quality report")
 	bodyLedgerPath := flags.String("corpus-body-ledger", "", "path to a JSON CorpusBodyLedger (FSQ-05 #368); when supplied, uncovered text bytes for admitted+atomized sources fail the integrity check")
+	semanticProfilePath := flags.String("corpus-semantic-quality-profile", "", "path to a JSON SemanticQualityProfile (FSQ-06 #369); defaults to corpus.DefaultRBOKProfile() when absent")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -109,6 +119,7 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 			*integritySourceDir,
 			*integrityFeedPath,
 			*integrityRAGPath,
+			*semanticProfilePath,
 		)
 		if *bodyLedgerPath != "" {
 			applyBodyLedgerToIntegrityCheck(check, *bodyLedgerPath)
@@ -320,7 +331,7 @@ func runExceptionsCheck(path string) GateSection {
 // --corpus-integrity-* flags. It never returns nil. On a load/parse failure
 // it produces a fail-status check with the error captured in Summary, so
 // the caller can simply read check.Status to decide the gate outcome.
-func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath string) *CorpusIntegrityCheck {
+func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath, semanticProfilePath string) *CorpusIntegrityCheck {
 	check := &CorpusIntegrityCheck{Status: "pass"}
 
 	if reportPath != "" {
@@ -336,7 +347,7 @@ func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath string) *C
 	}
 
 	if sourceDir != "" {
-		si, fq, err := computeIntegrityFromSources(sourceDir, feedPath, ragPath)
+		si, fq, sq, err := computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePath)
 		if err != nil {
 			return &CorpusIntegrityCheck{
 				Status:  "fail",
@@ -348,6 +359,9 @@ func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath string) *C
 		}
 		if fq != nil {
 			check.FeedQuality = fq
+		}
+		if sq != nil {
+			check.SemanticQuality = sq
 		}
 	}
 
@@ -365,6 +379,25 @@ func runCorpusIntegrityCheck(reportPath, sourceDir, feedPath, ragPath string) *C
 		}
 		parts = append(parts, fmt.Sprintf("feed_quality=%s (%d findings)",
 			check.FeedQuality.Status, len(check.FeedQuality.Findings)))
+	}
+	if check.SemanticQuality != nil {
+		if check.SemanticQuality.Status == "fail" {
+			check.Status = "fail"
+			check.AggregateFindings = append(check.AggregateFindings, GateError{
+				Code: FindingSemanticQualityFailed,
+				Message: fmt.Sprintf(
+					"semantic quality gate failed: %d blocking finding(s)",
+					check.SemanticQuality.BlockingFindingCount,
+				),
+			})
+		}
+		parts = append(parts, fmt.Sprintf(
+			"semantic_quality=%s (blocking=%d warning=%d info=%d)",
+			check.SemanticQuality.Status,
+			check.SemanticQuality.BlockingFindingCount,
+			check.SemanticQuality.WarningFindingCount,
+			check.SemanticQuality.InformationalFindingCount,
+		))
 	}
 	if len(parts) == 0 {
 		check.Summary = "no integrity sub-reports produced"
@@ -483,14 +516,16 @@ func loadIntegrityReportFile(path string) (*corpus.IntegrityReport, *corpus.Feed
 // computeIntegrityFromSources walks sourceDir for *.md files, runs the typed
 // markdown scanner over each, and produces a SFI-04 IntegrityReport. When
 // feedPath or ragPath is also supplied, it additionally runs CheckFeedQuality
-// against the resulting segment ledger.
-func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.IntegrityReport, *corpus.FeedQualityReport, error) {
+// against the resulting segment ledger. When BOTH feedPath AND ragPath are
+// supplied, it ALSO runs the FSQ-06 (#369) CheckSemanticQuality with the
+// supplied profile (or DefaultRBOKProfile when semanticProfilePath is empty).
+func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePath string) (*corpus.IntegrityReport, *corpus.FeedQualityReport, *corpus.SemanticQualityReport, error) {
 	info, err := os.Stat(sourceDir)
 	if err != nil {
-		return nil, nil, fmt.Errorf("stat source dir %s: %w", sourceDir, err)
+		return nil, nil, nil, fmt.Errorf("stat source dir %s: %w", sourceDir, err)
 	}
 	if !info.IsDir() {
-		return nil, nil, fmt.Errorf("--corpus-integrity-source %s: not a directory", sourceDir)
+		return nil, nil, nil, fmt.Errorf("--corpus-integrity-source %s: not a directory", sourceDir)
 	}
 	var sources []corpus.SourceInput
 	var allSegments []corpus.SourceSegment
@@ -526,30 +561,33 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 		return nil
 	})
 	if walkErr != nil {
-		return nil, nil, walkErr
+		return nil, nil, nil, walkErr
 	}
 	si := corpus.CheckSourceIntegrity(sources, allSegments)
 
 	var fq *corpus.FeedQualityReport
+	var sq *corpus.SemanticQualityReport
 	if feedPath != "" || ragPath != "" {
 		var feedUnits []corpus.FeedUnit
+		var feedSources []corpus.FeedSource
 		var chunks []corpus.ChunkMetadata
 		if feedPath != "" {
 			data, err := os.ReadFile(feedPath)
 			if err != nil {
-				return &si, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
+				return &si, nil, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
 			}
-			if err := json.Unmarshal(data, &feedUnits); err != nil {
-				return &si, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
+			feedUnits, feedSources, err = parseFeedFile(data)
+			if err != nil {
+				return &si, nil, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
 			}
 		}
 		if ragPath != "" {
 			data, err := os.ReadFile(ragPath)
 			if err != nil {
-				return &si, nil, fmt.Errorf("read rag %s: %w", ragPath, err)
+				return &si, nil, nil, fmt.Errorf("read rag %s: %w", ragPath, err)
 			}
 			if err := json.Unmarshal(data, &chunks); err != nil {
-				return &si, nil, fmt.Errorf("parse rag %s: %w", ragPath, err)
+				return &si, nil, nil, fmt.Errorf("parse rag %s: %w", ragPath, err)
 			}
 		}
 		r := corpus.CheckFeedQuality(corpus.FeedQualityInput{
@@ -558,8 +596,57 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 			Segments:  allSegments,
 		})
 		fq = &r
+
+		if feedPath != "" && ragPath != "" {
+			profile, err := loadSemanticProfile(semanticProfilePath)
+			if err != nil {
+				return &si, fq, nil, fmt.Errorf("load semantic profile %s: %w", semanticProfilePath, err)
+			}
+			s := corpus.CheckSemanticQuality(corpus.SemanticQualityInput{
+				Feed:     feedUnits,
+				Chunks:   chunks,
+				Segments: allSegments,
+				Sources:  feedSources,
+				Profile:  profile,
+			})
+			sq = &s
+		}
 	}
-	return &si, fq, nil
+	return &si, fq, sq, nil
+}
+
+// parseFeedFile accepts either a top-level []FeedUnit array (the legacy
+// shape consumed by the SFI-08 wiring) or a Feed envelope (so the FSQ-06
+// gate can also scrutinise the FeedSource list when supplied).
+func parseFeedFile(data []byte) ([]corpus.FeedUnit, []corpus.FeedSource, error) {
+	var feed corpus.Feed
+	if err := json.Unmarshal(data, &feed); err == nil && (len(feed.Units) > 0 || len(feed.Sources) > 0) {
+		return feed.Units, feed.Sources, nil
+	}
+	var units []corpus.FeedUnit
+	if err := json.Unmarshal(data, &units); err != nil {
+		return nil, nil, err
+	}
+	return units, nil, nil
+}
+
+// loadSemanticProfile returns the SemanticQualityProfile to use. When path
+// is empty we use the canonical RBOK defaults; otherwise we read and parse
+// the JSON file at path. The returned profile is passed straight through to
+// CheckSemanticQuality which substitutes defaults for a fully-zero profile.
+func loadSemanticProfile(path string) (corpus.SemanticQualityProfile, error) {
+	if strings.TrimSpace(path) == "" {
+		return corpus.DefaultRBOKProfile(), nil
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return corpus.SemanticQualityProfile{}, err
+	}
+	var profile corpus.SemanticQualityProfile
+	if err := json.Unmarshal(data, &profile); err != nil {
+		return corpus.SemanticQualityProfile{}, err
+	}
+	return profile, nil
 }
 
 func writeGateResult(result GateResult, format string, w io.Writer) {

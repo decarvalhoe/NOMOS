@@ -2,6 +2,7 @@ package corpus
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -288,4 +289,579 @@ func isNonSemanticSegmentKindForRAG(kind string) bool {
 		return true
 	}
 	return false
+}
+
+// =============================================================================
+// FSQ-06 (#369) — blocking semantic feed quality gate.
+//
+// CheckSemanticQuality complements (does NOT replace) CheckFeedQuality. The
+// SFI-07 gate fails on broken plumbing (missing source linkage, empty text,
+// duplicate spans). The FSQ-06 gate fails on technically valid but
+// semantically low-value feed: one-token chunks, stop-label cells, duplicate
+// labels, table-cell units missing row context, metadata-table leaks, and
+// admitted sources that produced zero units without a recorded reason.
+// Findings are severity-grouped (blocking / warning / informational) and the
+// profile is recorded in the report for evidence reproducibility.
+// =============================================================================
+
+// SemanticFindingSeverity classifies the impact of a SemanticQualityFinding.
+// Severity tiers are part of the public contract: the strict release gate
+// only fails on `blocking`; warnings surface for review without blocking.
+type SemanticFindingSeverity string
+
+const (
+	SemanticSeverityBlocking      SemanticFindingSeverity = "blocking"
+	SemanticSeverityWarning       SemanticFindingSeverity = "warning"
+	SemanticSeverityInformational SemanticFindingSeverity = "informational"
+)
+
+// Stable finding codes emitted by CheckSemanticQuality. Downstream consumers
+// (strict gate, dashboards, FSQ-09 schema) key off these strings; they MUST
+// NOT change without coordination.
+const (
+	FindingFeedUnitBelowTokenMin       = "FEED_UNIT_BELOW_TOKEN_MIN"
+	FindingFeedUnitBelowCharMin        = "FEED_UNIT_BELOW_CHAR_MIN"
+	FindingFeedStopLabel               = "FEED_STOP_LABEL"
+	FindingFeedDuplicateNormalizedText = "FEED_DUPLICATE_NORMALIZED_TEXT"
+	FindingFeedTableCellNotRowContext  = "FEED_TABLE_CELL_NOT_ROW_CONTEXT"
+	FindingFeedMetadataTableLeaked     = "FEED_METADATA_TABLE_LEAKED"
+	FindingFeedRawDecodedMismatch      = "FEED_RAW_DECODED_MISMATCH"
+	FindingSourceZeroUnitNoReason      = "SOURCE_ZERO_UNIT_NO_REASON"
+)
+
+// profileKindDefault is the lookup key the profile uses to express a
+// catch-all minimum for kinds not enumerated in MinTokensByKind /
+// MinCharsByKind.
+const profileKindDefault = "default"
+
+// SemanticQualityProfile is the threshold model for CheckSemanticQuality.
+// The struct is JSON-serialisable and used both as the default for RBOK
+// (DefaultRBOKProfile) and as the `--corpus-semantic-quality-profile` flag
+// payload on the strict gate.
+//
+// Defaults (RBOK):
+//   - MinTokensByKind: paragraph=3, list_item=2, callout=3, table_row=2, default=1
+//   - MinCharsByKind:  paragraph=20, list_item=12, callout=20, table_row=12, default=4
+//   - StopLabelDenylist (case-folded): champ, valeur, statut, status, version,
+//     field, value, key, name, date, id
+//   - DuplicateThreshold: 3 (≥ N occurrences → blocking)
+//   - DuplicateWarningThreshold: 2 (between this and DuplicateThreshold-1 → warning)
+//   - AllowTableCellWithoutRow: false
+//   - AllowMetadataTableUnits: false
+//   - RawDecodedMismatchSeverity: informational
+type SemanticQualityProfile struct {
+	MinTokensByKind            map[string]int          `json:"min_tokens_by_kind"`
+	MinCharsByKind             map[string]int          `json:"min_chars_by_kind"`
+	StopLabelDenylist          []string                `json:"stop_label_denylist"`
+	DuplicateThreshold         int                     `json:"duplicate_threshold"`
+	DuplicateWarningThreshold  int                     `json:"duplicate_warning_threshold"`
+	AllowTableCellWithoutRow   bool                    `json:"allow_table_cell_without_row"`
+	AllowMetadataTableUnits    bool                    `json:"allow_metadata_table_units"`
+	RawDecodedMismatchSeverity SemanticFindingSeverity `json:"raw_decoded_mismatch_severity"`
+}
+
+// DefaultRBOKProfile returns the canonical RBOK profile. The thresholds are
+// generic — RBOK does not embed RBOK-specific semantics in this profile;
+// callers can swap the profile for any other corpus.
+func DefaultRBOKProfile() SemanticQualityProfile {
+	return SemanticQualityProfile{
+		MinTokensByKind: map[string]int{
+			KindParagraph:    3,
+			KindListItem:     2,
+			KindCallout:      3,
+			"table_row":      2,
+			profileKindDefault: 1,
+		},
+		MinCharsByKind: map[string]int{
+			KindParagraph:    20,
+			KindListItem:     12,
+			KindCallout:      20,
+			"table_row":      12,
+			profileKindDefault: 4,
+		},
+		StopLabelDenylist: []string{
+			"champ", "valeur", "statut", "status", "version",
+			"field", "value", "key", "name", "date", "id",
+		},
+		DuplicateThreshold:         3,
+		DuplicateWarningThreshold:  2,
+		AllowTableCellWithoutRow:   false,
+		AllowMetadataTableUnits:    false,
+		RawDecodedMismatchSeverity: SemanticSeverityInformational,
+	}
+}
+
+// SemanticQualityInput is the full set of artifacts CheckSemanticQuality
+// inspects. Every slice / pointer is optional: an empty input yields a
+// passing report.
+type SemanticQualityInput struct {
+	Feed       []FeedUnit
+	Chunks     []ChunkMetadata
+	Segments   []SourceSegment
+	Sources    []FeedSource
+	BodyLedger *CorpusBodyLedger
+	Profile    SemanticQualityProfile
+}
+
+// SemanticQualityFinding is one rule violation. JSON shape is the wire format
+// surfaced by the strict release gate and (eventually) the FSQ-09 CUE schema.
+type SemanticQualityFinding struct {
+	Code            string                  `json:"code"`
+	Severity        SemanticFindingSeverity `json:"severity"`
+	UnitID          string                  `json:"unit_id,omitempty"`
+	ChunkID         string                  `json:"chunk_id,omitempty"`
+	SourceID        string                  `json:"source_id,omitempty"`
+	SourcePath      string                  `json:"source_path,omitempty"`
+	StartLine       int                     `json:"start_line,omitempty"`
+	Message         string                  `json:"message"`
+	RemediationHint string                  `json:"remediation_hint,omitempty"`
+}
+
+// SemanticQualityReport is the result of CheckSemanticQuality. Status is
+// derived deterministically from the findings: "fail" if any blocking,
+// "warn" if zero blocking but at least one warning, otherwise "pass".
+// Informational findings never change the status. The Profile is recorded
+// in the report so reviewers know exactly which thresholds applied.
+type SemanticQualityReport struct {
+	Status                    string                   `json:"status"`
+	BlockingFindingCount      int                      `json:"blocking_finding_count"`
+	WarningFindingCount       int                      `json:"warning_finding_count"`
+	InformationalFindingCount int                      `json:"informational_finding_count"`
+	Profile                   SemanticQualityProfile   `json:"profile"`
+	Findings                  []SemanticQualityFinding `json:"findings"`
+}
+
+// CheckSemanticQuality applies the FSQ-06 semantic gate. It is stateless
+// and side-effect-free. Callers wishing to use the canonical RBOK defaults
+// can leave Profile zero; CheckSemanticQuality detects the zero value and
+// substitutes DefaultRBOKProfile().
+func CheckSemanticQuality(input SemanticQualityInput) SemanticQualityReport {
+	profile := input.Profile
+	if isZeroSemanticProfile(profile) {
+		profile = DefaultRBOKProfile()
+	}
+
+	report := SemanticQualityReport{
+		Profile:  profile,
+		Findings: []SemanticQualityFinding{},
+	}
+
+	segByID := make(map[string]SourceSegment, len(input.Segments))
+	for _, s := range input.Segments {
+		segByID[s.SegmentID] = s
+	}
+
+	denySet := buildStopLabelSet(profile.StopLabelDenylist)
+
+	for _, u := range input.Feed {
+		if !isSourceDerivedFeedUnit(u) {
+			continue
+		}
+		kind := unitSemanticKind(u, segByID)
+		report.Findings = append(report.Findings, checkUnitTokenAndCharMin(u, kind, profile)...)
+		report.Findings = append(report.Findings, checkUnitStopLabel(u, denySet)...)
+		report.Findings = append(report.Findings, checkUnitTableCellContext(u, kind, profile)...)
+		report.Findings = append(report.Findings, checkUnitMetadataTableLeak(u, profile)...)
+		report.Findings = append(report.Findings, checkUnitRawDecodedMismatch(u, profile)...)
+	}
+
+	report.Findings = append(report.Findings, findDuplicateNormalizedText(input.Feed, profile)...)
+	report.Findings = append(report.Findings, findZeroUnitSources(input.Sources, input.Feed)...)
+
+	finalizeSemanticReport(&report)
+	return report
+}
+
+func finalizeSemanticReport(r *SemanticQualityReport) {
+	for _, f := range r.Findings {
+		switch f.Severity {
+		case SemanticSeverityBlocking:
+			r.BlockingFindingCount++
+		case SemanticSeverityWarning:
+			r.WarningFindingCount++
+		case SemanticSeverityInformational:
+			r.InformationalFindingCount++
+		}
+	}
+	switch {
+	case r.BlockingFindingCount > 0:
+		r.Status = "fail"
+	case r.WarningFindingCount > 0:
+		r.Status = "warn"
+	default:
+		r.Status = "pass"
+	}
+	sort.SliceStable(r.Findings, func(i, j int) bool {
+		return semanticFindingLess(r.Findings[i], r.Findings[j])
+	})
+}
+
+// semanticFindingLess implements the deterministic order required by the
+// dispatch: severity DESC (blocking > warning > informational), then code
+// ASC, then unit_id ASC, then chunk_id ASC.
+func semanticFindingLess(a, b SemanticQualityFinding) bool {
+	sa, sb := severityRank(a.Severity), severityRank(b.Severity)
+	if sa != sb {
+		return sa < sb // lower rank = higher severity, so blocking comes first
+	}
+	if a.Code != b.Code {
+		return a.Code < b.Code
+	}
+	if a.UnitID != b.UnitID {
+		return a.UnitID < b.UnitID
+	}
+	return a.ChunkID < b.ChunkID
+}
+
+func severityRank(s SemanticFindingSeverity) int {
+	switch s {
+	case SemanticSeverityBlocking:
+		return 0
+	case SemanticSeverityWarning:
+		return 1
+	case SemanticSeverityInformational:
+		return 2
+	default:
+		return 3
+	}
+}
+
+// isZeroSemanticProfile returns true when the caller passed an unset
+// SemanticQualityProfile (all fields default-valued). We treat that as
+// "use the RBOK defaults" rather than rejecting the input.
+func isZeroSemanticProfile(p SemanticQualityProfile) bool {
+	return len(p.MinTokensByKind) == 0 &&
+		len(p.MinCharsByKind) == 0 &&
+		len(p.StopLabelDenylist) == 0 &&
+		p.DuplicateThreshold == 0 &&
+		p.DuplicateWarningThreshold == 0 &&
+		!p.AllowTableCellWithoutRow &&
+		!p.AllowMetadataTableUnits &&
+		p.RawDecodedMismatchSeverity == ""
+}
+
+// buildStopLabelSet case-folds the profile denylist into a lookup map keyed
+// by the lowercase form. The dispatch mandates case-folded comparison.
+func buildStopLabelSet(list []string) map[string]struct{} {
+	out := make(map[string]struct{}, len(list))
+	for _, label := range list {
+		clean := strings.TrimSpace(strings.ToLower(label))
+		if clean == "" {
+			continue
+		}
+		out[clean] = struct{}{}
+	}
+	return out
+}
+
+// unitSemanticKind picks the most informative kind label for a feed unit:
+// authoritative seg.Kind via the segment lookup, then the trailing kind on
+// the SourceSegmentID (markdown_scanner.segmentID encodes it as ":<kind>"),
+// then UnitType as fallback.
+func unitSemanticKind(u FeedUnit, segByID map[string]SourceSegment) string {
+	if seg, ok := segByID[u.SourceSegmentID]; ok && strings.TrimSpace(seg.Kind) != "" {
+		return seg.Kind
+	}
+	if k := segmentKindFromSegmentID(u.SourceSegmentID); k != "" {
+		return k
+	}
+	return strings.TrimSpace(u.UnitType)
+}
+
+// segmentKindFromSegmentID parses the trailing "<kind>" on a segment id of
+// the form "seg:<src>:<a>-<b>:<kind>". Returns "" when the id does not
+// match the expected shape.
+func segmentKindFromSegmentID(id string) string {
+	id = strings.TrimSpace(id)
+	if !strings.HasPrefix(id, "seg:") {
+		return ""
+	}
+	idx := strings.LastIndex(id, ":")
+	if idx == -1 || idx == len(id)-1 {
+		return ""
+	}
+	return id[idx+1:]
+}
+
+// minByKind returns the threshold for the given kind, falling back to the
+// "default" key when no kind-specific value is present. Returns 0 (no
+// threshold) when neither is configured.
+func minByKind(table map[string]int, kind string) int {
+	if v, ok := table[kind]; ok {
+		return v
+	}
+	if v, ok := table[profileKindDefault]; ok {
+		return v
+	}
+	return 0
+}
+
+// tokenCountSemantic returns the whitespace-separated token count for a
+// feed unit's text. Matches the FSQ-01 audit definition (no tokenizer dep).
+func tokenCountSemantic(text string) int {
+	return len(strings.Fields(text))
+}
+
+// runeCount returns utf8 rune count without importing unicode/utf8 here —
+// the corpus package already pulls strings, and len() over runes via
+// strings.Count is awkward. Use strings.IndexByte-free walk: use a
+// for-range loop.
+func runeCount(text string) int {
+	n := 0
+	for range text {
+		n++
+	}
+	return n
+}
+
+func checkUnitTokenAndCharMin(u FeedUnit, kind string, profile SemanticQualityProfile) []SemanticQualityFinding {
+	var out []SemanticQualityFinding
+	text := u.BusinessRule
+	tokens := tokenCountSemantic(text)
+	chars := runeCount(strings.TrimSpace(text))
+
+	if min := minByKind(profile.MinTokensByKind, kind); min > 0 && tokens < min {
+		out = append(out, SemanticQualityFinding{
+			Code:       FindingFeedUnitBelowTokenMin,
+			Severity:   SemanticSeverityBlocking,
+			UnitID:     u.UnitID,
+			SourceID:   u.SourceID,
+			SourcePath: u.SourcePath,
+			StartLine:  u.StartLine,
+			Message: fmt.Sprintf(
+				"feed unit has %d token(s); profile requires ≥ %d for kind %q",
+				tokens, min, kind,
+			),
+			RemediationHint: "compose with surrounding context (heading, row context) before adding to the feed",
+		})
+	}
+	if min := minByKind(profile.MinCharsByKind, kind); min > 0 && chars < min {
+		out = append(out, SemanticQualityFinding{
+			Code:       FindingFeedUnitBelowCharMin,
+			Severity:   SemanticSeverityBlocking,
+			UnitID:     u.UnitID,
+			SourceID:   u.SourceID,
+			SourcePath: u.SourcePath,
+			StartLine:  u.StartLine,
+			Message: fmt.Sprintf(
+				"feed unit has %d character(s); profile requires ≥ %d for kind %q",
+				chars, min, kind,
+			),
+			RemediationHint: "raise the minimum-char threshold OR drop the unit from the feed",
+		})
+	}
+	return out
+}
+
+func checkUnitStopLabel(u FeedUnit, denySet map[string]struct{}) []SemanticQualityFinding {
+	if len(denySet) == 0 {
+		return nil
+	}
+	folded := strings.ToLower(strings.TrimSpace(u.BusinessRule))
+	folded = strings.TrimRight(folded, ".:;,!?")
+	if _, hit := denySet[folded]; !hit {
+		return nil
+	}
+	return []SemanticQualityFinding{{
+		Code:       FindingFeedStopLabel,
+		Severity:   SemanticSeverityBlocking,
+		UnitID:     u.UnitID,
+		SourceID:   u.SourceID,
+		SourcePath: u.SourcePath,
+		StartLine:  u.StartLine,
+		Message: fmt.Sprintf(
+			"feed unit text %q is a stop-label from the profile denylist",
+			strings.TrimSpace(u.BusinessRule),
+		),
+		RemediationHint: "drop the unit, or compose the cell with its row/heading context",
+	}}
+}
+
+func checkUnitTableCellContext(u FeedUnit, kind string, profile SemanticQualityProfile) []SemanticQualityFinding {
+	if profile.AllowTableCellWithoutRow {
+		return nil
+	}
+	if kind != KindTableCell {
+		return nil
+	}
+	if strings.TrimSpace(u.TableID) != "" && len(u.ColumnHeaders) > 0 {
+		return nil
+	}
+	return []SemanticQualityFinding{{
+		Code:       FindingFeedTableCellNotRowContext,
+		Severity:   SemanticSeverityBlocking,
+		UnitID:     u.UnitID,
+		SourceID:   u.SourceID,
+		SourcePath: u.SourcePath,
+		StartLine:  u.StartLine,
+		Message: "table_cell unit lacks row context (table_id and/or column_headers unset); " +
+			"cells must carry row scope before reaching the feed",
+		RemediationHint: "compose the cell into its parent table_row unit, or drop it from the feed",
+	}}
+}
+
+func checkUnitMetadataTableLeak(u FeedUnit, profile SemanticQualityProfile) []SemanticQualityFinding {
+	if profile.AllowMetadataTableUnits {
+		return nil
+	}
+	if u.TableRole != "metadata_table" {
+		return nil
+	}
+	return []SemanticQualityFinding{{
+		Code:       FindingFeedMetadataTableLeaked,
+		Severity:   SemanticSeverityBlocking,
+		UnitID:     u.UnitID,
+		SourceID:   u.SourceID,
+		SourcePath: u.SourcePath,
+		StartLine:  u.StartLine,
+		Message: "feed unit derived from a metadata_table row leaked into the curated feed; " +
+			"metadata tables should remain coverage-only",
+		RemediationHint: "exclude metadata_table rows from feed extraction",
+	}}
+}
+
+func checkUnitRawDecodedMismatch(u FeedUnit, profile SemanticQualityProfile) []SemanticQualityFinding {
+	// Only YAML-derived units (post-FSQ-04) carry RawText / DecodedValue.
+	if strings.TrimSpace(u.RawText) == "" && strings.TrimSpace(u.DecodedValue) == "" {
+		return nil
+	}
+	if u.BusinessRuleMode == "raw" {
+		return nil
+	}
+	if strings.TrimSpace(u.RawText) == strings.TrimSpace(u.DecodedValue) {
+		return nil
+	}
+	severity := profile.RawDecodedMismatchSeverity
+	if severity == "" {
+		severity = SemanticSeverityInformational
+	}
+	return []SemanticQualityFinding{{
+		Code:       FindingFeedRawDecodedMismatch,
+		Severity:   severity,
+		UnitID:     u.UnitID,
+		SourceID:   u.SourceID,
+		SourcePath: u.SourcePath,
+		StartLine:  u.StartLine,
+		Message: fmt.Sprintf(
+			"YAML feed unit raw_text %q differs from decoded_value %q while business_rule_mode=%q",
+			truncForFinding(u.RawText, 80), truncForFinding(u.DecodedValue, 80), u.BusinessRuleMode,
+		),
+		RemediationHint: "set business_rule_mode=raw to keep both sides explicit, " +
+			"or document the YAML scalar normalisation policy (FSQ-04)",
+	}}
+}
+
+func truncForFinding(s string, max int) string {
+	if runeCount(s) <= max {
+		return s
+	}
+	out := make([]rune, 0, max)
+	for _, r := range s {
+		if len(out) >= max {
+			break
+		}
+		out = append(out, r)
+	}
+	return string(out) + "..."
+}
+
+func findDuplicateNormalizedText(units []FeedUnit, profile SemanticQualityProfile) []SemanticQualityFinding {
+	if profile.DuplicateThreshold <= 0 && profile.DuplicateWarningThreshold <= 0 {
+		return nil
+	}
+	groups := map[string][]FeedUnit{}
+	order := []string{}
+	for _, u := range units {
+		if !isSourceDerivedFeedUnit(u) {
+			continue
+		}
+		hash := strings.TrimSpace(u.NormalizedTextHash)
+		if hash == "" {
+			continue
+		}
+		if _, seen := groups[hash]; !seen {
+			order = append(order, hash)
+		}
+		groups[hash] = append(groups[hash], u)
+	}
+	var out []SemanticQualityFinding
+	for _, h := range order {
+		group := groups[h]
+		count := len(group)
+		if count < 2 {
+			continue
+		}
+		var severity SemanticFindingSeverity
+		switch {
+		case profile.DuplicateThreshold > 0 && count >= profile.DuplicateThreshold:
+			severity = SemanticSeverityBlocking
+		case profile.DuplicateWarningThreshold > 0 && count >= profile.DuplicateWarningThreshold:
+			severity = SemanticSeverityWarning
+		default:
+			continue
+		}
+		for i := 1; i < len(group); i++ {
+			out = append(out, SemanticQualityFinding{
+				Code:       FindingFeedDuplicateNormalizedText,
+				Severity:   severity,
+				UnitID:     group[i].UnitID,
+				SourceID:   group[i].SourceID,
+				SourcePath: group[i].SourcePath,
+				StartLine:  group[i].StartLine,
+				Message: fmt.Sprintf(
+					"normalized text appears %d times in the feed (first claim: unit %q)",
+					count, group[0].UnitID,
+				),
+				RemediationHint: "collapse duplicate atoms, or move the repeated label out of the curated feed",
+			})
+		}
+	}
+	return out
+}
+
+// findZeroUnitSources verifies the FSQ-02 invariant post-hoc: a source
+// declared admitted+atomized must yield ≥1 feed unit, and if not it must
+// carry an explicit ExclusionReason. The build-time check
+// (ValidateAtomizedAgainstUnitCount) is the primary defence; this gate
+// re-asserts it on the final artifact so a regression cannot slip past.
+func findZeroUnitSources(sources []FeedSource, units []FeedUnit) []SemanticQualityFinding {
+	if len(sources) == 0 {
+		return nil
+	}
+	used := map[string]struct{}{}
+	for _, u := range units {
+		for _, sid := range u.SourceIDs {
+			used[sid] = struct{}{}
+		}
+		if u.SourceID != "" {
+			used[u.SourceID] = struct{}{}
+		}
+	}
+	var out []SemanticQualityFinding
+	for _, s := range sources {
+		if s.AdmissionStatus != AdmissionAdmitted {
+			continue
+		}
+		if s.AtomizationStatus != AtomizationAtomized {
+			continue
+		}
+		if _, has := used[s.ID]; has {
+			continue
+		}
+		if strings.TrimSpace(s.ExclusionReason) != "" {
+			continue
+		}
+		out = append(out, SemanticQualityFinding{
+			Code:       FindingSourceZeroUnitNoReason,
+			Severity:   SemanticSeverityBlocking,
+			SourceID:   s.ID,
+			SourcePath: s.Path,
+			Message: fmt.Sprintf(
+				"source %q is admitted+atomized, produced 0 feed units, and carries no exclusion_reason",
+				s.ID,
+			),
+			RemediationHint: "either record an exclusion_reason or downgrade atomization_status to coverage_only/not_atomized",
+		})
+	}
+	return out
 }

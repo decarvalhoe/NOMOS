@@ -553,3 +553,241 @@ func TestStrictGateCorpusIntegrity_BadReportFile(t *testing.T) {
 			result.CorpusIntegrityCheck.Summary)
 	}
 }
+
+// FSQ-06 (#369): the semantic feed quality gate is wired into
+// CorpusIntegrityCheck and flips the strict gate to fail on a single
+// blocking finding. These three tests cover the failing path, the
+// passing path, and the profile-override path.
+
+// fsq06SemanticFixtureFeed builds a feed JSON envelope. units carries the
+// FeedUnit slice; if any unit has a non-empty SourceID, that source id is
+// also added to the Sources list with admission=admitted+atomized so
+// FSQ-06's SOURCE_ZERO_UNIT_NO_REASON does not fire spuriously.
+func fsq06SemanticFixtureFeed(units []corpus.FeedUnit) []byte {
+	srcSet := map[string]struct{}{}
+	for _, u := range units {
+		if u.SourceID != "" {
+			srcSet[u.SourceID] = struct{}{}
+		}
+	}
+	feed := corpus.Feed{Units: units}
+	for sid := range srcSet {
+		feed.Sources = append(feed.Sources, corpus.FeedSource{
+			ID:                sid,
+			Path:              "fixture/" + sid + ".md",
+			Status:            "active",
+			AdmissionStatus:   corpus.AdmissionAdmitted,
+			AtomizationStatus: corpus.AtomizationAtomized,
+		})
+	}
+	data, _ := json.Marshal(feed)
+	return data
+}
+
+func fsq06SemanticFixtureRAG() []byte {
+	// Empty array is a valid RAG file. The semantic gate inspects the
+	// feed, not the chunks; what we care about is that --rag is supplied
+	// so the FSQ-06 gate runs (it requires both --feed AND --rag).
+	return []byte("[]")
+}
+
+func fsq06SourceDir(t *testing.T, content string) string {
+	t.Helper()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "doc.md"), []byte(content), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+	return dir
+}
+
+func TestStrictGateSemanticQuality_FailsOnBlocking(t *testing.T) {
+	dir := fsq06SourceDir(t, "# Heading\n\nClean source paragraph used by the FSQ-06 wiring test.\n")
+	feed := []corpus.FeedUnit{
+		// One-token paragraph — trips FEED_UNIT_BELOW_TOKEN_MIN (blocking).
+		{
+			UnitID:             "U-NOISY",
+			Domain:             "rbok",
+			UnitType:           "rule",
+			BusinessRule:       "x",
+			SourceIDs:          []string{"doc.md"},
+			SourceSegmentID:    "seg:doc.md:10-11:paragraph",
+			SourceID:           "doc.md",
+			SourcePath:         "doc.md",
+			StartByte:          10,
+			EndByte:            11,
+			StartLine:          3,
+			EndLine:            3,
+			NormalizedTextHash: "norm-noisy",
+		},
+	}
+	feedPath := filepath.Join(t.TempDir(), "feed.json")
+	if err := os.WriteFile(feedPath, fsq06SemanticFixtureFeed(feed), 0o600); err != nil {
+		t.Fatalf("write feed: %v", err)
+	}
+	ragPath := filepath.Join(t.TempDir(), "rag.json")
+	if err := os.WriteFile(ragPath, fsq06SemanticFixtureRAG(), 0o600); err != nil {
+		t.Fatalf("write rag: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+	}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 on noisy feed; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("expected JSON: %v", err)
+	}
+	if result.CorpusIntegrityCheck == nil ||
+		result.CorpusIntegrityCheck.SemanticQuality == nil {
+		t.Fatalf("expected semantic_quality to be populated; got %+v", result.CorpusIntegrityCheck)
+	}
+	if result.CorpusIntegrityCheck.SemanticQuality.Status != "fail" {
+		t.Fatalf("expected semantic_quality.status=fail; got %q",
+			result.CorpusIntegrityCheck.SemanticQuality.Status)
+	}
+	if result.CorpusIntegrityCheck.Status != "fail" {
+		t.Fatalf("expected corpus_integrity_check.status=fail; got %q",
+			result.CorpusIntegrityCheck.Status)
+	}
+	var sawAggregate bool
+	for _, f := range result.CorpusIntegrityCheck.AggregateFindings {
+		if f.Code == FindingSemanticQualityFailed {
+			sawAggregate = true
+		}
+	}
+	if !sawAggregate {
+		t.Fatalf("expected SEMANTIC_QUALITY_FAILED in aggregate_findings; got %+v",
+			result.CorpusIntegrityCheck.AggregateFindings)
+	}
+}
+
+func TestStrictGateSemanticQuality_PassWithCleanFixture(t *testing.T) {
+	dir := fsq06SourceDir(t, "# Heading\n\nClean and meaningful paragraph used by the FSQ-06 pass test.\n")
+	feed := []corpus.FeedUnit{
+		{
+			UnitID:             "U-OK",
+			Domain:             "rbok",
+			UnitType:           "rule",
+			BusinessRule:       "Clean and meaningful paragraph used by the FSQ-06 pass test.",
+			SourceIDs:          []string{"doc.md"},
+			SourceSegmentID:    "seg:doc.md:11-72:paragraph",
+			SourceID:           "doc.md",
+			SourcePath:         "doc.md",
+			StartByte:          11,
+			EndByte:            72,
+			StartLine:          3,
+			EndLine:            3,
+			NormalizedTextHash: "norm-ok",
+		},
+	}
+	feedPath := filepath.Join(t.TempDir(), "feed.json")
+	if err := os.WriteFile(feedPath, fsq06SemanticFixtureFeed(feed), 0o600); err != nil {
+		t.Fatalf("write feed: %v", err)
+	}
+	ragPath := filepath.Join(t.TempDir(), "rag.json")
+	if err := os.WriteFile(ragPath, fsq06SemanticFixtureRAG(), 0o600); err != nil {
+		t.Fatalf("write rag: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0 on clean feed; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("expected JSON: %v", err)
+	}
+	if result.CorpusIntegrityCheck == nil ||
+		result.CorpusIntegrityCheck.SemanticQuality == nil {
+		t.Fatalf("expected semantic_quality to be populated; got %+v", result.CorpusIntegrityCheck)
+	}
+	if result.CorpusIntegrityCheck.SemanticQuality.Status != "pass" {
+		t.Fatalf("expected semantic_quality.status=pass; got %q (%+v)",
+			result.CorpusIntegrityCheck.SemanticQuality.Status,
+			result.CorpusIntegrityCheck.SemanticQuality.Findings)
+	}
+}
+
+func TestStrictGateSemanticQuality_ProfileOverride(t *testing.T) {
+	dir := fsq06SourceDir(t, "# Heading\n\nClean paragraph for FSQ-06 profile-override test.\n")
+	// A bare table_cell unit (no TableID, no ColumnHeaders) would normally
+	// trip FEED_TABLE_CELL_NOT_ROW_CONTEXT under DefaultRBOKProfile.
+	feed := []corpus.FeedUnit{
+		{
+			UnitID:             "U-CELL",
+			Domain:             "rbok",
+			UnitType:           "rule",
+			BusinessRule:       "Free-form cell content that would otherwise pass the text rules.",
+			SourceIDs:          []string{"doc.md"},
+			SourceSegmentID:    "seg:doc.md:11-80:table_cell",
+			SourceID:           "doc.md",
+			SourcePath:         "doc.md",
+			StartByte:          11,
+			EndByte:            80,
+			StartLine:          3,
+			EndLine:            3,
+			NormalizedTextHash: "norm-cell",
+		},
+	}
+	feedPath := filepath.Join(t.TempDir(), "feed.json")
+	if err := os.WriteFile(feedPath, fsq06SemanticFixtureFeed(feed), 0o600); err != nil {
+		t.Fatalf("write feed: %v", err)
+	}
+	ragPath := filepath.Join(t.TempDir(), "rag.json")
+	if err := os.WriteFile(ragPath, fsq06SemanticFixtureRAG(), 0o600); err != nil {
+		t.Fatalf("write rag: %v", err)
+	}
+
+	// Permissive profile: AllowTableCellWithoutRow=true.
+	profile := corpus.DefaultRBOKProfile()
+	profile.AllowTableCellWithoutRow = true
+	profilePath := filepath.Join(t.TempDir(), "profile.json")
+	profileBytes, _ := json.Marshal(profile)
+	if err := os.WriteFile(profilePath, profileBytes, 0o600); err != nil {
+		t.Fatalf("write profile: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+		"--corpus-semantic-quality-profile", profilePath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0 with permissive profile; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("expected JSON: %v", err)
+	}
+	sq := result.CorpusIntegrityCheck.SemanticQuality
+	if sq == nil {
+		t.Fatal("expected semantic_quality to be populated")
+	}
+	for _, f := range sq.Findings {
+		if f.Code == corpus.FindingFeedTableCellNotRowContext {
+			t.Fatalf("expected NO %s under permissive profile; got %+v",
+				corpus.FindingFeedTableCellNotRowContext, sq.Findings)
+		}
+	}
+	if sq.Status != "pass" {
+		t.Fatalf("expected semantic_quality.status=pass; got %q (%+v)", sq.Status, sq.Findings)
+	}
+}
