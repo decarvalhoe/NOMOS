@@ -53,6 +53,13 @@ var extToSourceType = map[string]string{
 }
 
 // ManifestSource is a single entry in the sidecar source manifest.
+//
+// FSQ-02 (#365): the AdmissionStatus / AtomizationStatus / ExclusionReason
+// / SourceRole / FormatSupport / DerivativeOf fields make the admission
+// and atomization policy of every source explicit and machine-checkable.
+// All six are omitempty so legacy manifest YAML (which omits them) keeps
+// loading; the feed-generation pipeline backfills defaults from the
+// extension heuristic before validation.
 type ManifestSource struct {
 	ID              string   `yaml:"id"`
 	Path            string   `yaml:"path"`
@@ -65,6 +72,31 @@ type ManifestSource struct {
 	License         string   `yaml:"license"`
 	Confidentiality string   `yaml:"confidentiality"`
 	AllowedUses     []string `yaml:"allowed_uses"`
+
+	// FSQ-02 (#365) admission + atomization policy.
+	AdmissionStatus   string `yaml:"admission_status,omitempty"`
+	AtomizationStatus string `yaml:"atomization_status,omitempty"`
+	ExclusionReason   string `yaml:"exclusion_reason,omitempty"`
+	SourceRole        string `yaml:"source_role,omitempty"`
+	FormatSupport     string `yaml:"format_support,omitempty"`
+	DerivativeOf      string `yaml:"derivative_of,omitempty"`
+}
+
+// Admission returns a SourceAdmission projection of the manifest entry.
+func (m ManifestSource) Admission() SourceAdmission {
+	return SourceAdmission{
+		AdmissionStatus:   m.AdmissionStatus,
+		AtomizationStatus: m.AtomizationStatus,
+		ExclusionReason:   m.ExclusionReason,
+		SourceRole:        m.SourceRole,
+		FormatSupport:     m.FormatSupport,
+		DerivativeOf:      m.DerivativeOf,
+	}
+}
+
+// Validate enforces the FSQ-02 admission rules on the manifest entry.
+func (m ManifestSource) Validate() error {
+	return m.Admission().Validate()
 }
 
 // SidecarManifest is the YAML structure matching source-manifest.cue.
@@ -121,18 +153,25 @@ func GenerateManifest(snap Snapshot, opts ManifestOptions) SidecarManifest {
 			id = id + "-" + pathHashSuffix(entry.Path)
 		}
 		seenIDs[id] = true
+		def := DefaultAdmissionForPath(entry.Path)
 		sources = append(sources, ManifestSource{
-			ID:              id,
-			Path:            entry.Path,
-			Type:            inferSourceType(entry.Extension),
-			Domain:          opts.Domain,
-			Priority:        priority,
-			Status:          "active",
-			Hash:            entry.Hash,
-			Owner:           owner,
-			License:         license,
-			Confidentiality: confidentiality,
-			AllowedUses:     allowedUses,
+			ID:                id,
+			Path:              entry.Path,
+			Type:              inferSourceType(entry.Extension),
+			Domain:            opts.Domain,
+			Priority:          priority,
+			Status:            "active",
+			Hash:              entry.Hash,
+			Owner:             owner,
+			License:           license,
+			Confidentiality:   confidentiality,
+			AllowedUses:       allowedUses,
+			AdmissionStatus:   def.AdmissionStatus,
+			AtomizationStatus: def.AtomizationStatus,
+			ExclusionReason:   def.ExclusionReason,
+			SourceRole:        def.SourceRole,
+			FormatSupport:     def.FormatSupport,
+			DerivativeOf:      def.DerivativeOf,
 		})
 	}
 
