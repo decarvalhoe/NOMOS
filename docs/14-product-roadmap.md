@@ -64,7 +64,7 @@ Nomos can convert any source into legally defensible product law without custome
 |---|---|---|
 | `v0.1.0-ALPHA` | Prove the canonical corpus pipeline, RBOK lawbook POC, strict fidelity gate, and public claim boundary. | Local and CI gates green; GitHub pre-release published; no regulated overclaim. |
 | `v0.2.x` | Make structure fidelity more portable beyond RBOK Markdown. | AST-to-Nomos comparison covers tables, lists, callouts, code, links, images, annexes, xrefs, H1-H6, and exact source spans across fixtures. |
-| `v0.3.x` | Harden adapters and structured-data atomization. | Markdown, YAML, JSON, and adapter fixtures produce governed nodes or explicit unsupported records; no silent skip of active source material. |
+| `v0.3.x` | Harden adapters and structured-data atomization. | Markdown, YAML, JSON, and adapter fixtures produce governed nodes or explicit unsupported records; no silent skip of active source material; short critical fragments have a governed disposition instead of disappearing behind feed-noise filters. |
 | `v0.4.x` | Mature RAG and runtime import contracts. | Retrieval metadata, citation behavior, refusal cases, and downstream engine import are evaluated with traceable tests. |
 | `v0.5.x` | Close regulated-readiness evidence. | Reference-to-control matrix, validation inventory, GitHub QMS evidence, training records, approval records, and release bundle are reconstructible. |
 | `v0.6.x` | Publish the Nomos-to-Praxis evidence contract. | Praxis can consume verified Nomos artifacts without weakening the Nomos claim boundary. |
@@ -92,6 +92,7 @@ Nomos remains split into clear responsibility layers:
 | RBOK-specific implementation bias | Roadmap requires portable AST/fidelity fixtures beyond RBOK. |
 | Licensed reference misuse | Licensed standards are tracked by intake sidecars; redistribution remains blocked unless license allows it. |
 | RAG authority drift | RAG remains downstream from canonical units and requires future retrieval/behavior evals. |
+| Short critical atom loss | Short strings can carry high regulatory or operational meaning; the backlog now requires a short-critical inventory, disposition report, and gate before stronger fidelity claims. |
 | Praxis dependency overclaim | Praxis is downstream and not used as release-grade evidence until the shared contract is verified. |
 
 ## Release Gates

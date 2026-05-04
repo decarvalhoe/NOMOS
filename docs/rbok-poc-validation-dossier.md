@@ -412,6 +412,18 @@ this dispatch. Listing them here keeps the AQ-3 claim honest.
   shipped strategy table. Whichever is the case on `c20c5f4..6c14cbf`
   is what this run uses; section 11 reproduces the on-disk strategy
   for the recorded run.
+- **Short critical atom disposition** is not yet separately proven.
+  The recorded alpha run has `0` feed units <= 10 characters, which
+  is good evidence against orphan junk chunks, but it is not evidence
+  that every short meaningful token was semantically represented. In
+  regulated and operational corpora, strings such as `GxP`, `ALCOA+`,
+  `21 CFR`, `SOP-01`, `P0`, `Yes` / `No`, thresholds, status values,
+  and identifiers can be critical even when they are short. Future
+  work must inventory excluded short fragments and assign each one a
+  disposition: contextualized in parent, governed lexicon term,
+  identifier atom, normative value atom, non-semantic, or review
+  required. Tracked in `docs/15-product-backlog.md` under "Short
+  Critical Atom Reconciliation" and GitHub issue #382.
 - **No CLI emitter for `[]SourceSegment` ledger** today. The
   body-ledger generator embeds the ledger per-source. Tracked under
   SFI-02 / #340.

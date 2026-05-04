@@ -60,6 +60,9 @@ Not claimed:
 - FDA, EU Annex 11, ISO, GxP, NASA, or Part 11 compliance;
 - complete support for every PDF, DOCX, scanned document, image, legal
   code, regulation, or game-rule corpus;
+- a completed short-critical atom reconciliation proving that every
+  short but meaningful token was promoted, contextualized, or explicitly
+  classified;
 - attestation `claim_coverage` fully wired to the body ledger.
 
 ## Release Gate
@@ -71,4 +74,3 @@ following checks are green on the release commit:
 - `scripts/e2e.ps1`;
 - GitHub Actions required checks;
 - RBOK `01_rbok` POC runner or the documented equivalent evidence pack.
-
