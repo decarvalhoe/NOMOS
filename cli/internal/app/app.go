@@ -25,6 +25,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"diagnose": diagnoseCommand,
 		"corpus":   corpusCommand,
 		"strict":   StrictGateCommand,
+		"github":   githubCommand,
 	}
 
 	if len(args) == 0 {
@@ -57,6 +58,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
 	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
+	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
 	return 0

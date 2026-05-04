@@ -803,3 +803,124 @@ func runGit(t *testing.T, root string, args ...string) {
 		t.Fatalf("git %v failed: %v\n%s", args, err, string(out))
 	}
 }
+
+// NGW-03 (#388): nomos github plan tests.
+// Three cases: end-to-end happy path, unknown subcommand, missing config.
+
+func TestGithubPlan_EndToEnd(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "corpus-workflows.yaml")
+	configBody := `schema_version: "0.1.0"
+workflows:
+  - id: ngw-end-to-end
+    source:
+      repo: a/b
+      base_branch: main
+      paths:
+        - docs/**
+    output:
+      repo: corpus
+      branch: main
+      path: out/
+    nomos:
+      corpus_id: x
+      project_id: y
+      commands: [scan, manifest]
+    publish:
+      mode: artifact_only
+      target_repo: output
+      target_branch: main
+      target_path: out/
+      branch_strategy: fixed
+      risk_class: low
+    notify:
+      source_pr_comment: { enabled: false }
+`
+	if err := os.WriteFile(configPath, []byte(configBody), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	changedPathsPath := filepath.Join(dir, "changed.txt")
+	body := "# header comment\n" +
+		"docs/a.md\n" +
+		"\n" +
+		"docs/sub/b.md\n" +
+		"out/regenerated.json\n"
+	if err := os.WriteFile(changedPathsPath, []byte(body), 0o600); err != nil {
+		t.Fatalf("write changed-paths: %v", err)
+	}
+
+	outPath := filepath.Join(dir, "nomos-diff.json")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"github", "plan",
+		"--config", configPath,
+		"--changed-paths", changedPathsPath,
+		"--out", outPath,
+		"--frozen-time", "2026-05-04T12:00:00Z",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d (stderr=%q)", code, stderr.String())
+	}
+
+	raw, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read out: %v", err)
+	}
+	var plan map[string]any
+	if err := json.Unmarshal(raw, &plan); err != nil {
+		t.Fatalf("parse plan: %v", err)
+	}
+	if plan["schema_version"] != "ngw-diff-v1" {
+		t.Fatalf("expected schema_version=ngw-diff-v1, got %v", plan["schema_version"])
+	}
+	if plan["generated_at"] != "2026-05-04T12:00:00Z" {
+		t.Fatalf("expected frozen generated_at, got %v", plan["generated_at"])
+	}
+	impacted, _ := plan["impacted"].([]any)
+	if len(impacted) != 1 {
+		t.Fatalf("expected 1 impacted workflow, got %d (%v)", len(impacted), plan["impacted"])
+	}
+	first, _ := impacted[0].(map[string]any)
+	if first["workflow_id"] != "ngw-end-to-end" {
+		t.Fatalf("expected workflow_id=ngw-end-to-end, got %v", first["workflow_id"])
+	}
+	matched, _ := first["matched_paths"].([]any)
+	if len(matched) != 2 {
+		t.Fatalf("expected 2 matched paths (excluding the generated one), got %d (%v)", len(matched), matched)
+	}
+	ignored, _ := plan["ignored_generated_paths"].([]any)
+	if len(ignored) != 1 || ignored[0] != "out/regenerated.json" {
+		t.Fatalf("expected ignored=[out/regenerated.json], got %v", ignored)
+	}
+}
+
+func TestGithubPlan_UnknownSubcommand(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"github", "bogus"}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("expected exit 2 on unknown subcommand, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "unknown subcommand") {
+		t.Fatalf("expected stderr to mention unknown subcommand, got %q", stderr.String())
+	}
+}
+
+func TestGithubPlan_MissingConfig(t *testing.T) {
+	dir := t.TempDir()
+	changedPathsPath := filepath.Join(dir, "changed.txt")
+	if err := os.WriteFile(changedPathsPath, []byte("docs/a.md\n"), 0o600); err != nil {
+		t.Fatalf("write changed-paths: %v", err)
+	}
+	outPath := filepath.Join(dir, "out.json")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"github", "plan",
+		"--config", filepath.Join(dir, "does-not-exist.yaml"),
+		"--changed-paths", changedPathsPath,
+		"--out", outPath,
+	}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 on missing config, got %d (stderr=%q)", code, stderr.String())
+	}
+}
