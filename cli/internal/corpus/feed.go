@@ -179,6 +179,7 @@ type extractedFeedUnit struct {
 	Priority     string
 	SourceStatus string
 	Locator      string
+	Segment      *SourceSegment
 }
 
 // GenerateFeed produces a consumer feed from a canonical matrix and source manifest.
@@ -358,27 +359,51 @@ func extractFeedUnits(root string, manifest SidecarManifest) ([]extractedFeedUni
 }
 
 func extractParcoursFeedUnits(path string, source ManifestSource) ([]extractedFeedUnit, error) {
-	result, err := ExtractParcours(path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read parcours %s: %w", source.Path, err)
+	}
+	result, err := ExtractParcoursFromBytes(data)
 	if err != nil {
 		return nil, err
 	}
+	scalars, err := scanYAMLScalarSegmentsWithValues(source.ID, source.Path, data)
+	if err != nil {
+		return nil, err
+	}
+	matcher := yamlScalarMatcher{scalars: scalars}
+
 	units := make([]extractedFeedUnit, 0, len(result.Units))
 	for _, unit := range result.Units {
 		content := strings.TrimSpace(unit.BusinessRule)
 		if content == "" {
 			content = unit.Name
 		}
+		segment := matcher.consume(content)
+		if segment == nil {
+			return nil, fmt.Errorf("feed: parcours YAML scalar span not found for %s in %s", unit.UnitID, source.Path)
+		}
+		segment.CanonicalUnitID = unit.UnitID
 		units = append(units, extractedFeedUnit{
 			FeedUnit: FeedUnit{
-				UnitID:       unit.UnitID,
-				Name:         unit.Name,
-				Domain:       feedDomain(firstNonEmpty(unit.Domain, source.Domain)),
-				UnitType:     unit.UnitType,
-				Criticality:  feedCriticality(unit.Criticality),
-				Status:       "partial",
-				BusinessRule: content,
-				SourceIDs:    []string{source.ID},
-				Gaps:         []string{"Extracted from parcours YAML; requires human canonical review."},
+				UnitID:             unit.UnitID,
+				Name:               unit.Name,
+				Domain:             feedDomain(firstNonEmpty(unit.Domain, source.Domain)),
+				UnitType:           unit.UnitType,
+				Criticality:        feedCriticality(unit.Criticality),
+				Status:             "partial",
+				BusinessRule:       content,
+				SourceIDs:          []string{source.ID},
+				Gaps:               []string{"Extracted from parcours YAML; requires human canonical review."},
+				SourceSegmentID:    segment.SegmentID,
+				SourceID:           source.ID,
+				SourcePath:         source.Path,
+				StartByte:          segment.StartByte,
+				EndByte:            segment.EndByte,
+				StartLine:          segment.StartLine,
+				EndLine:            segment.EndLine,
+				NormalizedTextHash: segment.NormalizedTextHash,
+				HeadingPath:        []string{result.ParcoursName, unit.EtapeName, unit.ObjectifID},
 			},
 			Content:      content,
 			SourceID:     source.ID,
@@ -387,9 +412,40 @@ func extractParcoursFeedUnits(path string, source ManifestSource) ([]extractedFe
 			Priority:     feedPriority(source.Priority),
 			SourceStatus: feedSourceStatus(source.Status),
 			Locator:      source.Path + "#" + unit.UnitID,
+			Segment:      segment,
 		})
 	}
 	return units, nil
+}
+
+type yamlScalarMatcher struct {
+	scalars []yamlScalarSegment
+	used    []bool
+}
+
+func (m *yamlScalarMatcher) consume(value string) *SourceSegment {
+	target := strings.TrimSpace(value)
+	if target == "" {
+		return nil
+	}
+	if m.used == nil {
+		m.used = make([]bool, len(m.scalars))
+	}
+	for i, scalar := range m.scalars {
+		if m.used[i] {
+			continue
+		}
+		if scalar.Segment.Disposition != DispositionCanonicalAtom {
+			continue
+		}
+		if strings.TrimSpace(scalar.Value) != target {
+			continue
+		}
+		m.used[i] = true
+		seg := scalar.Segment
+		return &seg
+	}
+	return nil
 }
 
 func verifyFeedLockfile(lockfile *Lockfile, snapshot *Snapshot) (*FeedLockfileStatus, error) {
@@ -413,9 +469,42 @@ func verifyFeedLockfile(lockfile *Lockfile, snapshot *Snapshot) (*FeedLockfileSt
 
 func buildRAGMetadata(units []extractedFeedUnit, generatedAt time.Time) ([]ChunkMetadata, error) {
 	metadata := make([]ChunkMetadata, 0, len(units))
+	segments := map[string]SourceSegment{}
+	for _, unit := range units {
+		if unit.Segment == nil {
+			continue
+		}
+		seg := *unit.Segment
+		if strings.TrimSpace(seg.CanonicalUnitID) == "" {
+			seg.CanonicalUnitID = unit.UnitID
+		}
+		segments[seg.SegmentID] = seg
+	}
+
 	for _, unit := range units {
 		content := strings.TrimSpace(unit.Content)
 		if content == "" {
+			continue
+		}
+		if unit.Segment != nil && strings.TrimSpace(unit.SourceSegmentID) != "" {
+			chunks, err := BuildRAGMetadata([]RAGBuildInput{{
+				Unit:       unit.FeedUnit,
+				Content:    content,
+				SourceHash: unit.SourceHash,
+				Domain:     feedDomain(unit.Domain),
+				Priority:   feedPriority(unit.Priority),
+				Status:     feedSourceStatus(unit.SourceStatus),
+				Confidence: "medium",
+				Tags:       []string{unit.UnitType},
+				Locator:    unit.Locator,
+			}}, segments, EnrichConfig{
+				IngestionVersion: FeedFormat,
+				Now:              generatedAt,
+			})
+			if err != nil {
+				return nil, err
+			}
+			metadata = append(metadata, chunks...)
 			continue
 		}
 		meta, err := Enrich(ChunkInput{
@@ -638,6 +727,8 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 		}
 		leafID := unitIDLeaf(source.Path, title, seg.Kind, seg.StartLine)
 		unitID := uniqueFeedUnitID(toUpperSlug("RBOK-MD-"+source.ID+"-"+leafID), seenUnitIDs)
+		sourceSegment := seg
+		sourceSegment.CanonicalUnitID = unitID
 		out = append(out, extractedFeedUnit{
 			FeedUnit: FeedUnit{
 				UnitID:             unitID,
@@ -666,6 +757,7 @@ func buildFeedUnitsFromSegments(content []byte, segments []SourceSegment, source
 			Priority:     feedPriority(source.Priority),
 			SourceStatus: feedSourceStatus(source.Status),
 			Locator:      fmt.Sprintf("%s:%d", source.Path, seg.StartLine),
+			Segment:      &sourceSegment,
 		})
 	}
 	return out

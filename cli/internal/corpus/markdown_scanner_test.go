@@ -218,13 +218,13 @@ func TestScanMarkdown_BlankLines(t *testing.T) {
 
 func TestScanMarkdown_DecorativeSeparators(t *testing.T) {
 	t.Parallel()
-	content := "para one.\n\n---\n\npara two.\n\n***\n\npara three.\n\n___\n\npara four.\n\n...\n"
+	content := "para one.\n\n---\n\npara two.\n\n***\n\npara three.\n\n___\n\npara four.\n\n...\n\npara five.\n\n\u2014\n"
 	segs := scanOK(t, content)
 	assertCoverageAndIntegrity(t, content, segs)
 	assertSliceMatchesHash(t, content, segs)
 
-	if collectKinds(segs)[KindDecorativeSeparator] != 4 {
-		t.Fatalf("expected 4 decorative separators, got %v", collectKinds(segs))
+	if collectKinds(segs)[KindDecorativeSeparator] != 5 {
+		t.Fatalf("expected 5 decorative separators, got %v", collectKinds(segs))
 	}
 	for _, s := range segs {
 		if s.Kind == KindDecorativeSeparator && s.Disposition != DispositionCoverageOnly {
@@ -292,6 +292,56 @@ func TestScanMarkdown_TableEmitsRowsAndCells(t *testing.T) {
 	}
 	if !sawEmptyCoverage {
 		t.Fatal("expected at least one coverage_only empty table_cell")
+	}
+}
+
+func TestScanMarkdown_TablePlaceholderCellsAreCoverageOnly(t *testing.T) {
+	t.Parallel()
+	dash := "\u2014"
+	content := "" +
+		"| Name | Status | Notes |\n" +
+		"|------|--------|-------|\n" +
+		"| ...  | " + dash + " | Real value |\n"
+	segs := scanOK(t, content)
+	assertCoverageAndIntegrity(t, content, segs)
+	assertSliceMatchesHash(t, content, segs)
+
+	report := CheckSourceIntegrity(
+		[]SourceInput{{SourceID: testSourceID, Path: testSourcePath, Content: []byte(content)}},
+		segs,
+	)
+	if report.Status != "pass" {
+		t.Fatalf("placeholder table cells should not become junk canonical atoms; got %s: %+v",
+			report.Status, report.Findings)
+	}
+
+	var sawEllipsis, sawDash, sawRealValue bool
+	for _, s := range segs {
+		if s.Kind != KindTableCell {
+			continue
+		}
+		cell := strings.TrimSpace(content[s.StartByte:s.EndByte])
+		switch cell {
+		case "...":
+			sawEllipsis = true
+			if s.Disposition != DispositionCoverageOnly {
+				t.Fatalf("ellipsis placeholder cell must be coverage_only, got %s", s.Disposition)
+			}
+		case dash:
+			sawDash = true
+			if s.Disposition != DispositionCoverageOnly {
+				t.Fatalf("dash placeholder cell must be coverage_only, got %s", s.Disposition)
+			}
+		case "Real value":
+			sawRealValue = true
+			if s.Disposition != DispositionCanonicalAtom {
+				t.Fatalf("real table cell must stay canonical_atom, got %s", s.Disposition)
+			}
+		}
+	}
+	if !sawEllipsis || !sawDash || !sawRealValue {
+		t.Fatalf("expected to observe ellipsis=%t dash=%t real=%t cells",
+			sawEllipsis, sawDash, sawRealValue)
 	}
 }
 

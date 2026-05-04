@@ -123,7 +123,7 @@ var (
 
 // decorativeChars enumerates the punctuation characters that may compose a
 // decorative separator line ("---", "***", "___", "...", "~~~~", etc.).
-const decorativeChars = "*-_.~+ \t"
+const decorativeChars = "*-_.~+ \t\u2013\u2014\u2011\u2026"
 
 func (s *mdScanner) scan() ([]SourceSegment, error) {
 	i := 0
@@ -257,7 +257,7 @@ func (s *mdScanner) emitBlank(idx int) {
 func isDecorativeSeparator(text string) bool {
 	trimmed := strings.TrimSpace(text)
 	if len(trimmed) < 3 {
-		return false
+		return isSingleUnicodeSeparator(trimmed)
 	}
 	nonWhite := 0
 	for _, r := range trimmed {
@@ -268,7 +268,16 @@ func isDecorativeSeparator(text string) bool {
 			nonWhite++
 		}
 	}
-	return nonWhite >= 3
+	return nonWhite >= 3 || isSingleUnicodeSeparator(trimmed)
+}
+
+func isSingleUnicodeSeparator(text string) bool {
+	switch text {
+	case "\u2013", "\u2014", "\u2011", "\u2026":
+		return true
+	default:
+		return false
+	}
 }
 
 func (s *mdScanner) emitDecorativeSeparator(idx int) {
@@ -446,7 +455,7 @@ func (s *mdScanner) emitTableCells(rowIdx int, parentID string) {
 			ParentSegmentID: parentID,
 			RawTextHash:     ComputeRawTextHash([]byte(cellText)),
 		}
-		if strings.TrimSpace(cellText) == "" {
+		if strings.TrimSpace(cellText) == "" || isJunkSemantic([]byte(cellText)) {
 			seg.Disposition = DispositionCoverageOnly
 		} else {
 			seg.Disposition = DispositionCanonicalAtom

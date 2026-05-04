@@ -23,6 +23,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"init":     initCommand,
 		"validate": validate.Command,
 		"diagnose": diagnoseCommand,
+		"strict":   StrictGateCommand,
 		"corpus":   corpusCommand,
 	}
 
@@ -54,6 +55,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  init       Initialize Nomos manifests in a repository")
 	fmt.Fprintln(stdout, "  validate   Validate Nomos manifests and schemas")
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
+	fmt.Fprintln(stdout, "  strict     Run the aggregated strict release gate")
 	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")

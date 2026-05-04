@@ -52,6 +52,34 @@ func TestRunUnknownCommand(t *testing.T) {
 	}
 }
 
+func TestRunStrictCorpusIntegrityCommand(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "01_rbok/rule.md", "# Rule\n\nBody\n")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"strict",
+		"--corpus-integrity-source", root,
+		"--format", "json",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected strict corpus integrity command to pass, got code=%d stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("decode strict json: %v\n%s", err, stdout.String())
+	}
+	if result.CorpusIntegrityCheck == nil {
+		t.Fatalf("expected corpus_integrity_check section, got %#v", result)
+	}
+	if result.CorpusIntegrityCheck.Status != "pass" {
+		t.Fatalf("expected corpus integrity status pass, got %#v", result.CorpusIntegrityCheck)
+	}
+}
+
 func TestRunInitMinimalCreatesBaselineProject(t *testing.T) {
 	target := t.TempDir()
 	var stdout bytes.Buffer

@@ -261,7 +261,7 @@ func rangeFitsContent(s SourceSegment, content []byte) bool {
 // their own, mark a canonical atom as junk. Backtick is included so that
 // fenced fragments accidentally tagged as canonical atoms are caught.
 var junkRuneSet = func() map[rune]struct{} {
-	const junkRunes = "-_*~|.,;:!?()[]{}<>+=`"
+	const junkRunes = "-_*~|.,;:!?()[]{}<>+=`\u2013\u2014\u2011\u2026"
 	m := make(map[rune]struct{}, len(junkRunes))
 	for _, r := range junkRunes {
 		m[r] = struct{}{}

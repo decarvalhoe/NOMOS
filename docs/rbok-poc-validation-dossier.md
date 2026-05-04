@@ -47,11 +47,11 @@ step 10 in the command sequence below).
 
 | Field | Value at dossier time |
 |---|---|
-| Go toolchain | `go version` from `cli/` build host (`go1.22.2 linux/amd64` recorded at dossier authoring time) |
-| CUE toolchain | `cue version` (≥ `v0.12.0` used at dossier authoring time) |
-| OS | Linux x86_64 (orchestrator host) |
-| Nomos commit sha | `git rev-parse HEAD` at the time of the run (dossier-authoring base: `399d653`, `feat(SFI-08)`) |
-| Branch | `feat/sfi-11-rbok-poc-rerun` (this PR) at dossier time; the actual run on a host with the corpus must record the merged `main` sha. |
+| Go toolchain | `go1.26.2 linux/amd64` on WSL for the recorded local POC run |
+| CUE toolchain | validated by `scripts/e2e.sh` in the NOMOS repo |
+| OS | WSL2 Linux x86_64 on the Windows orchestrator workstation |
+| Nomos commit sha | recorded by the run script in `<RUN_DIR>/run-environment.txt` (`git -C "$NOMOS_REPO" rev-parse HEAD`) |
+| Branch | `codex/rbok-poc-restart-20260504` for the local POC restart |
 
 The run script (`scripts/rbok-poc-integrity.sh`) records all four of
 these into `<RUN_DIR>/run-environment.txt` so the dossier and the run
@@ -108,32 +108,22 @@ artefact is written.
 ### Step 3 — Source segment ledger emission
 
 - Input: `$CORPUS` directory + `source-manifest.yaml`.
-- Status: **TODO — no dedicated CLI subcommand emits a JSON
-  `[]SourceSegment` ledger today.** The ledger is computed in-process
-  by `corpus.ScanMarkdown` (SFI-02 / #340). Until a dedicated CLI is
-  added, the integrity gate computes the ledger internally as part of
-  step 4 (`--corpus-integrity-source` walks the directory and runs
-  `ScanMarkdown` per file). Tracked as a follow-up to SFI-02 / #340
-  and to be revisited under SFI-08 / #346 CLI surface.
+- Status: no dedicated CLI subcommand emits a JSON `[]SourceSegment`
+  ledger today. The ledger is computed in-process by the strict gate:
+  Markdown sources use `corpus.ScanMarkdown`; source-backed YAML
+  parcours artefacts use `corpus.ScanYAMLScalars`.
 - Output: *(none — implicit input to step 4).*
 
 ### Step 4 — Source integrity gate (SFI-04, #342)
 
-- Input: directory of `*.md` source files inside `$CORPUS`.
-- Command (today, via the strict gate flag plumbing in
-  `cli/internal/app/strict_gate.go`):
+- Input: directory of source files inside `$CORPUS`.
+- Command:
   ```bash
   ( cd "$NOMOS_REPO/cli" && \
-    go run ./internal/app strict \
+    go run . strict \
       --corpus-integrity-source "$CORPUS" \
       --format json ) > "$RUN_DIR/integrity-source.json"
   ```
-  Status: **TODO — `nomos strict` is not yet wired into the top-level
-  command map (`cli/internal/app/app.go::Run`).** `StrictGateCommand`
-  (the function that owns the `--corpus-integrity-*` flags) is
-  implemented but not yet selectable from the `nomos` binary. Tracked
-  under SFI-08 / #346 as a CLI surface follow-up; until then the run
-  script invokes the gate via `go run` against the package directly.
 - Output: `integrity-source.json` carrying the SFI-04 `IntegrityReport`
   payload (status, source/segment counts, findings).
 - Expected exit code: 0 if `Status == "pass"`, 1 otherwise.
@@ -176,17 +166,15 @@ artefact is written.
 ### Step 7 — Feed quality gate (SFI-07, #345)
 
 - Input: `$CORPUS`, `feed-units.json`, `rag.json`.
-- Command (today, via the same strict-gate plumbing):
+- Command:
   ```bash
   ( cd "$NOMOS_REPO/cli" && \
-    go run ./internal/app strict \
+    go run . strict \
       --corpus-integrity-source "$CORPUS" \
       --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
       --corpus-integrity-rag    "$RUN_DIR/rag.json" \
       --format json ) > "$RUN_DIR/integrity-feed.json"
   ```
-  Status: **TODO — same wiring caveat as step 4.** Tracked under
-  SFI-08 / #346.
 - Output: `integrity-feed.json` containing both the source integrity
   sub-report and the feed quality sub-report.
 - Expected exit code: 0 if both sub-reports pass, 1 otherwise.
@@ -230,14 +218,12 @@ artefact is written.
 - Command:
   ```bash
   ( cd "$NOMOS_REPO/cli" && \
-    go run ./internal/app strict \
+    go run . strict \
       --corpus-integrity-source "$CORPUS" \
       --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
       --corpus-integrity-rag    "$RUN_DIR/rag.json" \
       --format json ) > "$RUN_DIR/strict-gate.json"
   ```
-  (Once SFI-08 / #346 wires `nomos strict`, the same flags via the
-  `nomos` binary directly: `nomos strict --corpus-integrity-source ... --format json`.)
 - Output: `strict-gate.json`.
 - Expected exit code: 0 if the gate passes, 1 if it fails.
 - Reference: `cli/internal/app/strict_gate.go::StrictGateCommand`.
@@ -283,41 +269,33 @@ this run pass".
 
 | Step | Name | Exit code | Artefact path | Finding count | Status |
 |---|---|---|---|---|---|
-| 0  | Pre-run git status capture       | n/a | n/a | n/a | **BLOCKED — corpus not accessible at /root/repos/realisons-business/01_rbok** |
-| 1  | Source scan                      | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 2  | Source manifest                  | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 3  | Source segment ledger            | n/a | n/a | n/a | **BLOCKED — corpus not accessible (and no CLI ledger emitter today; see step 3 TODO)** |
-| 4  | Source integrity gate (SFI-04)   | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 5  | Feed generation (SFI-05)         | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 6  | RAG metadata (SFI-06)            | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 7  | Feed quality gate (SFI-07)       | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 8  | Attestation (bounded claim)      | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 9  | Strict gate (SFI-08)             | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
-| 10 | Post-run git status capture      | n/a | n/a | n/a | **BLOCKED — corpus not accessible** |
+| 0  | Pre-run git status capture       | 0 | `corpus-status-before.txt` | 0 | PASS — corpus clean |
+| 1  | Source scan                      | 0 | `snapshot.json` | 240 files | PASS |
+| 2  | Source manifest                  | 0 | `source-manifest.yaml` | 240 sources | PASS |
+| 3  | Source segment ledger            | n/a | in-process ledger | n/a | PASS — computed by strict gate |
+| 4  | Source integrity gate (SFI-04)   | 0 | `integrity-source.json` | 0 findings | PASS |
+| 5  | Feed generation (SFI-05)         | 0 | `feed.json` | 9500 units | PASS |
+| 6  | RAG metadata (SFI-06)            | 0 | `rag.json` | 9500 chunks | PASS |
+| 7  | Feed quality gate (SFI-07)       | 0 | `integrity-feed.json` | 0 findings | PASS |
+| 8  | Attestation (bounded claim)      | 0 | `attestation.json` | n/a | PASS |
+| 9  | Strict gate (SFI-08)             | 0 | `strict-gate.json` | 0 findings | PASS |
+| 10 | Post-run git status capture      | 0 | `corpus-status-after.txt` | 0 | PASS — no corpus mutation |
 
-This dossier was produced on the orchestrator agent host
-(`/root/repos/Nomos-copilot`). The path
-`/root/repos/realisons-business/01_rbok` does **not** exist on this
-host at dossier time; therefore the actual SFI-04..SFI-08 source-to-feed
-integrity POC run could not be executed. Finding counts are
-deliberately left as `n/a` rather than fabricated.
+Recorded local evidence path:
+`C:\Dev\nomos-rbok-poc-run-20260504-sfi-7`.
 
-The dossier is marked **pending corpus access**.
+Recorded corpus revision:
+`ea003e8fe3c35993731c3708a3787df6a3a690df` from the clean
+throwaway clone `/tmp/realisons-business-nomos-poc-20260504`.
 
-The next concrete steps to lift the block:
+Recorded feed summary:
 
-1. Provision read-only corpus access on the orchestrator host (clone
-   `realisons-business` to `/root/repos/realisons-business` and pin
-   to a recorded sha) **or** run this dossier on a host where the
-   corpus already lives.
-2. Re-run `scripts/rbok-poc-integrity.sh` end-to-end and replace this
-   table with the resulting per-step rows (exit code, artefact path,
-   finding count, status read from the JSON reports).
-3. Update the bounded claim language in section 8 to cite the actual
-   `<NOMOS-SHA>` and `<CORPUS-COMMIT-SHA>` for the run.
-
-Until those steps land, the dossier records readiness of the command
-sequence — not a passing run.
+- `source_count`: 240
+- `unit_count`: 9500
+- `rag_metadata` chunks: 9500
+- source-backed units: 9500 / 9500
+- source-backed chunks: 9500 / 9500
+- strict summary: `source_integrity=pass (0 findings); feed_quality=pass (0 findings)`
 
 ## 7. Remaining gaps
 
@@ -340,14 +318,14 @@ claim honest.
   integrity gate reads the ledger in-process. Step 3 is a TODO.
   Tracked under SFI-02 / #340 follow-up (or under SFI-08 / #346
   alongside CLI wiring).
-- **`nomos strict` is not in the top-level command map** today.
-  `StrictGateCommand` (with `--corpus-integrity-*` flags) is
-  implemented in `cli/internal/app/strict_gate.go` but must be
-  invoked via `go run` until SFI-08 / #346 wiring lands. Steps 4, 7,
-  9 carry this caveat.
 - **No dedicated `nomos corpus rag` subcommand**. RAG metadata is
   bundled inside `nomos corpus feed` output. The run script
   extracts it via `jq`. Tracked under SFI-06 / #344 follow-up.
+- **YAML parsing scope is artifact-aware.** YAML parcours files that
+  back feed/RAG artefacts are parsed into exact source segments.
+  Unreferenced YAML templates are not globally parsed by the
+  source-to-feed gate; a separate corpus-shape policy gate is needed
+  before claiming every YAML source in `01_rbok` is structurally valid.
 - **HTML blocks** are surfaced as `unsupported_blocking` rather than
   parsed. Intentional, but corpora with significant HTML will fail
   the integrity gate until the typed scanner grows HTML support.
@@ -366,8 +344,8 @@ away.
 Exact language permitted in any attestation file or release note that
 cites this dossier:
 
-> *On the recorded run of NOMOS commit `<NOMOS-SHA>` against
-> `realisons-business/01_rbok` at commit `<CORPUS-COMMIT-SHA>`, the
+> *On the recorded run of NOMOS against `realisons-business/01_rbok`
+> at corpus commit `ea003e8fe3c35993731c3708a3787df6a3a690df`, the
 > SFI-04 source integrity gate and the SFI-07 feed quality gate each
 > reported `status=pass` with `0` findings, and the SFI-08 strict
 > release gate exited 0. The corpus working tree was clean before
@@ -375,7 +353,7 @@ cites this dossier:
 > `source-integrity-proven` for this run. Promotion to
 > `full-fidelity-proven` requires this strict gate to be wired into
 > CI for the RBOK POC corpus and to remain green across consecutive
-> runs (gating issue: #346).*
+> runs.*
 
 Both claim levels (`source-integrity-proven`,
 `full-fidelity-proven`) are defined in
@@ -383,9 +361,9 @@ Both claim levels (`source-integrity-proven`,
 either claim level beyond what was actually proven on the recorded
 run.
 
-While the dossier is marked **pending corpus access** (section 6),
-the bounded claim above is *templated text* and **must not** be
-advertised. No claim level is conferred by an unrun POC.
+The exact NOMOS commit for any advertised claim must be taken from
+the matching run's `run-environment.txt`; do not infer it from this
+Markdown file if the POC has been re-run.
 
 ## 9. Engine reference
 

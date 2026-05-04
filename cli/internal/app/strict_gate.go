@@ -410,6 +410,27 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 	if !info.IsDir() {
 		return nil, nil, fmt.Errorf("--corpus-integrity-source %s: not a directory", sourceDir)
 	}
+
+	var feedUnits []corpus.FeedUnit
+	var chunks []corpus.ChunkMetadata
+	if feedPath != "" {
+		feedUnits, err = loadFeedUnitsFile(feedPath)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if ragPath != "" {
+		chunks, err = loadRAGChunksFile(ragPath)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	artifactSourceIDByPath, err := buildArtifactSourceIDByPath(feedUnits, chunks)
+	if err != nil {
+		return nil, nil, err
+	}
+	artifactAware := feedPath != "" || ragPath != ""
+
 	var sources []corpus.SourceInput
 	var allSegments []corpus.SourceSegment
 	walkErr := filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
@@ -419,25 +440,45 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 		if d.IsDir() {
 			return nil
 		}
-		if !strings.EqualFold(filepath.Ext(d.Name()), ".md") {
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext != ".md" && ext != ".mdx" && ext != ".yaml" && ext != ".yml" {
 			return nil
-		}
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("read %s: %w", path, err)
 		}
 		rel, relErr := filepath.Rel(sourceDir, path)
 		if relErr != nil {
 			rel = filepath.Base(path)
 		}
-		sourceID := filepath.ToSlash(rel)
-		segs, err := corpus.ScanMarkdown(sourceID, path, content)
+		sourcePath := filepath.ToSlash(rel)
+		artifactSourceID := artifactSourceIDByPath[normalizeArtifactPath(sourcePath)]
+		if ext == ".yaml" || ext == ".yml" {
+			if !artifactAware || artifactSourceID == "" {
+				return nil
+			}
+		}
+		content, err := os.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("scan %s: %w", path, err)
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+		sourceID := sourcePath
+		if artifactSourceID != "" {
+			sourceID = artifactSourceID
+		}
+		var segs []corpus.SourceSegment
+		switch ext {
+		case ".md", ".mdx":
+			segs, err = corpus.ScanMarkdown(sourceID, sourcePath, content)
+			if err != nil {
+				return fmt.Errorf("scan markdown %s: %w", path, err)
+			}
+		case ".yaml", ".yml":
+			segs, err = corpus.ScanYAMLScalars(sourceID, sourcePath, content)
+			if err != nil {
+				return fmt.Errorf("scan yaml %s: %w", path, err)
+			}
 		}
 		sources = append(sources, corpus.SourceInput{
 			SourceID: sourceID,
-			Path:     path,
+			Path:     sourcePath,
 			Content:  content,
 		})
 		allSegments = append(allSegments, segs...)
@@ -450,26 +491,6 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 
 	var fq *corpus.FeedQualityReport
 	if feedPath != "" || ragPath != "" {
-		var feedUnits []corpus.FeedUnit
-		var chunks []corpus.ChunkMetadata
-		if feedPath != "" {
-			data, err := os.ReadFile(feedPath)
-			if err != nil {
-				return &si, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
-			}
-			if err := json.Unmarshal(data, &feedUnits); err != nil {
-				return &si, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
-			}
-		}
-		if ragPath != "" {
-			data, err := os.ReadFile(ragPath)
-			if err != nil {
-				return &si, nil, fmt.Errorf("read rag %s: %w", ragPath, err)
-			}
-			if err := json.Unmarshal(data, &chunks); err != nil {
-				return &si, nil, fmt.Errorf("parse rag %s: %w", ragPath, err)
-			}
-		}
 		r := corpus.CheckFeedQuality(corpus.FeedQualityInput{
 			FeedUnits: feedUnits,
 			Chunks:    chunks,
@@ -478,6 +499,75 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath string) (*corpus.I
 		fq = &r
 	}
 	return &si, fq, nil
+}
+
+func loadFeedUnitsFile(path string) ([]corpus.FeedUnit, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read feed %s: %w", path, err)
+	}
+	var feedUnits []corpus.FeedUnit
+	if err := json.Unmarshal(data, &feedUnits); err != nil {
+		return nil, fmt.Errorf("parse feed %s: %w", path, err)
+	}
+	return feedUnits, nil
+}
+
+func loadRAGChunksFile(path string) ([]corpus.ChunkMetadata, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read rag %s: %w", path, err)
+	}
+	var chunks []corpus.ChunkMetadata
+	if err := json.Unmarshal(data, &chunks); err != nil {
+		return nil, fmt.Errorf("parse rag %s: %w", path, err)
+	}
+	return chunks, nil
+}
+
+func buildArtifactSourceIDByPath(feedUnits []corpus.FeedUnit, chunks []corpus.ChunkMetadata) (map[string]string, error) {
+	out := map[string]string{}
+	add := func(path string, sourceIDs ...string) error {
+		key := normalizeArtifactPath(path)
+		if key == "" {
+			return nil
+		}
+		sourceID := ""
+		for _, candidate := range sourceIDs {
+			if trimmed := strings.TrimSpace(candidate); trimmed != "" {
+				sourceID = trimmed
+				break
+			}
+		}
+		if sourceID == "" {
+			return nil
+		}
+		if existing := out[key]; existing != "" && existing != sourceID {
+			return fmt.Errorf("artifact source path %s maps to conflicting source IDs %s and %s", key, existing, sourceID)
+		}
+		out[key] = sourceID
+		return nil
+	}
+	for _, u := range feedUnits {
+		if err := add(u.SourcePath, append([]string{u.SourceID}, u.SourceIDs...)...); err != nil {
+			return nil, err
+		}
+	}
+	for _, c := range chunks {
+		if err := add(c.SourcePath, c.SourceID); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+func normalizeArtifactPath(path string) string {
+	path = filepath.ToSlash(strings.TrimSpace(path))
+	path = strings.TrimPrefix(path, "./")
+	if path == "" || path == "." {
+		return ""
+	}
+	return filepath.ToSlash(filepath.Clean(path))
 }
 
 func writeGateResult(result GateResult, format string, w io.Writer) {

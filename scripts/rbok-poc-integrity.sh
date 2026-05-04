@@ -137,12 +137,9 @@ log "step 3: source segment ledger — TODO(SFI-02 / SFI-08); ledger computed in
 # ---- step 4: source integrity gate (SFI-04, #342) --------------------------
 
 log "step 4: source integrity gate (SFI-04 / #342)"
-# TODO(SFI-08 / #346): once `nomos strict` is wired into the top-level
-# command map (cli/internal/app/app.go::Run), replace the `go run`
-# invocation below with: nomos strict --corpus-integrity-source ...
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
     --format json ) > "$RUN_DIR/integrity-source.json"
 step4_rc=$?
@@ -170,10 +167,9 @@ jq '.units        // []' "$RUN_DIR/feed.json" > "$RUN_DIR/feed-units.json"
 # ---- step 7: feed quality gate (SFI-07, #345) ------------------------------
 
 log "step 7: feed quality gate (SFI-07 / #345)"
-# TODO(SFI-08 / #346): same wiring caveat as step 4.
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
     --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
     --corpus-integrity-rag    "$RUN_DIR/rag.json" \
@@ -212,7 +208,7 @@ EOF
 log "step 9: strict gate (SFI-08 / #346)"
 set +e
 ( cd "$NOMOS_CLI_PKG_DIR" && \
-  go run ./internal/app strict \
+  go run . strict \
     --corpus-integrity-source "$CORPUS" \
     --corpus-integrity-feed   "$RUN_DIR/feed-units.json" \
     --corpus-integrity-rag    "$RUN_DIR/rag.json" \

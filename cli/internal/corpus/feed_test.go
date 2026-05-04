@@ -320,6 +320,17 @@ sources:
 	if len(feed.RAGMetadata) != 2 {
 		t.Fatalf("expected 2 RAG metadata chunks, got %d", len(feed.RAGMetadata))
 	}
+	for i, chunk := range feed.RAGMetadata {
+		if chunk.SourceSegmentID == "" {
+			t.Fatalf("rag chunk %d missing source_segment_id: %#v", i, chunk)
+		}
+		if chunk.CanonicalUnitID == "" {
+			t.Fatalf("rag chunk %d missing canonical_unit_id: %#v", i, chunk)
+		}
+		if chunk.StartByte == chunk.EndByte {
+			t.Fatalf("rag chunk %d missing byte span: %#v", i, chunk)
+		}
+	}
 	if feed.Attestation == nil {
 		t.Fatal("expected embedded corpus attestation")
 	}

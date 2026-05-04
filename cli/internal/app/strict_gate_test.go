@@ -388,6 +388,202 @@ func TestStrictGateCorpusIntegrity_ComputeOnTheFlyPasses(t *testing.T) {
 	}
 }
 
+func TestStrictGateCorpusIntegrity_ArtifactSourceIDsDriveRescanLedger(t *testing.T) {
+	dir := t.TempDir()
+	relPath := filepath.Join("docs", "rule.md")
+	sourcePath := filepath.ToSlash(relPath)
+	content := []byte(strings.Join([]string{
+		"# Rule",
+		"",
+		"The controlled corpus SHALL keep a manifest source identifier stable across feed and RAG validation.",
+		"",
+	}, "\n"))
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(dir, relPath)), 0o700); err != nil {
+		t.Fatalf("mkdir fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, relPath), content, 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	const sourceID = "SRC-RULE"
+	segments, err := corpus.ScanMarkdown(sourceID, sourcePath, content)
+	if err != nil {
+		t.Fatalf("ScanMarkdown: %v", err)
+	}
+	var seg corpus.SourceSegment
+	for _, candidate := range segments {
+		if candidate.Disposition == corpus.DispositionCanonicalAtom {
+			seg = candidate
+			break
+		}
+	}
+	if seg.SegmentID == "" {
+		t.Fatal("expected a canonical atom segment")
+	}
+
+	const unitID = "UNIT-RULE-1"
+	body := strings.TrimSpace(string(content[seg.StartByte:seg.EndByte]))
+	unit := corpus.FeedUnit{
+		UnitID:             unitID,
+		Name:               "Rule",
+		Domain:             "rbok",
+		UnitType:           "rule",
+		Criticality:        "medium",
+		Status:             "active",
+		BusinessRule:       body,
+		SourceIDs:          []string{sourceID},
+		SourceSegmentID:    seg.SegmentID,
+		SourceID:           sourceID,
+		SourcePath:         sourcePath,
+		StartByte:          seg.StartByte,
+		EndByte:            seg.EndByte,
+		StartLine:          seg.StartLine,
+		EndLine:            seg.EndLine,
+		NormalizedTextHash: seg.NormalizedTextHash,
+		HeadingPath:        []string{"Rule"},
+	}
+	seg.CanonicalUnitID = unitID
+	chunks, err := corpus.BuildRAGMetadata(
+		[]corpus.RAGBuildInput{{
+			Unit:       unit,
+			Content:    body,
+			SourceHash: "sha256:fixture",
+			Domain:     "rbok",
+			Priority:   "primary",
+			Status:     "active",
+			Confidence: "medium",
+		}},
+		map[string]corpus.SourceSegment{seg.SegmentID: seg},
+		corpus.EnrichConfig{},
+	)
+	if err != nil {
+		t.Fatalf("BuildRAGMetadata: %v", err)
+	}
+	feedPath := writeIntegrityJSON(t, "feed.json", []corpus.FeedUnit{unit})
+	ragPath := writeIntegrityJSON(t, "rag.json", chunks)
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected strict gate to resolve artifact source IDs; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+	var result GateResult
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("expected valid JSON: %v", err)
+	}
+	if result.CorpusIntegrityCheck == nil ||
+		result.CorpusIntegrityCheck.FeedQuality == nil ||
+		result.CorpusIntegrityCheck.FeedQuality.Status != "pass" {
+		t.Fatalf("expected feed_quality=pass, got %+v", result.CorpusIntegrityCheck)
+	}
+}
+
+func TestStrictGateCorpusIntegrity_ParcoursYAMLFeedIsSourceBacked(t *testing.T) {
+	dir := t.TempDir()
+	relPath := filepath.Join("03_parcours", "PAR_TEST.yaml")
+	content := []byte(strings.Join([]string{
+		"parcours:",
+		"  code: PAR_TEST",
+		"  name: Test parcours",
+		"  modules:",
+		"    - code: MOD_ONE",
+		"      name: Module one",
+		"      ai_instructions: |",
+		"        Keep this instruction traceable.",
+		"        It spans two lines.",
+		"      objectives:",
+		"        - key: obj",
+		"          questions:",
+		"            - key: q1",
+		"              label: \"What is the status?\"",
+		"              help_text: \"Answer with one status only.\"",
+		"",
+	}, "\n"))
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(dir, relPath)), 0o700); err != nil {
+		t.Fatalf("mkdir fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, relPath), content, 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	manifestYAML := []byte(`schema_version: nomos.source-manifest.v1
+sources:
+  - id: CORPUS-PAR-TEST
+    path: 03_parcours/PAR_TEST.yaml
+    type: yaml
+    domain: rbok
+    priority: primary
+    status: active
+    hash: sha256:fixture
+    owner: qa@example.com
+    confidentiality: internal
+    allowed_uses:
+      - structured_contract
+      - vector_index
+`)
+	feed, err := corpus.GenerateFeed(corpus.FeedInput{
+		Root:         dir,
+		ManifestYAML: manifestYAML,
+	})
+	if err != nil {
+		t.Fatalf("GenerateFeed: %v", err)
+	}
+	if len(feed.Units) == 0 || len(feed.RAGMetadata) == 0 {
+		t.Fatalf("expected YAML parcours to produce feed units and RAG chunks, got units=%d chunks=%d",
+			len(feed.Units), len(feed.RAGMetadata))
+	}
+	feedPath := writeIntegrityJSON(t, "feed.json", feed.Units)
+	ragPath := writeIntegrityJSON(t, "rag.json", feed.RAGMetadata)
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+		"--corpus-integrity-feed", feedPath,
+		"--corpus-integrity-rag", ragPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected strict gate to accept source-backed parcours YAML feed; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+}
+
+func TestStrictGateCorpusIntegrity_SourceOnlySkipsUnparsedYAMLTemplates(t *testing.T) {
+	dir := t.TempDir()
+	doc := strings.Join([]string{
+		"# Heading",
+		"",
+		"This markdown source is clean and should drive the source-only integrity pass.",
+		"",
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(dir, "doc.md"), []byte(doc), 0o600); err != nil {
+		t.Fatalf("write markdown fixture: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "00_meta"), 0o700); err != nil {
+		t.Fatalf("mkdir template fixture: %v", err)
+	}
+	template := "template_id: [code-parcours]-[code-module]\n"
+	if err := os.WriteFile(filepath.Join(dir, "00_meta", "template.yaml"), []byte(template), 0o600); err != nil {
+		t.Fatalf("write yaml template fixture: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := StrictGateCommand([]string{
+		"--format", "json",
+		"--corpus-integrity-source", dir,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected source-only gate to skip unreferenced YAML templates; got %d; stdout=%q stderr=%q",
+			code, stdout.String(), stderr.String())
+	}
+}
+
 func TestStrictGateCorpusIntegrity_ComputeOnTheFlyFailsOnJunk(t *testing.T) {
 	dir := t.TempDir()
 	// A line of pipes is not a heading, list, blockquote, or decorative
