@@ -76,6 +76,13 @@ type FeedContractRef struct {
 }
 
 // FeedSource is a source snapshot entry in the consumer feed.
+//
+// FSQ-02 (#365): the AdmissionStatus / AtomizationStatus / ExclusionReason
+// / SourceRole / FormatSupport / DerivativeOf fields make the admission
+// and atomization policy explicit. All six are omitempty so legacy
+// consumers keep parsing the JSON; feed generation backfills defaults
+// from the extension heuristic and validates the transition rules
+// before returning the feed.
 type FeedSource struct {
 	ID              string `json:"id"`
 	Path            string `json:"path"`
@@ -85,6 +92,31 @@ type FeedSource struct {
 	Confidentiality string `json:"confidentiality"`
 	Hash            string `json:"hash"`
 	Status          string `json:"status"`
+
+	// FSQ-02 (#365) admission + atomization policy.
+	AdmissionStatus   string `json:"admission_status,omitempty"`
+	AtomizationStatus string `json:"atomization_status,omitempty"`
+	ExclusionReason   string `json:"exclusion_reason,omitempty"`
+	SourceRole        string `json:"source_role,omitempty"`
+	FormatSupport     string `json:"format_support,omitempty"`
+	DerivativeOf      string `json:"derivative_of,omitempty"`
+}
+
+// Admission returns a SourceAdmission projection of the feed source.
+func (s FeedSource) Admission() SourceAdmission {
+	return SourceAdmission{
+		AdmissionStatus:   s.AdmissionStatus,
+		AtomizationStatus: s.AtomizationStatus,
+		ExclusionReason:   s.ExclusionReason,
+		SourceRole:        s.SourceRole,
+		FormatSupport:     s.FormatSupport,
+		DerivativeOf:      s.DerivativeOf,
+	}
+}
+
+// Validate enforces the FSQ-02 admission rules on the feed source.
+func (s FeedSource) Validate() error {
+	return s.Admission().Validate()
 }
 
 // FeedSnapshotSummary links a feed to the immutable corpus snapshot it was built from.
@@ -216,6 +248,23 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 		return Feed{}, fmt.Errorf("parse manifest: %w", err)
 	}
 
+	// FSQ-02 (#365): backfill admission/atomization defaults so legacy
+	// manifest YAML (which omits the six classification fields) keeps
+	// loading. Operator-declared values always win.
+	for i := range manifest.Sources {
+		adm := manifest.Sources[i].Admission()
+		BackfillAdmission(&adm, manifest.Sources[i].Path)
+		manifest.Sources[i].AdmissionStatus = adm.AdmissionStatus
+		manifest.Sources[i].AtomizationStatus = adm.AtomizationStatus
+		manifest.Sources[i].ExclusionReason = adm.ExclusionReason
+		manifest.Sources[i].SourceRole = adm.SourceRole
+		manifest.Sources[i].FormatSupport = adm.FormatSupport
+		manifest.Sources[i].DerivativeOf = adm.DerivativeOf
+		if err := manifest.Sources[i].Validate(); err != nil {
+			return Feed{}, fmt.Errorf("manifest source %q: %w", manifest.Sources[i].ID, err)
+		}
+	}
+
 	ts := input.GeneratedAt
 	if ts.IsZero() {
 		ts = time.Now().UTC()
@@ -255,18 +304,40 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 		units = append(units, item.FeedUnit)
 	}
 
+	// FSQ-02 (#365): count units per source so we can enforce
+	// "atomization_status=atomized implies ≥1 feed unit" fail-closed.
+	unitsBySource := map[string]int{}
+	for _, u := range units {
+		for _, sid := range u.SourceIDs {
+			unitsBySource[sid]++
+		}
+	}
+
 	sources := make([]FeedSource, 0, len(manifest.Sources))
 	for _, s := range manifest.Sources {
-		sources = append(sources, FeedSource{
-			ID:              s.ID,
-			Path:            s.Path,
-			Domain:          s.Domain,
-			Type:            s.Type,
-			Owner:           s.Owner,
-			Confidentiality: s.Confidentiality,
-			Hash:            s.Hash,
-			Status:          s.Status,
-		})
+		fs := FeedSource{
+			ID:                s.ID,
+			Path:              s.Path,
+			Domain:            s.Domain,
+			Type:              s.Type,
+			Owner:             s.Owner,
+			Confidentiality:   s.Confidentiality,
+			Hash:              s.Hash,
+			Status:            s.Status,
+			AdmissionStatus:   s.AdmissionStatus,
+			AtomizationStatus: s.AtomizationStatus,
+			ExclusionReason:   s.ExclusionReason,
+			SourceRole:        s.SourceRole,
+			FormatSupport:     s.FormatSupport,
+			DerivativeOf:      s.DerivativeOf,
+		}
+		if err := fs.Validate(); err != nil {
+			return Feed{}, fmt.Errorf("feed source %q: %w", fs.ID, err)
+		}
+		if err := ValidateAtomizedAgainstUnitCount(fs.Admission(), fs.ID, unitsBySource[fs.ID]); err != nil {
+			return Feed{}, err
+		}
+		sources = append(sources, fs)
 	}
 
 	lockStatus, err := verifyFeedLockfile(input.Lockfile, input.Snapshot)
