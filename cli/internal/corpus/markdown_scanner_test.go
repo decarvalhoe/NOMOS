@@ -268,30 +268,54 @@ func TestScanMarkdown_TableEmitsRowsAndCells(t *testing.T) {
 		}
 	}
 
-	// At least one non-empty cell must be canonical_atom; the empty cell must
-	// fall back to coverage_only.
-	var sawCanonical, sawEmptyCoverage bool
+	// FSQ-03 (#366): every table_cell is now coverage_only — the row carries
+	// the canonical_atom status, the cell stays in the ledger only for span
+	// fidelity. Both empty cells and non-empty cells follow this rule.
 	for _, s := range segs {
 		if s.Kind != KindTableCell {
 			continue
 		}
-		txt := strings.TrimSpace(content[s.StartByte:s.EndByte])
-		if txt == "" {
-			if s.Disposition != DispositionCoverageOnly {
-				t.Fatalf("empty cell %q must be coverage_only, got %s", s.SegmentID, s.Disposition)
-			}
-			sawEmptyCoverage = true
-		} else {
-			if s.Disposition == DispositionCanonicalAtom {
-				sawCanonical = true
-			}
+		if s.Disposition != DispositionCoverageOnly {
+			t.Fatalf("FSQ-03: every table_cell must be coverage_only, got %s on %q",
+				s.Disposition, s.SegmentID)
 		}
 	}
-	if !sawCanonical {
-		t.Fatal("expected at least one canonical_atom table_cell")
+
+	// FSQ-03 (#366): exactly the data rows (Ada / Lin) are canonical_atom;
+	// the header row stays structure_only and carries no RowCanonicalText.
+	var canonicalRows, structureRows int
+	for _, s := range segs {
+		if s.Kind != KindTableRow {
+			continue
+		}
+		switch s.Disposition {
+		case DispositionCanonicalAtom:
+			canonicalRows++
+			if strings.TrimSpace(s.RowCanonicalText) == "" {
+				t.Fatalf("canonical_atom table_row %q has empty RowCanonicalText", s.SegmentID)
+			}
+			if s.NormalizedTextHash == "" {
+				t.Fatalf("canonical_atom table_row %q must carry NormalizedTextHash", s.SegmentID)
+			}
+			if len(s.ColumnHeaders) == 0 {
+				t.Fatalf("canonical_atom table_row %q must carry ColumnHeaders", s.SegmentID)
+			}
+		case DispositionStructureOnly, DispositionCoverageOnly:
+			structureRows++
+		default:
+			t.Fatalf("table_row %q has unexpected disposition %s",
+				s.SegmentID, s.Disposition)
+		}
 	}
-	if !sawEmptyCoverage {
-		t.Fatal("expected at least one coverage_only empty table_cell")
+	if canonicalRows != 2 {
+		t.Fatalf("expected 2 canonical_atom data rows, got %d", canonicalRows)
+	}
+
+	// table_header is structure_only by construction; check explicitly.
+	for _, s := range segs {
+		if s.Kind == KindTableHeader && s.Disposition != DispositionStructureOnly {
+			t.Fatalf("table_header must be structure_only, got %s", s.Disposition)
+		}
 	}
 }
 

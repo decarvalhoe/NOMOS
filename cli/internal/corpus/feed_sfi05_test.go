@@ -91,13 +91,15 @@ func TestSFI05FeedHeadingsAndParagraphs(t *testing.T) {
 	}
 }
 
-// 2. Markdown table: feed surfaces the data-row cell text but never the
-//    "| --- | --- |" separator row.
+// 2. Markdown table: feed surfaces row-level canonical text (FSQ-03 #366)
+//    but never the "| --- | --- |" separator row. Header words here are
+//    "Offre"/"Prix" — outside the metadata-table key/value heuristic — so
+//    data rows produce real feed units.
 func TestSFI05FeedExcludesTableSeparator(t *testing.T) {
 	doc := "# Rules\n" +
-		"| key | value |\n" +
+		"| Offre | Prix |\n" +
 		"|-----|-------|\n" +
-		"| alpha | beta |\n"
+		"| Programme Lancement | 980 CHF |\n"
 	feed := sfi05Feed(t, doc)
 
 	if feed.UnitCount == 0 {

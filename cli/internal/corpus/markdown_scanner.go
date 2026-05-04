@@ -371,14 +371,24 @@ func (s *mdScanner) emitTable(start int) int {
 		end++
 	}
 
+	// FSQ-03 (#366): parse header column names once and use them to (a)
+	// detect metadata-table tables and (b) build per-row canonical text
+	// like "Col1=Val1; Col2=Val2; ..." on data rows.
+	columnHeaders := parseTableRowCells(s.lines[start].text)
+	tableRole := classifyTableRole(columnHeaders)
+
 	tableSeg := s.makeBlockSegment(start, end-1, KindTable, "")
 	tableSeg.Disposition = DispositionStructureOnly
 	tableSeg.RawTextHash = ComputeRawTextHash(s.lineBytes(start))
+	tableSeg.TableID = tableSeg.SegmentID
+	tableSeg.TableRole = tableRole
 	s.append(tableSeg)
 
 	headerSeg := s.makeBlockSegment(start, start, KindTableHeader, tableSeg.SegmentID)
 	headerSeg.Disposition = DispositionStructureOnly
 	headerSeg.RawTextHash = ComputeRawTextHash(s.lineBytes(start))
+	headerSeg.TableID = tableSeg.SegmentID
+	headerSeg.TableRole = tableRole
 	s.append(headerSeg)
 	s.emitTableCells(start, headerSeg.SegmentID)
 
@@ -389,8 +399,29 @@ func (s *mdScanner) emitTable(start int) int {
 
 	for r := start + 2; r < end; r++ {
 		rowSeg := s.makeBlockSegment(r, r, KindTableRow, tableSeg.SegmentID)
-		rowSeg.Disposition = DispositionStructureOnly
 		rowSeg.RawTextHash = ComputeRawTextHash(s.lineBytes(r))
+		rowSeg.TableID = tableSeg.SegmentID
+		rowSeg.TableRole = tableRole
+		rowSeg.RowIndex = r - (start + 2)
+		rowSeg.ColumnHeaders = append([]string(nil), columnHeaders...)
+		rowCells := parseTableRowCells(s.lines[r].text)
+		rowSeg.RowCanonicalText = buildRowCanonicalText(columnHeaders, rowCells)
+
+		switch {
+		case tableRole == "metadata_table":
+			// Metadata tables describe document properties (Field/Value),
+			// not retrievable doctrine. Rows stay in the ledger but do not
+			// enter the feed.
+			rowSeg.Disposition = DispositionCoverageOnly
+		case rowSeg.RowCanonicalText != "" && !isJunkSemantic([]byte(rowSeg.RowCanonicalText)):
+			rowSeg.Disposition = DispositionCanonicalAtom
+			rowSeg.NormalizedTextHash = ComputeNormalizedTextHash(rowSeg.RowCanonicalText)
+			rowSeg.IncludeInFeed = true
+			rowSeg.IncludeInRAG = true
+		default:
+			rowSeg.Disposition = DispositionCoverageOnly
+		}
+
 		s.append(rowSeg)
 		s.emitTableCells(r, rowSeg.SegmentID)
 	}
@@ -402,6 +433,12 @@ func (s *mdScanner) emitTable(start int) int {
 // emits one table_cell child segment per cell. Cells are siblings with no
 // overlap; they do not need to cover the full row span (pipe glyphs are
 // gaps between cells).
+//
+// FSQ-03 (#366): table_cell segments are always coverage_only — they remain
+// in the source ledger so fidelity is preserved, but the canonical_atom
+// status now lives on the parent table_row data segment. Header cells and
+// metadata-table cells were already non-canonical; data cells now follow
+// the same rule.
 func (s *mdScanner) emitTableCells(rowIdx int, parentID string) {
 	line := s.lines[rowIdx]
 	text := line.text
@@ -437,6 +474,7 @@ func (s *mdScanner) emitTableCells(rowIdx int, parentID string) {
 			SourceID:        s.sourceID,
 			SourcePath:      s.sourcePath,
 			Kind:            KindTableCell,
+			Disposition:     DispositionCoverageOnly,
 			StartByte:       startB,
 			EndByte:         endB,
 			StartLine:       line.lineNum,
@@ -446,16 +484,101 @@ func (s *mdScanner) emitTableCells(rowIdx int, parentID string) {
 			ParentSegmentID: parentID,
 			RawTextHash:     ComputeRawTextHash([]byte(cellText)),
 		}
-		if strings.TrimSpace(cellText) == "" {
-			seg.Disposition = DispositionCoverageOnly
-		} else {
-			seg.Disposition = DispositionCanonicalAtom
-			seg.NormalizedTextHash = ComputeNormalizedTextHash(cellText)
-			seg.IncludeInFeed = true
-			seg.IncludeInRAG = true
-		}
 		s.append(seg)
 	}
+}
+
+// parseTableRowCells splits a Markdown table row line on '|' and returns
+// the trimmed cell text in document order. Leading/trailing empty cells
+// (created by the line-bounding pipes) are dropped, mirroring the cell
+// segments emitted by emitTableCells.
+func parseTableRowCells(text string) []string {
+	text = strings.TrimRight(text, "\r\n")
+	var pipes []int
+	for j := 0; j < len(text); j++ {
+		if text[j] == '|' {
+			pipes = append(pipes, j)
+		}
+	}
+	if len(pipes) == 0 {
+		return nil
+	}
+	var cells []string
+	if pipes[0] > 0 {
+		cells = append(cells, strings.TrimSpace(text[:pipes[0]]))
+	}
+	for k := 0; k < len(pipes)-1; k++ {
+		cells = append(cells, strings.TrimSpace(text[pipes[k]+1:pipes[k+1]]))
+	}
+	last := pipes[len(pipes)-1]
+	if last < len(text) {
+		if rest := strings.TrimSpace(text[last+1:]); rest != "" {
+			cells = append(cells, rest)
+		}
+	}
+	return cells
+}
+
+// buildRowCanonicalText assembles a row's structured "Col=Val; ..." text
+// using the header column names. Empty cells are skipped; if every cell is
+// empty the result is "" so the caller can mark the row coverage_only.
+// Headers shorter than the row produce bare "Val" entries (no "=") for
+// extra columns; this is conservative for malformed tables.
+func buildRowCanonicalText(headers, cells []string) string {
+	var b strings.Builder
+	emitted := 0
+	for i, cell := range cells {
+		if cell == "" {
+			continue
+		}
+		if emitted > 0 {
+			b.WriteString("; ")
+		}
+		if i < len(headers) && headers[i] != "" {
+			b.WriteString(headers[i])
+			b.WriteString("=")
+		}
+		b.WriteString(cell)
+		emitted++
+	}
+	return b.String()
+}
+
+// classifyTableRole tags two-column tables whose header is a
+// (Field/Champ/Key/Property, Value/Valeur/Setting/Statut) pair. Such tables
+// describe document properties rather than retrievable doctrine; their data
+// rows stay in the ledger as coverage_only and never enter the feed.
+//
+// French and English labels are both recognised. The match is case-
+// insensitive and trims trailing punctuation. Order is irrelevant: either
+// column may be the key column.
+func classifyTableRole(headers []string) string {
+	if len(headers) != 2 {
+		return ""
+	}
+	keyTerms := map[string]struct{}{
+		"field": {}, "champ": {}, "key": {}, "cle": {}, "clé": {},
+		"property": {}, "propriete": {}, "propriété": {},
+	}
+	valueTerms := map[string]struct{}{
+		"value": {}, "valeur": {}, "setting": {}, "statut": {}, "status": {},
+	}
+	h0 := normalizeHeaderToken(headers[0])
+	h1 := normalizeHeaderToken(headers[1])
+	_, k0 := keyTerms[h0]
+	_, k1 := keyTerms[h1]
+	_, v0 := valueTerms[h0]
+	_, v1 := valueTerms[h1]
+	if (k0 && v1) || (k1 && v0) {
+		return "metadata_table"
+	}
+	return ""
+}
+
+func normalizeHeaderToken(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.Trim(s, ":-—–.|")
+	return strings.ToLower(strings.TrimSpace(s))
 }
 
 // ----------------------------------------------------------------------------

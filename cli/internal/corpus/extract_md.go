@@ -36,6 +36,14 @@ type HeadingUnit struct {
 	// StartByte and EndByte locate the unit's exact source byte range.
 	StartByte int `json:"start_byte,omitempty"`
 	EndByte   int `json:"end_byte,omitempty"`
+
+	// FSQ-03 (#366) table-context fields. Set on units derived from
+	// table_row data segments so RAG composers can reconstruct the row's
+	// column context without re-parsing the source.
+	TableID       string   `json:"table_id,omitempty"`
+	TableRole     string   `json:"table_role,omitempty"`
+	RowIndex      int      `json:"row_index,omitempty"`
+	ColumnHeaders []string `json:"column_headers,omitempty"`
 }
 
 // HeadingUnitKindHeading is the Kind value used for structural heading
@@ -161,6 +169,43 @@ func extractFromBytes(path string, content []byte) ([]HeadingUnit, error) {
 				HeadingPath: ancestors,
 				StartByte:   seg.StartByte,
 				EndByte:     seg.EndByte,
+			})
+		case KindTableRow:
+			// FSQ-03 (#366): data table rows surface as canonical_atom
+			// segments carrying pre-assembled "Col1=Val1; ..." text on
+			// RowCanonicalText. Header rows and metadata-table rows stay
+			// non-canonical and never reach this branch.
+			if seg.Disposition != DispositionCanonicalAtom {
+				continue
+			}
+			if len(stack) == 0 {
+				continue
+			}
+			row := strings.TrimSpace(seg.RowCanonicalText)
+			if row == "" {
+				continue
+			}
+			top := stack[len(stack)-1]
+			ancestors := cloneAncestry()
+			var headers []string
+			if len(seg.ColumnHeaders) > 0 {
+				headers = append([]string(nil), seg.ColumnHeaders...)
+			}
+			units = append(units, HeadingUnit{
+				ID:            unitIDLeaf(path, top.title, seg.Kind, seg.StartLine),
+				Path:          path,
+				Level:         top.level,
+				Title:         top.title,
+				Line:          seg.StartLine,
+				Content:       row,
+				Kind:          seg.Kind,
+				HeadingPath:   ancestors,
+				StartByte:     seg.StartByte,
+				EndByte:       seg.EndByte,
+				TableID:       seg.TableID,
+				TableRole:     seg.TableRole,
+				RowIndex:      seg.RowIndex,
+				ColumnHeaders: headers,
 			})
 		}
 	}
