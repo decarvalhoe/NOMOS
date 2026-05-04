@@ -18,6 +18,10 @@ This directory contains the method, product architecture, regulated-readiness ba
 | [Compliance closure plan](28-regulated-compliance-closure-plan.md) | Current closure plan for regulated-readiness gaps. |
 | [GitHub workflow setup](31-github-workflow-setup.md) | Source-owned and output-owned install guide for the reusable NOMOS GitHub workflow (NGW). |
 | [GitHub App readiness boundary](32-github-app-readiness-boundary.md) | Future GitHub App boundary and event-mapping contract (lands in #394 / NGW-09). |
+| [Nomos documentation guide](33-nomos-documentation-guide.md) | General documentation for audiences, artifact roles, claim boundaries, and downstream consumption. |
+| [Nomos user manual](34-nomos-user-manual.md) | Operator manual for local use, POC runs, artifact reading, verification, and troubleshooting. |
+| [Nomos integration manual](35-nomos-integration-manual.md) | End-to-end integration guide for source repo, NOMOS workflow, output repo/path, and downstream application runtime. |
+| [RBOK integration recommendation plan](36-rbok-integration-recommendation-plan.md) | Downstream implementation plan and dependency tree for RBOK without modifying that repo from NOMOS. |
 
 ## Current Release Evidence
 
