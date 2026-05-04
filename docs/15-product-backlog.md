@@ -162,6 +162,10 @@ Exit gate:
 Joint Nomos/Praxis claims are backed by a shared contract and both products declare their own quality level.
 ```
 
+## SFI Wave Status
+
+- SFI-11 (#349) shipped: dossier + command sequence; real run blocked on corpus access at `/root/repos/realisons-business/01_rbok`.
+
 ## Non-Goals For The Alpha
 
 The alpha backlog does not include:
