@@ -31,7 +31,7 @@ Primary source families reviewed:
   https://health.ec.europa.eu/system/files/2016-11/annex11_01-2011_en_0.pdf
 - FDA Computer Software Assurance for production and quality-system
   software:
-  https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software
+  https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software-0
 - FDA Quality Management System Regulation, effective 2026-02-02, aligned
   with ISO 13485 by incorporation by reference:
   https://www.fda.gov/medical-devices/postmarket-requirements-devices/quality-management-system-regulation-qmsr
@@ -40,7 +40,7 @@ Primary source families reviewed:
 - NIST AI Risk Management Framework:
   https://www.nist.gov/itl/ai-risk-management-framework
 - NIST Generative AI Profile:
-  https://www.nist.gov/news-events/news/2024/07/nist-releases-generative-ai-profile-help-organizations-manage-risks
+  https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence
 - EU AI Act:
   https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai
 - ISO/IEC 42001 AI management systems:
