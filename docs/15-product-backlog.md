@@ -18,6 +18,14 @@ It covers source-PR triggered NOMOS runs, output-owned workflows,
 risk-based publication, mandatory trace manifests, optional source PR
 comments, and GitHub App readiness.
 
+The regulated domain opportunity issue list lives in
+[`docs/38-domain-opportunity-roadmap.md`](38-domain-opportunity-roadmap.md).
+It covers the post-alpha domain expansion lane for GxP/CSV, medical/SaMD,
+AI governance, finance/RegTech, legal/eDiscovery, Six Sigma/CAPA,
+verifiable evidence, cyber supplier assurance, high-assurance engineering,
+ALM/QMS interoperability, domain-pack packaging, and control-plane
+opportunities. Its GitHub issues are `#412` through `#435`.
+
 Each active backlog item must have:
 
 - an owner or GitHub issue;
@@ -210,6 +218,38 @@ Exit gate:
 ```text
 Joint Nomos/Praxis claims are backed by a shared contract and both products declare their own quality level.
 ```
+
+### EPIC F - Regulated Domain Expansion
+
+Goal: turn NOMOS from a single alpha proof into a portable domain-profile
+platform without weakening the claim boundary.
+
+Work:
+
+- Close `DOR-001` through `DOR-004` first: domain profile schema, claim
+  ladder, reference intake policy, and multi-domain golden corpus pack.
+- Implement domain packs only after the common profile contract exists.
+- Prioritize `gxp-csv`, `ai-governance`, and
+  `cyber-supplier-assurance` because they align most directly with the
+  current regulated documentation and RAG evidence needs.
+- Keep finance, legal, medical, Six Sigma, provenance, and high-assurance
+  profiles blocked or exploratory until the common evidence gates can
+  express `mapped`, `blocked`, `not_applicable`, and `waived` states.
+
+Exit gate:
+
+```text
+Every domain profile declares intended use, references, risk class,
+claim ladder, required artifacts, blocked claims, verification commands,
+and current evidence status.
+```
+
+Claim impact:
+
+Domain packs may be advertised only as scoped evidence-support packages.
+They do not create compliance, certification, legal advice, medical
+validation, financial regulatory approval, or high-assurance
+qualification claims.
 
 ## SFI Wave Status
 
