@@ -23,6 +23,7 @@ This directory contains the method, product architecture, regulated-readiness ba
 | [Nomos integration manual](35-nomos-integration-manual.md) | End-to-end integration guide for source repo, NOMOS workflow, output repo/path, and downstream application runtime. |
 | [RBOK integration recommendation plan](36-rbok-integration-recommendation-plan.md) | Downstream implementation plan and dependency tree for RBOK without modifying that repo from NOMOS. |
 | [RBOK NOMOS recommendations implementation plan](37-rbok-nomos-recommendations-implementation-plan.md) | Task-by-task downstream implementation plan for importer, runtime RAG, conversation policy, YAML/JSON status, and POC evidence. |
+| [Domain opportunity roadmap](38-domain-opportunity-roadmap.md) | Market/domain opportunity scan and atomic issue list for GxP, medical, AI, finance, legal, Six Sigma, provenance, cyber, and high-assurance profiles. |
 
 ## Current Release Evidence
 
