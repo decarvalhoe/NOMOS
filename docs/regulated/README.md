@@ -57,6 +57,7 @@ The intended order is:
 | `atomization-certification/` | Structure-aware atomization reports, coverage evidence, review status, and certification gates. |
 | `operations/` | Periodic review, incident/CAPA handling, retention, backup/restore, and audit-trail review. |
 | `customer-integration/` | Client validation support, shared responsibility, deployment boundaries, and acceptance checklist. |
+| `domain-packs/` | Customer install material for domain packs: per-pack install guide, validation checklist, claim boundary, and the reusable templates new packs adopt (DOR-021). |
 | `decisions/` | Controlled decisions that alter scope, claims, validation strategy, or regulated posture. |
 
 ## Automation
