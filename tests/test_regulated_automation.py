@@ -601,6 +601,45 @@ answers:
         self.assertEqual(option_statuses["c2pa-content-provenance"], "optional")
         self.assertEqual(option_statuses["rfc9162-transparency-log"], "deferred")
 
+    def test_cyber_supplier_profile_distinguishes_supplier_control_statuses(self) -> None:
+        import yaml
+
+        profile_path = ROOT / "specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml"
+        self.assertTrue(profile_path.exists(), f"missing profile: {profile_path}")
+        profile = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["domain_profile"], "cyber-supplier-assurance")
+
+        references = {reference["id"] for reference in profile["references"]}
+        self.assertLessEqual({"NIST-SP-800-218", "NIST-CSF-2"}, references)
+
+        artifacts = {artifact["id"]: artifact for artifact in profile["required_artifacts"]}
+        required_artifact_ids = {
+            "supplier-assurance-pack",
+            "sbom-inventory",
+            "vulnerability-register",
+            "incident-response-record",
+            "branch-protection-evidence",
+            "release-provenance-attestation",
+        }
+        self.assertLessEqual(required_artifact_ids, set(artifacts))
+
+        pack_path = ROOT / artifacts["supplier-assurance-pack"]["path"]
+        pack = yaml.safe_load(pack_path.read_text(encoding="utf-8"))
+        self.assertEqual(pack["domain_profile"], "cyber-supplier-assurance")
+        self.assertIn("no security certification", pack["claim_boundary"].lower())
+
+        statuses = {control["status"] for control in pack["supplier_controls"]}
+        self.assertLessEqual({"implemented", "manual", "blocked", "customer_owned"}, statuses)
+
+        mapped_controls = {
+            control["control_id"]: control
+            for control in pack["supplier_controls"]
+        }
+        self.assertEqual(mapped_controls["SSDF-PO.3.2"]["evidence_type"], "sbom")
+        self.assertEqual(mapped_controls["SSDF-RV.1.2"]["evidence_type"], "vulnerability_register")
+        self.assertEqual(mapped_controls["CSF-RS.MA-01"]["status"], "manual")
+        self.assertEqual(mapped_controls["CSF-GV.SC-07"]["status"], "customer_owned")
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
