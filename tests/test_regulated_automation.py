@@ -816,6 +816,43 @@ answers:
         self.assertIn("notes de strategie", readme_text)
         self.assertIn("sans revendiquer certification", readme_text)
 
+    def test_rbok_nomos_iq_baseline_records_installation_scope(self) -> None:
+        import yaml
+
+        baseline_path = ROOT / "docs/regulated/qualification/rbok-nomos-iq-baseline.yaml"
+        self.assertTrue(baseline_path.exists(), f"missing IQ baseline: {baseline_path}")
+        baseline = yaml.safe_load(baseline_path.read_text(encoding="utf-8"))
+        self.assertEqual(baseline["baseline_id"], "IQ-RBOK-NOMOS-2026-05-06")
+        self.assertEqual(baseline["qualification_phase"], "IQ")
+        self.assertIn("not OQ or PQ evidence", baseline["claim_boundary"])
+
+        installed = baseline["installed_baseline"]
+        self.assertEqual(installed["rbok_develop_sha"], "fd0aee8f")
+        self.assertEqual(installed["github_target"]["repo"], "RBOKproject/RBOK")
+        self.assertEqual(installed["github_target"]["branch"], "develop")
+        self.assertFalse(installed["github_target"]["direct_push_allowed"])
+
+        readiness = baseline["portfolio_readiness"]
+        self.assertEqual(readiness["ready_bindings"], 55)
+        self.assertEqual(readiness["total_bindings"], 55)
+        self.assertEqual(readiness["blockers"], 0)
+
+        artifact_paths = {artifact["path"] for artifact in baseline["ordo_state_artifacts"]}
+        self.assertLessEqual(
+            {
+                "/root/.local/share/orch-state/_portfolio/session_start.json",
+                "/root/.local/share/orch-state/_portfolio/clean_plan.json",
+                "/root/.local/share/orch-state/_portfolio/unblock_tasks.json",
+            },
+            artifact_paths,
+        )
+
+        self.assertEqual(baseline["proof_dependency"], "#314")
+        self.assertTrue(baseline["workflow_run_urls"])
+        self.assertEqual(baseline["operator_identity"]["github_user"], "realisonsdotcom")
+        self.assertEqual(baseline["tool_identity"]["tool"], "Codex")
+        self.assertEqual(baseline["later_phase_boundaries"], ["OQ", "PQ"])
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

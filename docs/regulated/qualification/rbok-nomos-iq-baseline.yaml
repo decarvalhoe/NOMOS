@@ -1,0 +1,85 @@
+schema_version: "0.1.0"
+baseline_id: IQ-RBOK-NOMOS-2026-05-06
+record_type: rbok_nomos_installation_qualification_baseline
+qualification_phase: IQ
+recorded_at_utc: "2026-05-14T11:19:19Z"
+claim_boundary: >-
+  Installation baseline evidence only; not OQ or PQ evidence, not production
+  validation, not regulated certification, and not customer acceptance.
+parent_epic: "#314"
+proof_dependency: "#314"
+installed_baseline:
+  rbok_develop_sha: fd0aee8f
+  source_event: "RBOK PR #3050-#3060 wave after ORDO live orchestration"
+  github_target:
+    repo: RBOKproject/RBOK
+    branch: develop
+    direct_push_allowed: false
+    integration_rule: "PR required; no direct main/develop push."
+  nomos_dependency:
+    repo: RBOKproject/NOMOS
+    issue: "#314"
+    evidence_role: "qualification dossier owner"
+portfolio_readiness:
+  ready_bindings: 55
+  total_bindings: 55
+  blockers: 0
+  source: "ORDO portfolio preflight"
+ordo_state_artifacts:
+  - id: session-start
+    path: /root/.local/share/orch-state/_portfolio/session_start.json
+    role: "session start state"
+  - id: clean-plan
+    path: /root/.local/share/orch-state/_portfolio/clean_plan.json
+    role: "portfolio clean plan"
+  - id: unblock-tasks
+    path: /root/.local/share/orch-state/_portfolio/unblock_tasks.json
+    role: "portfolio unblock task list"
+workflow_run_urls:
+  - url: https://github.com/RBOKproject/RBOK/actions/runs/25442507323
+    workflow: "Deploy DEV Alerts"
+    observed_at_utc: "2026-05-06T14:45:48Z"
+    note: >-
+      Historical run URL retained as installation-wave evidence pointer; OQ
+      current-state interpretation is handled separately.
+operator_identity:
+  github_user: realisonsdotcom
+  workstation: "Windows Codex session"
+  timezone: Europe/Zurich
+tool_identity:
+  tool: Codex
+  shell: PowerShell
+  orchestration_context: "NOMOS inline development and PR management"
+iq_checks:
+  - id: iq-rbok-sha-recorded
+    status: pass
+    evidence: "rbok_develop_sha recorded as fd0aee8f"
+  - id: iq-ordo-artifact-paths-recorded
+    status: pass
+    evidence: "session_start, clean_plan, and unblock_tasks paths retained"
+  - id: iq-portfolio-readiness-recorded
+    status: pass
+    evidence: "55/55 ready, 0 blockers"
+  - id: iq-github-target-recorded
+    status: pass
+    evidence: "RBOKproject/RBOK develop with PR-only rule"
+later_phase_boundaries:
+  - OQ
+  - PQ
+excluded_from_iq:
+  - "latest-run operational gate interpretation"
+  - "readonly production user journey execution"
+  - "a11y proof for deployed RBOK/NOMOS surfaces"
+  - "customer validation or acceptance"
+verification:
+  - id: iq-baseline-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_rbok_nomos_iq_baseline_records_installation_scope
+      -v
+    required: true
+  - id: iq-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
