@@ -1,0 +1,65 @@
+schema_version: "0.1.0"
+record_type: verifiability_mechanism_decision
+domain_profile: verifiable-evidence
+claim_boundary: >-
+  Tamper-evident evidence decision record only; verifiability does not prove
+  semantic correctness, legal compliance, certification, or regulated
+  validation.
+decision:
+  id: ADR-VE-001
+  status: accepted_for_planning
+  title: "Initial NOMOS verifiable evidence mechanisms"
+  rationale: >-
+    Start with deterministic hashes, ALCOA envelope hashes, and detached
+    signature references because they are implementable without storing private
+    keys. Keep W3C VC and C2PA as wrappers, and defer transparency logs until
+    the signing CLI exists.
+signed_evidence_bundle:
+  required_fields:
+    - bundle_id
+    - bundle_version
+    - issuer
+    - subject
+    - artifact_hashes
+    - alcoa_envelope_hash
+    - source_commit
+    - source_repository
+    - generated_at_utc
+    - signature_algorithm
+    - signature_value_or_external_ref
+    - verification_instructions
+    - transparency_entry_ref
+  hash_algorithm: sha256
+  signature_mode: detached_or_external_reference
+  unsigned_mode_status: allowed_but_weaker
+  verification_scope: >-
+    Verifies artifact integrity, bundle reconstruction inputs, and signature
+    binding when signature material is supplied.
+mechanism_decision:
+  selected_first:
+    - id: hash-manifest
+      mechanism: sha256_digest_manifest
+      status: selected
+      reason: "NOMOS already emits hashable evidence artifacts."
+    - id: detached-signature
+      mechanism: detached_signature_or_external_attestation
+      status: selected
+      reason: "Avoids private-key custody in NOMOS while enabling verification."
+  evaluated_options:
+    - id: w3c-vc-wrapper
+      reference_id: W3C-VC-2-0
+      status: optional
+      reason: "Useful credential wrapper after core bundle fields stabilize."
+    - id: c2pa-content-provenance
+      reference_id: C2PA-2-2
+      status: optional
+      reason: "Useful for human-readable documents and media provenance."
+    - id: rfc9162-transparency-log
+      reference_id: RFC-9162
+      status: deferred
+      reason: "Requires log operator, inclusion proofs, and verification CLI."
+non_claims:
+  - "Does not prove semantic correctness."
+  - "Does not prove legal compliance."
+  - "Does not create regulated validation."
+  - "Does not replace ALCOA+ source fidelity evidence."
