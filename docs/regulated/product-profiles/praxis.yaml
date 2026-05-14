@@ -43,6 +43,7 @@ critical_path:
 nomos_relationship:
   relationship: downstream_consumer
   upstream_product: nomos
+  activation_gate_record: docs/regulated/qualification/praxis-activation-gate.yaml
   required_input:
     - canonical_claim_ids
     - control_ids

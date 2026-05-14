@@ -1,0 +1,102 @@
+schema_version: "0.1.0"
+record_type: praxis_activation_gate
+activation_id: PRAXIS-NOMOS-ACTIVATION-2026-05-14
+related_issue: "#320"
+current_status: blocked_until_nomos_verified
+claim_boundary: >
+  Activation criteria and blocked-state evidence only; this is not an
+  activation approval, Praxis qualification record, or joint regulated claim.
+
+nomos_required_proof:
+  required_aq_status: accepted
+  required_reconstruction_verdict: pass
+  required_strict_gate_status: pass
+  required_artifacts:
+    - path: docs/regulated/qualification/rbok-nomos-iq-baseline.yaml
+      role: installation_baseline
+      required_state: accepted
+    - path: docs/regulated/qualification/rbok-nomos-oq-ci-signal-protocol.yaml
+      role: operational_gate_protocol
+      required_state: accepted
+    - path: docs/regulated/qualification/rbok-nomos-pq-readonly-journey-pack.yaml
+      role: production_journey_evidence
+      required_state: passed
+    - path: docs/regulated/validation-pack/validation-inventory.yaml
+      role: validation_inventory
+      required_state: no_open_high_or_critical_unwaived_gap
+    - path: docs/regulated/customer-integration/praxis-atom-mapping.md
+      role: evidence_contract
+      required_state: verified
+  required_reviews:
+    - independent_nomosside_review
+    - praxis_boundary_review
+    - release_approver_signoff
+
+activation_checklist:
+  - id: nomos_verified_evidence_chain
+    status: blocked
+    evidence_dependency: nomos_required_proof.required_artifacts
+    acceptance_rule: "All required artifacts have accepted or passed state."
+  - id: no_unverified_atom_consumption
+    status: implemented
+    evidence_dependency: consumer_guard
+    acceptance_rule: "Praxis treats unverified Nomos atoms as not_qualified_external_input."
+  - id: mapping_contract_fixture
+    status: deferred
+    evidence_dependency: mapping_contract_fixture
+    acceptance_rule: "Fixture import/reject tests run only after Nomos verification is accepted."
+  - id: dossier_state_explains_block
+    status: implemented
+    evidence_dependency: dossier_state
+    acceptance_rule: "Dossier records whether Praxis is blocked or activated and why."
+
+consumer_guard:
+  praxis_may_consume_unverified_nomos_atoms_as_regulated_evidence: false
+  unverified_atom_handling: not_qualified_external_input
+  allowed_before_activation:
+    - schema_drift_checks
+    - non_regulated_contract_dry_run
+    - fixture_design_review
+  disallowed_before_activation:
+    - regulated_release_go_no_go
+    - capa_closure_evidence
+    - audit_response_evidence
+    - customer_validation_claim
+
+mapping_contract_fixture:
+  status: deferred_until_nomos_verified
+  contract_path: docs/regulated/customer-integration/praxis-atom-mapping.md
+  planned_fixture_path: docs/regulated/customer-integration/praxis-activation-fixture.todo.yaml
+  must_accept:
+    - "approved atom with source_hash, content_hash, evidence_bundle_id, and verified attestation"
+  must_reject:
+    - "review_state != approved"
+    - "missing source_hash"
+    - "missing content_hash"
+    - "unverified attestation"
+    - "blocked or waived Nomos atom without explicit waiver record"
+  execution_trigger: "Nomos verification and reconstruction verdict accepted"
+
+dossier_state:
+  praxis_activation: blocked
+  blocked_reason: "Nomos verification and reconstruction verdict are not accepted yet."
+  activation_owner: not_assigned
+  next_review_event: "After Nomos AQ evidence chain reaches accepted status."
+  dossier_note: >
+    Praxis may remain a downstream design target, but it must not consume
+    Nomos atoms as regulated evidence until the Nomos producer chain and
+    Praxis boundary fixture are both verified.
+
+blocked_claims:
+  - "Praxis inherits Nomos regulated evidence status"
+  - "Nomos-to-Praxis mapping is production qualified"
+  - "Praxis runtime evidence can close Nomos AQ gaps"
+  - "Joint Nomos/Praxis regulated claim is allowed"
+
+verification:
+  tests:
+    - tests.test_regulated_automation.RegulatedAutomationTests.test_praxis_activation_gate_keeps_unverified_nomos_atoms_blocked
+  commands:
+    - "python -m unittest tests.test_regulated_automation.RegulatedAutomationTests.test_praxis_activation_gate_keeps_unverified_nomos_atoms_blocked -v"
+    - "python scripts/regulated_docs_gate.py --report .regulated-doc-gate/regulated-doc-gate-report.json"
+    - "python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json"
