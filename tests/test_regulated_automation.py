@@ -703,6 +703,45 @@ answers:
         self.assertEqual(decisions["HA-REL-001"]["status"], "conditional_release")
         self.assertIn("HA-WVR-001", decisions["HA-REL-001"]["accepted_waivers"])
 
+    def test_alm_qms_adapter_decision_records_first_adapter_and_risks(self) -> None:
+        import yaml
+
+        adr_path = ROOT / "docs/regulated/decisions/ADR-alm-qms-export-adapter-selection.md"
+        self.assertTrue(adr_path.exists(), f"missing ADR: {adr_path}")
+        adr_text = adr_path.read_text(encoding="utf-8")
+        self.assertIn("ADR-ALM-QMS-020", adr_text)
+        self.assertIn("First adapter: GitHub issues evidence export", adr_text)
+        self.assertIn("Blocked adapters", adr_text)
+        self.assertIn("Deferred adapters", adr_text)
+        self.assertIn("evidence loss risks", adr_text.lower())
+        self.assertIn("not an ALM/QMS replacement", adr_text)
+
+        fixture_path = ROOT / "docs/regulated/domain-packs/alm-qms-export/github-issues-export-fixture.yaml"
+        self.assertTrue(fixture_path.exists(), f"missing fixture: {fixture_path}")
+        fixture = yaml.safe_load(fixture_path.read_text(encoding="utf-8"))
+        self.assertEqual(fixture["adapter_decision_id"], "ADR-ALM-QMS-020")
+        self.assertEqual(fixture["chosen_adapter"]["id"], "github-issues-evidence-export")
+        self.assertEqual(fixture["chosen_adapter"]["status"], "first_supported")
+        self.assertEqual(fixture["chosen_adapter"]["direction"], "nomos_to_external")
+
+        exported_fields = {
+            field["name"]
+            for field in fixture["chosen_adapter"]["exported_fields"]
+        }
+        self.assertLessEqual(
+            {"canonical_ref", "content_hash", "claim_boundary", "source_span"},
+            exported_fields,
+        )
+
+        blocked_ids = {adapter["id"] for adapter in fixture["blocked_adapters"]}
+        self.assertLessEqual({"bidirectional_reqif_sync", "qms_template_import"}, blocked_ids)
+
+        deferred_ids = {adapter["id"] for adapter in fixture["deferred_adapters"]}
+        self.assertLessEqual({"reqif_export", "jira_export", "csv_export", "json_schema_export"}, deferred_ids)
+
+        risks = {risk["risk"] for risk in fixture["evidence_loss_risks"]}
+        self.assertLessEqual({"rich_text_normalization", "status_semantics_drift"}, risks)
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

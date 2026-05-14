@@ -1,0 +1,95 @@
+schema_version: "0.1.0"
+adapter_decision_id: ADR-ALM-QMS-020
+record_type: alm_qms_export_adapter_fixture
+claim_boundary: >-
+  GitHub issue export fixture only; not an ALM/QMS replacement, not a
+  validated eQMS, and not a regulated validation or compliance claim.
+chosen_adapter:
+  id: github-issues-evidence-export
+  name: "GitHub issues evidence export"
+  target: GitHub issues
+  direction: nomos_to_external
+  status: first_supported
+  rationale: >-
+    GitHub Issues align with the current repository evidence workflow and can
+    represent reviewable work items without importing external changes into the
+    canonical chain.
+  exported_fields:
+    - name: canonical_ref
+      source: nomos_atom_or_evidence_record
+      required: true
+      loss_risk: none
+    - name: content_hash
+      source: nomos_evidence_hash
+      required: true
+      loss_risk: none
+    - name: source_span
+      source: canonical_source_span
+      required: true
+      loss_risk: low_if_line_refs_remain_stable
+    - name: claim_boundary
+      source: public_claim_boundary_or_domain_profile
+      required: true
+      loss_risk: low_if_exported_as_plain_text
+    - name: evidence_status
+      source: regulated_evidence_pack_status
+      required: true
+      loss_risk: status_semantics_drift
+    - name: acceptance_criteria
+      source: verification_gate_or_issue_definition
+      required: true
+      loss_risk: rich_text_normalization
+sample_issue_payload:
+  title: "[NOMOS evidence] Controlled export review"
+  labels:
+    - area:compliance
+    - type:backlog
+  body_fields:
+    canonical_ref: NOMOS-DOR-020-FIXTURE
+    content_hash: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    source_span: docs/38-domain-opportunity-roadmap.md#dor-020
+    claim_boundary: "Integration-layer fixture only; no ALM/QMS replacement claim."
+    evidence_status: mapped
+    acceptance_criteria:
+      - "Canonical reference and content hash are present."
+      - "Evidence loss risks are listed before export approval."
+      - "Deferred and blocked adapters are not represented as supported."
+blocked_adapters:
+  - id: bidirectional_reqif_sync
+    target: ReqIF
+    reason: >-
+      External ALM edits must not mutate the Nomos canonical chain or replace
+      Nomos canonical identifiers.
+  - id: qms_template_import
+    target: QMS import templates
+    reason: >-
+      Vendor-specific QMS imports require customer validation and can imply QMS
+      replacement if shipped as a generic adapter.
+deferred_adapters:
+  - id: reqif_export
+    target: ReqIF
+    reason: "Requires vendor golden-file import checks before support."
+  - id: jira_export
+    target: Jira
+    reason: "Requires tenant-specific field and workflow mapping."
+  - id: csv_export
+    target: CSV
+    reason: "Requires sidecar loss annotations for nested traceability."
+  - id: json_schema_export
+    target: JSON schema
+    reason: "Should be derived after the first payload contract stabilizes."
+evidence_loss_risks:
+  - risk: rich_text_normalization
+    affected_fields:
+      - acceptance_criteria
+      - claim_boundary
+    mitigation: "Retain source hash and canonical reference in every exported issue."
+  - risk: status_semantics_drift
+    affected_fields:
+      - evidence_status
+      - labels
+    mitigation: "Map Nomos statuses explicitly and block unsupported status claims."
+  - risk: attachment_separation
+    affected_fields:
+      - supporting_artifacts
+    mitigation: "Export artifact hashes and do not rely on attachment presence alone."
