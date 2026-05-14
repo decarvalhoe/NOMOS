@@ -131,6 +131,32 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		return RBOKLawbookArtifactPackResult{}, err
 	}
 
+	shortCriticalManifest := SidecarManifest{Sources: make([]ManifestSource, 0, len(sources))}
+	for _, source := range sources {
+		shortCriticalManifest.Sources = append(shortCriticalManifest.Sources, ManifestSource{
+			ID:                "RBOK-LAWBOOK-" + toUpperSlug(strings.TrimSuffix(source.Path, filepath.Ext(source.Path))),
+			Path:              filepath.ToSlash(source.Path),
+			Type:              "markdown",
+			Domain:            rbokDomainFromPath(source.Path),
+			Priority:          string(rbokPriorityFromClassification(source.Classification)),
+			Status:            "active",
+			Hash:              source.Hash,
+			Owner:             "nomos",
+			Confidentiality:   "internal",
+			AdmissionStatus:   AdmissionAdmitted,
+			AtomizationStatus: AtomizationAtomized,
+			SourceRole:        AdmissionRoleCanonical,
+			FormatSupport:     FormatSupported,
+		})
+	}
+	shortCriticalReport, err := BuildShortCriticalAtomsReport(absRoot, shortCriticalManifest, now)
+	if err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("build short-critical-atoms.json: %w", err)
+	}
+	if err := writeJSONFile(filepath.Join(outDir, "short-critical-atoms.json"), shortCriticalReport); err != nil {
+		return RBOKLawbookArtifactPackResult{}, fmt.Errorf("write short-critical-atoms.json: %w", err)
+	}
+
 	governance := governanceFromDiagnosis(diagnosis)
 	governancePath := filepath.Join(outDir, "rbok-governance.json")
 	if err := writeJSONFile(governancePath, governance); err != nil {
@@ -204,6 +230,7 @@ func WriteRBOKLawbookArtifactPack(root string, outDir string, opts RBOKLawbookAr
 		"rbok-governed-lexicon.yaml",
 		"rbok-certified-toc.json",
 		"rbok-strict-fidelity-gate.json",
+		"short-critical-atoms.json",
 	}
 	sort.Strings(artifacts)
 

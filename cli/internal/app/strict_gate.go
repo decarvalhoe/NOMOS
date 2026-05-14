@@ -532,6 +532,7 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePa
 	var sq *corpus.SemanticQualityReport
 	var feedUnits []corpus.FeedUnit
 	var feedSources []corpus.FeedSource
+	var shortCriticalAtoms *corpus.ShortCriticalAtomsReport
 	var chunks []corpus.ChunkMetadata
 	if feedPath != "" || ragPath != "" {
 		if feedPath != "" {
@@ -539,7 +540,7 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePa
 			if err != nil {
 				return nil, nil, nil, fmt.Errorf("read feed %s: %w", feedPath, err)
 			}
-			feedUnits, feedSources, err = parseFeedFile(data)
+			feedUnits, feedSources, shortCriticalAtoms, err = parseFeedFile(data)
 			if err != nil {
 				return nil, nil, nil, fmt.Errorf("parse feed %s: %w", feedPath, err)
 			}
@@ -575,11 +576,12 @@ func computeIntegrityFromSources(sourceDir, feedPath, ragPath, semanticProfilePa
 				return &si, fq, nil, fmt.Errorf("load semantic profile %s: %w", semanticProfilePath, err)
 			}
 			s := corpus.CheckSemanticQuality(corpus.SemanticQualityInput{
-				Feed:     feedUnits,
-				Chunks:   chunks,
-				Segments: allSegments,
-				Sources:  feedSources,
-				Profile:  profile,
+				Feed:               feedUnits,
+				Chunks:             chunks,
+				Segments:           allSegments,
+				Sources:            feedSources,
+				ShortCriticalAtoms: shortCriticalAtoms,
+				Profile:            profile,
 			})
 			sq = &s
 		}
@@ -722,16 +724,16 @@ func manifestSourceFromFeedSource(source corpus.FeedSource) corpus.ManifestSourc
 // parseFeedFile accepts either a top-level []FeedUnit array (the legacy
 // shape consumed by the SFI-08 wiring) or a Feed envelope (so the FSQ-06
 // gate can also scrutinise the FeedSource list when supplied).
-func parseFeedFile(data []byte) ([]corpus.FeedUnit, []corpus.FeedSource, error) {
+func parseFeedFile(data []byte) ([]corpus.FeedUnit, []corpus.FeedSource, *corpus.ShortCriticalAtomsReport, error) {
 	var feed corpus.Feed
 	if err := json.Unmarshal(data, &feed); err == nil && (len(feed.Units) > 0 || len(feed.Sources) > 0) {
-		return feed.Units, feed.Sources, nil
+		return feed.Units, feed.Sources, feed.ShortCriticalAtoms, nil
 	}
 	var units []corpus.FeedUnit
 	if err := json.Unmarshal(data, &units); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return units, nil, nil
+	return units, nil, nil, nil
 }
 
 // loadSemanticProfile returns the SemanticQualityProfile to use. When path
