@@ -113,6 +113,18 @@ references:
       - "docs/regulated/data-integrity/alcoa-data-integrity-policy.md"
       - "templates/regulated/alcoa-evidence-envelope.yaml"
     evidence_status: requires_evidence
+  - id: MHRA-GXP-DATA-INTEGRITY-2018
+    title: "Guidance on GxP data integrity"
+    publisher: "UK MHRA"
+    url: "https://www.gov.uk/government/publications/guidance-on-gxp-data-integrity"
+    version_or_date: "Published 2018-03-09; updated 2021-09-27"
+    checked_on: "2026-05-14"
+    applicability: "Data integrity expectations across GxP sectors and GLP studies regulated by MHRA."
+    nomos_alignment: "ALCOA+ evidence envelopes, source integrity, reviewer attribution, and retention planning."
+    required_documents:
+      - "docs/regulated/data-integrity/alcoa-data-integrity-policy.md"
+      - "templates/regulated/alcoa-evidence-envelope.yaml"
+    evidence_status: requires_evidence
   - id: EU-EUDRALEX-V4-ANNEX11
     title: "EudraLex Volume 4 Annex 11 - Computerised Systems"
     publisher: "European Commission"

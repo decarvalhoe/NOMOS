@@ -1,0 +1,85 @@
+schema_version: "0.1.0"
+record_type: gxp_csv_control_crosswalk
+domain_profile: gxp-csv
+status: draft_not_qualified
+claim_boundary: >
+  Planning crosswalk only. This record does not claim GxP compliance,
+  Part 11 compliance, regulated validation, certification, or customer
+  validation approval.
+
+references:
+  - reference_id: FDA-21CFR11-11.10
+    title: "21 CFR Part 11 - Controls for closed systems"
+    disposition: mapped
+    controls:
+      - CTL-DI-001
+      - CTL-DI-002
+      - CTL-AC-001
+    rationale: >
+      Electronic record validation, audit trail, and access restriction
+      controls are planning controls for Part 11-relevant source records.
+    blocked_claims:
+      - part11_compliance
+      - regulated_validation
+
+  - reference_id: EU-EUDRALEX-V4-ANNEX11
+    title: "EudraLex Volume 4 Annex 11 - Computerised Systems"
+    disposition: mapped
+    controls:
+      - CTL-CC-001
+      - CTL-SC-001
+    rationale: >
+      Change control and supplier assessment controls are the current
+      NOMOS planning controls for Annex 11-relevant computerized systems.
+    blocked_claims:
+      - gxp_compliance
+      - regulated_validation
+
+  - reference_id: FDA-CSA-2025
+    title: "Computer Software Assurance for Production and Quality System Software"
+    disposition: mapped
+    controls:
+      - CTL-VAL-002
+      - CTL-VAL-003
+    rationale: >
+      Risk-based testing and self-compliance controls are planning controls
+      for CSA-style evidence. Human validation ownership remains external.
+    blocked_claims:
+      - regulated_validation
+      - gxp_compliance
+
+  - reference_id: MHRA-GXP-DATA-INTEGRITY-2018
+    title: "MHRA guidance on GxP data integrity"
+    disposition: mapped
+    controls:
+      - CTL-DI-003
+      - CTL-DI-004
+    rationale: >
+      ALCOA+ attribution, accuracy, and source hash integrity are the
+      current NOMOS planning controls for GxP data-integrity evidence.
+    blocked_claims:
+      - gxp_compliance
+      - regulated_validation
+
+  - reference_id: ISPE-GAMP5-2E-2022
+    title: "ISPE GAMP 5 Second Edition"
+    disposition: mapped
+    controls:
+      - CTL-VAL-001
+      - CTL-SC-001
+    access_policy: licensed_reference_only
+    rationale: >
+      Risk-based validation strategy and supplier assessment controls are
+      mapped from the registered licensed reference. Clause-level use remains
+      blocked until licensed intake and review evidence are complete.
+    blocked_claims:
+      - gxp_compliance
+      - regulated_validation
+
+summary:
+  required_references: 5
+  mapped_references: 5
+  blocked_references: 0
+  not_applicable_references: 0
+  waived_references: 0
+  decorative_authority_count: 0

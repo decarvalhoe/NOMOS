@@ -4,12 +4,12 @@ version: "0.2.0"
 generated_at: "2026-05-03"
 status: not_qualified
 claim_boundary: >
-  Complete mapping of all 25 registered references to controls.
+  Complete mapping of all 26 registered references to controls.
   Every reference has at least one mapped control.
   All controls are not_qualified until evidence is verified.
 
-# Total: 25 references → 27 controls
-# Coverage: 25/25 references mapped (100%)
+# Total: 26 references → 27 controls
+# Coverage: 26/26 references mapped (100%)
 
 reference_map:
   # --- FDA ---
@@ -30,6 +30,10 @@ reference_map:
     coverage: mapped
 
   - reference_id: FDA-DATA-INTEGRITY-CGMP-2018
+    controls: [CTL-DI-003, CTL-DI-004]
+    coverage: mapped
+
+  - reference_id: MHRA-GXP-DATA-INTEGRITY-2018
     controls: [CTL-DI-003, CTL-DI-004]
     coverage: mapped
 
@@ -125,8 +129,8 @@ reference_map:
     coverage: mapped
 
 summary:
-  total_references: 25
-  mapped_references: 25
+  total_references: 26
+  mapped_references: 26
   unmapped_references: 0
   total_controls: 27
   controls_not_qualified: 27

@@ -55,6 +55,7 @@ controls:
     control_family: data-integrity
     external_refs:
       - FDA-DATA-INTEGRITY-CGMP-2018
+      - MHRA-GXP-DATA-INTEGRITY-2018
     intended_use: >
       Every data entry is attributable to its actor. Records are
       error-free, complete, and truthful. Originals or certified
@@ -73,6 +74,7 @@ controls:
     control_family: data-integrity
     external_refs:
       - FDA-DATA-INTEGRITY-CGMP-2018
+      - MHRA-GXP-DATA-INTEGRITY-2018
     intended_use: >
       Verify source file integrity via cryptographic hashes.
       Detect tampering between intake and consumption.

@@ -414,6 +414,47 @@ validation_gates:
                 domain_report["findings"],
             )
 
+    def test_regulated_docs_gate_blocks_incomplete_gxp_csv_crosswalk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/38-domain-opportunity-roadmap.md",
+                "# Domain opportunity roadmap\n\nDOR-005 requires a GxP/CSV crosswalk.\n",
+            )
+            write(
+                repo / "docs/regulated/control-matrix/gxp-csv-control-crosswalk.yaml",
+                """
+schema_version: "0.1.0"
+record_type: gxp_csv_control_crosswalk
+domain_profile: gxp-csv
+claim_boundary: "Planning crosswalk only; no GxP compliance claim."
+references:
+  - reference_id: FDA-CSA-2025
+    disposition: mapped
+    controls:
+      - CTL-VAL-002
+    rationale: "Only one required reference is intentionally present."
+""".lstrip(),
+            )
+            output = repo / "out/regulated-doc-gate.json"
+
+            result = run_script(
+                "regulated_docs_gate.py",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(
+                    "GxP/CSV crosswalk missing required reference" in finding["message"]
+                    for finding in report["findings"]
+                )
+            )
+
     def test_reference_canon_marks_gamp5_as_licensed_bible(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

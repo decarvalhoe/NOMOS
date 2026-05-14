@@ -71,6 +71,17 @@ PROHIBITED_PATTERNS = [
     (re.compile(r"external_certification_claim:\s*(allowed|true)", re.IGNORECASE), "External certification claim is not allowed."),
 ]
 
+DOR_ROADMAP_PATH = Path("docs/38-domain-opportunity-roadmap.md")
+GXP_CSV_CROSSWALK_PATH = Path("docs/regulated/control-matrix/gxp-csv-control-crosswalk.yaml")
+GXP_CSV_REQUIRED_REFERENCES = {
+    "FDA-21CFR11-11.10",
+    "EU-EUDRALEX-V4-ANNEX11",
+    "FDA-CSA-2025",
+    "MHRA-GXP-DATA-INTEGRITY-2018",
+    "ISPE-GAMP5-2E-2022",
+}
+GXP_CSV_REFERENCE_DISPOSITIONS = {"mapped", "blocked", "not_applicable", "waived"}
+
 
 def iter_existing_files(roots: list[Path], suffixes: tuple[str, ...]) -> list[Path]:
     paths: list[Path] = []
@@ -319,6 +330,82 @@ def build_domain_applicability_report() -> tuple[dict, list[dict[str, str]]]:
     }, findings
 
 
+def validate_gxp_csv_crosswalk(findings: list[dict[str, str]]) -> None:
+    if not GXP_CSV_CROSSWALK_PATH.exists():
+        if DOR_ROADMAP_PATH.exists():
+            findings.append({
+                "severity": "error",
+                "path": str(GXP_CSV_CROSSWALK_PATH),
+                "message": "GxP/CSV crosswalk is required by the domain opportunity roadmap.",
+            })
+        return
+
+    try:
+        crosswalk = yaml.safe_load(GXP_CSV_CROSSWALK_PATH.read_text(encoding="utf-8")) or {}
+    except Exception as exc:  # noqa: BLE001 - parser detail belongs in CI output
+        findings.append({
+            "severity": "error",
+            "path": str(GXP_CSV_CROSSWALK_PATH),
+            "message": f"GxP/CSV crosswalk YAML parse failed: {exc}",
+        })
+        return
+
+    references = crosswalk.get("references")
+    if not isinstance(references, list):
+        findings.append({
+            "severity": "error",
+            "path": str(GXP_CSV_CROSSWALK_PATH),
+            "message": "GxP/CSV crosswalk must declare a references list.",
+        })
+        return
+
+    by_reference: dict[str, dict] = {}
+    for index, reference in enumerate(references):
+        if not isinstance(reference, dict):
+            findings.append({
+                "severity": "error",
+                "path": f"{GXP_CSV_CROSSWALK_PATH}:references[{index}]",
+                "message": "GxP/CSV crosswalk reference row must be an object.",
+            })
+            continue
+        reference_id = str(reference.get("reference_id", "")).strip()
+        disposition = str(reference.get("disposition", "")).strip()
+        if not reference_id:
+            findings.append({
+                "severity": "error",
+                "path": f"{GXP_CSV_CROSSWALK_PATH}:references[{index}].reference_id",
+                "message": "GxP/CSV crosswalk reference row is missing reference_id.",
+            })
+            continue
+        by_reference[reference_id] = reference
+        if disposition not in GXP_CSV_REFERENCE_DISPOSITIONS:
+            findings.append({
+                "severity": "error",
+                "path": f"{GXP_CSV_CROSSWALK_PATH}:{reference_id}.disposition",
+                "message": "GxP/CSV crosswalk reference disposition must be mapped, blocked, not_applicable, or waived.",
+            })
+        controls = reference.get("controls") or []
+        if disposition == "mapped" and (not isinstance(controls, list) or not controls):
+            findings.append({
+                "severity": "error",
+                "path": f"{GXP_CSV_CROSSWALK_PATH}:{reference_id}.controls",
+                "message": "GxP/CSV crosswalk mapped reference must list at least one NOMOS control.",
+            })
+        if disposition in {"blocked", "not_applicable", "waived"} and not str(reference.get("rationale", "")).strip():
+            findings.append({
+                "severity": "error",
+                "path": f"{GXP_CSV_CROSSWALK_PATH}:{reference_id}.rationale",
+                "message": "GxP/CSV crosswalk non-mapped reference must declare a rationale.",
+            })
+
+    for reference_id in sorted(GXP_CSV_REQUIRED_REFERENCES - set(by_reference)):
+        findings.append({
+            "severity": "error",
+            "path": str(GXP_CSV_CROSSWALK_PATH),
+            "message": f"GxP/CSV crosswalk missing required reference {reference_id}.",
+        })
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", default="regulated-doc-gate-report.json")
@@ -353,6 +440,7 @@ def main() -> int:
         })
 
     validate_approval_workflow_file(findings)
+    validate_gxp_csv_crosswalk(findings)
 
     domain_report, domain_findings = build_domain_applicability_report()
     findings.extend(domain_findings)
