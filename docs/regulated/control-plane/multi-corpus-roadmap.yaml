@@ -1,0 +1,135 @@
+schema_version: "0.1.0"
+roadmap_id: DOR-022
+record_type: multi_corpus_control_plane_roadmap
+claim_boundary: >-
+  CLI-first baseline remains supported; this roadmap defines enterprise
+  control-plane direction only and makes no certification, regulated
+  validation, legal compliance, or ALM/QMS replacement claim.
+context:
+  dependencies:
+    - DOR-002
+    - DOR-006
+    - DOR-020
+  purpose: >-
+    Define the minimum portfolio evidence model needed to supervise multiple
+    corpora, domain profiles, releases, findings, and evidence bundles without
+    making a dashboard mandatory.
+cli_first_baseline:
+  status: supported
+  evidence_source: local_cli_outputs_and_ci_artifacts
+  guarantee: >-
+    The CLI and generated evidence bundles remain the auditable source of
+    truth even when a future control plane indexes them.
+required_evidence_model:
+  description: >-
+    These entities are required for the MVP because they preserve claim and
+    evidence state independently of any UI.
+  entities:
+    - id: corpus
+      required_for_mvp: true
+      source: source_manifest_or_corpus_registry
+      minimum_fields:
+        - corpus_id
+        - corpus_name
+        - owner
+        - access_policy
+    - id: domain_profile
+      required_for_mvp: true
+      source: nomos_domain_profile
+      minimum_fields:
+        - domain_profile
+        - applicability_status
+        - current_claim_level
+    - id: source_version
+      required_for_mvp: true
+      source: source_manifest_and_git_commit
+      minimum_fields:
+        - source_ref
+        - source_hash
+        - commit
+        - generated_at_utc
+    - id: open_findings
+      required_for_mvp: true
+      source: regulated_docs_gate_and_evidence_pack
+      minimum_fields:
+        - finding_id
+        - severity
+        - owner
+        - disposition
+    - id: claim_level
+      required_for_mvp: true
+      source: domain_claim_ladder
+      minimum_fields:
+        - current_level
+        - blocked_levels
+        - evidence_refs
+    - id: release_status
+      required_for_mvp: true
+      source: release_bundle
+      minimum_fields:
+        - release_id
+        - status
+        - release_decision
+        - accepted_waivers
+    - id: periodic_review
+      required_for_mvp: true
+      source: operations_periodic_review_record
+      minimum_fields:
+        - review_id
+        - due_on
+        - reviewer
+        - outcome
+    - id: evidence_bundle
+      required_for_mvp: true
+      source: regulated_evidence_pack
+      minimum_fields:
+        - bundle_id
+        - bundle_hash
+        - record_count
+        - generated_at_utc
+portfolio_record_fixture:
+  portfolio_record_id: CP-MVP-001
+  corpus: rbok-reference-corpus
+  domain_profile: gxp-csv
+  source_version:
+    source_ref: docs/38-domain-opportunity-roadmap.md
+    source_hash: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    commit: HEAD
+  open_findings: 0
+  claim_level: mapped
+  release_status: draft
+  periodic_review:
+    review_id: PR-CP-001
+    due_on: "2026-08-14"
+    reviewer: regulated_owner
+    outcome: planned
+  evidence_bundle: EV-CP-MVP-001
+  evidence_bundle_hash: sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789
+optional_ui_dashboard:
+  status: optional
+  required_for_mvp: false
+  rationale: >-
+    A dashboard can improve scanning and portfolio triage, but the MVP contract
+    is the evidence model and exportable records.
+  allowed_views:
+    - portfolio_summary
+    - domain_profile_status
+    - open_findings_queue
+    - release_readiness
+deferred_capabilities:
+  - control-plane-api
+  - dashboard-ui
+  - multi-tenant-authz
+  - scheduled-background-review-worker
+  - external-qms-sync
+release_gates:
+  - id: cp-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
+  - id: cp-evidence-pack
+    command: >-
+      python scripts/regulated_evidence_pack.py --output
+      .regulated-evidence-pack/evidence-pack.json
+    required: true

@@ -742,6 +742,47 @@ answers:
         risks = {risk["risk"] for risk in fixture["evidence_loss_risks"]}
         self.assertLessEqual({"rich_text_normalization", "status_semantics_drift"}, risks)
 
+    def test_control_plane_roadmap_separates_evidence_model_from_optional_ui(self) -> None:
+        import yaml
+
+        roadmap_path = ROOT / "docs/regulated/control-plane/multi-corpus-roadmap.yaml"
+        self.assertTrue(roadmap_path.exists(), f"missing roadmap: {roadmap_path}")
+        roadmap = yaml.safe_load(roadmap_path.read_text(encoding="utf-8"))
+        self.assertEqual(roadmap["roadmap_id"], "DOR-022")
+        self.assertIn("CLI-first", roadmap["claim_boundary"])
+
+        required_entities = {
+            entity["id"]: entity
+            for entity in roadmap["required_evidence_model"]["entities"]
+        }
+        self.assertLessEqual(
+            {
+                "corpus",
+                "domain_profile",
+                "source_version",
+                "open_findings",
+                "claim_level",
+                "release_status",
+                "periodic_review",
+                "evidence_bundle",
+            },
+            set(required_entities),
+        )
+        self.assertTrue(all(entity["required_for_mvp"] for entity in required_entities.values()))
+
+        sample = roadmap["portfolio_record_fixture"]
+        self.assertEqual(sample["corpus"], "rbok-reference-corpus")
+        self.assertEqual(sample["domain_profile"], "gxp-csv")
+        self.assertEqual(sample["claim_level"], "mapped")
+        self.assertEqual(sample["release_status"], "draft")
+        self.assertIn("EV-", sample["evidence_bundle"])
+        self.assertGreaterEqual(sample["open_findings"], 0)
+
+        ui = roadmap["optional_ui_dashboard"]
+        self.assertEqual(ui["status"], "optional")
+        self.assertFalse(ui["required_for_mvp"])
+        self.assertIn("control-plane-api", roadmap["deferred_capabilities"])
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
