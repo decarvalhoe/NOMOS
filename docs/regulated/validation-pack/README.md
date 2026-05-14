@@ -21,6 +21,11 @@ The pack must be risk based. It should prove confidence for the intended use act
 
 Use `templates/regulated/intended-use.yaml` and `templates/regulated/validation-plan.md` as initial templates.
 
+`scripts/regulated_validation_planner.py` generates the current CSA-style
+risk-ranked plan at `.regulated-evidence-pack/risk-based-validation-plan.json`.
+The generated plan is planning evidence only; it does not claim validation,
+certification, legal compliance, GxP compliance, or Part 11 compliance.
+
 ## Current Protocol Coverage
 
 - `TP-NOMOS-001-self-compliance.yaml`: executed self-compliance protocol for VAL-013.
