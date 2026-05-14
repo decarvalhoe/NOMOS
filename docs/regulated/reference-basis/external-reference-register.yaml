@@ -8,6 +8,44 @@ nomos_bible_policy:
   public_reference_processing: "Snapshot official source, hash it, atomize it with Nomos, and retain generated evidence."
   licensed_reference_processing: "Do not fetch or commit full text. Use a licensed local artifact, hash it, create a sidecar intake record, and process it read-only."
   missing_reference_policy: "Missing source content remains requires_evidence and blocks clause-level claims."
+reference_classification_policy:
+  allowed_source_classes:
+    - public
+    - licensed
+    - private
+    - confidential
+    - customer_owned
+  classes:
+    public:
+      content_access_policy: official_public_reference
+      confidentiality: public
+      processing_mode: official_snapshot
+      full_text_redistribution: source_terms_only
+      retention_obligation: public_snapshot_retained_with_hash
+    licensed:
+      content_access_policy: licensed_content_required
+      confidentiality: licensed_restricted
+      processing_mode: licensed_read_only_local_artifact
+      full_text_redistribution: forbidden
+      retention_obligation: license_terms
+    private:
+      content_access_policy: private_reference_only
+      confidentiality: private_restricted
+      processing_mode: private_read_only_local_artifact
+      full_text_redistribution: forbidden
+      retention_obligation: owner_policy
+    confidential:
+      content_access_policy: confidential_reference_only
+      confidentiality: confidential_restricted
+      processing_mode: confidential_read_only_local_artifact
+      full_text_redistribution: forbidden
+      retention_obligation: confidentiality_agreement
+    customer_owned:
+      content_access_policy: customer_owned_confidential
+      confidentiality: customer_confidential
+      processing_mode: customer_read_only_local_artifact
+      full_text_redistribution: forbidden
+      retention_obligation: customer_contract
 references:
   - id: FDA-21CFR11-11.10
     title: "21 CFR Part 11 - Controls for closed systems"
@@ -21,6 +59,12 @@ references:
       - "docs/regulated/data-integrity/electronic-records-and-signatures-policy.md"
       - "docs/regulated/security-privacy/access-control-and-audit-trail-sop.md"
     evidence_status: requires_evidence
+    reference_classification:
+      source_class: public
+      confidentiality: public
+      full_text_redistribution: source_terms_only
+      processing_mode: official_snapshot
+      retention_obligation: public_snapshot_retained_with_hash
   - id: FDA-21CFR820-QMSR
     title: "21 CFR Part 820 - Quality Management System Regulation"
     publisher: "US FDA / eCFR"
@@ -196,6 +240,12 @@ references:
     content_access_policy: licensed_content_required
     nomos_processing_mode: licensed_local_artifact_required
     nomos_alignment: "Canonical Nomos bible for CSV/CSA/GxP computerized-system validation. Public metadata and TOC may be registered, but full-text atomization requires a licensed local copy and sidecar intake record."
+    reference_classification:
+      source_class: licensed
+      confidentiality: licensed_restricted
+      full_text_redistribution: forbidden
+      processing_mode: licensed_read_only_local_artifact
+      retention_obligation: license_terms
     required_documents:
       - "docs/regulated/reference-basis/nomos-bible-corpus-policy.md"
       - "docs/regulated/reference-basis/licensed-intakes/ISPE-GAMP5-2E-2022.yaml"
