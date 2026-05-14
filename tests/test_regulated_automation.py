@@ -245,6 +245,107 @@ artifact:
                 ),
                 report.get("findings", []),
             )
+    def test_validation_planner_ranks_controls_by_csa_risk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            domain_profile = repo / "specs/examples/nomos-domain-profile.gxp.valid.yaml"
+            control_matrix = repo / "docs/regulated/control-matrix/nomos-control-matrix.yaml"
+            crosswalk = repo / "docs/regulated/control-matrix/gxp-csv-control-crosswalk.yaml"
+            write(
+                domain_profile,
+                """
+schema_version: "0.1.0"
+domain_profile: gxp-csv
+name: "GxP/CSV validation readiness"
+intended_use:
+  statement: "Plan CSA-style validation evidence for customer-owned GxP/CSV assessment."
+risk_class:
+  level: high
+  rationale: "Unsupported regulated claims are high impact."
+references:
+  - id: FDA-CSA-2025
+    status: required
+claim_ladder:
+  current_level: registered
+""".lstrip(),
+            )
+            write(
+                control_matrix,
+                """
+schema_version: "0.1.0"
+controls:
+  - control_id: CTL-VAL-HIGH
+    title: High Risk Function
+    control_family: validation
+    intended_use: "A quality-impacting function."
+    risk_level: high
+    evidence_type: manual_review
+    verification_ref: manual review alone is insufficient
+    evidence_artifact: review-note
+  - control_id: CTL-VAL-LOW
+    title: Low Risk Function
+    control_family: validation
+    intended_use: "A low-impact support function."
+    risk_level: low
+    evidence_type: manual_review
+    verification_ref: documented review
+    evidence_artifact: review-note
+""".lstrip(),
+            )
+            write(
+                crosswalk,
+                """
+schema_version: "0.1.0"
+record_type: gxp_csv_control_crosswalk
+domain_profile: gxp-csv
+references:
+  - reference_id: FDA-CSA-2025
+    disposition: mapped
+    controls:
+      - CTL-VAL-HIGH
+      - CTL-VAL-LOW
+    rationale: "CSA planning controls."
+""".lstrip(),
+            )
+            output = repo / "out/risk-based-validation-plan.json"
+
+            result = run_script(
+                "regulated_validation_planner.py",
+                "--root",
+                str(repo),
+                "--domain-profile",
+                str(domain_profile),
+                "--control-matrix",
+                str(control_matrix),
+                "--crosswalk",
+                str(crosswalk),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            plan = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(plan["status"], "generated")
+            self.assertEqual(
+                plan["claim_boundary"],
+                "CSA-style validation planning only; no validation, compliance, or certification claim.",
+            )
+            controls = {control["control_id"]: control for control in plan["controls"]}
+            self.assertEqual(controls["CTL-VAL-HIGH"]["criticality"], "high")
+            self.assertEqual(
+                controls["CTL-VAL-HIGH"]["required_verification_type"],
+                "scripted_or_challenge_evidence",
+            )
+            self.assertIn("scripted_test", controls["CTL-VAL-HIGH"]["required_evidence"])
+            self.assertIn("challenge_case", controls["CTL-VAL-HIGH"]["required_evidence"])
+            self.assertFalse(controls["CTL-VAL-HIGH"]["lighter_evidence_allowed"])
+            self.assertEqual(controls["CTL-VAL-LOW"]["criticality"], "low")
+            self.assertEqual(controls["CTL-VAL-LOW"]["required_verification_type"], "documented_rationale")
+            self.assertIn("documented_rationale", controls["CTL-VAL-LOW"]["required_evidence"])
+            self.assertTrue(controls["CTL-VAL-LOW"]["lighter_evidence_allowed"])
+            self.assertTrue(plan["summary"]["high_risk_controls_require_scripted_or_challenge_evidence"])
+            self.assertTrue(plan["summary"]["low_risk_controls_allow_lighter_evidence_with_rationale"])
 
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
