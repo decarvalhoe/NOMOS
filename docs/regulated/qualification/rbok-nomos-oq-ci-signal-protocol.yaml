@@ -1,0 +1,103 @@
+schema_version: "0.1.0"
+protocol_id: OQ-RBOK-NOMOS-CI-2026-05-06
+record_type: rbok_nomos_operational_qualification_ci_signal_protocol
+qualification_phase: OQ
+recorded_at_utc: "2026-05-14T11:27:00Z"
+claim_boundary: >-
+  Operational gate signal protocol only; current gate status must be separated
+  from historical incident telemetry, and this record is not PQ evidence,
+  production validation, or regulated certification.
+parent_epic: "#314"
+related_issue: "#409"
+current_state_rule: latest_run_per_workflow_wins
+signal_model:
+  grouping_key: workflow_or_required_check_name
+  ordering_key: completed_or_started_at_utc
+  latest_success: green
+  latest_failure: red
+  latest_in_progress: pending_external_wait
+  superseded_failure: warning
+merge_rule:
+  allow_merge_when_required_current_check_red: false
+  allow_historical_failure_as_warning_when_superseded: true
+  allow_merge_when_required_check_in_progress: false
+  in_progress_disposition: pending_external_wait
+test_cases:
+  - id: stale_failure_healed
+    description: >-
+      A historical failed workflow is superseded by a newer successful run for
+      the same workflow and SHA.
+    workflow: "Deploy DEV Alerts"
+    sha: fd0aee8f
+    historical_failure:
+      run_id: "25442507323"
+      status: completed
+      conclusion: failure
+      observed_at_utc: "2026-05-06T14:45:48Z"
+    newer_signal:
+      status: completed
+      conclusion: success
+      observed_at_utc: "2026-05-06T14:46:01Z"
+    expected_gate_status: warning
+    evidence_urls:
+      - https://github.com/RBOKproject/RBOK/actions/runs/25442507323
+    ordo_audit_refs:
+      - ORDO-2026-05-06-stale-ci-signal
+  - id: newest_failure
+    description: >-
+      The newest run for a required workflow fails, so the current gate remains
+      red and PR merge is forbidden.
+    workflow: "Required CI"
+    sha: fd0aee8f
+    newest_signal:
+      status: completed
+      conclusion: failure
+      observed_at_utc: "2026-05-06T14:50:00Z"
+    expected_gate_status: red
+    evidence_urls:
+      - https://github.com/RBOKproject/RBOK/actions
+    ordo_audit_refs:
+      - ORDO-2026-05-06-newest-failure-case
+  - id: in_progress_deploy
+    description: >-
+      The newest deploy workflow is still running, so the correct operational
+      qualification state is pending/external_wait rather than hard red.
+    workflow: "Deploy DEV"
+    sha: fd0aee8f
+    newest_signal:
+      status: in_progress
+      conclusion: null
+      observed_at_utc: "2026-05-06T14:46:01Z"
+    expected_gate_status: pending_external_wait
+    evidence_urls:
+      - https://github.com/RBOKproject/RBOK/actions
+    ordo_audit_refs:
+      - ORDO-2026-05-06-in-progress-deploy
+ordo_audit_log_lines:
+  - id: ORDO-2026-05-06-stale-ci-signal
+    line: >-
+      check_ci_health observed historical Deploy DEV Alerts failure
+      25442507323 and must compare it with the newer same-workflow signal.
+  - id: ORDO-2026-05-06-newest-failure-case
+    line: >-
+      Required current failure remains red until a newer same-workflow success
+      supersedes it.
+  - id: ORDO-2026-05-06-in-progress-deploy
+    line: >-
+      Current deploy still in progress is pending_external_wait and must not be
+      reported as healed or failed.
+claim_language_boundary: >-
+  Reports must say current gate status when evaluating merge readiness, and
+  historical incident telemetry when describing superseded failures.
+verification:
+  - id: oq-ci-signal-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_rbok_nomos_oq_protocol_models_latest_ci_signal
+      -v
+    required: true
+  - id: oq-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true

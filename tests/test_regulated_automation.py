@@ -853,6 +853,35 @@ answers:
         self.assertEqual(baseline["tool_identity"]["tool"], "Codex")
         self.assertEqual(baseline["later_phase_boundaries"], ["OQ", "PQ"])
 
+    def test_rbok_nomos_oq_protocol_models_latest_ci_signal(self) -> None:
+        import yaml
+
+        protocol_path = ROOT / "docs/regulated/qualification/rbok-nomos-oq-ci-signal-protocol.yaml"
+        self.assertTrue(protocol_path.exists(), f"missing OQ protocol: {protocol_path}")
+        protocol = yaml.safe_load(protocol_path.read_text(encoding="utf-8"))
+        self.assertEqual(protocol["protocol_id"], "OQ-RBOK-NOMOS-CI-2026-05-06")
+        self.assertEqual(protocol["qualification_phase"], "OQ")
+        self.assertEqual(protocol["current_state_rule"], "latest_run_per_workflow_wins")
+        self.assertIn("historical incident telemetry", protocol["claim_boundary"])
+
+        cases = {case["id"]: case for case in protocol["test_cases"]}
+        self.assertEqual(cases["stale_failure_healed"]["expected_gate_status"], "warning")
+        self.assertEqual(cases["newest_failure"]["expected_gate_status"], "red")
+        self.assertEqual(cases["in_progress_deploy"]["expected_gate_status"], "pending_external_wait")
+
+        stale = cases["stale_failure_healed"]
+        self.assertEqual(stale["historical_failure"]["run_id"], "25442507323")
+        self.assertEqual(stale["newer_signal"]["conclusion"], "success")
+        self.assertIn("https://github.com/RBOKproject/RBOK/actions/runs/25442507323", stale["evidence_urls"])
+
+        merge_rule = protocol["merge_rule"]
+        self.assertFalse(merge_rule["allow_merge_when_required_current_check_red"])
+        self.assertTrue(merge_rule["allow_historical_failure_as_warning_when_superseded"])
+
+        self.assertTrue(protocol["ordo_audit_log_lines"])
+        self.assertIn("current gate status", protocol["claim_language_boundary"])
+        self.assertIn("historical incident telemetry", protocol["claim_language_boundary"])
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
