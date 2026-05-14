@@ -1,0 +1,57 @@
+schema_version: "0.1.0"
+domain_profile: gxp-csv
+name: "Invalid GxP overclaim"
+summary: >-
+  This fixture must fail because an unsupported compliance claim is listed as
+  authorized.
+intended_use:
+  statement: "Demonstrate claim rejection."
+  allowed_uses:
+    - "Fixture validation."
+  not_authorized:
+    - "Unsupported compliance claims."
+references:
+  - id: GAMP5
+    title: "GAMP 5"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: required
+    purpose: "CSV lifecycle and validation planning reference."
+applicability:
+  status: applicable
+  applies_when:
+    - "Fixture is evaluated."
+  does_not_apply_when:
+    - "Unsupported compliance claims are blocked."
+risk_class:
+  level: high
+  rationale: "Unsupported claims must fail schema validation."
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: BAD-GXP-CLAIM-001
+      level: registered
+      kind: gxp_compliance
+      statement: "Nomos is GxP compliant."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#non-claim-rule"
+  blocked_claims:
+    - id: GXP-BLOCK-001
+      kind: gxp_compliance
+      statement: "Nomos is GxP compliant."
+      reason: "This statement must remain blocked, not authorized."
+required_artifacts:
+  - id: source-manifest
+    type: source_manifest
+    path: docs/canonical/source-manifest.yaml
+    required: true
+    minimum_claim_level: registered
+validation_gates:
+  - id: invalid-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.unsupported-claim.invalid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
