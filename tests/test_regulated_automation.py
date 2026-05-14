@@ -32,6 +32,30 @@ def run_script(script: str, *args: str, cwd: Path) -> subprocess.CompletedProces
     )
 
 
+REQUIRED_ALCOA_ENVELOPE_PATHS = (
+    ("attributable", "actor"),
+    ("attributable", "tool"),
+    ("attributable", "tool_version"),
+    ("attributable", "command"),
+    ("contemporaneous", "timestamp_utc"),
+    ("original_or_true_copy", "source_commit"),
+    ("original_or_true_copy", "source_hash"),
+    ("original_or_true_copy", "artifact_hash"),
+    ("complete", "derivation"),
+    ("complete", "exclusions"),
+    ("enduring", "retention_hint"),
+)
+
+
+def nested_value(data: dict[str, object], path: tuple[str, ...]) -> object:
+    value: object = data
+    for part in path:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(part)
+    return value
+
+
 def make_minimal_regulated_repo(tmp_path: Path) -> Path:
     write(
         tmp_path / "docs/regulated/reference-basis/external-reference-register.yaml",
@@ -176,6 +200,51 @@ class RegulatedAutomationTests(unittest.TestCase):
             self.assertGreaterEqual(report["summary"]["records_hashed"], 7)
             self.assertTrue(any(record["path"].endswith("quality-manual.md") for record in report["records"]))
             self.assertTrue(all(record["sha256"] for record in report["records"]))
+            for record in report["records"]:
+                envelope = record.get("alcoa_envelope")
+                self.assertIsInstance(envelope, dict, record)
+                for path in REQUIRED_ALCOA_ENVELOPE_PATHS:
+                    self.assertNotIn(nested_value(envelope, path), (None, "", []), (record["path"], path))
+                self.assertEqual(nested_value(envelope, ("original_or_true_copy", "source_hash")), record["sha256"])
+                self.assertEqual(nested_value(envelope, ("original_or_true_copy", "artifact_hash")), record["sha256"])
+
+    def test_evidence_pack_blocks_domain_evidence_without_alcoa_envelope(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/domain-evidence/gxp-csv-pack.yaml",
+                """
+schema_version: "0.1.0"
+record_type: domain_evidence_artifact
+domain_profile: gxp-csv
+claim_boundary: "Evidence planning artifact only; no GxP compliance claim."
+artifact:
+  id: EV-DOMAIN-GXP-CSV-001
+  title: GxP CSV sample evidence pack
+""".lstrip(),
+            )
+            output = repo / "out/evidence-pack.json"
+
+            result = run_script(
+                "regulated_evidence_pack.py",
+                "--root",
+                str(repo),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(
+                    finding["code"] == "MISSING_ALCOA_ENVELOPE_FIELD"
+                    and "docs/regulated/domain-evidence/gxp-csv-pack.yaml" in finding["path"]
+                    for finding in report["findings"]
+                ),
+                report.get("findings", []),
+            )
 
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

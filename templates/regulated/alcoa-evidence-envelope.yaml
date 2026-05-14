@@ -8,22 +8,29 @@ alcoa_plus:
   attributable:
     actor: replace_with_actor
     tool: replace_with_tool
+    tool_version: replace_with_tool_version
     command: replace_with_command
   legible:
     human_readable_path: replace_with_path
     machine_readable_path: replace_with_path
   contemporaneous:
+    timestamp_utc: replace_with_iso8601_timestamp
     generated_at: replace_with_iso8601_timestamp
     source_state_time: replace_with_iso8601_timestamp
   original_or_true_copy:
+    source_commit: replace_with_commit_sha
     source_hashes:
       - source_id: replace_with_source_id
         hash: replace_with_hash
+    source_hash: replace_with_hash
     artifact_hash: replace_with_hash
   accurate:
     schema: replace_with_schema
     validation_status: not_validated
   complete:
+    derivation:
+      method: replace_with_derivation_method
+      source_path: replace_with_source_path
     included_scope:
       - replace_with_scope
     exclusions:
@@ -32,6 +39,7 @@ alcoa_plus:
     stable_id_policy: replace_with_policy
     ordering_policy: replace_with_policy
   enduring:
+    retention_hint: replace_with_retention_hint
     retention_location: replace_with_location
     retention_period: replace_with_period
   available:
@@ -40,6 +48,8 @@ alcoa_plus:
 lineage:
   repository: replace_with_repository_url
   commit: replace_with_commit_sha
+  source_commit: replace_with_commit_sha
   workflow_run: replace_with_workflow_run_or_not_applicable
+  derivation: replace_with_derivation_summary
   derived_from:
     - replace_with_source_or_artifact_id
