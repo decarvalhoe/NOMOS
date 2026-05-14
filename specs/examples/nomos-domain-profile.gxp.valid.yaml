@@ -1,0 +1,88 @@
+schema_version: "0.1.0"
+domain_profile: gxp-csv
+name: "GxP/CSV validation readiness"
+summary: >-
+  Plans Nomos evidence for GxP and CSV contexts without claiming
+  validated-system or GxP compliance.
+intended_use:
+  statement: >-
+    Plan source-backed evidence, validation gates, and artifacts for
+    customer-owned GxP/CSV assessment.
+  allowed_uses:
+    - "Identify source, control, and evidence gaps before customer validation."
+    - "Prepare IQ/OQ/PQ and supplier evidence candidates for human review."
+  not_authorized:
+    - "Claim that Nomos is a validated GxP system."
+    - "Claim 21 CFR Part 11 or GxP compliance."
+references:
+  - id: GAMP5
+    title: "GAMP 5"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: required
+    purpose: "CSV lifecycle and validation planning reference."
+  - id: ISO-13485
+    title: "ISO 13485:2016"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: deferred
+    purpose: "Quality management reference for regulated medical contexts."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - >-
+      The customer has identified intended use and accountable validation
+      owner.
+    - "Source documents can be hashed and processed read-only."
+  does_not_apply_when:
+    - >-
+      The customer expects Nomos to certify, validate, or replace its quality
+      system.
+risk_class:
+  level: high
+  rationale: >-
+    Evidence gaps can lead to unsupported regulated claims if not blocked
+    explicitly.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: GXP-PLAN-001
+      level: registered
+      kind: planning
+      statement: "Nomos can structure a GxP/CSV evidence planning profile."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-001"
+  blocked_claims:
+    - id: GXP-BLOCK-001
+      kind: gxp_compliance
+      statement: "Nomos is GxP compliant."
+      reason: >-
+        Compliance requires customer validation, approved procedures, and
+        audit evidence outside this profile.
+    - id: GXP-BLOCK-002
+      kind: part11_compliance
+      statement: "Nomos is 21 CFR Part 11 compliant."
+      reason: >-
+        Part 11 controls and validation evidence are not established by this
+        planning profile.
+required_artifacts:
+  - id: source-manifest
+    type: source_manifest
+    path: docs/canonical/source-manifest.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: validation-plan
+    type: validation_plan
+    path: docs/regulated/validation-pack/README.md
+    required: true
+    minimum_claim_level: mapped
+validation_gates:
+  - id: gxp-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.gxp.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready

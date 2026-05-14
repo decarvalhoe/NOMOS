@@ -1,0 +1,88 @@
+schema_version: "0.1.0"
+domain_profile: ai-governance
+name: "AI governance evidence readiness"
+summary: >-
+  Plans source-backed AI/RAG governance evidence without claiming model
+  certification or legal compliance.
+intended_use:
+  statement: >-
+    Plan evidence for governed AI/RAG answers, model/provider change control,
+    and citation-bound outputs.
+  allowed_uses:
+    - >-
+      Map AI answer evidence to source-backed citations and change-control
+      artifacts.
+    - "Identify gates that block unsupported AI governance claims."
+  not_authorized:
+    - "Claim that a model provider or AI system is certified."
+    - "Claim legal, medical, financial, or regulatory sufficiency."
+references:
+  - id: NOMOS-AI-RAG-GOVERNANCE
+    title: "Nomos AI/RAG governance documentation"
+    authority_type: internal_policy
+    access_policy: repository_public
+    status: required
+    purpose: "Defines citation and source-backed answer expectations."
+  - id: CUSTOMER-AI-POLICY
+    title: "Customer AI governance policy"
+    authority_type: customer_source
+    access_policy: customer_confidential
+    status: optional
+    purpose: "Constrains deployment-specific AI governance claims."
+applicability:
+  status: applicable
+  applies_when:
+    - "AI outputs can cite governed source units."
+    - "Model and provider changes can be recorded in a controlled ledger."
+  does_not_apply_when:
+    - >-
+      The deployment requires unreviewed generative decisions for critical
+      outcomes.
+risk_class:
+  level: high
+  rationale: >-
+    AI answer drift and provider changes can create unsupported product
+    claims.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: AI-PLAN-001
+      level: registered
+      kind: planning
+      statement: "Nomos can define an AI governance evidence planning profile."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-010"
+  blocked_claims:
+    - id: AI-BLOCK-001
+      kind: certification
+      statement: "Nomos certifies AI systems."
+      reason: >-
+        Certification requires independent authority and evidence outside this
+        profile.
+    - id: AI-BLOCK-002
+      kind: legal_compliance
+      statement: "Nomos guarantees AI regulatory compliance."
+      reason: >-
+        Regulatory compliance depends on jurisdiction, intended use,
+        deployment controls, and legal review.
+required_artifacts:
+  - id: source-backed-answer-report
+    type: evidence_pack
+    path: docs/regulated/ai-rag-governance/README.md
+    required: true
+    minimum_claim_level: mapped
+  - id: provider-change-ledger
+    type: change_control_ledger
+    path: docs/regulated/operations/README.md
+    required: true
+    minimum_claim_level: evidence_ready
+validation_gates:
+  - id: ai-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.ai.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
