@@ -882,6 +882,37 @@ answers:
         self.assertIn("current gate status", protocol["claim_language_boundary"])
         self.assertIn("historical incident telemetry", protocol["claim_language_boundary"])
 
+    def test_rbok_nomos_pq_pack_lists_required_readonly_journeys_and_blockers(self) -> None:
+        import yaml
+
+        pack_path = ROOT / "docs/regulated/qualification/rbok-nomos-pq-readonly-journey-pack.yaml"
+        self.assertTrue(pack_path.exists(), f"missing PQ pack: {pack_path}")
+        pack = yaml.safe_load(pack_path.read_text(encoding="utf-8"))
+        self.assertEqual(pack["pack_id"], "PQ-RBOK-NOMOS-READONLY-2026-05-14")
+        self.assertEqual(pack["qualification_phase"], "PQ")
+        self.assertIn("no PQ pass claim", pack["claim_boundary"])
+        self.assertEqual(pack["environment"]["url"], "https://dev.realisons.com")
+        self.assertEqual(pack["observed_public_checks"]["health"]["result"], "PASS")
+        self.assertEqual(pack["observed_public_checks"]["root_redirect"]["location"], "/login")
+
+        journeys = {journey["id"]: journey for journey in pack["readonly_journeys"]}
+        self.assertLessEqual(
+            {
+                "documents_list_readonly",
+                "document_detail_citation",
+                "collaborateur_docs_workspace",
+                "permission_denied_missing_capability",
+                "empty_endpoint_data",
+                "accessibility_readonly_surfaces",
+            },
+            set(journeys),
+        )
+        self.assertTrue(all("url" in journey for journey in journeys.values()))
+        self.assertTrue(all("evidence_required" in journey for journey in journeys.values()))
+        self.assertIn("auth_required_for_role_journeys", pack["blockers"])
+        self.assertIn("screenshot_trace_missing", pack["blockers"])
+        self.assertEqual(pack["overall_result"], "PENDING")
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

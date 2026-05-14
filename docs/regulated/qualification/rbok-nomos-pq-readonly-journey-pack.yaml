@@ -1,0 +1,122 @@
+schema_version: "0.1.0"
+pack_id: PQ-RBOK-NOMOS-READONLY-2026-05-14
+record_type: rbok_nomos_readonly_pq_evidence_pack
+qualification_phase: PQ
+recorded_at_utc: "2026-05-14T11:24:25Z"
+related_issue: "#410"
+parent_epic: "#314"
+claim_boundary: >-
+  PQ evidence pack with public checks and explicit blockers only; no PQ pass
+  claim, no production validation, no customer acceptance, and no regulated
+  certification claim.
+environment:
+  name: RBOK dev
+  url: https://dev.realisons.com
+  access_context: unauthenticated_public_network_probe
+observed_public_checks:
+  health:
+    url: https://dev.realisons.com/api/health
+    result: PASS
+    http_status: 200
+    observed_at_utc: "2026-05-14T11:24:25Z"
+    response_summary:
+      status: healthy
+      database: ok
+      cache: ok
+    request_id: b427af14-b2ec-4f46-853e-ace5eaaad6ed
+  root_redirect:
+    url: https://dev.realisons.com/
+    result: PASS
+    http_status: 307
+    location: /login
+    observed_at_utc: "2026-05-14T11:24:24Z"
+    response_summary: "Unauthenticated root redirects to login."
+readonly_journeys:
+  - id: documents_list_readonly
+    name: "RBOK/NOMOS documents list readonly journey"
+    url: https://dev.realisons.com/docs
+    profile_or_capability: rbok_nomos_read
+    result: PENDING
+    evidence_required:
+      - authenticated_user_profile
+      - screenshot_or_trace
+      - api_response_summary_without_secrets
+      - readonly_assertion
+    blocker: auth_required_for_role_journeys
+  - id: document_detail_citation
+    name: "NOMOS document detail and citation journey"
+    url: https://dev.realisons.com/docs/rbok
+    profile_or_capability: rbok_nomos_read
+    result: PENDING
+    evidence_required:
+      - authenticated_user_profile
+      - screenshot_or_trace
+      - citation_visible_or_api_bound
+      - source_reference_summary_without_secrets
+    blocker: auth_required_for_role_journeys
+  - id: collaborateur_docs_workspace
+    name: "Collaborateur docs readonly workspace journey"
+    url: https://dev.realisons.com/collaborateur/docs
+    profile_or_capability: collaborateur_docs_read
+    result: PENDING
+    evidence_required:
+      - collaborateur_profile
+      - screenshot_or_trace
+      - workspace_readonly_assertion
+      - api_response_summary_without_secrets
+    blocker: auth_required_for_role_journeys
+  - id: permission_denied_missing_capability
+    name: "Permission denied path for missing RBOK/NOMOS read capability"
+    url: https://dev.realisons.com/docs/rbok
+    profile_or_capability: authenticated_user_without_rbok_nomos_read
+    result: PENDING
+    evidence_required:
+      - negative_profile_identity
+      - denied_response_status
+      - screenshot_or_trace
+      - no_secret_disclosure_assertion
+    blocker: auth_required_for_negative_profile
+  - id: empty_endpoint_data
+    name: "Empty endpoint/data path without hallucinated filler content"
+    url: https://dev.realisons.com/api/docs/rbok
+    profile_or_capability: rbok_nomos_read_with_empty_fixture_or_filter
+    result: PENDING
+    evidence_required:
+      - endpoint_response_summary_without_secrets
+      - empty_state_screenshot_or_trace
+      - no_hallucinated_content_assertion
+    blocker: test_fixture_or_filter_required
+  - id: accessibility_readonly_surfaces
+    name: "Critical accessibility assertions for readonly surfaces"
+    url: https://dev.realisons.com/docs
+    profile_or_capability: rbok_nomos_read
+    result: PENDING
+    evidence_required:
+      - axe_or_equivalent_a11y_summary
+      - keyboard_navigation_observation
+      - focus_and_landmark_summary
+      - screenshot_or_trace
+    blocker: screenshot_trace_missing
+blockers:
+  - auth_required_for_role_journeys
+  - auth_required_for_negative_profile
+  - test_fixture_or_filter_required
+  - screenshot_trace_missing
+overall_result: PENDING
+child_issue_policy:
+  required_when: "A journey result is FAIL after authenticated execution."
+  current_disposition: >-
+    No FAIL claim is recorded because authenticated journey execution was not
+    available in this session; blockers remain explicit.
+verification:
+  - id: pq-readonly-pack-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_rbok_nomos_pq_pack_lists_required_readonly_journeys_and_blockers
+      -v
+    required: true
+  - id: pq-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
