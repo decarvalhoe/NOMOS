@@ -1,0 +1,74 @@
+schema_version: "0.1.0"
+claim_boundary: >
+  RAG answer fixtures test citation, refusal, prompt-injection, and verbosity
+  policy outcomes. They do not make LLM output authoritative.
+answers:
+  - answer_id: ANS-CITATION-OK
+    prompt_id: PROMPT-CITATION-001
+    fixture_type: citation
+    model:
+      provider: fixture-provider
+      name: fixture-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-AI-001
+        source_id: DOC-AI-GOV-001
+        source_hash: "6f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081"
+        span: "lines:1-8"
+    source_spans:
+      - source_id: DOC-AI-GOV-001
+        source_hash: "6f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081"
+        span: "lines:1-8"
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.91
+    policy_outcome: acceptable
+
+  - answer_id: ANS-PROMPT-INJECTION-REFUSED
+    prompt_id: PROMPT-INJECTION-001
+    fixture_type: prompt_injection
+    model:
+      provider: fixture-provider
+      name: fixture-model
+      version: "2026-05-14"
+    retrieved_chunks: []
+    source_spans: []
+    citation_status: not_applicable
+    refusal_status: refused
+    confidence: 0.2
+    policy_outcome: blocked_prompt_injection
+
+  - answer_id: ANS-UNSUPPORTED-REFUSAL
+    prompt_id: PROMPT-UNSUPPORTED-001
+    fixture_type: refusal
+    model:
+      provider: fixture-provider
+      name: fixture-model
+      version: "2026-05-14"
+    retrieved_chunks: []
+    source_spans: []
+    citation_status: not_applicable
+    refusal_status: unsupported
+    confidence: 0.34
+    policy_outcome: unsupported
+
+  - answer_id: ANS-OVER-VERBOSE-BLOCKED
+    prompt_id: PROMPT-VERBOSITY-001
+    fixture_type: over_verbosity
+    model:
+      provider: fixture-provider
+      name: fixture-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-AI-002
+        source_id: DOC-AI-GOV-002
+        source_hash: "2f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7000"
+        span: "lines:20-26"
+    source_spans:
+      - source_id: DOC-AI-GOV-002
+        source_hash: "2f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7000"
+        span: "lines:20-26"
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.73
+    policy_outcome: blocked_over_verbosity
