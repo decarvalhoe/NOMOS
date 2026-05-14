@@ -50,6 +50,29 @@ Nomos may fetch or snapshot public metadata and the public TOC. Nomos must not f
 | `metadata_only_until_licensed` | Public product page or table of contents exists but full text is restricted. | Register metadata and open a gap. No clause-level mapping is allowed. |
 | `public_surrogate_annex` | Temporary bridge for a required licensed bible when authoritative public regulations, regulator guidance, or agency standards cover enough adjacent process scope to keep Nomos work moving. | Process only the public sources named in `public-surrogate-annexes/`. Preserve the licensed gap and block all protected-standard clause, certification, equivalence, and redistribution claims. |
 
+## Machine-Readable Reference Classification
+
+Each registered bible may declare `reference_classification`. If the block is absent, `regulated_reference_canon.py` infers the class from `content_access_policy`, publisher and evidence status. The normalized report always emits the effective classification.
+
+```yaml
+reference_classification:
+  source_class: public | licensed | private | confidential | customer_owned
+  confidentiality: public | licensed_restricted | private_restricted | confidential_restricted | customer_confidential
+  full_text_redistribution: allowed | source_terms_only | forbidden
+  processing_mode: official_snapshot | licensed_read_only_local_artifact | private_read_only_local_artifact | confidential_read_only_local_artifact | customer_read_only_local_artifact
+  retention_obligation: public_snapshot_retained_with_hash | license_terms | owner_policy | confidentiality_agreement | customer_contract
+```
+
+Class rules:
+
+| Source class | Access rule | Retention rule | Redistribution rule |
+|---|---|---|---|
+| `public` | Official public source may be snapshotted and hashed. | Keep public snapshot metadata, hash and retrieval evidence. | Full text redistribution is only `allowed` when the source terms permit it; otherwise use `source_terms_only`. |
+| `licensed` | Full text must live outside Git under `NOMOS_LICENSED_REFERENCE_ROOT` and be processed read-only. | Retain according to license terms and intake sidecar. | Full text redistribution and committed full text are forbidden by the gate. |
+| `private` | Source must be supplied as a controlled local artifact. | Retain according to owner policy. | Full text redistribution and committed full text are forbidden by the gate. |
+| `confidential` | Source must be supplied as a confidential controlled local artifact. | Retain according to confidentiality agreement. | Full text redistribution and committed full text are forbidden by the gate. |
+| `customer_owned` | Source must be supplied as a customer-controlled local artifact. | Retain according to customer contract. | Full text redistribution and committed full text are forbidden by the gate. |
+
 ## Public Surrogate Annexes
 
 A public surrogate annex is a legal temporary bypass, not a license bypass.
@@ -79,7 +102,7 @@ Before Nomos processes a licensed bible:
 3. Store the source in `NOMOS_LICENSED_REFERENCE_ROOT/<reference-id>/`.
 4. Run Nomos corpus scan/feed in read-only mode against that local artifact.
 5. Commit only permitted sidecars, manifests, hashes, coverage, traceability and validation evidence.
-6. Do not commit full text or substantial extracted chunks unless the license explicitly permits it.
+6. Do not commit full text or substantial extracted chunks. For `licensed`, `private`, `confidential`, and `customer_owned` classifications, the reference canon gate fails if an intake sidecar authorizes full-text redistribution or committed full text.
 
 ## Self-Processing Requirement
 
