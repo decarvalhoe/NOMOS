@@ -951,6 +951,45 @@ answers:
         self.assertEqual(findings["stale_ci_signal_detection"]["linked_nomos_issue"], "#409")
         self.assertEqual(rule["future_reconciliation"]["requires_full_transcript_read"], False)
 
+    def test_praxis_activation_gate_keeps_unverified_nomos_atoms_blocked(self) -> None:
+        import yaml
+
+        gate_path = ROOT / "docs/regulated/qualification/praxis-activation-gate.yaml"
+        self.assertTrue(gate_path.exists(), f"missing Praxis activation gate: {gate_path}")
+        gate = yaml.safe_load(gate_path.read_text(encoding="utf-8"))
+        self.assertEqual(gate["activation_id"], "PRAXIS-NOMOS-ACTIVATION-2026-05-14")
+        self.assertEqual(gate["related_issue"], "#320")
+        self.assertEqual(gate["current_status"], "blocked_until_nomos_verified")
+        self.assertIn("not an activation approval", gate["claim_boundary"])
+
+        proof = gate["nomos_required_proof"]
+        self.assertEqual(proof["required_aq_status"], "accepted")
+        required_artifacts = {artifact["path"] for artifact in proof["required_artifacts"]}
+        self.assertLessEqual(
+            {
+                "docs/regulated/qualification/rbok-nomos-iq-baseline.yaml",
+                "docs/regulated/qualification/rbok-nomos-oq-ci-signal-protocol.yaml",
+                "docs/regulated/qualification/rbok-nomos-pq-readonly-journey-pack.yaml",
+            },
+            required_artifacts,
+        )
+
+        consumer_guard = gate["consumer_guard"]
+        self.assertFalse(consumer_guard["praxis_may_consume_unverified_nomos_atoms_as_regulated_evidence"])
+        self.assertEqual(consumer_guard["unverified_atom_handling"], "not_qualified_external_input")
+
+        fixture = gate["mapping_contract_fixture"]
+        self.assertEqual(fixture["status"], "deferred_until_nomos_verified")
+        self.assertEqual(fixture["contract_path"], "docs/regulated/customer-integration/praxis-atom-mapping.md")
+        self.assertIn("review_state != approved", fixture["must_reject"])
+
+        dossier = gate["dossier_state"]
+        self.assertEqual(dossier["praxis_activation"], "blocked")
+        self.assertIn("Nomos verification", dossier["blocked_reason"])
+
+        blocked_claims = set(gate["blocked_claims"])
+        self.assertIn("Praxis inherits Nomos regulated evidence status", blocked_claims)
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
