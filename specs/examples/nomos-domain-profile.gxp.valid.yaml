@@ -15,6 +15,30 @@ intended_use:
     - "Claim that Nomos is a validated GxP system."
     - "Claim 21 CFR Part 11 or GxP compliance."
 references:
+  - id: FDA-21CFR11-1110
+    title: "21 CFR Part 11 - Controls for closed systems"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Electronic record validation, audit trail, and access-control planning reference."
+  - id: EU-EUDRALEX-V4-ANNEX11
+    title: "EudraLex Volume 4 Annex 11 - Computerised Systems"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Computerized-system change control and supplier assessment planning reference."
+  - id: FDA-CSA-2025
+    title: "Computer Software Assurance for Production and Quality System Software"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Risk-based testing and CSA evidence planning reference."
+  - id: MHRA-GXP-DATA-INTEGRITY-2018
+    title: "MHRA guidance on GxP data integrity"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "ALCOA+ and source-integrity planning reference."
   - id: GAMP5
     title: "GAMP 5"
     authority_type: licensed_standard
@@ -76,12 +100,25 @@ required_artifacts:
     path: docs/regulated/validation-pack/README.md
     required: true
     minimum_claim_level: mapped
+  - id: gxp-csv-control-crosswalk
+    type: control_matrix
+    path: docs/regulated/control-matrix/gxp-csv-control-crosswalk.yaml
+    required: true
+    minimum_claim_level: mapped
 validation_gates:
   - id: gxp-domain-profile-vet
     command: >-
       cue vet specs/nomos-domain-profile.cue
       specs/examples/nomos-domain-profile.gxp.valid.yaml
       -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: gxp-csv-crosswalk-gate
+    command: >-
+      python scripts/regulated_docs_gate.py
+      --report .regulated-doc-gate/regulated-doc-gate-report.json
     required: true
     blocks_claim_levels:
       - mapped
