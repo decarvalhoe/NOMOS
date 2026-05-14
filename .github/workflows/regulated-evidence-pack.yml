@@ -56,6 +56,8 @@ jobs:
             --output .regulated-evidence-pack/evidence-pack.json
           python scripts/regulated_validation_planner.py \
             --output .regulated-evidence-pack/risk-based-validation-plan.json
+          python scripts/regulated_iq_oq_pq_generator.py \
+            --output .regulated-evidence-pack/iq-oq-pq-template-pack.json
           python scripts/regulated_reference_canon.py \
             --report .regulated-evidence-pack/reference-canon-report.json
 
