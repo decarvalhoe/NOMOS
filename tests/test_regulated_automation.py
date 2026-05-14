@@ -783,6 +783,39 @@ answers:
         self.assertFalse(ui["required_for_mvp"])
         self.assertIn("control-plane-api", roadmap["deferred_capabilities"])
 
+    def test_commercial_positioning_pack_bounds_pricing_and_public_claims(self) -> None:
+        import yaml
+
+        pack_path = ROOT / "docs/regulated/domain-packs/commercial-positioning/commercial-positioning-pack.yaml"
+        self.assertTrue(pack_path.exists(), f"missing commercial pack: {pack_path}")
+        pack = yaml.safe_load(pack_path.read_text(encoding="utf-8"))
+        self.assertEqual(pack["pack_id"], "DOR-023")
+        self.assertIn("no certification", pack["claim_boundary"].lower())
+
+        categories = {
+            category["id"]: category
+            for category in pack["market_category_comparison"]
+        }
+        self.assertLessEqual(
+            {"alm", "validation_lifecycle_management", "qms", "rag_governance", "regtech"},
+            set(categories),
+        )
+        self.assertEqual(categories["alm"]["positioning"], "upstream_and_adjacent")
+        self.assertEqual(categories["qms"]["positioning"], "evidence_supplier_not_replacement")
+
+        packaging = {item["id"]: item for item in pack["packaging_assumptions"]}
+        self.assertLessEqual({"cli_evidence_core", "domain_pack", "control_plane"}, set(packaging))
+
+        pricing = pack["pricing_assumptions"]
+        self.assertEqual(pricing["status"], "strategy_notes_not_financial_claims")
+        self.assertFalse(pricing["valuation_claim_allowed"])
+        self.assertIn("customer validation", pricing["depends_on"])
+
+        readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("commercial-positioning-pack.yaml", readme_text)
+        self.assertIn("notes de strategie", readme_text)
+        self.assertIn("sans revendiquer certification", readme_text)
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

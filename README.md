@@ -242,6 +242,10 @@ Pour les multiples de valorisation, les benchmarks SaaS publics et privés 2026 
 
 ## Position Commerciale Et Capitalisable
 
+Le pack DOR-023 de positionnement et pricing est suivi dans
+[`commercial-positioning-pack.yaml`](docs/regulated/domain-packs/commercial-positioning/commercial-positioning-pack.yaml).
+Ces hypotheses de packaging et pricing restent des notes de strategie, sans revendiquer certification, conformite, validation reglementee ou suffisance legale garantie.
+
 Nomos doit être évalué selon deux angles distincts :
 
 1. **Capitalisation comptable.** Une idée ne se capitalise pas. Les coûts de développement peuvent être capitalisés uniquement lorsque les critères applicables sont remplis : faisabilité technique, intention de terminer, capacité à utiliser ou vendre, bénéfices économiques futurs probables, ressources disponibles et mesure fiable des coûts. Les preuves éligibles peuvent inclure temps de développement, architecture, tests, documentation, CI, validation records et outillage ou infrastructure directement attribuables.

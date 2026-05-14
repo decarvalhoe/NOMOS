@@ -1,0 +1,117 @@
+schema_version: "0.1.0"
+pack_id: DOR-023
+record_type: commercial_positioning_pricing_evidence_pack
+claim_boundary: >-
+  Commercial positioning and pricing strategy notes only; no certification,
+  compliance, regulated validation, financial valuation, guaranteed legal
+  sufficiency, or customer acceptance claim.
+purpose: >-
+  Compare NOMOS against adjacent enterprise categories and define bounded
+  packaging and pricing assumptions without overclaiming maturity.
+market_category_comparison:
+  - id: alm
+    category: "ALM / requirements / test traceability"
+    positioning: upstream_and_adjacent
+    nomos_role: >-
+      Convert authority corpora into governed canonical units and evidence that
+      ALM tools can consume downstream.
+    not_claimed:
+      - "full ALM replacement"
+      - "bidirectional ALM synchronization"
+      - "customer release authority"
+  - id: validation_lifecycle_management
+    category: "Validation lifecycle management"
+    positioning: evidence_supplier_not_replacement
+    nomos_role: >-
+      Provide source-backed evidence, validation pack inputs, and claim
+      boundaries for customer validation processes.
+    not_claimed:
+      - "completed customer validation lifecycle"
+      - "validation approval"
+      - "regulated validation"
+  - id: qms
+    category: "QMS / document and record control"
+    positioning: evidence_supplier_not_replacement
+    nomos_role: >-
+      Produce controlled evidence records that can be retained by a customer's
+      QMS, while the customer QMS remains authoritative.
+    not_claimed:
+      - "validated eQMS"
+      - "quality system replacement"
+      - "Part 11 electronic signature system"
+  - id: rag_governance
+    category: "AI/RAG governance"
+    positioning: source_grounding_evidence
+    nomos_role: >-
+      Bind RAG inputs, citations, refusals, and source spans to governed
+      authority references.
+    not_claimed:
+      - "model truth guarantee"
+      - "autonomous compliance decision"
+      - "complete hallucination elimination"
+  - id: regtech
+    category: "RegTech evidence organization"
+    positioning: evidence_organization_layer
+    nomos_role: >-
+      Organize regulatory or policy evidence into traceable artifacts without
+      providing legal advice or regulatory approval.
+    not_claimed:
+      - "legal sufficiency"
+      - "regulatory approval"
+      - "financial regulatory compliance"
+packaging_assumptions:
+  - id: cli_evidence_core
+    package: "CLI evidence core"
+    buyer_signal: "Technical team needs source-backed evidence in CI or local runs."
+    maturity_dependency: "repeatable CLI and evidence-pack gates"
+    pricing_basis: "developer seat, repository, or annual support package"
+  - id: domain_pack
+    package: "Domain pack"
+    buyer_signal: "Customer needs bounded workflows for GxP, AI/RAG, cyber, legal, finance, or high-assurance planning."
+    maturity_dependency: "domain profile, install guide, validation checklist, and claim boundary"
+    pricing_basis: "pack license plus services for customer evidence mapping"
+  - id: control_plane
+    package: "Control-plane portfolio view"
+    buyer_signal: "Enterprise needs multi-corpus status, open findings, release readiness, and periodic review."
+    maturity_dependency: "DOR-022 evidence model and future API/dashboard implementation"
+    pricing_basis: "organization subscription after production-grade control-plane delivery"
+  - id: supplier_assurance_pack
+    package: "Supplier assurance pack"
+    buyer_signal: "Enterprise buyer needs security or qualification evidence from a software supplier."
+    maturity_dependency: "cyber supplier profile, evidence signing, and customer review workflow"
+    pricing_basis: "project package or annual supplier-review add-on"
+pricing_assumptions:
+  status: strategy_notes_not_financial_claims
+  valuation_claim_allowed: false
+  depends_on:
+    - customer validation
+    - repeatable evidence on customer corpora
+    - paid pilot or signed commercial intent
+    - support scope and deployment mode
+    - legal and finance review
+  notes:
+    - "Do not present pricing assumptions as valuation, revenue, or investment claims."
+    - "Keep alpha pricing separate from production subscription packaging."
+    - "Tie higher pricing to retained evidence, support obligations, and customer validation work."
+public_documentation_controls:
+  readme_path: README.md
+  required_public_boundary: >-
+    Packaging and pricing hypotheses are strategy notes only and must be
+    presented without certification, compliance, validation, or legal
+    sufficiency claims.
+  allowed_public_phrases:
+    - "authority-to-product evidence layer"
+    - "source-backed evidence"
+    - "integration layer"
+    - "strategy notes"
+  blocked_public_phrases:
+    - "certified QMS"
+    - "validated GxP system"
+    - "guaranteed legal sufficiency"
+    - "regulatory approval"
+verification:
+  - id: commercial-positioning-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
