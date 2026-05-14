@@ -1,0 +1,162 @@
+schema_version: "0.1.0"
+domain_profile: high-assurance-engineering
+name: "High-assurance engineering planning"
+summary: >-
+  Plans lifecycle, requirements, verification, independent review, waiver, and
+  release-decision evidence for high-rigor engineering without claiming
+  aerospace qualification.
+intended_use:
+  statement: >-
+    Map NASA-style engineering discipline to NOMOS evidence artifacts so a
+    reviewer can trace requirements through verification, waivers, independent
+    review, and release decisions.
+  allowed_uses:
+    - "Plan lifecycle and requirements traceability evidence."
+    - "Map verification, waiver, and independent review records."
+    - "Prepare release-decision evidence with explicit accepted waivers."
+  not_authorized:
+    - "Claim NASA, aerospace, safety-critical, or mission assurance qualification."
+    - "Claim regulated validation, certification, or legal compliance."
+    - "Replace customer engineering assurance or independent review authority."
+references:
+  - id: NASA-NPR-7150-2D
+    title: "NASA Software Engineering Requirements"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Public high-rigor lifecycle, requirements, verification, and assurance
+      reference vocabulary.
+  - id: NASA-SWEHB
+    title: "NASA Software Engineering Handbook"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Public implementation guidance for NASA-style software engineering
+      practices.
+  - id: ISO-IEC-IEEE-12207-2026
+    title: "ISO/IEC/IEEE 12207 lifecycle reference"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: deferred
+    purpose: >-
+      Lifecycle standard reference pending licensed intake; NASA public
+      materials are used only as surrogates until acquisition.
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "Requirements, verification evidence, waivers, and release decisions can be retained."
+    - "Independent review is performed by someone other than the evidence author."
+    - "The customer accepts that this is planning evidence, not qualification."
+  does_not_apply_when:
+    - "A customer expects NOMOS to qualify aerospace or mission-critical software."
+    - "Release authority, IV&V, or safety case approval must come from an external body."
+risk_class:
+  level: critical
+  rationale: >-
+    Unsupported high-assurance, aerospace, or safety-critical claims can
+    materially mislead engineering and release authorities.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: HA-PLAN-001
+      level: registered
+      kind: planning
+      statement: >-
+        NOMOS can structure a high-assurance engineering planning profile.
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-019"
+    - id: HA-TRACE-001
+      level: mapped
+      kind: workflow_support
+      statement: >-
+        NOMOS can map requirement, verification, waiver, independent review,
+        and release-decision evidence when trace links are explicit.
+      evidence:
+        - "docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml"
+  blocked_claims:
+    - id: HA-BLOCK-001
+      kind: certification
+      statement: "NOMOS provides aerospace or NASA qualification."
+      reason: >-
+        Aerospace qualification requires external authority, program-specific
+        assurance scope, and accepted independent evidence.
+    - id: HA-BLOCK-002
+      kind: regulated_validation
+      statement: "NOMOS validates high-assurance engineering outcomes."
+      reason: >-
+        Validation requires customer-approved intended use, execution evidence,
+        and independent review outside this planning profile.
+    - id: HA-BLOCK-003
+      kind: legal_compliance
+      statement: "NOMOS guarantees engineering compliance."
+      reason: "Legal and contractual compliance depend on customer scope and authority."
+required_artifacts:
+  - id: lifecycle-evidence-map
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: requirement-verification-trace
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: independent-review-record
+    type: audit_log
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: waiver-register
+    type: decision_record
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: release-decision-record
+    type: release_bundle
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: high-assurance-fixture
+    type: evidence_pack
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: external-ivv-placeholder
+    kind: lifecycle_evidence
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    status: deferred_until_customer_execution
+    reason: "Program-specific IV&V or assurance board review must be supplied externally."
+    related_issue: "#431"
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: aerospace-qualification-placeholder
+    kind: other
+    path: docs/regulated/domain-packs/high-assurance/high-assurance-traceability-fixture.yaml
+    status: missing_evidence_blocked
+    reason: "No aerospace, NASA, mission, or safety-critical qualification authority is present."
+    related_issue: "#431"
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: high-assurance-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.high-assurance.valid.yaml
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: high-assurance-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_high_assurance_profile_traces_requirement_verification_waiver
+      -v
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready

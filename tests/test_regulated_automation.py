@@ -640,6 +640,68 @@ answers:
         self.assertEqual(mapped_controls["CSF-RS.MA-01"]["status"], "manual")
         self.assertEqual(mapped_controls["CSF-GV.SC-07"]["status"], "customer_owned")
 
+    def test_high_assurance_profile_traces_requirement_verification_waiver(self) -> None:
+        import yaml
+
+        profile_path = ROOT / "specs/examples/nomos-domain-profile.high-assurance.valid.yaml"
+        self.assertTrue(profile_path.exists(), f"missing profile: {profile_path}")
+        profile = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["domain_profile"], "high-assurance-engineering")
+
+        references = {reference["id"] for reference in profile["references"]}
+        self.assertLessEqual({"NASA-NPR-7150-2D", "NASA-SWEHB"}, references)
+
+        artifacts = {artifact["id"]: artifact for artifact in profile["required_artifacts"]}
+        required_artifact_ids = {
+            "lifecycle-evidence-map",
+            "requirement-verification-trace",
+            "independent-review-record",
+            "waiver-register",
+            "release-decision-record",
+        }
+        self.assertLessEqual(required_artifact_ids, set(artifacts))
+
+        fixture_path = ROOT / artifacts["requirement-verification-trace"]["path"]
+        fixture = yaml.safe_load(fixture_path.read_text(encoding="utf-8"))
+        self.assertEqual(fixture["domain_profile"], "high-assurance-engineering")
+        self.assertIn("no aerospace qualification", fixture["claim_boundary"].lower())
+
+        requirements = {
+            requirement["requirement_id"]: requirement
+            for requirement in fixture["requirements"]
+        }
+        verifications = {
+            verification["verification_id"]: verification
+            for verification in fixture["verifications"]
+        }
+        waivers = {waiver["waiver_id"]: waiver for waiver in fixture["waivers"]}
+        reviews = {
+            review["review_id"]: review
+            for review in fixture["independent_reviews"]
+        }
+        decisions = {
+            decision["decision_id"]: decision
+            for decision in fixture["release_decisions"]
+        }
+
+        requirement = requirements["HA-REQ-001"]
+        self.assertIn("HA-VER-001", requirement["verification_ids"])
+        self.assertEqual(requirement["waiver_id"], "HA-WVR-001")
+        self.assertEqual(requirement["release_decision_id"], "HA-REL-001")
+
+        verification = verifications["HA-VER-001"]
+        self.assertEqual(verification["requirement_id"], "HA-REQ-001")
+        self.assertEqual(verification["independent_review_id"], "HA-IR-001")
+
+        waiver = waivers["HA-WVR-001"]
+        self.assertEqual(waiver["requirement_id"], "HA-REQ-001")
+        self.assertEqual(waiver["verification_id"], "HA-VER-001")
+        self.assertEqual(waiver["status"], "approved_with_expiry")
+
+        self.assertEqual(reviews["HA-IR-001"]["reviewed_artifacts"], ["HA-VER-001", "HA-WVR-001"])
+        self.assertEqual(decisions["HA-REL-001"]["status"], "conditional_release")
+        self.assertIn("HA-WVR-001", decisions["HA-REL-001"]["accepted_waivers"])
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

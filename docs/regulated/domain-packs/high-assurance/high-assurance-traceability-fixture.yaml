@@ -1,0 +1,106 @@
+schema_version: "0.1.0"
+record_type: high_assurance_traceability_fixture
+domain_profile: high-assurance-engineering
+claim_boundary: >-
+  High-assurance engineering traceability fixture only; no aerospace
+  qualification, NASA qualification, safety-critical certification, regulated
+  validation, or legal compliance claim.
+references:
+  - id: NASA-NPR-7150-2D
+    role: lifecycle_and_assurance_reference
+  - id: NASA-SWEHB
+    role: implementation_guidance_reference
+lifecycle_model:
+  - stage_id: lifecycle-planning
+    evidence_artifact: lifecycle-evidence-map
+    owner: engineering_assurance_owner
+  - stage_id: requirements-baseline
+    evidence_artifact: requirement-verification-trace
+    owner: requirements_owner
+  - stage_id: verification
+    evidence_artifact: requirement-verification-trace
+    owner: verification_owner
+  - stage_id: independent-review
+    evidence_artifact: independent-review-record
+    owner: independent_reviewer
+  - stage_id: release-decision
+    evidence_artifact: release-decision-record
+    owner: accountable_release_owner
+risks:
+  - risk_id: HA-RISK-001
+    category: release_integrity
+    criticality: high
+    mitigation: >-
+      Require verification evidence or an expiring waiver before conditional
+      release.
+requirements:
+  - requirement_id: HA-REQ-001
+    title: "Release evidence must be traceable before release"
+    lifecycle_stage: requirements-baseline
+    source_ref: NASA-NPR-7150-2D
+    statement: >-
+      Every high-assurance release decision must trace at least one
+      requirement to verification evidence or to an approved expiring waiver.
+    criticality: high
+    risk_id: HA-RISK-001
+    verification_ids:
+      - HA-VER-001
+    waiver_id: HA-WVR-001
+    release_decision_id: HA-REL-001
+verifications:
+  - verification_id: HA-VER-001
+    requirement_id: HA-REQ-001
+    method: inspection_and_test
+    evidence_ref: docs/regulated/validation-pack/validation-inventory.yaml
+    result: conditionally_satisfied_by_waiver
+    independent_review_id: HA-IR-001
+    reviewer_required: true
+waivers:
+  - waiver_id: HA-WVR-001
+    requirement_id: HA-REQ-001
+    verification_id: HA-VER-001
+    status: approved_with_expiry
+    owner: engineering_assurance_owner
+    approver: accountable_release_owner
+    expires_on: "2026-12-31"
+    rationale: >-
+      Full customer IV&V evidence is unavailable in the repository fixture; the
+      release decision is conditional until customer execution evidence exists.
+    mitigation: >-
+      Block evidence-ready and independent-review-ready claims until the
+      customer-owned IV&V placeholder is satisfied.
+    release_decision_impact: conditional_release
+independent_reviews:
+  - review_id: HA-IR-001
+    reviewer_role: independent_engineering_reviewer
+    independence_basis: not_author_of_requirement_or_verification
+    reviewed_artifacts:
+      - HA-VER-001
+      - HA-WVR-001
+    outcome: accepted_with_conditions
+    finding: >-
+      Traceability is structurally complete, but stronger claims remain blocked
+      by missing customer IV&V evidence.
+release_decisions:
+  - decision_id: HA-REL-001
+    status: conditional_release
+    decision_owner: accountable_release_owner
+    requirement_ids:
+      - HA-REQ-001
+    accepted_waivers:
+      - HA-WVR-001
+    blocked_claims:
+      - aerospace_qualification
+      - regulated_validation
+      - safety_critical_certification
+    go_no_go_rationale: >-
+      Conditional release may proceed for planning evidence only because the
+      waiver is explicit, expiring, independently reviewed, and claim-bounded.
+traceability_checks:
+  - check_id: HA-TRACE-CHECK-001
+    requirement_id: HA-REQ-001
+    verification_id: HA-VER-001
+    waiver_id: HA-WVR-001
+    independent_review_id: HA-IR-001
+    release_decision_id: HA-REL-001
+    status: trace_complete_with_claim_limit
