@@ -36,6 +36,24 @@ YAML_ROOTS = [
     Path(".github"),
 ]
 
+DOMAIN_PROFILE_ROOT = Path("specs/examples")
+
+DOMAIN_REPORT_STATUSES = [
+    "applicable",
+    "not_applicable",
+    "blocked",
+    "waived",
+    "missing_evidence",
+]
+
+CLAIM_LEVEL_RANK = {
+    "registered": 0,
+    "mapped": 1,
+    "evidence_ready": 2,
+    "validated_by_customer": 3,
+    "independent_review_ready": 4,
+}
+
 REQUIRED_MARKERS = [
     "document_id:",
     "version:",
@@ -144,12 +162,170 @@ def validate_approval_workflow_file(findings: list[dict[str, str]]) -> None:
         })
 
 
+def iter_domain_profile_files() -> list[Path]:
+    if not DOMAIN_PROFILE_ROOT.exists():
+        return []
+    return sorted(DOMAIN_PROFILE_ROOT.glob("nomos-domain-profile.*.valid.yaml"))
+
+
+def domain_claim_status(level: str, current_level: str) -> str:
+    level_rank = CLAIM_LEVEL_RANK.get(level, -1)
+    current_rank = CLAIM_LEVEL_RANK.get(current_level, -1)
+    if level_rank > current_rank:
+        return "exceeds_evidence"
+    return "allowed"
+
+
+def profile_report_status(profile: dict, missing_artifacts: list[str]) -> str:
+    if profile.get("waiver"):
+        return "waived"
+
+    applicability = profile.get("applicability") or {}
+    status = str(applicability.get("status", "")).strip()
+    if status == "blocked":
+        return "blocked"
+    if status == "not_applicable":
+        return "not_applicable"
+    if missing_artifacts:
+        return "missing_evidence"
+    return "applicable"
+
+
+def evaluate_domain_profile(path: Path) -> tuple[dict, list[dict[str, str]]]:
+    findings: list[dict[str, str]] = []
+    try:
+        profile = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001 - report parser detail to CI
+        finding = {
+            "severity": "error",
+            "code": "DOMAIN_PROFILE_PARSE_FAILED",
+            "path": str(path),
+            "message": f"Domain profile YAML parse failed: {exc}",
+        }
+        return {
+            "path": str(path),
+            "domain_profile": path.stem,
+            "report_status": "blocked",
+            "findings": [finding],
+        }, [finding]
+
+    if not isinstance(profile, dict):
+        finding = {
+            "severity": "error",
+            "code": "DOMAIN_PROFILE_NOT_OBJECT",
+            "path": str(path),
+            "message": "Domain profile must be a YAML object.",
+        }
+        return {
+            "path": str(path),
+            "domain_profile": path.stem,
+            "report_status": "blocked",
+            "findings": [finding],
+        }, [finding]
+
+    claim_ladder = profile.get("claim_ladder") or {}
+    current_level = str(claim_ladder.get("current_level", "")).strip()
+    current_rank = CLAIM_LEVEL_RANK.get(current_level, -1)
+
+    missing_artifacts: list[str] = []
+    for artifact in profile.get("required_artifacts") or []:
+        if not isinstance(artifact, dict):
+            continue
+        if artifact.get("required", True) is False:
+            continue
+        minimum_level = str(artifact.get("minimum_claim_level", "registered")).strip()
+        minimum_rank = CLAIM_LEVEL_RANK.get(minimum_level, 0)
+        if current_rank >= 0 and minimum_rank > current_rank:
+            continue
+        artifact_path = str(artifact.get("path", "")).strip()
+        if artifact_path and not Path(artifact_path).exists():
+            missing_artifacts.append(artifact_path)
+            findings.append({
+                "severity": "error",
+                "code": "DOMAIN_REQUIRED_ARTIFACT_MISSING",
+                "path": str(path),
+                "message": f"Required domain artifact is missing: {artifact_path}",
+            })
+
+    public_claim_review: list[dict[str, str]] = []
+    for claim in claim_ladder.get("authorized_claims") or []:
+        if not isinstance(claim, dict):
+            continue
+        claim_id = str(claim.get("id", "")).strip()
+        claim_level = str(claim.get("level", "")).strip()
+        status = domain_claim_status(claim_level, current_level)
+        public_claim_review.append({
+            "claim_id": claim_id,
+            "level": claim_level,
+            "statement": str(claim.get("statement", "")).strip(),
+            "status": status,
+        })
+        if status == "exceeds_evidence":
+            findings.append({
+                "severity": "error",
+                "code": "DOMAIN_CLAIM_LEVEL_EXCEEDS_EVIDENCE",
+                "path": str(path),
+                "message": (
+                    f"Domain claim {claim_id} requires {claim_level}, "
+                    f"but current evidence level is {current_level}."
+                ),
+            })
+
+    profile_report = {
+        "path": str(path),
+        "domain_profile": str(profile.get("domain_profile", "")).strip(),
+        "applicability_status": str((profile.get("applicability") or {}).get("status", "")).strip(),
+        "report_status": profile_report_status(profile, missing_artifacts),
+        "current_level": current_level,
+        "missing_artifacts": missing_artifacts,
+        "public_claim_review": public_claim_review,
+        "blocked_claims": [
+            {
+                "claim_id": str(claim.get("id", "")).strip(),
+                "kind": str(claim.get("kind", "")).strip(),
+                "statement": str(claim.get("statement", "")).strip(),
+            }
+            for claim in claim_ladder.get("blocked_claims") or []
+            if isinstance(claim, dict)
+        ],
+    }
+    if profile.get("waiver"):
+        profile_report["waiver"] = profile["waiver"]
+    return profile_report, findings
+
+
+def build_domain_applicability_report() -> tuple[dict, list[dict[str, str]]]:
+    profiles: list[dict] = []
+    findings: list[dict[str, str]] = []
+    status_counts = {status: 0 for status in DOMAIN_REPORT_STATUSES}
+
+    for path in iter_domain_profile_files():
+        profile_report, profile_findings = evaluate_domain_profile(path)
+        profiles.append(profile_report)
+        findings.extend(profile_findings)
+        status = profile_report.get("report_status", "blocked")
+        if status not in status_counts:
+            status = "blocked"
+        status_counts[status] += 1
+
+    return {
+        "schema_version": "0.1.0",
+        "status": "failed" if findings else "passed",
+        "claim_boundary": "Domain applicability only; no compliance certification.",
+        "profile_count": len(profiles),
+        "status_counts": status_counts,
+        "profiles": profiles,
+        "findings": findings,
+    }, findings
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", default="regulated-doc-gate-report.json")
     args = parser.parse_args()
 
     findings: list[dict[str, str]] = []
+    report_path = Path(args.report)
 
     yaml_files = iter_existing_files(YAML_ROOTS, (".yaml", ".yml"))
     for path in yaml_files:
@@ -178,16 +354,25 @@ def main() -> int:
 
     validate_approval_workflow_file(findings)
 
+    domain_report, domain_findings = build_domain_applicability_report()
+    findings.extend(domain_findings)
+    domain_report_path = report_path.parent / "domain-applicability-report.json"
+
     report = {
         "schema_version": "0.1.0",
         "status": "failed" if findings else "passed",
         "claim_boundary": "Documentation gate only; no compliance certification.",
         "yaml_files_checked": len(yaml_files),
         "controlled_markdown_files_checked": len(controlled_md),
+        "domain_applicability_report": str(domain_report_path),
+        "domain_applicability": {
+            "profile_count": domain_report["profile_count"],
+            "status_counts": domain_report["status_counts"],
+        },
         "findings": findings,
     }
-    report_path = Path(args.report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    domain_report_path.write_text(json.dumps(domain_report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, sort_keys=True))
     return 1 if findings else 0

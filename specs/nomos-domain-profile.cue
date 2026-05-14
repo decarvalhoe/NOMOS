@@ -18,6 +18,7 @@ package nomos
 	claim_ladder:  #ClaimLadder
 	required_artifacts: [#RequiredArtifact, ...#RequiredArtifact]
 	validation_gates: [#ValidationGate, ...#ValidationGate]
+	waiver?: #DomainWaiver
 }
 
 #DomainID: =~"^[a-z0-9][a-z0-9-]*$"
@@ -151,6 +152,13 @@ package nomos
 	command:  #NonEmptyString
 	required: bool | *true
 	blocks_claim_levels: [#ClaimLevel, ...#ClaimLevel]
+}
+
+#DomainWaiver: {
+	id:         =~"^[A-Z0-9][A-Z0-9-]*$"
+	reason:     #NonEmptyString
+	approver:   #NonEmptyString
+	expires_on: =~"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 }
 
 #NonEmptyString: string & =~".*\\S.*"
