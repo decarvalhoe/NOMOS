@@ -578,8 +578,8 @@ Done when:
 Verification:
 
 ```bash
-cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.gxp.valid.yaml
-cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.ai.valid.yaml
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.gxp.valid.yaml -d '#DomainProfile'
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.ai.valid.yaml -d '#DomainProfile'
 ```
 
 Claim impact:

@@ -89,6 +89,23 @@ jobs:
         with:
           version: v0.16.1
       - run: cue vet specs/*.cue
+      - name: Domain profile fixtures
+        run: |
+          cue vet specs/nomos-domain-profile.cue \
+            specs/examples/nomos-domain-profile.gxp.valid.yaml \
+            -d '#DomainProfile'
+          cue vet specs/nomos-domain-profile.cue \
+            specs/examples/nomos-domain-profile.ai.valid.yaml \
+            -d '#DomainProfile'
+          cue vet specs/nomos-domain-profile.cue \
+            specs/examples/nomos-domain-profile.legal.valid.yaml \
+            -d '#DomainProfile'
+          if cue vet specs/nomos-domain-profile.cue \
+            specs/examples/nomos-domain-profile.unsupported-claim.invalid.yaml \
+            -d '#DomainProfile'; then
+            echo "::error::unsupported domain compliance claim passed"
+            exit 1
+          fi
 
   yaml-lint:
     name: YAML lint

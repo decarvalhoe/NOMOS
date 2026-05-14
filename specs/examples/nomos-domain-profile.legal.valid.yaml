@@ -1,0 +1,91 @@
+schema_version: "0.1.0"
+domain_profile: legal-ediscovery
+name: "Legal and eDiscovery evidence readiness"
+summary: >-
+  Plans legal/eDiscovery source processing evidence without claiming legal
+  sufficiency.
+intended_use:
+  statement: >-
+    Plan traceable corpus intake, preservation evidence, and review gates for
+    legal or eDiscovery-adjacent workflows.
+  allowed_uses:
+    - >-
+      Map legal corpus references to read-only processing and evidence
+      artifacts.
+    - "Identify chain-of-custody and confidentiality gates for customer review."
+  not_authorized:
+    - "Claim legal advice, legal sufficiency, or litigation readiness."
+    - "Claim that Nomos replaces counsel or court-approved workflows."
+references:
+  - id: CUSTOMER-LEGAL-HOLD
+    title: "Customer legal hold procedure"
+    authority_type: customer_source
+    access_policy: customer_confidential
+    status: required
+    purpose: >-
+      Defines customer-specific preservation and access constraints.
+  - id: EDISCOVERY-PROTOCOL
+    title: "Matter-specific eDiscovery protocol"
+    authority_type: private_source
+    access_policy: private_reference_only
+    status: optional
+    purpose: >-
+      Constrains matter-level production, privilege, and review expectations.
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "The corpus can be processed read-only with explicit access policy."
+    - "Legal owner reviews the intended use and blocked claims."
+  does_not_apply_when:
+    - >-
+      A workflow requires legal advice or court-approved certification from
+      Nomos.
+risk_class:
+  level: critical
+  rationale: >-
+    Unsupported legal sufficiency claims can create material legal risk.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: LEGAL-PLAN-001
+      level: registered
+      kind: planning
+      statement: >-
+        Nomos can structure a legal/eDiscovery evidence planning profile.
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-014"
+  blocked_claims:
+    - id: LEGAL-BLOCK-001
+      kind: legal_sufficiency
+      statement: >-
+        Nomos output is legally sufficient for discovery or litigation.
+      reason: >-
+        Legal sufficiency requires counsel review, matter-specific rules, and
+        external authority.
+    - id: LEGAL-BLOCK-002
+      kind: legal_compliance
+      statement: "Nomos guarantees legal compliance."
+      reason: >-
+        Compliance depends on jurisdiction, matter posture, court orders, and
+        legal review.
+required_artifacts:
+  - id: corpus-access-policy
+    type: access_policy
+    path: docs/regulated/reference-basis/README.md
+    required: true
+    minimum_claim_level: registered
+  - id: chain-of-custody-ledger
+    type: evidence_pack
+    path: docs/regulated/evidence-index/README.md
+    required: true
+    minimum_claim_level: mapped
+validation_gates:
+  - id: legal-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.legal.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready

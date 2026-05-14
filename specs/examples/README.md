@@ -13,6 +13,8 @@ Exemples cibles :
 - `nomos-report.minimal.json` : report Nomos minimal valide ;
 - `nomos-report.complete.json` : report Nomos complet avec findings, codes erreur, severites et evidence ;
 - `adapter-manifest.node-typescript.yaml` : manifeste adapter valide.
+- `nomos-domain-profile.*.valid.yaml` : profils de domaine DOR-001 valides ;
+- `nomos-domain-profile.*.invalid.yaml` : fixtures negatives pour verifier le blocage des claims non supportees.
 
 Les fichiers `nomos-project.*.yaml` doivent passer avec :
 
@@ -26,6 +28,32 @@ ils doivent echouer avec `cue vet specs/canonical-matrix.cue <fixture> -d
 
 Les fichiers `nomos-report.*.json` doivent rester compatibles avec
 `specs/nomos-report.schema.json`.
+
+## DOR-001 (#413) — domain profile schema
+
+The domain profile fixtures define domain-scoped planning contracts for
+regulated expansion without authorizing certification, compliance,
+validated-system, legal, or regulatory claims.
+
+Valid profiles:
+
+```bash
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.gxp.valid.yaml -d '#DomainProfile'
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.ai.valid.yaml -d '#DomainProfile'
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.legal.valid.yaml -d '#DomainProfile'
+```
+
+The unsupported-claim fixture is intentionally invalid. It places
+`gxp_compliance` in `claim_ladder.authorized_claims`, and the schema must
+reject it because unsupported compliance claims belong under
+`claim_ladder.blocked_claims`.
+
+```bash
+cue vet specs/nomos-domain-profile.cue \
+        specs/examples/nomos-domain-profile.unsupported-claim.invalid.yaml \
+        -d '#DomainProfile'
+# expected: non-zero exit; authorized_claims.kind rejects gxp_compliance.
+```
 
 ## SFI-09 (#347) — corpus integrity examples
 
