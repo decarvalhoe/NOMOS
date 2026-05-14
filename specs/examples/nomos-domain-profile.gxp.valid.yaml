@@ -15,7 +15,7 @@ intended_use:
     - "Claim that Nomos is a validated GxP system."
     - "Claim 21 CFR Part 11 or GxP compliance."
 references:
-  - id: FDA-21CFR11-1110
+  - id: FDA-21CFR11-11.10
     title: "21 CFR Part 11 - Controls for closed systems"
     authority_type: public_guidance
     access_policy: repository_public

@@ -31,7 +31,7 @@ package nomos
 }
 
 #Reference: {
-	id:             =~"^[A-Z0-9][A-Z0-9-]*$"
+	id:             =~"^[A-Z0-9][A-Z0-9.-]*$"
 	title:          #NonEmptyString
 	authority_type: #AuthorityType
 	access_policy:  #AccessPolicy
