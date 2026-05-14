@@ -1,0 +1,55 @@
+schema_version: "0.1.0"
+record_type: legal_ediscovery_fixture
+domain_profile: legal-ediscovery
+claim_boundary: >-
+  Source, custody, retention, privilege, and citation integrity fixture only;
+  no legal advice and no legal sufficiency claim.
+matter_context:
+  matter_id: sample-matter-001
+  source_authority: customer_legal_hold
+  review_owner: customer_legal_owner
+source_documents:
+  - source_id: LEGAL-SRC-001
+    title: "Sample customer policy excerpt"
+    authority_level: customer_policy
+    source_hash: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    custody:
+      custodian: customer_legal_owner
+      acquisition_method: read_only_customer_export
+      acquired_at_utc: "2026-05-14T00:00:00Z"
+      custody_event_id: CUSTODY-LEGAL-001
+    retention:
+      schedule_id: LEGAL-RET-001
+      hold_status: legal_hold_required
+      disposition: retain_until_customer_release
+    privilege:
+      marker: potentially_privileged
+      reviewer_required: counsel
+      external_distribution: blocked_until_review
+source_spans:
+  - span_id: LEGAL-SPAN-001
+    source_id: LEGAL-SRC-001
+    canonical_ref: LEGAL-SRC-001#section-1
+    start_ref: section-1
+    end_ref: section-1
+    source_hash: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    normalized_span_hash: sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789
+citations:
+  - citation_id: LEGAL-CIT-001
+    span_id: LEGAL-SPAN-001
+    display_ref: "Sample customer policy excerpt, section 1"
+    integrity_status: source_span_hash_bound
+    citation_use: internal_review_only
+policy_contract_trace:
+  - trace_id: LEGAL-TRACE-001
+    policy_span_id: LEGAL-SPAN-001
+    contract_clause_ref: customer-contract#privacy-review
+    trace_status: needs_counsel_review
+    review_note: "Trace demonstrates linkage only; counsel decides meaning."
+unsupported_outputs:
+  - kind: legal_advice
+    status: blocked
+    rationale: "NOMOS cannot advise on legal meaning or strategy."
+  - kind: legal_sufficiency
+    status: blocked
+    rationale: "Legal sufficiency requires matter-specific counsel review."

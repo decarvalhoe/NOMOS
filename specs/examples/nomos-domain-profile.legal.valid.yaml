@@ -17,6 +17,14 @@ intended_use:
     - "Claim legal advice, legal sufficiency, or litigation readiness."
     - "Claim that Nomos replaces counsel or court-approved workflows."
 references:
+  - id: EDRM-MODEL
+    title: "EDRM model"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Provides a public eDiscovery lifecycle reference for source processing,
+      custody, review, and production planning.
   - id: CUSTOMER-LEGAL-HOLD
     title: "Customer legal hold procedure"
     authority_type: customer_source
@@ -74,11 +82,58 @@ required_artifacts:
     path: docs/regulated/reference-basis/README.md
     required: true
     minimum_claim_level: registered
-  - id: chain-of-custody-ledger
-    type: evidence_pack
-    path: docs/regulated/evidence-index/README.md
+  - id: source-authority-register
+    type: source_manifest
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
     required: true
     minimum_claim_level: mapped
+  - id: citation-source-span-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: chain-of-custody-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: retention-schedule-evidence
+    type: decision_record
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: privilege-marker-register
+    type: access_policy
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: policy-contract-trace-matrix
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: legal-ediscovery-fixture
+    type: evidence_pack
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: customer-authority-placeholder
+    kind: source_processing_evidence
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    status: planned
+    reason: "Customer matter authority must be supplied by the legal owner."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: counsel-review-placeholder
+    kind: lifecycle_evidence
+    path: docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+    status: deferred_until_customer_execution
+    reason: "Privilege and legal-advice boundaries require counsel review."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
 validation_gates:
   - id: legal-domain-profile-vet
     command: >-

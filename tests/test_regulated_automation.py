@@ -460,6 +460,48 @@ answers:
                 report.get("findings", []),
             )
 
+    def test_legal_domain_profile_links_citation_custody_and_privilege_fixture(self) -> None:
+        import yaml
+
+        profile_path = ROOT / "specs/examples/nomos-domain-profile.legal.valid.yaml"
+        profile = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["domain_profile"], "legal-ediscovery")
+
+        artifacts = {artifact["id"]: artifact for artifact in profile["required_artifacts"]}
+        required_artifact_ids = {
+            "source-authority-register",
+            "citation-source-span-ledger",
+            "chain-of-custody-ledger",
+            "retention-schedule-evidence",
+            "privilege-marker-register",
+            "policy-contract-trace-matrix",
+            "legal-ediscovery-fixture",
+        }
+        self.assertLessEqual(required_artifact_ids, set(artifacts))
+
+        fixture_path = ROOT / artifacts["legal-ediscovery-fixture"]["path"]
+        fixture = yaml.safe_load(fixture_path.read_text(encoding="utf-8"))
+        self.assertEqual(fixture["domain_profile"], "legal-ediscovery")
+        self.assertIn("no legal advice", fixture["claim_boundary"].lower())
+        self.assertIn("no legal sufficiency", fixture["claim_boundary"].lower())
+
+        source = fixture["source_documents"][0]
+        self.assertIn("source_hash", source)
+        self.assertIn("custody", source)
+        self.assertIn("retention", source)
+        self.assertIn("privilege", source)
+        self.assertEqual(source["privilege"]["marker"], "potentially_privileged")
+
+        span = fixture["source_spans"][0]
+        citation = fixture["citations"][0]
+        self.assertEqual(span["source_id"], source["source_id"])
+        self.assertEqual(citation["span_id"], span["span_id"])
+        self.assertEqual(citation["integrity_status"], "source_span_hash_bound")
+
+        trace = fixture["policy_contract_trace"][0]
+        self.assertEqual(trace["policy_span_id"], span["span_id"])
+        self.assertEqual(trace["trace_status"], "needs_counsel_review")
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
