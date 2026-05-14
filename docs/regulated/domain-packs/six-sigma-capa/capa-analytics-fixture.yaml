@@ -1,0 +1,108 @@
+schema_version: "0.1.0"
+record_type: six_sigma_capa_analytics_fixture
+domain_profile: six-sigma-capa
+claim_boundary: >-
+  CAPA analytics fixture only; no certified Six Sigma result, no certified Six
+  Sigma claim, no CAPA effectiveness claim, and no regulated validation claim.
+source_register:
+  - source_id: CAPA-SRC-001
+    title: "Sample quality metric and finding register"
+    source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+    access_policy: customer_confidential
+finding_groups:
+  - group_id: CAPA-GRP-CTQ-001
+    category: ctq
+    dmaic_phase: define
+    finding: "Response-time CTQ lacks an approved measurable threshold."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "metrics-register:ctq-1"
+    evidence_context:
+      artifact_ref: capa-fixture#ctq-register
+      evidence_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  - group_id: CAPA-GRP-DEFECT-001
+    category: defect
+    dmaic_phase: measure
+    finding: "Defect type is classified as missing required evidence context."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "defect-ledger:defect-4"
+    evidence_context:
+      artifact_ref: capa-fixture#defect-taxonomy
+      evidence_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
+  - group_id: CAPA-GRP-DEVIATION-001
+    category: deviation
+    dmaic_phase: measure
+    finding: "Deviation record needs source-backed containment evidence."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "deviation-ledger:dev-2"
+    evidence_context:
+      artifact_ref: capa-fixture#deviation-ledger
+      evidence_hash: sha256:4444444444444444444444444444444444444444444444444444444444444444
+  - group_id: CAPA-GRP-RCA-001
+    category: root_cause
+    dmaic_phase: analyze
+    finding: "Root-cause hypothesis is recorded but not approved."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "rca-record:why-3"
+    evidence_context:
+      artifact_ref: capa-fixture#root-cause-analysis
+      evidence_hash: sha256:5555555555555555555555555555555555555555555555555555555555555555
+  - group_id: CAPA-GRP-ACTION-001
+    category: capa_action
+    dmaic_phase: improve
+    finding: "Corrective action owner and due date are assigned for review."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "capa-action-register:action-1"
+    evidence_context:
+      artifact_ref: capa-fixture#capa-action-register
+      evidence_hash: sha256:6666666666666666666666666666666666666666666666666666666666666666
+  - group_id: CAPA-GRP-CONTROL-001
+    category: control_plan
+    dmaic_phase: control
+    finding: "Control plan names the monitoring metric and review cadence."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "control-plan:metric-1"
+    evidence_context:
+      artifact_ref: capa-fixture#control-plan
+      evidence_hash: sha256:7777777777777777777777777777777777777777777777777777777777777777
+  - group_id: CAPA-GRP-TREND-001
+    category: trend
+    dmaic_phase: control
+    finding: "Trend summary links repeated defects to the same CTQ."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "trend-summary:trend-1"
+    evidence_context:
+      artifact_ref: capa-fixture#trend-analysis
+      evidence_hash: sha256:8888888888888888888888888888888888888888888888888888888888888888
+  - group_id: CAPA-GRP-MR-001
+    category: management_review
+    dmaic_phase: control
+    finding: "Management-review summary is prepared for customer approval."
+    source_context:
+      source_id: CAPA-SRC-001
+      source_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      span: "management-review:summary-1"
+    evidence_context:
+      artifact_ref: capa-fixture#management-review-summary
+      evidence_hash: sha256:9999999999999999999999999999999999999999999999999999999999999999
+unsupported_outputs:
+  - kind: six_sigma_certification
+    status: blocked
+    rationale: "The fixture groups evidence; it does not certify results."
+  - kind: capa_effectiveness
+    status: blocked
+    rationale: >-
+      Effectiveness requires customer execution and approval evidence.

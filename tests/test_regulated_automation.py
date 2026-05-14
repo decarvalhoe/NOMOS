@@ -502,6 +502,56 @@ answers:
         self.assertEqual(trace["policy_span_id"], span["span_id"])
         self.assertEqual(trace["trace_status"], "needs_counsel_review")
 
+    def test_six_sigma_capa_profile_groups_findings_with_traceable_context(self) -> None:
+        import yaml
+
+        profile_path = ROOT / "specs/examples/nomos-domain-profile.six-sigma-capa.valid.yaml"
+        self.assertTrue(profile_path.exists(), f"missing profile: {profile_path}")
+        profile = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["domain_profile"], "six-sigma-capa")
+
+        artifacts = {artifact["id"]: artifact for artifact in profile["required_artifacts"]}
+        required_artifact_ids = {
+            "dmaic-model",
+            "ctq-register",
+            "defect-taxonomy",
+            "deviation-ledger",
+            "root-cause-analysis",
+            "capa-action-register",
+            "control-plan",
+            "trend-analysis",
+            "management-review-summary",
+            "capa-analytics-fixture",
+        }
+        self.assertLessEqual(required_artifact_ids, set(artifacts))
+
+        fixture_path = ROOT / artifacts["capa-analytics-fixture"]["path"]
+        fixture = yaml.safe_load(fixture_path.read_text(encoding="utf-8"))
+        self.assertEqual(fixture["domain_profile"], "six-sigma-capa")
+        self.assertIn("no certified six sigma", fixture["claim_boundary"].lower())
+
+        required_categories = {
+            "ctq",
+            "defect",
+            "deviation",
+            "root_cause",
+            "capa_action",
+            "control_plan",
+            "trend",
+            "management_review",
+        }
+        groups = {group["category"] for group in fixture["finding_groups"]}
+        self.assertLessEqual(required_categories, groups)
+
+        for group in fixture["finding_groups"]:
+            source_context = group["source_context"]
+            evidence_context = group["evidence_context"]
+            self.assertTrue(source_context["source_id"])
+            self.assertTrue(source_context["source_hash"])
+            self.assertTrue(source_context["span"])
+            self.assertTrue(evidence_context["artifact_ref"])
+            self.assertTrue(evidence_context["evidence_hash"])
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
