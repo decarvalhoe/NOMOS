@@ -26,6 +26,13 @@ risk-ranked plan at `.regulated-evidence-pack/risk-based-validation-plan.json`.
 The generated plan is planning evidence only; it does not claim validation,
 certification, legal compliance, GxP compliance, or Part 11 compliance.
 
+`scripts/regulated_iq_oq_pq_generator.py` generates intended-use-specific
+IQ/OQ/PQ template prompts at
+`.regulated-evidence-pack/iq-oq-pq-template-pack.json` for CLI-only, GitHub
+workflow, output-repo, control-plane, and downstream-RAG deployments.
+The generated pack remains a preparation artifact until customer execution and
+review evidence exist.
+
 ## Current Protocol Coverage
 
 - `TP-NOMOS-001-self-compliance.yaml`: executed self-compliance protocol for VAL-013.

@@ -347,6 +347,66 @@ references:
             self.assertTrue(plan["summary"]["high_risk_controls_require_scripted_or_challenge_evidence"])
             self.assertTrue(plan["summary"]["low_risk_controls_allow_lighter_evidence_with_rationale"])
 
+    def test_iq_oq_pq_generator_distinguishes_deployments_without_rbok_coupling(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            domain_profile = repo / "specs/examples/nomos-domain-profile.gxp.valid.yaml"
+            write(
+                domain_profile,
+                """
+schema_version: "0.1.0"
+domain_profile: gxp-csv
+name: "GxP/CSV validation readiness"
+intended_use:
+  statement: "Prepare customer-owned validation package templates."
+  allowed_uses:
+    - "Prepare IQ/OQ/PQ evidence prompts for human review."
+  not_authorized:
+    - "Claim regulated validation."
+risk_class:
+  level: high
+  rationale: "Unsupported regulated claims are high impact."
+claim_ladder:
+  current_level: registered
+""".lstrip(),
+            )
+            output = repo / "out/iq-oq-pq-template-pack.json"
+
+            result = run_script(
+                "regulated_iq_oq_pq_generator.py",
+                "--root",
+                str(repo),
+                "--domain-profile",
+                str(domain_profile),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            pack = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(pack["status"], "generated")
+            self.assertEqual(
+                pack["claim_boundary"],
+                "IQ/OQ/PQ template preparation only; no validation, compliance, or certification claim.",
+            )
+            deployments = {template["deployment_model"]: template for template in pack["templates"]}
+            self.assertEqual(
+                set(deployments),
+                {"cli-only", "github-workflow", "output-repo", "control-plane", "downstream-rag"},
+            )
+            for template in deployments.values():
+                self.assertIn("iq", template)
+                self.assertIn("oq", template)
+                self.assertIn("pq", template)
+                self.assertIn("intended_use", template)
+            self.assertIn("local executable baseline", deployments["cli-only"]["iq"]["focus"])
+            self.assertIn("latest run per workflow", " ".join(deployments["github-workflow"]["oq"]["checks"]))
+            self.assertIn("published artifact", deployments["output-repo"]["pq"]["focus"])
+            self.assertIn("portfolio supervision", deployments["control-plane"]["oq"]["focus"])
+            self.assertIn("citation", deployments["downstream-rag"]["pq"]["focus"])
+            self.assertNotIn("RBOK", json.dumps(pack, sort_keys=True))
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
