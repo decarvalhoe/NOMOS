@@ -36,6 +36,62 @@ VALID_PUBLIC_SURROGATE_STATUSES = (
     "temporary_surrogate_until_official_document_acquired",
     "temporary_surrogate",
 )
+SOURCE_CLASSES = ("public", "licensed", "private", "confidential", "customer_owned")
+RESTRICTED_SOURCE_CLASSES = ("licensed", "private", "confidential", "customer_owned")
+ACCESS_POLICY_SOURCE_CLASSES = {
+    "official_public_reference": "public",
+    "public_reference": "public",
+    "licensed_content_required": "licensed",
+    "private_reference_only": "private",
+    "private_content_required": "private",
+    "confidential_reference_only": "confidential",
+    "confidential_content_required": "confidential",
+    "customer_owned_confidential": "customer_owned",
+    "customer_owned_reference": "customer_owned",
+}
+SOURCE_CLASS_ACCESS_POLICIES = {
+    "public": "official_public_reference",
+    "licensed": "licensed_content_required",
+    "private": "private_reference_only",
+    "confidential": "confidential_reference_only",
+    "customer_owned": "customer_owned_confidential",
+}
+SOURCE_CLASS_PROCESSING_POLICIES = {
+    "public": "official_snapshot_allowed_with_hash",
+    "licensed": "licensed_local_artifact_required",
+    "private": "read_only_local_artifact_required",
+    "confidential": "read_only_local_artifact_required",
+    "customer_owned": "read_only_local_artifact_required",
+}
+SOURCE_CLASS_CONFIDENTIALITY = {
+    "public": "public",
+    "licensed": "licensed_restricted",
+    "private": "private_restricted",
+    "confidential": "confidential_restricted",
+    "customer_owned": "customer_confidential",
+}
+SOURCE_CLASS_RETENTION = {
+    "public": "public_snapshot_retained_with_hash",
+    "licensed": "license_terms",
+    "private": "owner_policy",
+    "confidential": "confidentiality_agreement",
+    "customer_owned": "customer_contract",
+}
+REDISTRIBUTION_KEYS = {
+    "customer_redistribution",
+    "full_text_redistribution",
+    "full_text_redistribution_allowed",
+    "redistribution",
+    "redistribution_allowed",
+}
+COMMIT_FULL_TEXT_KEYS = {
+    "commit_full_text",
+    "commit_full_text_allowed",
+    "commit_full_text_to_git",
+    "full_text_commit",
+    "full_text_commit_allowed",
+}
+ALLOWED_VALUES = {"allow", "allowed", "permitted", "true", "yes"}
 
 
 def utc_now() -> str:
@@ -65,17 +121,56 @@ def is_licensed_reference(reference: dict[str, Any]) -> bool:
     )
 
 
+def as_mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def normalized_text(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
+def value_allows_full_text(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return normalized_text(value) in ALLOWED_VALUES
+
+
+def infer_source_class(reference: dict[str, Any], access_policy: str, licensed: bool) -> str:
+    classification = as_mapping(reference.get("reference_classification"))
+    requested_source_class = normalized_text(classification.get("source_class"))
+    if requested_source_class in SOURCE_CLASSES:
+        return requested_source_class
+    if access_policy in ACCESS_POLICY_SOURCE_CLASSES:
+        return ACCESS_POLICY_SOURCE_CLASSES[access_policy]
+    return "licensed" if licensed else "public"
+
+
+def normalized_full_text_redistribution(classification: dict[str, Any], source_class: str) -> str:
+    raw_value = normalized_text(classification.get("full_text_redistribution"))
+    if raw_value:
+        return raw_value
+    if "full_text_redistribution_allowed" in classification:
+        return "allowed" if value_allows_full_text(classification.get("full_text_redistribution_allowed")) else "forbidden"
+    return "source_terms_only" if source_class == "public" else "forbidden"
+
+
 def classify_reference(reference: dict[str, Any]) -> dict[str, Any]:
     licensed = is_licensed_reference(reference)
     access_policy = str(reference.get("content_access_policy") or "").strip()
+    classification = as_mapping(reference.get("reference_classification"))
     if not access_policy:
         access_policy = "licensed_content_required" if licensed else "official_public_reference"
 
-    processing_policy = (
-        "licensed_local_artifact_required"
-        if access_policy == "licensed_content_required"
-        else "official_snapshot_allowed_with_hash"
-    )
+    source_class = infer_source_class(reference, access_policy, licensed)
+    if access_policy not in ACCESS_POLICY_SOURCE_CLASSES:
+        access_policy = SOURCE_CLASS_ACCESS_POLICIES[source_class]
+
+    processing_policy = SOURCE_CLASS_PROCESSING_POLICIES[source_class]
+    confidentiality = str(classification.get("confidentiality") or SOURCE_CLASS_CONFIDENTIALITY[source_class]).strip()
+    full_text_redistribution = normalized_full_text_redistribution(classification, source_class)
+    retention_obligation = str(classification.get("retention_obligation") or SOURCE_CLASS_RETENTION[source_class]).strip()
+    classification_processing_mode = str(classification.get("processing_mode") or processing_policy).strip()
+    full_text_redistribution_allowed = value_allows_full_text(full_text_redistribution)
 
     return {
         "id": reference.get("id", "unknown"),
@@ -84,9 +179,16 @@ def classify_reference(reference: dict[str, Any]) -> dict[str, Any]:
         "url": reference.get("url", ""),
         "canonical_role": "nomos_bible",
         "content_access_policy": access_policy,
+        "access_policy": access_policy,
+        "source_class": source_class,
+        "confidentiality": confidentiality,
         "nomos_processing_policy": processing_policy,
-        "full_text_fetch_allowed": access_policy != "licensed_content_required",
+        "classification_processing_mode": classification_processing_mode,
+        "full_text_fetch_allowed": source_class == "public",
+        "full_text_redistribution": full_text_redistribution,
+        "full_text_redistribution_allowed": full_text_redistribution_allowed,
         "metadata_fetch_allowed": True,
+        "retention_obligation": retention_obligation,
         "evidence_status": reference.get("evidence_status", "requires_evidence"),
     }
 
@@ -142,6 +244,86 @@ def load_public_surrogate(root: Path, ref_id: str) -> tuple[dict[str, Any] | Non
         },
         None,
     )
+
+
+def forbidden_full_text_permissions(value: Any, prefix: str = "") -> list[str]:
+    violations: list[str] = []
+    if isinstance(value, dict):
+        for key, nested_value in value.items():
+            nested_prefix = f"{prefix}.{key}" if prefix else str(key)
+            normalized_key = normalized_text(key)
+            if normalized_key in REDISTRIBUTION_KEYS | COMMIT_FULL_TEXT_KEYS and value_allows_full_text(nested_value):
+                violations.append(nested_prefix)
+            violations.extend(forbidden_full_text_permissions(nested_value, nested_prefix))
+    elif isinstance(value, list):
+        for index, nested_value in enumerate(value):
+            violations.extend(forbidden_full_text_permissions(nested_value, f"{prefix}[{index}]"))
+    return violations
+
+
+def validate_reference_policy(reference: dict[str, Any], bible: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    ref_id = str(reference.get("id", "unknown"))
+    source_class = str(bible.get("source_class", "public"))
+    classification = as_mapping(reference.get("reference_classification"))
+    requested_source_class = normalized_text(classification.get("source_class"))
+    if requested_source_class and requested_source_class not in SOURCE_CLASSES:
+        findings.append(
+            {
+                "id": "REFERENCE_CLASSIFICATION_UNSUPPORTED_SOURCE_CLASS",
+                "severity": "error",
+                "reference_id": ref_id,
+                "path": f"{REGISTER_PATH.as_posix()}:{ref_id}:reference_classification.source_class",
+                "message": "Reference classification source_class must be public, licensed, private, confidential, or customer_owned.",
+            }
+        )
+    if source_class in RESTRICTED_SOURCE_CLASSES and bible.get("full_text_redistribution_allowed"):
+        findings.append(
+            {
+                "id": "REFERENCE_FULL_TEXT_REDISTRIBUTION_FORBIDDEN",
+                "severity": "error",
+                "reference_id": ref_id,
+                "path": f"{REGISTER_PATH.as_posix()}:{ref_id}:reference_classification.full_text_redistribution",
+                "message": "Licensed, private, confidential, and customer-owned references cannot authorize full-text redistribution.",
+            }
+        )
+    if source_class in ("private", "confidential", "customer_owned") and not str(
+        bible.get("retention_obligation", "")
+    ).strip():
+        findings.append(
+            {
+                "id": "REFERENCE_RETENTION_OBLIGATION_REQUIRED",
+                "severity": "error",
+                "reference_id": ref_id,
+                "path": f"{REGISTER_PATH.as_posix()}:{ref_id}:reference_classification.retention_obligation",
+                "message": "Private, confidential, and customer-owned references must declare retention obligations.",
+            }
+        )
+    return findings
+
+
+def validate_intake_policy(root: Path, ref_id: str, source_class: str) -> list[dict[str, str]]:
+    if source_class not in RESTRICTED_SOURCE_CLASSES:
+        return []
+
+    sidecar = intake_path(root, ref_id)
+    if not sidecar.exists():
+        return []
+
+    violations = forbidden_full_text_permissions(load_yaml(sidecar))
+    if not violations:
+        return []
+
+    return [
+        {
+            "id": "REFERENCE_FULL_TEXT_REDISTRIBUTION_FORBIDDEN",
+            "severity": "error",
+            "reference_id": ref_id,
+            "path": f"{sidecar.as_posix()}:{violation}",
+            "message": "Restricted reference intake must not authorize full-text redistribution or committed full text.",
+        }
+        for violation in violations
+    ]
 
 
 def verify_licensed_artifact(
@@ -309,12 +491,16 @@ def build_report(
     bibles = [classify_reference(reference) for reference in references]
     gaps = []
     for reference, bible in zip(references, bibles, strict=False):
+        ref_id = str(reference.get("id", "unknown"))
+        findings.extend(validate_reference_policy(reference, bible))
+        findings.extend(validate_intake_policy(root, ref_id, str(bible.get("source_class", ""))))
         gap, finding = gap_for(root, reference, bible, licensed_root, allow_public_surrogates)
         if gap is not None:
             gaps.append(gap)
         if finding is not None:
             findings.append(finding)
     policy_counts = Counter(str(bible["content_access_policy"]) for bible in bibles)
+    source_class_counts = Counter(str(bible["source_class"]) for bible in bibles)
     surrogate_mitigations = sum(1 for gap in gaps if gap.get("status") == "temporarily_mitigated")
     unmitigated_gaps = len(gaps) - surrogate_mitigations
 
@@ -337,6 +523,7 @@ def build_report(
         "summary": {
             "canonical_bibles": len(bibles),
             "content_access_policies": dict(sorted(policy_counts.items())),
+            "source_classes": dict(sorted(source_class_counts.items())),
             "licensed_reference_gaps": len(gaps),
             "surrogate_mitigations": surrogate_mitigations,
             "unmitigated_licensed_reference_gaps": unmitigated_gaps,
