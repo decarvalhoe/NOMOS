@@ -1,0 +1,172 @@
+schema_version: "0.1.0"
+domain_profile: six-sigma-capa
+name: "Six Sigma and CAPA analytics planning"
+summary: >-
+  Plans DMAIC, CTQ, defect, deviation, root-cause, CAPA, control-plan,
+  trend, and management-review evidence without claiming certified Six Sigma
+  results or regulated CAPA effectiveness.
+intended_use:
+  statement: >-
+    Group NOMOS findings into operational improvement and CAPA categories with
+    traceable source and evidence context.
+  allowed_uses:
+    - "Map findings to DMAIC phases and CTQ/defect/deviation categories."
+    - "Prepare CAPA analytics evidence for accountable human review."
+    - "Summarize trends and control-plan evidence for management review."
+  not_authorized:
+    - "Claim certified Six Sigma results."
+    - "Claim CAPA effectiveness, regulated validation, or GxP compliance."
+    - "Replace customer quality-system approval or management review."
+references:
+  - id: ASQ-DMAIC
+    title: "ASQ DMAIC process"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "DMAIC phase framing for improvement evidence planning."
+  - id: CUSTOMER-CAPA-PROCEDURE
+    title: "Customer CAPA procedure"
+    authority_type: customer_source
+    access_policy: customer_confidential
+    status: required
+    purpose: "Customer-specific CAPA classification and approval rules."
+  - id: CUSTOMER-QUALITY-METRICS
+    title: "Customer quality metrics register"
+    authority_type: customer_source
+    access_policy: customer_confidential
+    status: required
+    purpose: "Source for CTQ, defect, deviation, and trend context."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "Findings have source spans, hashes, and evidence artifact references."
+    - "A customer quality owner reviews CAPA categories and trend summaries."
+    - "Management-review output remains advisory and evidence-bounded."
+  does_not_apply_when:
+    - "The customer expects certified Six Sigma outcomes."
+    - "The customer expects NOMOS to approve CAPA effectiveness."
+risk_class:
+  level: high
+  rationale: >-
+    Unsupported CAPA effectiveness, quality-system, or certification claims can
+    misstate customer quality obligations and improvement evidence.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: CAPA-PLAN-001
+      level: registered
+      kind: planning
+      statement: >-
+        NOMOS can structure a Six Sigma/CAPA analytics planning profile.
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-015"
+    - id: CAPA-WORKFLOW-001
+      level: mapped
+      kind: workflow_support
+      statement: >-
+        NOMOS can group findings into improvement categories when source and
+        evidence context are present.
+      evidence:
+        - "docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml"
+  blocked_claims:
+    - id: CAPA-BLOCK-001
+      kind: certification
+      statement: "NOMOS certifies Six Sigma results."
+      reason: "Certification requires a recognized program and human approval."
+    - id: CAPA-BLOCK-002
+      kind: regulated_validation
+      statement: "NOMOS validates CAPA effectiveness."
+      reason: >-
+        CAPA effectiveness requires customer execution evidence and approved
+        quality-system review.
+    - id: CAPA-BLOCK-003
+      kind: gxp_compliance
+      statement: "NOMOS proves GxP CAPA compliance."
+      reason: "GxP compliance claims are outside this analytics profile."
+required_artifacts:
+  - id: dmaic-model
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: ctq-register
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: defect-taxonomy
+    type: canonical_matrix
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: deviation-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: root-cause-analysis
+    type: decision_record
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: capa-action-register
+    type: control_matrix
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: control-plan
+    type: control_matrix
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: trend-analysis
+    type: evidence_pack
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: management-review-summary
+    type: decision_record
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: capa-analytics-fixture
+    type: evidence_pack
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: customer-capa-effectiveness-placeholder
+    kind: lifecycle_evidence
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    status: deferred_until_customer_execution
+    reason: "CAPA effectiveness requires customer execution and approval."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: certified-six-sigma-placeholder
+    kind: other
+    path: docs/regulated/domain-packs/six-sigma-capa/capa-analytics-fixture.yaml
+    status: missing_evidence_blocked
+    reason: "No recognized Six Sigma certification evidence is present."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: six-sigma-capa-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.six-sigma-capa.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: six-sigma-capa-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_six_sigma_capa_profile_groups_findings_with_traceable_context
+      -v
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
