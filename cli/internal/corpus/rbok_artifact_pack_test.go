@@ -1,6 +1,7 @@
 package corpus
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -95,12 +96,24 @@ func TestWriteRBOKLawbookArtifactPack_AllExpectedArtifacts(t *testing.T) {
 		"rbok-governance.json",
 		"rbok-attestation.json",
 		"rbok-governed-lexicon.yaml",
+		"short-critical-atoms.json",
 	}
 	for _, name := range expected {
 		path := filepath.Join(outDir, name)
 		if _, err := os.Stat(path); err != nil {
 			t.Fatalf("missing artifact: %s", name)
 		}
+	}
+	data, err := os.ReadFile(filepath.Join(outDir, "short-critical-atoms.json"))
+	if err != nil {
+		t.Fatalf("read short-critical-atoms.json: %v", err)
+	}
+	var shortReport ShortCriticalAtomsReport
+	if err := json.Unmarshal(data, &shortReport); err != nil {
+		t.Fatalf("parse short-critical-atoms.json: %v", err)
+	}
+	if shortReport.Format != ShortCriticalAtomsFormat {
+		t.Fatalf("short-critical-atoms format=%q", shortReport.Format)
 	}
 	if len(result.Artifacts) < len(expected) {
 		t.Fatalf("expected at least %d artifacts, got %d", len(expected), len(result.Artifacts))

@@ -170,18 +170,19 @@ type FeedLockfileStatus struct {
 
 // Feed is the top-level consumer feed artifact.
 type Feed struct {
-	Format      string                      `json:"format"`
-	GeneratedAt string                      `json:"generated_at"`
-	ContentHash string                      `json:"content_hash"`
-	UnitCount   int                         `json:"unit_count"`
-	SourceCount int                         `json:"source_count"`
-	Units       []FeedUnit                  `json:"units"`
-	Sources     []FeedSource                `json:"sources"`
-	Snapshot    *FeedSnapshotSummary        `json:"snapshot,omitempty"`
-	CorpusIndex *CorpusIndex                `json:"corpus_index,omitempty"`
-	RAGMetadata []ChunkMetadata             `json:"rag_metadata,omitempty"`
-	Attestation *CorpusAttestationStatement `json:"attestation,omitempty"`
-	Lockfile    *FeedLockfileStatus         `json:"lockfile,omitempty"`
+	Format             string                      `json:"format"`
+	GeneratedAt        string                      `json:"generated_at"`
+	ContentHash        string                      `json:"content_hash"`
+	UnitCount          int                         `json:"unit_count"`
+	SourceCount        int                         `json:"source_count"`
+	Units              []FeedUnit                  `json:"units"`
+	Sources            []FeedSource                `json:"sources"`
+	Snapshot           *FeedSnapshotSummary        `json:"snapshot,omitempty"`
+	CorpusIndex        *CorpusIndex                `json:"corpus_index,omitempty"`
+	RAGMetadata        []ChunkMetadata             `json:"rag_metadata,omitempty"`
+	ShortCriticalAtoms *ShortCriticalAtomsReport   `json:"short_critical_atoms,omitempty"`
+	Attestation        *CorpusAttestationStatement `json:"attestation,omitempty"`
+	Lockfile           *FeedLockfileStatus         `json:"lockfile,omitempty"`
 }
 
 // FeedInput provides the raw data for feed generation.
@@ -314,6 +315,10 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 	for _, item := range extracted {
 		units = append(units, item.FeedUnit)
 	}
+	shortCriticalAtoms, err := BuildShortCriticalAtomsReport(input.Root, manifest, ts)
+	if err != nil {
+		return Feed{}, err
+	}
 
 	// FSQ-02 (#365): count units per source so we can enforce
 	// "atomization_status=atomized implies ≥1 feed unit" fail-closed.
@@ -323,6 +328,7 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 			unitsBySource[sid]++
 		}
 	}
+	governedShortAtomsBySource := governedShortCriticalAtomCountsBySource(shortCriticalAtoms)
 
 	sources := make([]FeedSource, 0, len(manifest.Sources))
 	for _, s := range manifest.Sources {
@@ -345,7 +351,8 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 		if err := fs.Validate(); err != nil {
 			return Feed{}, fmt.Errorf("feed source %q: %w", fs.ID, err)
 		}
-		if err := ValidateAtomizedAgainstUnitCount(fs.Admission(), fs.ID, unitsBySource[fs.ID]); err != nil {
+		representedAtomCount := unitsBySource[fs.ID] + governedShortAtomsBySource[fs.ID]
+		if err := ValidateAtomizedAgainstUnitCount(fs.Admission(), fs.ID, representedAtomCount); err != nil {
 			return Feed{}, err
 		}
 		sources = append(sources, fs)
@@ -400,17 +407,18 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 	}
 
 	feed := Feed{
-		Format:      FeedFormat,
-		GeneratedAt: ts.Format(time.RFC3339),
-		UnitCount:   len(units),
-		SourceCount: len(sources),
-		Units:       units,
-		Sources:     sources,
-		Snapshot:    snapshotSummary,
-		CorpusIndex: index,
-		RAGMetadata: rag,
-		Attestation: attestation,
-		Lockfile:    lockStatus,
+		Format:             FeedFormat,
+		GeneratedAt:        ts.Format(time.RFC3339),
+		UnitCount:          len(units),
+		SourceCount:        len(sources),
+		Units:              units,
+		Sources:            sources,
+		Snapshot:           snapshotSummary,
+		CorpusIndex:        index,
+		RAGMetadata:        rag,
+		ShortCriticalAtoms: shortCriticalAtoms,
+		Attestation:        attestation,
+		Lockfile:           lockStatus,
 	}
 
 	feed.ContentHash = computeFeedHash(feed)

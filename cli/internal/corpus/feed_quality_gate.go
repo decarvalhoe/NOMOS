@@ -327,6 +327,7 @@ const (
 	FindingFeedMetadataTableLeaked     = "FEED_METADATA_TABLE_LEAKED"
 	FindingFeedRawDecodedMismatch      = "FEED_RAW_DECODED_MISMATCH"
 	FindingSourceZeroUnitNoReason      = "SOURCE_ZERO_UNIT_NO_REASON"
+	FindingShortCriticalRequiresReview = "SHORT_CRITICAL_REQUIRES_REVIEW"
 )
 
 // profileKindDefault is the lookup key the profile uses to express a
@@ -366,17 +367,17 @@ type SemanticQualityProfile struct {
 func DefaultRBOKProfile() SemanticQualityProfile {
 	return SemanticQualityProfile{
 		MinTokensByKind: map[string]int{
-			KindParagraph:    3,
-			KindListItem:     2,
-			KindCallout:      3,
-			"table_row":      2,
+			KindParagraph:      3,
+			KindListItem:       2,
+			KindCallout:        3,
+			"table_row":        2,
 			profileKindDefault: 1,
 		},
 		MinCharsByKind: map[string]int{
-			KindParagraph:    20,
-			KindListItem:     12,
-			KindCallout:      20,
-			"table_row":      12,
+			KindParagraph:      20,
+			KindListItem:       12,
+			KindCallout:        20,
+			"table_row":        12,
 			profileKindDefault: 4,
 		},
 		StopLabelDenylist: []string{
@@ -395,12 +396,13 @@ func DefaultRBOKProfile() SemanticQualityProfile {
 // inspects. Every slice / pointer is optional: an empty input yields a
 // passing report.
 type SemanticQualityInput struct {
-	Feed       []FeedUnit
-	Chunks     []ChunkMetadata
-	Segments   []SourceSegment
-	Sources    []FeedSource
-	BodyLedger *CorpusBodyLedger
-	Profile    SemanticQualityProfile
+	Feed               []FeedUnit
+	Chunks             []ChunkMetadata
+	Segments           []SourceSegment
+	Sources            []FeedSource
+	BodyLedger         *CorpusBodyLedger
+	ShortCriticalAtoms *ShortCriticalAtomsReport
+	Profile            SemanticQualityProfile
 }
 
 // SemanticQualityFinding is one rule violation. JSON shape is the wire format
@@ -466,7 +468,8 @@ func CheckSemanticQuality(input SemanticQualityInput) SemanticQualityReport {
 	}
 
 	report.Findings = append(report.Findings, findDuplicateNormalizedText(input.Feed, profile)...)
-	report.Findings = append(report.Findings, findZeroUnitSources(input.Sources, input.Feed)...)
+	report.Findings = append(report.Findings, findZeroUnitSources(input.Sources, input.Feed, input.ShortCriticalAtoms)...)
+	report.Findings = append(report.Findings, checkShortCriticalAtomDispositions(input.ShortCriticalAtoms)...)
 
 	finalizeSemanticReport(&report)
 	return report
@@ -824,7 +827,7 @@ func findDuplicateNormalizedText(units []FeedUnit, profile SemanticQualityProfil
 // carry an explicit ExclusionReason. The build-time check
 // (ValidateAtomizedAgainstUnitCount) is the primary defence; this gate
 // re-asserts it on the final artifact so a regression cannot slip past.
-func findZeroUnitSources(sources []FeedSource, units []FeedUnit) []SemanticQualityFinding {
+func findZeroUnitSources(sources []FeedSource, units []FeedUnit, shortCriticalAtoms *ShortCriticalAtomsReport) []SemanticQualityFinding {
 	if len(sources) == 0 {
 		return nil
 	}
@@ -835,6 +838,11 @@ func findZeroUnitSources(sources []FeedSource, units []FeedUnit) []SemanticQuali
 		}
 		if u.SourceID != "" {
 			used[u.SourceID] = struct{}{}
+		}
+	}
+	for sourceID, count := range governedShortCriticalAtomCountsBySource(shortCriticalAtoms) {
+		if count > 0 {
+			used[sourceID] = struct{}{}
 		}
 	}
 	var out []SemanticQualityFinding
@@ -861,6 +869,33 @@ func findZeroUnitSources(sources []FeedSource, units []FeedUnit) []SemanticQuali
 				s.ID,
 			),
 			RemediationHint: "either record an exclusion_reason or downgrade atomization_status to coverage_only/not_atomized",
+		})
+	}
+	return out
+}
+
+func checkShortCriticalAtomDispositions(report *ShortCriticalAtomsReport) []SemanticQualityFinding {
+	if report == nil {
+		return nil
+	}
+	var out []SemanticQualityFinding
+	for _, atom := range report.Atoms {
+		if strings.TrimSpace(atom.Disposition) != "" && atom.Disposition != ShortCriticalRequiresReview {
+			continue
+		}
+		message := fmt.Sprintf(
+			"short critical fragment %q has unresolved disposition %q",
+			atom.Fragment,
+			atom.Disposition,
+		)
+		out = append(out, SemanticQualityFinding{
+			Code:            FindingShortCriticalRequiresReview,
+			Severity:        SemanticSeverityBlocking,
+			SourceID:        atom.SourceID,
+			SourcePath:      atom.SourcePath,
+			StartLine:       atom.StartLine,
+			Message:         message,
+			RemediationHint: "classify the fragment as non_semantic, contextualized_in_parent, lexicon_atom, identifier_atom, or normative_value_atom",
 		})
 	}
 	return out
