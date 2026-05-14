@@ -17,6 +17,7 @@ package nomos
 	risk_class:    #RiskClass
 	claim_ladder:  #ClaimLadder
 	required_artifacts: [#RequiredArtifact, ...#RequiredArtifact]
+	evidence_placeholders?: [#EvidencePlaceholder, ...#EvidencePlaceholder]
 	validation_gates: [#ValidationGate, ...#ValidationGate]
 	waiver?: #DomainWaiver
 }
@@ -127,6 +128,31 @@ package nomos
 	required:            bool | *true
 	minimum_claim_level: #ClaimLevel
 }
+
+#EvidencePlaceholder: {
+	id:                  #DomainID
+	kind:                #EvidencePlaceholderKind
+	path:                #NonEmptyString
+	status:              #EvidencePlaceholderStatus
+	reason:              #NonEmptyString
+	related_issue?:      =~"^#[0-9]+$"
+	blocks_claim_levels: [#ClaimLevel, ...#ClaimLevel]
+}
+
+#EvidencePlaceholderKind:
+	"clinical_evaluation" |
+	"requirement_test_trace" |
+	"licensed_reference_intake" |
+	"source_processing_evidence" |
+	"risk_assessment" |
+	"lifecycle_evidence" |
+	"other"
+
+#EvidencePlaceholderStatus:
+	"missing_evidence_blocked" |
+	"deferred_until_licensed_intake" |
+	"deferred_until_customer_execution" |
+	"planned"
 
 #ArtifactType:
 	"source_manifest" |

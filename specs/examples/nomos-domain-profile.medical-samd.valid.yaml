@@ -1,0 +1,169 @@
+schema_version: "0.1.0"
+domain_profile: medical-samd
+name: "Medical/SaMD evidence planning"
+summary: >-
+  Plans NOMOS evidence for medical-device and SaMD contexts without claiming
+  medical-device compliance, clinical validation, or regulatory clearance.
+intended_use:
+  statement: >-
+    Plan source-backed evidence, risk controls, lifecycle traceability, and
+    clinical-evaluation placeholders for customer-owned medical/SaMD
+    assessment.
+  allowed_uses:
+    - "Identify missing medical/SaMD evidence before customer validation."
+    - "Prepare requirement/test trace and clinical-evaluation placeholders."
+    - "Map lifecycle and QMS references to planning controls for review."
+  not_authorized:
+    - "Claim that NOMOS is a medical device or validated SaMD system."
+    - "Claim ISO 13485 certification or FDA regulatory compliance."
+    - "Replace clinical evaluation, risk management, or regulatory review."
+references:
+  - id: FDA-21CFR820-QMSR
+    title: "21 CFR Part 820 - Quality Management System Regulation"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Medical-device QMS and record-control planning reference."
+  - id: ISO-13485-2016
+    title: "ISO 13485:2016 - Medical devices quality management systems"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: deferred
+    purpose: "Licensed QMS reference; clause-level use blocked until intake."
+  - id: FDA-GPSV-2002
+    title: "General Principles of Software Validation"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Software validation and traceability planning reference."
+  - id: IMDRF-SAMD-CLINICAL-EVAL
+    title: "IMDRF SaMD clinical evaluation"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Clinical-evaluation planning placeholder reference."
+  - id: ISO-IEC-IEEE-12207-2026
+    title: "ISO/IEC/IEEE 12207:2026 - Software life cycle processes"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: deferred
+    purpose: "Software lifecycle reference; full text requires licensed intake."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "The customer has declared medical/SaMD intended use and owner."
+    - "Clinical, risk, and lifecycle evidence can be retained outside NOMOS."
+  does_not_apply_when:
+    - >-
+      The customer expects NOMOS to certify, clear, or clinically validate a
+      device.
+    - >-
+      Licensed ISO references are unavailable and clause-level mapping is
+      requested.
+risk_class:
+  level: high
+  rationale: >-
+    Missing clinical-evaluation, requirement/test trace, or lifecycle evidence
+    can create unsupported medical-device claims.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: SAMD-PLAN-001
+      level: registered
+      kind: planning
+      statement: "NOMOS can structure a medical/SaMD evidence planning profile."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-009"
+  blocked_claims:
+    - id: SAMD-BLOCK-001
+      kind: medical_device_compliance
+      statement: "NOMOS is medical-device compliant or clinically validated."
+      reason: >-
+        Medical-device compliance and clinical validation require customer
+        intended use, approved procedures, clinical evaluation, and external
+        regulatory evidence outside this planning profile.
+    - id: SAMD-BLOCK-002
+      kind: certification
+      statement: "NOMOS is ISO 13485 certified."
+      reason: "No external certification or licensed clause-level audit exists."
+    - id: SAMD-BLOCK-003
+      kind: regulated_validation
+      statement: "NOMOS is validated for medical/SaMD use."
+      reason: "Customer-specific validation evidence is missing."
+required_artifacts:
+  - id: source-manifest
+    type: source_manifest
+    path: docs/canonical/source-manifest.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: samd-clinical-evaluation
+    type: other
+    path: docs/regulated/validation-pack/medical-samd-clinical-evaluation-placeholder.md
+    required: true
+    minimum_claim_level: evidence_ready
+  - id: samd-requirement-test-trace
+    type: canonical_matrix
+    path: docs/regulated/validation-pack/medical-samd-requirement-test-trace-placeholder.yaml
+    required: true
+    minimum_claim_level: evidence_ready
+  - id: samd-risk-assessment
+    type: other
+    path: docs/regulated/validation-pack/medical-samd-risk-assessment-placeholder.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: medical-validation-plan
+    type: validation_plan
+    path: docs/regulated/validation-pack/README.md
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: clinical-evaluation-placeholder
+    kind: clinical_evaluation
+    path: docs/regulated/validation-pack/medical-samd-clinical-evaluation-placeholder.md
+    status: missing_evidence_blocked
+    reason: >-
+      Customer clinical-evaluation rationale and review evidence are not
+      present.
+    related_issue: "#196"
+    blocks_claim_levels:
+      - evidence_ready
+      - validated_by_customer
+      - independent_review_ready
+  - id: requirement-test-trace-placeholder
+    kind: requirement_test_trace
+    path: docs/regulated/validation-pack/medical-samd-requirement-test-trace-placeholder.yaml
+    status: missing_evidence_blocked
+    reason: "Requirement-to-test trace records are planned but not executed."
+    blocks_claim_levels:
+      - evidence_ready
+      - validated_by_customer
+      - independent_review_ready
+  - id: iso13485-licensed-intake-placeholder
+    kind: licensed_reference_intake
+    path: docs/regulated/reference-basis/licensed-intakes/ISO-13485-2016.yaml
+    status: deferred_until_licensed_intake
+    reason: "ISO 13485 full text is licensed and issue #192 remains open."
+    related_issue: "#192"
+    blocks_claim_levels:
+      - evidence_ready
+      - validated_by_customer
+      - independent_review_ready
+validation_gates:
+  - id: medical-samd-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.medical-samd.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: medical-samd-reference-canon
+    command: >-
+      python scripts/regulated_reference_canon.py
+      --allow-public-surrogates
+      --report .regulated-doc-gate/reference-canon-report.json
+    required: true
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
