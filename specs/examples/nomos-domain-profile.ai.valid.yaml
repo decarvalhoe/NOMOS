@@ -16,7 +16,41 @@ intended_use:
   not_authorized:
     - "Claim that a model provider or AI system is certified."
     - "Claim legal, medical, financial, or regulatory sufficiency."
+ai_system_types:
+  - advisory
+  - rag-only
+  - ai-assisted-extraction
+  - autonomous-agent
+  - high-risk-candidate
 references:
+  - id: EU-AI-ACT-2024
+    title: "EU AI Act"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      AI system role, risk, oversight, and governance planning reference.
+  - id: NIST-AI-RMF-1
+    title: "NIST AI Risk Management Framework 1.0"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      AI risk governance, mapping, measurement, and management reference.
+  - id: NIST-GENAI-PROFILE-2024
+    title: "NIST AI RMF Generative AI Profile"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Generative AI-specific risk, evaluation, and monitoring reference.
+  - id: ISO-IEC-42001-2023
+    title: "ISO/IEC 42001:2023 AI management systems"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: deferred
+    purpose: >-
+      AI management system reference; full text requires licensed intake.
   - id: NOMOS-AI-RAG-GOVERNANCE
     title: "Nomos AI/RAG governance documentation"
     authority_type: internal_policy
@@ -66,6 +100,36 @@ claim_ladder:
         Regulatory compliance depends on jurisdiction, intended use,
         deployment controls, and legal review.
 required_artifacts:
+  - id: ai-system-classification
+    type: decision_record
+    path: docs/regulated/ai-rag-governance/README.md
+    required: true
+    minimum_claim_level: registered
+  - id: model-inventory
+    type: other
+    path: docs/regulated/ai-rag-governance/model-inventory-placeholder.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: provider-inventory
+    type: other
+    path: docs/regulated/ai-rag-governance/provider-inventory-placeholder.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: prompt-boundary
+    type: access_policy
+    path: docs/regulated/ai-rag-governance/prompt-boundary-placeholder.md
+    required: true
+    minimum_claim_level: mapped
+  - id: evaluation-datasets
+    type: other
+    path: docs/regulated/ai-rag-governance/evaluation-datasets-placeholder.yaml
+    required: true
+    minimum_claim_level: evidence_ready
+  - id: human-review-monitoring
+    type: workflow_config
+    path: docs/regulated/ai-rag-governance/human-review-monitoring-placeholder.yaml
+    required: true
+    minimum_claim_level: evidence_ready
   - id: source-backed-answer-report
     type: evidence_pack
     path: docs/regulated/ai-rag-governance/README.md

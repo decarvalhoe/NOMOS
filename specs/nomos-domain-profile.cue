@@ -12,6 +12,7 @@ package nomos
 	name:           #NonEmptyString
 	summary:        #NonEmptyString
 	intended_use:   #IntendedUse
+	ai_system_types?: [#AISystemType, ...#AISystemType]
 	references: [#Reference, ...#Reference]
 	applicability: #Applicability
 	risk_class:    #RiskClass
@@ -29,6 +30,13 @@ package nomos
 	allowed_uses: [#NonEmptyString, ...#NonEmptyString]
 	not_authorized: [#NonEmptyString, ...#NonEmptyString]
 }
+
+#AISystemType:
+	"advisory" |
+	"rag-only" |
+	"ai-assisted-extraction" |
+	"autonomous-agent" |
+	"high-risk-candidate"
 
 #Reference: {
 	id:             =~"^[A-Z0-9][A-Z0-9.-]*$"
