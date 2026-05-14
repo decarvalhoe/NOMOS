@@ -60,6 +60,8 @@ jobs:
             --output .regulated-evidence-pack/iq-oq-pq-template-pack.json
           python scripts/regulated_rag_answer_evidence.py \
             --output .regulated-evidence-pack/rag-answer-evidence.json
+          python scripts/regulated_ai_provider_ledger.py \
+            --output .regulated-evidence-pack/ai-provider-change-ledger.json
           python scripts/regulated_reference_canon.py \
             --report .regulated-evidence-pack/reference-canon-report.json
 

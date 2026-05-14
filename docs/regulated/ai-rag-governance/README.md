@@ -19,4 +19,10 @@ Nomos must treat AI output as assistance, not authority. Product law requires so
 `rag-answer-fixtures.yaml`. The gate blocks any answer marked acceptable unless
 it has source-backed citations or an explicit refusal/unsupported state.
 
+`scripts/regulated_ai_provider_ledger.py` emits
+`.regulated-evidence-pack/ai-provider-change-ledger.json` from
+`ai-provider-change-ledger.yaml`. The regulated documentation gate blocks
+provider/model changes that preserve domain claims unless impact assessment is
+complete.
+
 Use `templates/regulated/ai-rag-governance.md` as the first controlled record.

@@ -737,6 +737,48 @@ references:
                 )
             )
 
+    def test_regulated_docs_gate_blocks_provider_change_without_impact_assessment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/ai-rag-governance/ai-provider-change-ledger.yaml",
+                """
+schema_version: "0.1.0"
+record_type: ai_provider_change_ledger
+claim_boundary: "AI provider change-control evidence only; no AI compliance claim."
+records:
+  - change_id: AI-PROVIDER-001
+    provider: example-provider
+    model: example-model
+    region: eu
+    data_use_policy: no_training_on_customer_data
+    api_version: "2026-05-14"
+    prompt_template_version: prompt-v1
+    evaluation_baseline: eval-baseline-v1
+    approval_state: approved_preserve_domain_claims
+""".lstrip(),
+            )
+            output = repo / "out/regulated-doc-gate.json"
+
+            result = run_script(
+                "regulated_docs_gate.py",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(
+                    "AI provider/model changes that preserve domain claims require impact assessment"
+                    in finding["message"]
+                    for finding in report["findings"]
+                ),
+                report["findings"],
+            )
+
     def test_reference_canon_marks_gamp5_as_licensed_bible(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
