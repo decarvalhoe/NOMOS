@@ -1,0 +1,159 @@
+schema_version: "0.1.0"
+domain_profile: finance-regtech
+name: "Finance and RegTech evidence planning"
+summary: >-
+  Plans NOMOS evidence for financial regulated-technology contexts without
+  claiming legal, supervisory, crypto, or financial regulatory compliance.
+intended_use:
+  statement: >-
+    Plan source-backed evidence for ICT risk, third-party risk, cyber
+    disclosure, AI supervision, and crypto disclosure review.
+  allowed_uses:
+    - "Identify finance/RegTech evidence gaps before customer review."
+    - "Map regulated operational resilience references to planning controls."
+    - "Prepare disclosure and supervision evidence placeholders."
+  not_authorized:
+    - "Claim DORA, SEC, FINRA, MiCA, or other financial regulatory compliance."
+    - "Provide legal advice or regulatory filing approval."
+references:
+  - id: EU-DORA-2022-2554
+    title: "EU DORA Regulation 2022/2554"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "ICT risk and third-party risk planning reference."
+  - id: SEC-CYBER-DISCLOSURE-2023
+    title: "SEC cybersecurity disclosure rules"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Cyber disclosure governance and evidence planning reference."
+  - id: FINRA-RN-24-09
+    title: "FINRA Regulatory Notice 24-09 on AI"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "AI supervision and member-obligation planning reference."
+  - id: EU-MICA-2023-1114
+    title: "EU MiCA Regulation 2023/1114"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Crypto-asset disclosure and reference-corpus planning reference."
+  - id: NIST-SP-800-218
+    title: "NIST Secure Software Development Framework"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Secure SDLC evidence planning for financial software changes."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "Customer finance policies and regulatory sources are registered."
+    - "Operational resilience and disclosure evidence can be retained."
+    - "AI supervision evidence is reviewed by accountable human owners."
+  does_not_apply_when:
+    - "The customer expects NOMOS to approve filings or legal positions."
+    - "Crypto, cyber, or ICT risk disclosures need legal sign-off."
+risk_class:
+  level: high
+  rationale: >-
+    Missing ICT, third-party, cyber, AI-supervision, or crypto-disclosure
+    evidence can create unsupported financial regulatory claims.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: FIN-PLAN-001
+      level: registered
+      kind: planning
+      statement: "NOMOS can structure a finance/RegTech evidence profile."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-013"
+  blocked_claims:
+    - id: FIN-BLOCK-001
+      kind: financial_regulatory_compliance
+      statement: "NOMOS makes a financial regulatory compliance determination."
+      reason: >-
+        Compliance determinations require customer facts, legal review,
+        supervisory context, and approved filing evidence.
+    - id: FIN-BLOCK-002
+      kind: legal_compliance
+      statement: "NOMOS approves SEC, FINRA, DORA, or MiCA disclosures."
+      reason: "Disclosure approval is outside this planning profile."
+required_artifacts:
+  - id: ict-risk-evidence
+    type: other
+    path: docs/regulated/domain-packs/finance-regtech/ict-risk-placeholder.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: third-party-risk-evidence
+    type: supplier_pack
+    path: docs/regulated/domain-packs/finance-regtech/third-party-risk-placeholder.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: cyber-disclosure-evidence
+    type: decision_record
+    path: docs/regulated/domain-packs/finance-regtech/cyber-disclosure-placeholder.md
+    required: true
+    minimum_claim_level: mapped
+  - id: ai-supervision-evidence
+    type: workflow_config
+    path: docs/regulated/domain-packs/finance-regtech/ai-supervision-placeholder.yaml
+    required: true
+    minimum_claim_level: evidence_ready
+  - id: crypto-disclosure-evidence
+    type: other
+    path: docs/regulated/domain-packs/finance-regtech/crypto-disclosure-placeholder.yaml
+    required: true
+    minimum_claim_level: evidence_ready
+evidence_placeholders:
+  - id: ict-risk-placeholder
+    kind: risk_assessment
+    path: docs/regulated/domain-packs/finance-regtech/ict-risk-placeholder.yaml
+    status: missing_evidence_blocked
+    reason: "DORA ICT risk evidence is planned but not customer-executed."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: third-party-risk-placeholder
+    kind: source_processing_evidence
+    path: docs/regulated/domain-packs/finance-regtech/third-party-risk-placeholder.yaml
+    status: missing_evidence_blocked
+    reason: "Third-party ICT provider evidence is missing."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: cyber-disclosure-placeholder
+    kind: lifecycle_evidence
+    path: docs/regulated/domain-packs/finance-regtech/cyber-disclosure-placeholder.md
+    status: missing_evidence_blocked
+    reason: "Cyber disclosure assessment evidence is missing."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: ai-supervision-placeholder
+    kind: source_processing_evidence
+    path: docs/regulated/domain-packs/finance-regtech/ai-supervision-placeholder.yaml
+    status: missing_evidence_blocked
+    reason: "AI supervision and human-review evidence is missing."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: crypto-disclosure-placeholder
+    kind: source_processing_evidence
+    path: docs/regulated/domain-packs/finance-regtech/crypto-disclosure-placeholder.yaml
+    status: missing_evidence_blocked
+    reason: "MiCA crypto-asset disclosure evidence is missing."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: finance-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.finance.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
