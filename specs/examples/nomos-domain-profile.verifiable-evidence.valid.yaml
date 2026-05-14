@@ -1,0 +1,152 @@
+schema_version: "0.1.0"
+domain_profile: verifiable-evidence
+name: "Verifiable evidence bundle planning"
+summary: >-
+  Plans tamper-evident NOMOS evidence bundles with hashes, external
+  signatures, optional credential/provenance wrappers, and optional
+  transparency records without claiming semantic correctness.
+intended_use:
+  statement: >-
+    Define the verifiability fields and mechanism choices for NOMOS evidence
+    bundles so reviewers can reconstruct and verify integrity.
+  allowed_uses:
+    - "Define signed evidence bundle fields and verification instructions."
+    - "Choose first verifiability mechanisms for NOMOS evidence packs."
+    - "Track optional W3C VC, C2PA, and transparency-log compatibility."
+  not_authorized:
+    - "Claim that a signature or log proves semantic correctness."
+    - "Claim certification, legal compliance, or regulated validation."
+    - "Replace source fidelity, ALCOA+ review, or customer acceptance."
+references:
+  - id: W3C-VC-2-0
+    title: "W3C Verifiable Credentials Data Model 2.0"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: optional
+    purpose: "Evaluate optional credential wrapper for evidence bundles."
+  - id: C2PA-2-2
+    title: "C2PA Content Credentials technical specification 2.2"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: optional
+    purpose: "Evaluate optional content provenance for human documents."
+  - id: RFC-9162
+    title: "RFC 9162 Certificate Transparency Version 2.0"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: deferred
+    purpose: "Evaluate append-only transparency log compatibility."
+  - id: NOMOS-ALCOA-ENVELOPE
+    title: "NOMOS ALCOA evidence envelope"
+    authority_type: internal_policy
+    access_policy: internal_only
+    status: required
+    purpose: "Bind verifiability to existing evidence integrity fields."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "Evidence artifacts have stable hashes and ALCOA envelope hashes."
+    - "A detached signature or external signing reference is available."
+    - "Verification instructions identify artifacts, commits, and algorithms."
+  does_not_apply_when:
+    - "Evidence content lacks source fidelity or ALCOA context."
+    - "A reviewer expects cryptographic proof of semantic correctness."
+risk_class:
+  level: high
+  rationale: >-
+    Signing weak or unsupported evidence only makes weak evidence
+    tamper-evident; it does not improve source fidelity or meaning.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: VE-PLAN-001
+      level: registered
+      kind: planning
+      statement: "NOMOS can structure verifiable evidence bundle planning."
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-016"
+    - id: VE-MAPPED-001
+      level: mapped
+      kind: workflow_support
+      statement: >-
+        NOMOS can define hash, signature-reference, and verification fields for
+        evidence bundles.
+      evidence:
+        - "docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml"
+  blocked_claims:
+    - id: VE-BLOCK-001
+      kind: certification
+      statement: "NOMOS verifiability certifies evidence correctness."
+      reason: >-
+        Hashes, signatures, and logs prove integrity properties, not semantic
+        truth or source correctness.
+    - id: VE-BLOCK-002
+      kind: regulated_validation
+      statement: "NOMOS verifiable evidence creates regulated validation."
+      reason: >-
+        Regulated validation requires customer-approved validation scope.
+    - id: VE-BLOCK-003
+      kind: legal_compliance
+      statement: "NOMOS verifiable evidence proves legal compliance."
+      reason: "Legal compliance is outside this evidence-integrity profile."
+required_artifacts:
+  - id: signed-evidence-bundle-format
+    type: evidence_pack
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: mechanism-decision-record
+    type: decision_record
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: w3c-vc-evaluation
+    type: decision_record
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: c2pa-evaluation
+    type: decision_record
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: rfc9162-transparency-log-evaluation
+    type: decision_record
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: cryptographic-signature-placeholder
+    kind: lifecycle_evidence
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    status: planned
+    reason: "Detached signatures are planned; key custody is not implemented."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: transparency-log-placeholder
+    kind: other
+    path: docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+    status: planned
+    reason: "Append-only log integration remains deferred."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: verifiable-evidence-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: verifiable-evidence-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py
+      --report .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready

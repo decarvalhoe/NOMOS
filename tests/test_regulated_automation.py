@@ -551,6 +551,56 @@ answers:
             self.assertTrue(evidence_context["artifact_ref"])
             self.assertTrue(evidence_context["evidence_hash"])
 
+    def test_verifiable_evidence_profile_selects_mechanisms_and_bundle_fields(self) -> None:
+        import yaml
+
+        profile_path = ROOT / "specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml"
+        self.assertTrue(profile_path.exists(), f"missing profile: {profile_path}")
+        profile = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["domain_profile"], "verifiable-evidence")
+
+        artifacts = {artifact["id"]: artifact for artifact in profile["required_artifacts"]}
+        required_artifact_ids = {
+            "signed-evidence-bundle-format",
+            "mechanism-decision-record",
+            "w3c-vc-evaluation",
+            "c2pa-evaluation",
+            "rfc9162-transparency-log-evaluation",
+        }
+        self.assertLessEqual(required_artifact_ids, set(artifacts))
+
+        decision_path = ROOT / artifacts["mechanism-decision-record"]["path"]
+        decision = yaml.safe_load(decision_path.read_text(encoding="utf-8"))
+        self.assertEqual(decision["domain_profile"], "verifiable-evidence")
+        self.assertIn("does not prove semantic correctness", decision["claim_boundary"].lower())
+
+        bundle_fields = set(decision["signed_evidence_bundle"]["required_fields"])
+        self.assertLessEqual(
+            {
+                "bundle_id",
+                "bundle_version",
+                "issuer",
+                "artifact_hashes",
+                "alcoa_envelope_hash",
+                "source_commit",
+                "signature_algorithm",
+                "signature_value_or_external_ref",
+                "verification_instructions",
+                "transparency_entry_ref",
+            },
+            bundle_fields,
+        )
+
+        selected = {item["id"] for item in decision["mechanism_decision"]["selected_first"]}
+        self.assertLessEqual({"hash-manifest", "detached-signature"}, selected)
+        option_statuses = {
+            item["id"]: item["status"]
+            for item in decision["mechanism_decision"]["evaluated_options"]
+        }
+        self.assertEqual(option_statuses["w3c-vc-wrapper"], "optional")
+        self.assertEqual(option_statuses["c2pa-content-provenance"], "optional")
+        self.assertEqual(option_statuses["rfc9162-transparency-log"], "deferred")
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))
