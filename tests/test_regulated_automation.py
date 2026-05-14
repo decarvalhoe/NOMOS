@@ -220,6 +220,200 @@ class RegulatedAutomationTests(unittest.TestCase):
             report = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(report["status"], "passed")
 
+    def test_regulated_docs_gate_emits_domain_applicability_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(repo / "docs/canonical/source-manifest.yaml", "sources: []\n")
+            profiles = repo / "specs/examples"
+            for domain, status, extra in [
+                ("ai-governance", "applicable", ""),
+                ("finance-regtech", "not_applicable", ""),
+                ("cyber-supplier-assurance", "blocked", ""),
+                (
+                    "legal-ediscovery",
+                    "applicable",
+                    """
+waiver:
+  id: WAIVER-LEGAL-001
+  reason: Legal owner deferred this profile.
+  approver: legal-owner
+  expires_on: "2026-12-31"
+""",
+                ),
+                ("gxp-csv", "applicable", "missing_artifact: true\n"),
+            ]:
+                artifact_path = "docs/canonical/source-manifest.yaml"
+                if "missing_artifact" in extra:
+                    artifact_path = "docs/missing/evidence.yaml"
+                    extra = ""
+                write(
+                    profiles / f"nomos-domain-profile.{domain}.valid.yaml",
+                    f"""
+schema_version: "0.1.0"
+domain_profile: {domain}
+name: "{domain} profile"
+summary: "Test profile"
+intended_use:
+  statement: "Test intended use"
+  allowed_uses:
+    - "Test planning"
+  not_authorized:
+    - "Unsupported claims"
+references:
+  - id: REF-{domain.upper().replace("-", "")}
+    title: "Reference"
+    authority_type: internal_policy
+    access_policy: internal_only
+    status: required
+    purpose: "Test reference"
+applicability:
+  status: {status}
+  applies_when:
+    - "Profile applies"
+  does_not_apply_when:
+    - "Profile does not apply"
+risk_class:
+  level: high
+  rationale: "Test risk"
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: CLAIM-{domain.upper().replace("-", "")}
+      level: registered
+      kind: planning
+      statement: "Planning claim"
+      evidence:
+        - "{artifact_path}"
+  blocked_claims:
+    - id: BLOCK-{domain.upper().replace("-", "")}
+      kind: certification
+      statement: "Certification claim"
+      reason: "Unsupported"
+required_artifacts:
+  - id: source-manifest
+    type: source_manifest
+    path: {artifact_path}
+    required: true
+    minimum_claim_level: registered
+  - id: future-evidence
+    type: evidence_pack
+    path: docs/missing/future-evidence.yaml
+    required: true
+    minimum_claim_level: mapped
+validation_gates:
+  - id: profile-vet
+    command: "cue vet"
+    required: true
+    blocks_claim_levels:
+      - mapped
+{extra}
+""".lstrip(),
+                )
+
+            output = repo / ".regulated-doc-gate/regulated-doc-gate-report.json"
+
+            result = run_script(
+                "regulated_docs_gate.py",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            domain_report_path = output.parent / "domain-applicability-report.json"
+            self.assertTrue(domain_report_path.exists())
+            domain_report = json.loads(domain_report_path.read_text(encoding="utf-8"))
+            self.assertEqual(domain_report["status_counts"]["applicable"], 1)
+            self.assertEqual(domain_report["status_counts"]["not_applicable"], 1)
+            self.assertEqual(domain_report["status_counts"]["blocked"], 1)
+            self.assertEqual(domain_report["status_counts"]["waived"], 1)
+            self.assertEqual(domain_report["status_counts"]["missing_evidence"], 1)
+            self.assertTrue(
+                any(finding["code"] == "DOMAIN_REQUIRED_ARTIFACT_MISSING" for finding in domain_report["findings"]),
+                domain_report["findings"],
+            )
+            self.assertFalse(
+                any("future-evidence.yaml" in finding["message"] for finding in domain_report["findings"]),
+                domain_report["findings"],
+            )
+
+    def test_regulated_docs_gate_fails_domain_claim_above_evidence_level(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(repo / "docs/canonical/source-manifest.yaml", "sources: []\n")
+            write(
+                repo / "specs/examples/nomos-domain-profile.ai.valid.yaml",
+                """
+schema_version: "0.1.0"
+domain_profile: ai-governance
+name: "AI governance profile"
+summary: "Test profile"
+intended_use:
+  statement: "Test intended use"
+  allowed_uses:
+    - "Test planning"
+  not_authorized:
+    - "Unsupported claims"
+references:
+  - id: REF-AI
+    title: "Reference"
+    authority_type: internal_policy
+    access_policy: internal_only
+    status: required
+    purpose: "Test reference"
+applicability:
+  status: applicable
+  applies_when:
+    - "Profile applies"
+  does_not_apply_when:
+    - "Profile does not apply"
+risk_class:
+  level: high
+  rationale: "Test risk"
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: CLAIM-AI-001
+      level: evidence_ready
+      kind: readiness
+      statement: "Evidence-ready claim"
+      evidence:
+        - "docs/canonical/source-manifest.yaml"
+  blocked_claims:
+    - id: BLOCK-AI-001
+      kind: certification
+      statement: "Certification claim"
+      reason: "Unsupported"
+required_artifacts:
+  - id: source-manifest
+    type: source_manifest
+    path: docs/canonical/source-manifest.yaml
+    required: true
+    minimum_claim_level: registered
+validation_gates:
+  - id: profile-vet
+    command: "cue vet"
+    required: true
+    blocks_claim_levels:
+      - mapped
+""".lstrip(),
+            )
+            output = repo / ".regulated-doc-gate/regulated-doc-gate-report.json"
+
+            result = run_script(
+                "regulated_docs_gate.py",
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            domain_report = json.loads((output.parent / "domain-applicability-report.json").read_text(encoding="utf-8"))
+            self.assertTrue(
+                any(finding["code"] == "DOMAIN_CLAIM_LEVEL_EXCEEDS_EVIDENCE" for finding in domain_report["findings"]),
+                domain_report["findings"],
+            )
+
     def test_reference_canon_marks_gamp5_as_licensed_bible(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
