@@ -408,6 +408,58 @@ claim_ladder:
             self.assertIn("citation", deployments["downstream-rag"]["pq"]["focus"])
             self.assertNotIn("RBOK", json.dumps(pack, sort_keys=True))
 
+    def test_rag_answer_evidence_blocks_acceptable_answer_without_citation_or_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            write(
+                fixtures,
+                """
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-MISSING-CITATION
+    prompt_id: PROMPT-CITATION-001
+    fixture_type: citation
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: 0123456789abcdef
+        span: "1-3"
+    source_spans: []
+    citation_status: missing
+    refusal_status: not_refused
+    confidence: 0.82
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(
+                    finding["code"] == "ACCEPTABLE_WITHOUT_CITATION_OR_REFUSAL"
+                    for finding in report["findings"]
+                ),
+                report.get("findings", []),
+            )
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

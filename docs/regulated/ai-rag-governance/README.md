@@ -14,4 +14,9 @@ Nomos must treat AI output as assistance, not authority. Product law requires so
 - RAG answers preserve citations and refusal behavior;
 - human review status is retained for critical or ambiguous units.
 
+`scripts/regulated_rag_answer_evidence.py` emits
+`.regulated-evidence-pack/rag-answer-evidence.json` from
+`rag-answer-fixtures.yaml`. The gate blocks any answer marked acceptable unless
+it has source-backed citations or an explicit refusal/unsupported state.
+
 Use `templates/regulated/ai-rag-governance.md` as the first controlled record.
