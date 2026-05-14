@@ -245,7 +245,6 @@ artifact:
                 ),
                 report.get("findings", []),
             )
-
     def test_validation_planner_ranks_controls_by_csa_risk(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -1331,6 +1330,173 @@ source_integrity:
             self.assertEqual(report["status"], "ready_for_processing")
             self.assertEqual(report["summary"]["licensed_reference_gaps"], 0)
             self.assertEqual(report["bibles"][0]["licensed_artifact_status"], "verified")
+
+    def test_reference_canon_reports_machine_readable_access_classes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            write(
+                repo / "docs/regulated/reference-basis/external-reference-register.yaml",
+                """
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: PUBLIC-FDA-GUIDANCE
+    title: Public FDA Guidance
+    publisher: US FDA
+    url: https://www.fda.gov/
+    content_access_policy: official_public_reference
+    evidence_status: requires_evidence
+    reference_classification:
+      source_class: public
+      confidentiality: public
+      full_text_redistribution: allowed
+      processing_mode: official_snapshot
+      retention_obligation: public_snapshot_retained_with_hash
+  - id: LICENSED-ISO-STANDARD
+    title: Licensed ISO Standard
+    publisher: ISO
+    url: https://www.iso.org/
+    content_access_policy: licensed_content_required
+    evidence_status: licensed_reference_required_before_clause_mapping
+    reference_classification:
+      source_class: licensed
+      confidentiality: licensed_restricted
+      full_text_redistribution: forbidden
+      processing_mode: licensed_read_only_local_artifact
+      retention_obligation: license_terms
+  - id: PRIVATE-METHOD
+    title: Private Internal Method
+    publisher: Internal
+    url: ""
+    content_access_policy: private_reference_only
+    evidence_status: private_reference_registered
+    reference_classification:
+      source_class: private
+      confidentiality: private_restricted
+      full_text_redistribution: forbidden
+      processing_mode: private_read_only_local_artifact
+      retention_obligation: owner_policy
+  - id: CONFIDENTIAL-SOP
+    title: Confidential SOP
+    publisher: Partner
+    url: ""
+    content_access_policy: confidential_reference_only
+    evidence_status: confidential_reference_registered
+    reference_classification:
+      source_class: confidential
+      confidentiality: confidential_restricted
+      full_text_redistribution: forbidden
+      processing_mode: confidential_read_only_local_artifact
+      retention_obligation: confidentiality_agreement
+  - id: CUSTOMER-BIBLE
+    title: Customer Owned Bible
+    publisher: Customer
+    url: ""
+    content_access_policy: customer_owned_confidential
+    evidence_status: customer_reference_registered
+    reference_classification:
+      source_class: customer_owned
+      confidentiality: customer_confidential
+      full_text_redistribution: forbidden
+      processing_mode: customer_read_only_local_artifact
+      retention_obligation: customer_contract
+""".lstrip(),
+            )
+            output = repo / "out/reference-canon.json"
+
+            result = run_script(
+                "regulated_reference_canon.py",
+                "--root",
+                str(repo),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["summary"]["source_classes"]["public"], 1)
+            self.assertEqual(report["summary"]["source_classes"]["licensed"], 1)
+            self.assertEqual(report["summary"]["source_classes"]["private"], 1)
+            self.assertEqual(report["summary"]["source_classes"]["confidential"], 1)
+            self.assertEqual(report["summary"]["source_classes"]["customer_owned"], 1)
+            public = next(item for item in report["bibles"] if item["id"] == "PUBLIC-FDA-GUIDANCE")
+            customer = next(item for item in report["bibles"] if item["id"] == "CUSTOMER-BIBLE")
+            self.assertTrue(public["full_text_redistribution_allowed"])
+            self.assertFalse(customer["full_text_fetch_allowed"])
+            self.assertFalse(customer["full_text_redistribution_allowed"])
+            self.assertEqual(customer["access_policy"], "customer_owned_confidential")
+            self.assertEqual(customer["retention_obligation"], "customer_contract")
+            self.assertEqual(customer["nomos_processing_policy"], "read_only_local_artifact_required")
+
+    def test_reference_canon_blocks_forbidden_full_text_redistribution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            licensed_root = Path(tmp) / "licensed"
+            payload = b"licensed reference content"
+            digest = hashlib.sha256(payload).hexdigest().upper()
+            write_bytes(licensed_root / "ISO-9001/source.pdf", payload)
+            write(
+                repo / "docs/regulated/reference-basis/external-reference-register.yaml",
+                """
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: ISO-9001
+    title: ISO 9001
+    publisher: ISO
+    url: https://www.iso.org/
+    content_access_policy: licensed_content_required
+    evidence_status: local_artifact_registered_license_review_required_before_clause_mapping
+    reference_classification:
+      source_class: licensed
+      confidentiality: licensed_restricted
+      full_text_redistribution: forbidden
+      processing_mode: licensed_read_only_local_artifact
+      retention_obligation: license_terms
+""".lstrip(),
+            )
+            write(
+                repo / "docs/regulated/reference-basis/licensed-intakes/ISO-9001.yaml",
+                f"""
+schema_version: "0.1.0"
+record_type: licensed_reference_intake
+reference_id: ISO-9001
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: ISO-9001/source.pdf
+source_integrity:
+  sha256: {digest}
+licensed_use:
+  processing_scope: read_only_local_artifact
+  full_text_redistribution: allowed
+  commit_full_text_allowed: true
+""".lstrip(),
+            )
+            output = repo / "out/reference-canon.json"
+
+            result = run_script(
+                "regulated_reference_canon.py",
+                "--root",
+                str(repo),
+                "--licensed-root",
+                str(licensed_root),
+                "--report",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(
+                any(
+                    finding.get("id") == "REFERENCE_FULL_TEXT_REDISTRIBUTION_FORBIDDEN"
+                    for finding in report["findings"]
+                )
+            )
 
     def test_reference_canon_allows_public_surrogate_for_missing_licensed_reference(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
