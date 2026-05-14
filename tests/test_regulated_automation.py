@@ -912,6 +912,44 @@ answers:
         self.assertIn("screenshot_trace_missing", pack["blockers"])
         self.assertEqual(pack["overall_result"], "PENDING")
 
+    def test_ordo_finding_capa_intake_rule_links_qualification_findings(self) -> None:
+        import yaml
+
+        rule_path = ROOT / "docs/regulated/qualification/ordo-finding-capa-intake.yaml"
+        self.assertTrue(rule_path.exists(), f"missing ORDO CAPA intake rule: {rule_path}")
+        rule = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
+        self.assertEqual(rule["rule_id"], "CAPA-ORDO-NOMOS-2026-05-06")
+        self.assertEqual(rule["related_issue"], "#411")
+
+        required_fields = set(rule["required_fields"])
+        self.assertLessEqual(
+            {
+                "finding",
+                "impact_on_iq_oq_pq_or_release_claim",
+                "detection_signal",
+                "safe_remediation_candidate",
+                "validation_poc_plan",
+                "priority",
+                "source_links",
+            },
+            required_fields,
+        )
+
+        findings = {finding["id"]: finding for finding in rule["promoted_findings"]}
+        self.assertLessEqual(
+            {
+                "dispatch_submission_reliability",
+                "stale_ci_signal_detection",
+                "preflight_unblock_plans",
+                "dirty_worktree_checkpoints",
+                "portfolio_readiness_state",
+            },
+            set(findings),
+        )
+        self.assertTrue(all(finding["source_links"] for finding in findings.values()))
+        self.assertEqual(findings["stale_ci_signal_detection"]["linked_nomos_issue"], "#409")
+        self.assertEqual(rule["future_reconciliation"]["requires_full_transcript_read"], False)
+
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = make_minimal_regulated_repo(Path(tmp))

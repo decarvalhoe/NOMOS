@@ -1,0 +1,103 @@
+schema_version: "0.1.0"
+rule_id: CAPA-ORDO-NOMOS-2026-05-06
+record_type: ordo_operational_finding_to_nomos_capa_intake
+related_issue: "#411"
+parent_epic: "#314"
+recorded_at_utc: "2026-05-14T11:35:00Z"
+claim_boundary: >-
+  CAPA/backlog intake rule only; does not prove remediation effectiveness,
+  production validation, customer acceptance, or regulated certification.
+purpose: >-
+  Promote ORDO operational findings into lightweight NOMOS qualification
+  backlog records whenever proof quality, gate reliability, traceability, or
+  production readiness is affected.
+required_fields:
+  - finding
+  - impact_on_iq_oq_pq_or_release_claim
+  - detection_signal
+  - safe_remediation_candidate
+  - validation_poc_plan
+  - priority
+  - source_links
+promotion_rule:
+  applies_when:
+    - "ORDO finding affects NOMOS proof quality."
+    - "ORDO finding affects gate reliability."
+    - "ORDO finding affects traceability or production readiness."
+    - "ORDO finding changes IQ, OQ, PQ, or release claim interpretation."
+  does_not_apply_when:
+    - "Finding is operational noise with no evidence or release impact."
+    - "Finding is already captured by an active NOMOS issue with current evidence."
+promoted_findings:
+  - id: dispatch_submission_reliability
+    finding: "Remote dispatch submission can stall or fail without visible queue state."
+    impact_on_iq_oq_pq_or_release_claim: "Affects OQ evidence reliability and operator traceability."
+    detection_signal: "ORDO live orchestration finding during 2026-05-06 wave."
+    safe_remediation_candidate: "Record dispatch acknowledgement, target, timestamp, and retry outcome."
+    validation_poc_plan: "Replay a dry-run dispatch and verify acknowledgement evidence is retained."
+    priority: P2
+    linked_nomos_issue: "#411"
+    source_links:
+      - "RBOKproject/ORDO#58"
+      - "RBOKproject/NOMOS#314"
+  - id: stale_ci_signal_detection
+    finding: "Historical CI failures can be misread as current red gate state."
+    impact_on_iq_oq_pq_or_release_claim: "Affects OQ gate reliability and merge-readiness claims."
+    detection_signal: "Deploy DEV Alerts run 25442507323 was superseded by newer success."
+    safe_remediation_candidate: "Evaluate latest run per workflow/check name before blocking merge."
+    validation_poc_plan: "Use OQ stale/newest/in-progress cases in rbok-nomos-oq-ci-signal-protocol.yaml."
+    priority: P1
+    linked_nomos_issue: "#409"
+    source_links:
+      - "https://github.com/RBOKproject/RBOK/actions/runs/25442507323"
+      - "RBOKproject/ORDO#58"
+      - "RBOKproject/NOMOS#409"
+  - id: preflight_unblock_plans
+    finding: "Portfolio preflight needs durable unblock-task evidence."
+    impact_on_iq_oq_pq_or_release_claim: "Affects IQ readiness and release planning evidence."
+    detection_signal: "55/55 ready and 0 blockers recorded from ORDO portfolio state."
+    safe_remediation_candidate: "Retain clean_plan and unblock_tasks state artifact paths in IQ baseline."
+    validation_poc_plan: "Verify rbok-nomos-iq-baseline.yaml includes ORDO state artifact paths."
+    priority: P2
+    linked_nomos_issue: "#408"
+    source_links:
+      - "/root/.local/share/orch-state/_portfolio/clean_plan.json"
+      - "/root/.local/share/orch-state/_portfolio/unblock_tasks.json"
+      - "RBOKproject/NOMOS#408"
+  - id: dirty_worktree_checkpoints
+    finding: "Dirty worktree checkpoints can hide unpublished qualification changes."
+    impact_on_iq_oq_pq_or_release_claim: "Affects traceability between local evidence, commits, and PRs."
+    detection_signal: "ORDO live session required explicit clean/dirty status checks."
+    safe_remediation_candidate: "Require git status checkpoint before commit, push, and PR creation."
+    validation_poc_plan: "Confirm each NOMOS qualification PR body lists verification and claim boundary."
+    priority: P2
+    linked_nomos_issue: "#411"
+    source_links:
+      - "RBOKproject/NOMOS#314"
+  - id: portfolio_readiness_state
+    finding: "Portfolio readiness state is useful qualification evidence but can remain trapped in local ORDO artifacts."
+    impact_on_iq_oq_pq_or_release_claim: "Affects IQ baseline and release-readiness narrative."
+    detection_signal: "Portfolio preflight reported 55/55 bindings ready and 0 unblock tasks."
+    safe_remediation_candidate: "Promote readiness counts and artifact paths into NOMOS qualification records."
+    validation_poc_plan: "Verify IQ baseline records ready_bindings, total_bindings, and blockers."
+    priority: P2
+    linked_nomos_issue: "#408"
+    source_links:
+      - "/root/.local/share/orch-state/_portfolio/session_start.json"
+      - "RBOKproject/NOMOS#408"
+future_reconciliation:
+  requires_full_transcript_read: false
+  intake_surface: "NOMOS qualification backlog issue or YAML record"
+  minimum_review_cadence: "during IQ/OQ/PQ evidence updates"
+verification:
+  - id: ordo-capa-intake-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_ordo_finding_capa_intake_rule_links_qualification_findings
+      -v
+    required: true
+  - id: ordo-capa-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
