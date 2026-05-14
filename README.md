@@ -27,6 +27,13 @@ Nomos ne remplace pas les experts métier, les responsables juridiques, les resp
 
 > Nomos ne rend pas une IA "autoritaire". Il rend explicite, testable et gouvernable le lien entre une source d'autorité et les artefacts que le logiciel ou l'IA consomme.
 
+## Name
+
+Nomos is named after the ancient Greek `nomos`: law, rule, custom, norm, and
+the order that binds a community. In a Greco-Roman sense, it points to the
+Canonical-First method: turning authoritative sources into traceable, testable,
+and auditable product evidence before software or AI consumes them.
+
 ## En Un Coup D'oeil
 
 | Dimension | Position actuelle |
