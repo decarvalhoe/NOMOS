@@ -20,6 +20,7 @@ except ImportError as exc:  # pragma: no cover - exercised in CI setup failure
     raise SystemExit(2) from exc
 
 from regulated_approval_gate import validate_workflow as validate_approval_workflow
+from regulated_ai_provider_ledger import validate_ledger_document as validate_ai_provider_ledger
 
 
 CONTROLLED_ROOTS = [
@@ -81,6 +82,7 @@ GXP_CSV_REQUIRED_REFERENCES = {
     "ISPE-GAMP5-2E-2022",
 }
 GXP_CSV_REFERENCE_DISPOSITIONS = {"mapped", "blocked", "not_applicable", "waived"}
+AI_PROVIDER_LEDGER_PATH = Path("docs/regulated/ai-rag-governance/ai-provider-change-ledger.yaml")
 
 
 def iter_existing_files(roots: list[Path], suffixes: tuple[str, ...]) -> list[Path]:
@@ -406,6 +408,36 @@ def validate_gxp_csv_crosswalk(findings: list[dict[str, str]]) -> None:
         })
 
 
+def validate_ai_provider_ledger_file(findings: list[dict[str, str]]) -> None:
+    if not AI_PROVIDER_LEDGER_PATH.exists():
+        return
+
+    try:
+        ledger = yaml.safe_load(AI_PROVIDER_LEDGER_PATH.read_text(encoding="utf-8")) or {}
+    except Exception as exc:  # noqa: BLE001 - parser detail belongs in CI output
+        findings.append({
+            "severity": "error",
+            "path": str(AI_PROVIDER_LEDGER_PATH),
+            "message": f"AI provider change ledger YAML parse failed: {exc}",
+        })
+        return
+
+    if not isinstance(ledger, dict):
+        findings.append({
+            "severity": "error",
+            "path": str(AI_PROVIDER_LEDGER_PATH),
+            "message": "AI provider change ledger must be a YAML object.",
+        })
+        return
+
+    for finding in validate_ai_provider_ledger(ledger, AI_PROVIDER_LEDGER_PATH):
+        findings.append({
+            "severity": finding["severity"],
+            "path": finding["path"],
+            "message": f"AI provider ledger {finding['code']}: {finding['message']}",
+        })
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", default="regulated-doc-gate-report.json")
@@ -441,6 +473,7 @@ def main() -> int:
 
     validate_approval_workflow_file(findings)
     validate_gxp_csv_crosswalk(findings)
+    validate_ai_provider_ledger_file(findings)
 
     domain_report, domain_findings = build_domain_applicability_report()
     findings.extend(domain_findings)

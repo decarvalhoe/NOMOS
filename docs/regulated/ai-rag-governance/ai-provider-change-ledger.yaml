@@ -1,0 +1,32 @@
+schema_version: "0.1.0"
+record_type: ai_provider_change_ledger
+claim_boundary: >
+  AI provider/model change-control evidence only. This ledger does not claim
+  AI compliance, model certification, legal sufficiency, or output authority.
+records:
+  - change_id: AI-PROVIDER-BASELINE-001
+    provider: fixture-provider
+    model: fixture-model
+    region: eu
+    data_use_policy: no_training_on_customer_data
+    api_version: "2026-05-14"
+    prompt_template_version: prompt-template-v1
+    evaluation_baseline: rag-answer-fixtures-v1
+    approval_state: impact_assessed_preserve_domain_claims
+    impact_assessment:
+      assessment_id: AI-IMPACT-BASELINE-001
+      status: complete
+      assessed_changes:
+        - provider
+        - model
+        - region
+        - data_use_policy
+        - api_version
+        - prompt_template_version
+        - evaluation_baseline
+      domain_claims_preserved:
+        - ai-governance:registered
+      reviewer_status: pending_human_review
+      rationale: >
+        Baseline fixture provider is retained only for governance automation
+        tests. No production model authority or AI compliance claim is made.
