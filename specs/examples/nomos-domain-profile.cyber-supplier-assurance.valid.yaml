@@ -1,0 +1,151 @@
+schema_version: "0.1.0"
+domain_profile: cyber-supplier-assurance
+name: "Cyber supplier assurance planning"
+summary: >-
+  Plans supplier security review evidence for enterprise customers without
+  claiming security certification, audit acceptance, or regulatory compliance.
+intended_use:
+  statement: >-
+    Map supplier-facing cyber evidence to NIST SSDF and NIST CSF review
+    questions with explicit ownership and claim boundaries.
+  allowed_uses:
+    - "Prepare supplier assurance evidence for customer security review."
+    - "Map SBOM, vulnerability, incident, branch protection, and provenance evidence."
+    - "Separate implemented, manual, blocked, and customer-owned controls."
+  not_authorized:
+    - "Claim security certification or audit acceptance."
+    - "Claim regulatory compliance or legal sufficiency."
+    - "Replace customer supplier qualification."
+references:
+  - id: NIST-SP-800-218
+    title: "NIST Secure Software Development Framework"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Supplier/acquirer secure software development evidence vocabulary.
+  - id: NIST-CSF-2
+    title: "NIST Cybersecurity Framework 2.0"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: >-
+      Governance, supply-chain, vulnerability, and incident response framing.
+  - id: CUSTOMER-SUPPLIER-QUESTIONNAIRE
+    title: "Customer supplier security questionnaire"
+    authority_type: customer_source
+    access_policy: customer_confidential
+    status: optional
+    purpose: "Customer-specific review criteria and evidence ownership."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "Supplier evidence can be retained without exposing customer secrets."
+    - "SBOM, vulnerability, incident, branch protection, and provenance records exist."
+    - "Customer-owned controls remain explicitly assigned to the customer."
+  does_not_apply_when:
+    - "A customer expects NOMOS to certify supplier security."
+    - "A customer expects legal, regulatory, or audit acceptance."
+risk_class:
+  level: high
+  rationale: >-
+    Unsupported supplier-security claims can mislead enterprise customers and
+    regulated security reviewers.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: CYBER-SUPPLIER-PLAN-001
+      level: registered
+      kind: planning
+      statement: >-
+        NOMOS can structure a cyber supplier assurance planning profile.
+      evidence:
+        - "docs/38-domain-opportunity-roadmap.md#dor-018"
+    - id: CYBER-SUPPLIER-MAP-001
+      level: mapped
+      kind: workflow_support
+      statement: >-
+        NOMOS can map supplier evidence to bounded SSDF and CSF review
+        controls when evidence status and ownership are explicit.
+      evidence:
+        - "docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml"
+  blocked_claims:
+    - id: CYBER-SUPPLIER-BLOCK-001
+      kind: certification
+      statement: "NOMOS certifies supplier security."
+      reason: "Certification requires an external authority and independent audit."
+    - id: CYBER-SUPPLIER-BLOCK-002
+      kind: legal_compliance
+      statement: "NOMOS guarantees supplier security compliance."
+      reason: >-
+        Compliance depends on customer controls, contractual scope, legal
+        review, and accepted external evidence.
+required_artifacts:
+  - id: supplier-assurance-pack
+    type: supplier_pack
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: sbom-inventory
+    type: sbom
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: vulnerability-register
+    type: audit_log
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: incident-response-record
+    type: workflow_config
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: branch-protection-evidence
+    type: control_matrix
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: release-provenance-attestation
+    type: provenance
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: customer-questionnaire-placeholder
+    kind: other
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    status: deferred_until_customer_execution
+    reason: "Customer questionnaire mapping requires customer-owned review criteria."
+    related_issue: "#430"
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: external-audit-placeholder
+    kind: other
+    path: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+    status: missing_evidence_blocked
+    reason: "No external security audit or certification evidence is present."
+    related_issue: "#430"
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: cyber-supplier-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: cyber-supplier-contract-test
+    command: >-
+      python -m unittest
+      tests.test_regulated_automation.RegulatedAutomationTests.test_cyber_supplier_profile_distinguishes_supplier_control_statuses
+      -v
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready

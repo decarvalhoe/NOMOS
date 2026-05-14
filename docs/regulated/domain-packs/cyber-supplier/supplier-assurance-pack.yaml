@@ -1,0 +1,87 @@
+schema_version: "0.1.0"
+record_type: cyber_supplier_assurance_pack
+domain_profile: cyber-supplier-assurance
+claim_boundary: >-
+  Supplier assurance planning only; no security certification, audit
+  acceptance, regulatory compliance, legal sufficiency, or customer supplier
+  qualification claim.
+references:
+  - id: NIST-SP-800-218
+    role: secure_software_development_reference
+  - id: NIST-CSF-2
+    role: supplier_cyber_governance_reference
+control_statuses:
+  - status: implemented
+    meaning: "Evidence is present in NOMOS-controlled artifacts."
+  - status: manual
+    meaning: "Evidence requires human review or manual export."
+  - status: blocked
+    meaning: "Evidence is intentionally absent and blocks stronger claims."
+  - status: customer_owned
+    meaning: "Evidence belongs to the customer or customer contract."
+supplier_controls:
+  - control_id: SSDF-PO.3.2
+    framework: NIST-SP-800-218
+    objective: >-
+      Provide supplier-facing software composition and component inventory
+      evidence.
+    evidence_type: sbom
+    evidence_artifact: sbom-inventory
+    status: implemented
+    owner: NOMOS
+    evidence_ref: docs/regulated/product-profiles/nomos.yaml
+  - control_id: SSDF-RV.1.2
+    framework: NIST-SP-800-218
+    objective: >-
+      Track vulnerabilities and remediation disposition for supplier review.
+    evidence_type: vulnerability_register
+    evidence_artifact: vulnerability-register
+    status: implemented
+    owner: NOMOS
+    evidence_ref: docs/regulated/evidence-index/evidence-ledger.yaml
+  - control_id: CSF-PR.PS-06
+    framework: NIST-CSF-2
+    objective: "Bind release provenance and branch protection to supplier evidence."
+    evidence_type: release_provenance
+    evidence_artifact: release-provenance-attestation
+    status: implemented
+    owner: NOMOS
+    evidence_ref: docs/regulated/github-operating-model/branch-protection-config.yaml
+  - control_id: CSF-RS.MA-01
+    framework: NIST-CSF-2
+    objective: >-
+      Prepare incident response contact and communication evidence for
+      customer review.
+    evidence_type: incident_response_record
+    evidence_artifact: incident-response-record
+    status: manual
+    owner: supplier_security_owner
+    evidence_ref: docs/regulated/security-privacy/README.md
+  - control_id: CSF-ID.RA-08
+    framework: NIST-CSF-2
+    objective: "Record residual supplier risk where external audit evidence is absent."
+    evidence_type: external_audit_gap
+    evidence_artifact: external-audit-placeholder
+    status: blocked
+    owner: supplier_security_owner
+    evidence_ref: docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+  - control_id: CSF-GV.SC-07
+    framework: NIST-CSF-2
+    objective: >-
+      Capture customer-owned supplier questionnaire answers and acceptance
+      criteria.
+    evidence_type: customer_supplier_questionnaire
+    evidence_artifact: customer-questionnaire-placeholder
+    status: customer_owned
+    owner: customer_security_owner
+    evidence_ref: customer-controlled supplier questionnaire
+review_outputs:
+  - id: supplier-review-summary
+    generated_from:
+      - supplier_controls
+      - control_statuses
+    required_human_review: true
+    blocks_claims:
+      - security_certification
+      - regulatory_compliance
+      - legal_sufficiency
