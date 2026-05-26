@@ -2,6 +2,8 @@
 
 Date: 2026-05-02
 
+> Note: this document is a **template and guidance** for preparing client-side compliance evidence. It is not itself compliance evidence, a certification, or a validation.
+
 ## Purpose
 
 This document translates regulated-client expectations into concrete Nomos deliverables.

@@ -4,26 +4,88 @@ This directory contains the method, product architecture, regulated-readiness ba
 
 ## Start Here
 
+New readers should begin with the **claim boundary**, then the method overview. Documents are grouped below. **Status tags** (`roadmap`, `plan`, `issue list`, `template`, `market analysis`, `baseline`, `future`) mark forward-looking material so it is not read as delivered capability. Unless tagged, a document describes the current implemented method.
+
 | Document | Use |
 |---|---|
-| [Public claim boundary](public-claim-boundary.md) | What Nomos can and cannot claim at the current release. |
-| [Method overview](01-method-overview.md) | Canonical-first concepts and vocabulary. |
-| [Operational procedure](12-operational-procedure.md) | Step-by-step canonical-first operating procedure. |
-| [Product roadmap](14-product-roadmap.md) | Product architecture and roadmap. |
-| [Regulated quality reference](21-regulated-quality-reference.md) | Quality and compliance baseline for regulated-market readiness. |
-| [Regulated implementation plan](23-regulated-implementation-plan.md) | How the regulated-readiness track is implemented. |
-| [Regulated by design structure](25-regulated-by-design-structure.md) | Shared structure for Nomos and Praxis readiness work. |
-| [Atomization process](26-structure-aware-atomization-process.md) | Structure-aware atomization and fidelity certification approach. |
-| [AAA+ regulated document set](27-aaa-regulated-it-document-set.md) | Target document set and non-invention rule. |
-| [Compliance closure plan](28-regulated-compliance-closure-plan.md) | Current closure plan for regulated-readiness gaps. |
-| [GitHub workflow setup](31-github-workflow-setup.md) | Source-owned and output-owned install guide for the reusable NOMOS GitHub workflow (NGW). |
-| [GitHub App readiness boundary](32-github-app-readiness-boundary.md) | Future GitHub App boundary and event-mapping contract (lands in #394 / NGW-09). |
-| [Nomos documentation guide](33-nomos-documentation-guide.md) | General documentation for audiences, artifact roles, claim boundaries, and downstream consumption. |
-| [Nomos user manual](34-nomos-user-manual.md) | Operator manual for local use, POC runs, artifact reading, verification, and troubleshooting. |
-| [Nomos integration manual](35-nomos-integration-manual.md) | End-to-end integration guide for source repo, NOMOS workflow, output repo/path, and downstream application runtime. |
-| [RBOK integration recommendation plan](36-rbok-integration-recommendation-plan.md) | Downstream implementation plan and dependency tree for RBOK without modifying that repo from NOMOS. |
-| [RBOK NOMOS recommendations implementation plan](37-rbok-nomos-recommendations-implementation-plan.md) | Task-by-task downstream implementation plan for importer, runtime RAG, conversation policy, YAML/JSON status, and POC evidence. |
-| [Domain opportunity roadmap](38-domain-opportunity-roadmap.md) | Market/domain opportunity scan and atomic issue list for GxP, medical, AI, finance, legal, Six Sigma, provenance, cyber, and high-assurance profiles. |
+| [Public claim boundary](public-claim-boundary.md) | What Nomos can and cannot claim at the current release. **Read this first.** |
+| [Release notes v0.1.0-ALPHA](release-v0.1.0-alpha.md) | Current release scope and the publication gate. |
+| [External assessment pack](external-assessment/) | Impartial inputs for an external assessment: evidence, maturity, and neutral valuation frameworks. |
+
+### Method and process
+| Document | Use |
+|---|---|
+| [01 - Method overview](01-method-overview.md) | Canonical-first concepts and vocabulary. |
+| [02 - Source registry](02-source-registry.md) | How authoritative sources are registered. |
+| [03 - Atomization and canonical matrix](03-atomization-and-matrix.md) | Canonical node extraction and the traceability matrix. |
+| [04 - Contracts, schemas and read-models](04-contracts-schemas-readmodels.md) | Data contracts, CUE schemas, and read-models. |
+| [05 - Knowledge base, vector store and RAG](05-knowledge-base-and-rag.md) | RAG metadata model (traceable metadata; production retrieval not validated). |
+| [06 - Product integration](06-product-integration.md) | How downstream products consume artifacts. |
+| [07 - Tests, gates and release](07-tests-gates-release.md) | Test and gate model for releases. |
+| [08 - Governance and change](08-governance-and-change.md) | Change control over claims, gates, and evidence. |
+| [09 - Adaptation guide](09-adaptation-guide.md) | Adapting the method across domains and stacks. |
+| [12 - Operational procedure](12-operational-procedure.md) | Step-by-step canonical-first operating procedure. |
+| [13 - Agent and skills blueprint](13-agent-skills-blueprint.md) | Blueprint for agent/skill automation. |
+| [26 - Structure-aware atomization and certification](26-structure-aware-atomization-process.md) | Atomization engine and fidelity certification approach. |
+| [Canonical corpus mode](canonical-corpus-mode.md) | Canonical corpus processing mode. |
+| [Verdict taxonomy](verdict-taxonomy.md) | Gate verdict vocabulary. |
+
+### Product direction (forward-looking)
+| Document | Use |
+|---|---|
+| [11 - Generic roadmap and issue list](11-roadmap-and-issues.md) | Generic roadmap template. `roadmap` |
+| [14 - Product roadmap](14-product-roadmap.md) | Product architecture and version roadmap. `roadmap` |
+| [15 - Product backlog](15-product-backlog.md) | Implementation backlog and open issues. `backlog` |
+| [16 - Versioning policy](16-versioning-policy.md) | Versioning and compatibility policy. |
+| [29 - Post-alpha release issue list](29-post-alpha-release-issue-list.md) | Issues planned after the alpha. `issue list` |
+| [38 - Domain opportunity roadmap](38-domain-opportunity-roadmap.md) | Market/domain opportunity scan (GxP, medical, AI, finance, legal, etc.) and atomic issue list. `market analysis` / `roadmap` — not delivered capability. |
+
+### Source-to-feed integrity engine
+| Document | Use |
+|---|---|
+| [20 - Corpus operability corrective epics](20-corpus-operability-corrective-epics.md) | Corrective epics for corpus operability. `epics` |
+| [21 - Source-to-feed integrity engine](21-source-feed-integrity-engine.md) | Source-to-feed integrity engine design. *(Note: shares the `21-` prefix with the regulated quality reference below.)* |
+| [10 - Tools and projects to study](10-tools-and-projects-to-study.md) | External tools/projects reference. |
+
+### Regulated-readiness (baseline, not certification)
+| Document | Use |
+|---|---|
+| [21 - Regulated quality and compliance reference](21-regulated-quality-reference.md) | Quality/compliance baseline for regulated-market readiness. `baseline` |
+| [22 - Nomos/Praxis synergy and market audit](22-nomos-praxis-synergy-market-audit.md) | Synergy, regulated-market, and blind-spot audit. `market analysis` |
+| [23 - Regulated implementation plan](23-regulated-implementation-plan.md) | How the regulated-readiness track is implemented. `plan` |
+| [24 - Regulated client compliance evidence](24-regulated-client-compliance-evidence.md) | Template and guidance for client-side compliance evidence. `template` |
+| [25 - Regulated by design structure](25-regulated-by-design-structure.md) | Shared readiness structure for Nomos and Praxis. |
+| [27 - AAA+ regulated IT document set](27-aaa-regulated-it-document-set.md) | Target document set and the non-invention rule. `target set` |
+| [28 - Regulated compliance closure plan](28-regulated-compliance-closure-plan.md) | Closure plan for regulated-readiness gaps. `plan` |
+| [regulated/](regulated/) | Regulated-readiness baseline records, templates, and domain packs. `baseline` / `roadmap` |
+
+### GitHub workflow and app
+| Document | Use |
+|---|---|
+| [30 - GitHub workflow integration issue list](30-github-workflow-integration-issue-list.md) | Issues for the GitHub workflow integration. `issue list` |
+| [31 - GitHub workflow setup](31-github-workflow-setup.md) | Install guide for the reusable NOMOS GitHub workflow (NGW). |
+| [32 - GitHub App readiness boundary](32-github-app-readiness-boundary.md) | GitHub App boundary and event-mapping contract. `future` |
+
+### Manuals and integration
+| Document | Use |
+|---|---|
+| [33 - Documentation guide](33-nomos-documentation-guide.md) | Audiences, artifact roles, claim boundary, and downstream consumption. |
+| [34 - User manual](34-nomos-user-manual.md) | Operating Nomos locally, reading outputs, and verifying a run. |
+| [35 - Integration manual](35-nomos-integration-manual.md) | End-to-end integration: source repo, workflow, output, runtime. |
+| [36 - RBOK integration recommendation plan](36-rbok-integration-recommendation-plan.md) | Downstream RBOK plan (no modification of RBOK from Nomos). `plan` |
+| [37 - RBOK Nomos recommendations implementation plan](37-rbok-nomos-recommendations-implementation-plan.md) | Task-by-task downstream implementation plan. `plan` |
+| [RBOK engine import contract](rbok-engine-import-contract.md) | Handoff contract for the RBOK engine import. |
+
+### Evidence and validation
+| Document | Use |
+|---|---|
+| [RBOK 01_rbok POC validation dossier](rbok-poc-validation-dossier.md) | Scoped POC evidence (single corpus, recorded run). |
+| [Self-compliance report](self-compliance-report.md) | Nomos applied to its own repository. |
+
+### Environment
+| Document | Use |
+|---|---|
+| [Windows corpus setup](windows-corpus-setup.md) | Windows environment setup for corpus commands. |
 
 ## Current Release Evidence
 

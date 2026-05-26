@@ -207,47 +207,14 @@ Der ehrliche Status:
 Siehe [docs/public-claim-boundary.md](docs/public-claim-boundary.md) und [docs/regulated/README.md](docs/regulated/README.md).
 Siehe auch [docs/release-v0.1.0-alpha.md](docs/release-v0.1.0-alpha.md) fuer Release Notes und Publication Gate.
 
-## Marktkontext
+## Marktkontext Und Bewertung
 
-Nomos liegt an der Schnittstelle mehrerer etablierter Softwarekategorien:
+Nomos liegt an der Schnittstelle mehrerer etablierter Softwarekategorien (reguliertes Content-/Document-Control, QMS und Validation Lifecycle Management, AI/RAG Governance, Vertical SaaS fuer regulierte Industrien). Um die Unparteilichkeit einer externen Bewertung zu wahren, nennt dieses README weder Wertspannen noch eine Selbstbewertung.
 
-| Marktkategorie | Warum sie relevant ist |
-|---|---|
-| Regulated Content und Document Control | Organisationen zahlen fuer kontrollierte, reviewbare und auditfaehige Content-Lebenszyklen. |
-| QMS und Validation Lifecycle Management | Regulierte Teams brauchen Evidenz, dass Software und Prozesse fit-for-intended-use bleiben. |
-| AI Governance und RAG Governance | Unternehmen muessen nachweisen, was KI-Systeme verwenden, zitieren, speichern und beantworten duerfen. |
-| Vertical SaaS fuer regulierte Industrien | Spezialisierte Software wird strategisch wertvoll, wenn sie in operative Prozesse eingebettet ist. |
+Die neutralen Rahmenwerke (Aktivierung nach IAS 38 / Swiss GAAP FER 10, Kategorie-Vergleichswerte, Kontext zu Bewertungsmultiples) und der tatsaechliche Produktstand (was implementiert, getestet und bewiesen ist) werden als Input fuer die Analyse im [External Assessment Pack](docs/external-assessment/) bereitgestellt:
 
-Nuetzliche Referenzen:
-
-- [Veeva QualityDocs](https://www.veeva.com/products/vault-qualitydocs/) positioniert reguliertes Quality Content Management als reife GxP-Softwarekategorie.
-- [Veeva Systems Marktkapitalisierung](https://stockanalysis.com/stocks/veev/market-cap/) wurde am 1. Mai 2026 mit rund USD 28.03B angegeben. Veeva ist kein direkter Vergleich fuer Nomos, zeigt aber den moeglichen Wert von Qualitaets-, Content- und Life-Sciences-Software.
-- [ValGenesis](https://www.valgenesis.com/) illustriert den Markt fuer Validation Lifecycle Management in GxP- und Life-Sciences-Organisationen.
-- [FDA Computer Software Assurance guidance](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software-0) formalisiert einen risikobasierten Ansatz, um Vertrauen in Software fuer Produktions- und Qualitaetssysteme aufzubauen.
-- [21 CFR Part 11](https://www.law.cornell.edu/cfr/text/21/part-11) ist eine Kernreferenz fuer elektronische Records und elektronische Signaturen in FDA-regulierten Kontexten.
-- [IAS 38 Intangible Assets](https://www.ifrs.org/issued-standards/list-of-standards/ias-38-intangible-assets/) und [Swiss GAAP FER 10](https://www.fer.ch/en/standards/swiss-gaap-fer-10-immaterielle-werte/) liefern buchhalterischen Kontext fuer intern entwickelte immaterielle Werte.
-
-Fuer Bewertungskontext liegen oeffentliche und private SaaS-Benchmarks 2026 fuer mediane private SaaS-Unternehmen haeufig bei etwa 4-5x ARR, mit grosser Streuung nach Wachstum, Net Revenue Retention, Bruttomarge, Profitabilitaet, Kundenkonzentration und strategischem Wert. Siehe [SaaS Valuation Multiples 2026](https://saasvaluationmultiple.com/). Diese Multiples sind erst mit wiederkehrendem Umsatz sinnvoll; sie rechtfertigen nicht, ein Alpha-Produkt wie ein reifes SaaS-Unternehmen zu bewerten.
-
-## Kommerzielle Und Aktivierbare Position
-
-Nomos sollte in zwei getrennten Perspektiven bewertet werden:
-
-1. **Buchhalterische Aktivierung.** Eine Idee wird nicht aktiviert. Entwicklungskosten koennen nur aktiviert werden, wenn die anwendbaren Kriterien erfuellt sind: technische Machbarkeit, Absicht zur Fertigstellung, Nutzungs- oder Verkaufsfaehigkeit, wahrscheinlicher kuenftiger wirtschaftlicher Nutzen, verfuegbare Ressourcen und verlaessliche Kostenmessung. Geeignete Evidenz kann Entwicklungszeit, Architektur, Tests, Dokumentation, CI, Validation Records und direkt zurechenbares Tooling oder Infrastruktur umfassen.
-2. **Business/IP-Bewertung.** Der wirtschaftliche Wert kann ueber den aktivierten Kosten liegen, muss aber durch Reife, Demos, Kundenpiloten, Nutzung, Verteidigbarkeit, Reproduktionsbarrieren, Umsatz oder Letters of Intent gestuetzt sein.
-
-Ein realistischer interner Bewertungsrahmen fuer die aktuelle Reife:
-
-| Reifestufe | Vertretbarer Wertkorridor |
-|---|---:|
-| Nur Konzept | niedrig; schwer zu verteidigen |
-| Technischer POC mit begrenzter Evidenz | CHF 50k-150k |
-| Alpha POC mit source-backed Evidenz, Dokumentation, CI und echtem Proof-Corpus | CHF 100k-300k |
-| Alpha-Produkt nutzbar auf mehreren komplexen Corpora | CHF 300k-800k |
-| Produkt in kritischen Workflow integriert oder durch bezahlten Pilot / LOI gestuetzt | CHF 800k-1.5M+ |
-| Produkt mit wiederkehrendem Umsatz | ARR multipliziert mit geeignetem SaaS-Multiple |
-
-Diese Spannen sind keine Finanzberatung und sollten ohne Buchhalter, Auditor oder Corporate-Finance-Beratung nicht als formale Bewertung verwendet werden. Sie sind ein pragmatischer interner Rahmen fuer Produktstrategie, Aktivierungsdiskussionen und Roadmap-Priorisierung.
+- [docs/external-assessment/evidence-and-maturity.md](docs/external-assessment/evidence-and-maturity.md) — Evidenz und Reife;
+- [docs/external-assessment/valuation-inputs.md](docs/external-assessment/valuation-inputs.md) — Rahmenwerke und Vergleichswerte, ohne Urteil.
 
 ## Kernkonzepte
 
@@ -317,9 +284,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/regulated/` | Regulated-by-design Betriebsstruktur und kontrollierte Dokumentationsbaseline. |
 | `templates/` | Wiederverwendbare Projekt-, Regulated-, Validation-, Evidence- und Governance-Templates. |
 | `examples/` | Domaenenbeispiele fuer die canonical-first Methode. |
-| `adapters/` | Adapter-Vertrag und fruehe Adapterprofile fuer Node/TypeScript, Python und JVM. |
+| `adapters/` | Adapter-Vertraege und Referenzprofile fuer Node/TypeScript, Python und JVM: Specs und Fixtures, ohne ausfuehrbare Implementierung in diesem Stadium. |
 | `ci/` | Wiederverwendbare CI-Integrationsdokumentation. |
-| `control-plane/` | Optionale Go-Control-Plane-Packages fuer Dashboard, Registry und Storage. |
+| `control-plane/` | Optionale grundlegende Go-Packages (Dashboard, Registry, Storage): Skelett, nicht an die CLI angebunden und noch kein operativer Service (Roadmap v0.2+). |
+| `policies/` | Platzhalterverzeichnis fuer ein kuenftiges Policy-Framework; in diesem Stadium nicht operativ. |
 | `scripts/` | E2E-, Evidence-, regulierte Dokumentations- und Automationshelfer. |
 | `reports/` | Generierte lokale Evidence-Artefakte. |
 | `references/` | Methodologischer und externer Referenzregister-Inhalt. |
