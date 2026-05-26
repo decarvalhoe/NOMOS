@@ -213,8 +213,8 @@ Nomos liegt an der Schnittstelle mehrerer etablierter Softwarekategorien (reguli
 
 Die neutralen Rahmenwerke (Aktivierung nach IAS 38 / Swiss GAAP FER 10, Kategorie-Vergleichswerte, Kontext zu Bewertungsmultiples) und der tatsaechliche Produktstand (was implementiert, getestet und bewiesen ist) werden als Input fuer die Analyse im [External Assessment Pack](docs/external-assessment/) bereitgestellt:
 
-- [docs/external-assessment/evidence-and-maturity.md](docs/external-assessment/evidence-and-maturity.md) — Evidenz und Reife;
-- [docs/external-assessment/valuation-inputs.md](docs/external-assessment/valuation-inputs.md) — Rahmenwerke und Vergleichswerte, ohne Urteil.
+- [docs/external-assessment/evidence-and-maturity.de.md](docs/external-assessment/evidence-and-maturity.de.md) — Evidenz und Reife;
+- [docs/external-assessment/valuation-inputs.de.md](docs/external-assessment/valuation-inputs.de.md) — Rahmenwerke und Vergleichswerte, ohne Urteil.
 
 ## Kernkonzepte
 

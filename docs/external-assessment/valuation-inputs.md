@@ -1,5 +1,7 @@
 # Intrants de valorisation — cadres neutres pour évaluation externe
 
+> Langues : **FR** · [EN](valuation-inputs.en.md) · [DE](valuation-inputs.de.md)
+
 > Ce document rassemble des **cadres et points de référence neutres** qu'un analyste externe peut appliquer lui-même. Il **ne propose aucune fourchette de valeur**, aucune auto-évaluation, et ne positionne pas NOMOS sur une échelle de valeur. Les comparables de marché cités sont des **repères de catégorie**, pas des comparables directs de NOMOS à son stade actuel (alpha — voir [evidence-and-maturity.md](evidence-and-maturity.md)).
 >
 > Pour l'état réel du produit, voir [evidence-and-maturity.md](evidence-and-maturity.md). Pour les limites de claims, voir [public-claim-boundary.md](../public-claim-boundary.md).

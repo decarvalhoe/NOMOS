@@ -1,5 +1,7 @@
 # Dossier de preuves et de maturité — intrant pour évaluation externe
 
+> Langues : **FR** · [EN](evidence-and-maturity.en.md) · [DE](evidence-and-maturity.de.md)
+
 > Ce document est un **intrant neutre** destiné à une évaluation externe et indépendante de l'état du projet NOMOS. Il n'affirme **aucune valeur** monétaire ou stratégique et ne formule **aucune conclusion** sur la valeur du projet. Il présente des faits vérifiables : ce qui est réellement implémenté et testé, ce qui ne l'est pas, et les écarts connus. L'analyste tire ses propres conclusions.
 >
 > Le cadrage des affirmations publiques fait foi : voir [public-claim-boundary.md](../public-claim-boundary.md). Les **intrants de valorisation** (cadres comptables et comparables de marché, sans verdict) sont isolés dans [valuation-inputs.md](valuation-inputs.md) pour que l'analyste les applique lui-même.

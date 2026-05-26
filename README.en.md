@@ -213,8 +213,8 @@ Nomos sits at the intersection of several established software categories (regul
 
 The neutral frameworks (IAS 38 / Swiss GAAP FER 10 capitalization, category comparables, valuation-multiple context) and the actual product state (what is implemented, tested, proven) are provided as inputs for the analyst in the [external assessment pack](docs/external-assessment/):
 
-- [docs/external-assessment/evidence-and-maturity.md](docs/external-assessment/evidence-and-maturity.md) — evidence and maturity;
-- [docs/external-assessment/valuation-inputs.md](docs/external-assessment/valuation-inputs.md) — frameworks and comparables, no verdict.
+- [docs/external-assessment/evidence-and-maturity.en.md](docs/external-assessment/evidence-and-maturity.en.md) — evidence and maturity;
+- [docs/external-assessment/valuation-inputs.en.md](docs/external-assessment/valuation-inputs.en.md) — frameworks and comparables, no verdict.
 
 ## Core Concepts
 

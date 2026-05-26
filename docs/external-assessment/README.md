@@ -1,5 +1,7 @@
 # Pack d'évaluation externe — NOMOS
 
+> Langues : **FR** · [EN](README.en.md) · [DE](README.de.md)
+
 > Ce dossier rassemble des **intrants neutres** pour une évaluation externe et indépendante de l'état et de la valeur du projet NOMOS. Il est écrit pour permettre une analyse **impartiale** : faits vérifiables, preuves, et écarts connus. Le dépôt **ne formule aucun verdict de valeur** et ne cherche pas à orienter la conclusion de l'analyste.
 
 ## Principe d'impartialité
