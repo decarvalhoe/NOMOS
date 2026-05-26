@@ -90,7 +90,11 @@ Comment :
 Livrable :
 
 ```text
-tools/canonical hash-sources --write
+# Hashes source (sha256) calculés et enregistrés dans source-manifest.yaml :
+nomos corpus scan ...
+nomos corpus manifest ...
+# Détection de dérive source, rejouée en CI :
+nomos corpus diff ...
 ```
 
 Definition of Done :

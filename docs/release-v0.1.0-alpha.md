@@ -23,7 +23,7 @@ universal-fidelity claim.
   body ledger, strict gate, and attestation artifacts.
 - GitHub-native CI gates for Go, CUE, corpus tests, RBOK lawbook E2E,
   RBOK runtime E2E, regulated documentation, and evidence packs.
-- Regulated-by-design documentation baseline and public claim boundary.
+- Regulated-by-design documentation baseline (structural; not a certification or validation) and public claim boundary.
 
 ## Recorded POC Evidence
 
