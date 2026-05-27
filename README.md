@@ -225,51 +225,14 @@ Le statut honnête :
 Voir [docs/public-claim-boundary.md](docs/public-claim-boundary.md) et [docs/regulated/README.md](docs/regulated/README.md).
 Voir aussi [docs/release-v0.1.0-alpha.md](docs/release-v0.1.0-alpha.md) pour les notes de release et le gate de publication.
 
-## Contexte Marche
+## Contexte Marché Et Valorisation
 
-Nomos se situe à l'intersection de plusieurs catégories logicielles établies :
+NOMOS recoupe plusieurs catégories logicielles établies (content/document control régulé, QMS et validation lifecycle management, gouvernance IA/RAG, vertical SaaS régulé). Pour préserver l'impartialité d'une évaluation externe, ce README ne propose ni fourchette de valeur ni auto-évaluation.
 
-| Catégorie marché | Pourquoi c'est important |
-|---|---|
-| Content control et document control régulés | Les organisations paient pour des contenus contrôlés, révisables et auditables. |
-| QMS et validation lifecycle management | Les équipes régulées doivent prouver que logiciels et processus restent fit-for-intended-use. |
-| Gouvernance IA et RAG | Les entreprises doivent prouver ce que l'IA peut utiliser, citer, conserver et restituer. |
-| Vertical SaaS pour industries régulées | Les logiciels spécialisés prennent une valeur stratégique lorsqu'ils deviennent intégrés aux opérations. |
+Les cadres neutres (capitalisation IAS 38 / Swiss GAAP RPC 10, comparables de catégorie, contexte des multiples) et l'état réel du produit (ce qui est implémenté, testé, prouvé) sont fournis comme intrants pour l'analyste dans le [pack d'évaluation externe](docs/external-assessment/) :
 
-Références utiles :
-
-- [Veeva QualityDocs](https://www.veeva.com/products/vault-qualitydocs/) positionne le content management qualité régulé comme une catégorie logicielle GxP mature.
-- [La capitalisation boursière de Veeva Systems](https://stockanalysis.com/stocks/veev/market-cap/) était rapportée autour de 28.03 milliards USD le 1er mai 2026. Veeva n'est pas un comparable direct de Nomos, mais illustre la valeur possible des logiciels qualité, contenu et life sciences.
-- [ValGenesis](https://www.valgenesis.com/) illustre le marché validation lifecycle management pour organisations GxP et life sciences.
-- [FDA Computer Software Assurance guidance](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software-0) formalise une approche risk-based pour établir la confiance dans les logiciels de production et de systèmes qualité.
-- [21 CFR Part 11](https://www.law.cornell.edu/cfr/text/21/part-11) est une référence centrale pour les electronic records et electronic signatures en environnement FDA.
-- [IAS 38 Intangible Assets](https://www.ifrs.org/issued-standards/list-of-standards/ias-38-intangible-assets/) et [Swiss GAAP FER 10](https://www.fer.ch/en/standards/swiss-gaap-fer-10-immaterielle-werte/) donnent un cadre comptable pour la reconnaissance d'actifs immatériels développés en interne.
-
-Pour les multiples de valorisation, les benchmarks SaaS publics et privés 2026 placent souvent les SaaS privés médians autour de 4-5x ARR, avec une dispersion forte selon croissance, net revenue retention, marge brute, profitabilité, concentration client et valeur stratégique. Voir [SaaS Valuation Multiples 2026](https://saasvaluationmultiple.com/). Ces multiples ne deviennent pertinents qu'une fois le revenu récurrent établi ; ils ne justifient pas de valoriser une alpha comme un SaaS mature.
-
-## Position Commerciale Et Capitalisable
-
-Le pack DOR-023 de positionnement et pricing est suivi dans
-[`commercial-positioning-pack.yaml`](docs/regulated/domain-packs/commercial-positioning/commercial-positioning-pack.yaml).
-Ces hypotheses de packaging et pricing restent des notes de strategie, sans revendiquer certification, conformite, validation reglementee ou suffisance legale garantie.
-
-Nomos doit être évalué selon deux angles distincts :
-
-1. **Capitalisation comptable.** Une idée ne se capitalise pas. Les coûts de développement peuvent être capitalisés uniquement lorsque les critères applicables sont remplis : faisabilité technique, intention de terminer, capacité à utiliser ou vendre, bénéfices économiques futurs probables, ressources disponibles et mesure fiable des coûts. Les preuves éligibles peuvent inclure temps de développement, architecture, tests, documentation, CI, validation records et outillage ou infrastructure directement attribuables.
-2. **Valorisation business/IP.** La valeur économique peut dépasser le coût capitalisé, mais elle doit être soutenue par la maturité, des démonstrations, pilotes clients, usages, barrières de reproductibilité, revenus ou lettres d'intention.
-
-Cadre interne réaliste pour la maturité actuelle :
-
-| Stade de maturité | Fourchette défendable |
-|---|---:|
-| Concept seul | faible ; difficile à défendre |
-| POC technique avec preuve limitée | CHF 50k-150k |
-| Alpha POC avec evidence source-backed, documentation, CI et vrai corpus de preuve | CHF 100k-300k |
-| Alpha utilisable sur plusieurs corpus complexes | CHF 300k-800k |
-| Produit intégré à un workflow critique ou soutenu par pilote payant / LOI | CHF 800k-1.5M+ |
-| Produit avec revenu récurrent | ARR multiplié par un multiple SaaS approprié |
-
-Ces fourchettes ne sont pas un conseil financier et ne doivent pas être utilisées comme valorisation formelle sans comptable, auditeur ou conseil corporate finance. Elles servent de cadrage pragmatique pour stratégie produit, discussions de capitalisation et priorisation roadmap.
+- [docs/external-assessment/evidence-and-maturity.md](docs/external-assessment/evidence-and-maturity.md) — preuves et maturité ;
+- [docs/external-assessment/valuation-inputs.md](docs/external-assessment/valuation-inputs.md) — cadres et comparables, sans verdict.
 
 ## Concepts Clefs
 
@@ -339,9 +302,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/regulated/` | Structure regulated-by-design et baseline documentaire contrôlée. |
 | `templates/` | Templates projet, réglementaires, validation, evidence et gouvernance. |
 | `examples/` | Exemples de domaines appliquant la méthode canonical-first. |
-| `adapters/` | Contrats adapter et profils initiaux Node/TypeScript, Python et JVM. |
+| `adapters/` | Contrats adapter et profils de référence Node/TypeScript, Python et JVM : specs et fixtures, sans implémentation exécutable à ce stade. |
 | `ci/` | Documentation d'intégration CI réutilisable. |
-| `control-plane/` | Packages Go optionnels pour dashboard, registry et storage. |
+| `control-plane/` | Packages Go fondateurs optionnels (dashboard, registry, storage) : squelette non câblé à la CLI, pas encore un service opérationnel (roadmap v0.2+). |
+| `policies/` | Répertoire placeholder pour un futur cadre de policies ; non opérationnel à ce stade. |
 | `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation. |
 | `reports/` | Artefacts locaux générés. |
 | `references/` | Registre de références méthodologiques et externes. |

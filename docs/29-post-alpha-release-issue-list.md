@@ -2,7 +2,6 @@
 
 Date: 2026-05-04
 Baseline: `v0.1.0-ALPHA`
-Current main: `d7d03e2`
 
 ## Purpose
 

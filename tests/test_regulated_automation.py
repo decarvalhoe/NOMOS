@@ -810,10 +810,12 @@ answers:
         self.assertFalse(pricing["valuation_claim_allowed"])
         self.assertIn("customer validation", pricing["depends_on"])
 
-        readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("commercial-positioning-pack.yaml", readme_text)
-        self.assertIn("notes de strategie", readme_text)
-        self.assertIn("sans revendiquer certification", readme_text)
+        # Commercial positioning is bounded in the neutral valuation-inputs pack,
+        # not the public README.
+        inputs_text = (ROOT / "docs/external-assessment/valuation-inputs.md").read_text(encoding="utf-8")
+        self.assertIn("commercial-positioning-pack.yaml", inputs_text)
+        self.assertIn("notes de stratégie", inputs_text)
+        self.assertIn("sans revendication de certification", inputs_text)
 
     def test_rbok_nomos_iq_baseline_records_installation_scope(self) -> None:
         import yaml

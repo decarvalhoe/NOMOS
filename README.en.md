@@ -207,47 +207,14 @@ The honest status is:
 See [docs/public-claim-boundary.md](docs/public-claim-boundary.md) and [docs/regulated/README.md](docs/regulated/README.md).
 See also [docs/release-v0.1.0-alpha.md](docs/release-v0.1.0-alpha.md) for release notes and the publication gate.
 
-## Market Context
+## Market Context And Valuation
 
-Nomos sits at the intersection of several established software categories:
+Nomos sits at the intersection of several established software categories (regulated content/document control, QMS and validation lifecycle management, AI/RAG governance, vertical SaaS for regulated industries). To preserve the impartiality of an external assessment, this README offers no value range and no self-assessment.
 
-| Market category | Why it matters |
-|---|---|
-| Regulated content and document control | Organizations pay for controlled, reviewable, audit-ready content lifecycle management. |
-| QMS and validation lifecycle management | Regulated teams need evidence that software and processes remain fit for intended use. |
-| AI governance and RAG governance | Enterprises need to prove what AI systems can use, cite, retain, and answer from. |
-| Vertical SaaS for regulated industries | Specialized software gains strategic value when embedded in operating processes. |
+The neutral frameworks (IAS 38 / Swiss GAAP FER 10 capitalization, category comparables, valuation-multiple context) and the actual product state (what is implemented, tested, proven) are provided as inputs for the analyst in the [external assessment pack](docs/external-assessment/):
 
-Useful references:
-
-- [Veeva QualityDocs](https://www.veeva.com/products/vault-qualitydocs/) positions regulated quality content management as a mature GxP software category.
-- [Veeva Systems market capitalization](https://stockanalysis.com/stocks/veev/market-cap/) was reported around USD 28.03B on May 1, 2026. Veeva is not a direct comparable for Nomos, but it illustrates the potential value of quality, content, and life-sciences software.
-- [ValGenesis](https://www.valgenesis.com/) illustrates the validation lifecycle management market for GxP and life-sciences organizations.
-- [FDA Computer Software Assurance guidance](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software-0) formalizes a risk-based approach to establishing confidence in software used in production and quality systems.
-- [21 CFR Part 11](https://www.law.cornell.edu/cfr/text/21/part-11) is a core reference for electronic records and electronic signatures in FDA-regulated contexts.
-- [IAS 38 Intangible Assets](https://www.ifrs.org/issued-standards/list-of-standards/ias-38-intangible-assets/) and [Swiss GAAP FER 10](https://www.fer.ch/en/standards/swiss-gaap-fer-10-immaterielle-werte/) provide accounting context for recognizing internally generated intangible assets.
-
-For valuation context, public and private SaaS benchmarks in 2026 commonly place median private SaaS businesses around 4-5x ARR, with wide dispersion based on growth, net revenue retention, gross margin, profitability, customer concentration, and strategic value. See [SaaS Valuation Multiples 2026](https://saasvaluationmultiple.com/). These multiples become useful only once recurring revenue exists; they do not justify valuing an alpha product as a mature SaaS company.
-
-## Commercial And Asset Position
-
-Nomos should be evaluated in two separate ways:
-
-1. **Accounting capitalization.** An idea is not capitalized. Development costs may be capitalized only when the applicable accounting criteria are met: technical feasibility, intent to complete, ability to use or sell, probable future economic benefit, available resources, and reliable cost measurement. Eligible evidence may include development time, architecture, tests, documentation, CI, validation records, and directly attributable tooling or infrastructure.
-2. **Business/IP valuation.** Economic value can exceed capitalized cost, but it must be supported by maturity, demos, customer pilots, usage, defensibility, reproducibility barriers, revenue, or letters of intent.
-
-A realistic internal valuation frame for the current maturity is:
-
-| Maturity stage | Defensible value frame |
-|---|---:|
-| Concept only | low; difficult to defend |
-| Technical POC with limited evidence | CHF 50k-150k |
-| Alpha POC with source-backed evidence, documentation, CI, and a real proof corpus | CHF 100k-300k |
-| Alpha product usable across several complex corpora | CHF 300k-800k |
-| Product integrated into a critical workflow or backed by a paid pilot / letter of intent | CHF 800k-1.5M+ |
-| Product with recurring revenue | ARR multiplied by an appropriate SaaS multiple |
-
-These ranges are not financial advice and should not be used as a formal valuation without an accountant, auditor, or corporate finance advisor. They are a pragmatic internal framing for product strategy, capitalization discussions, and roadmap prioritization.
+- [docs/external-assessment/evidence-and-maturity.en.md](docs/external-assessment/evidence-and-maturity.en.md) — evidence and maturity;
+- [docs/external-assessment/valuation-inputs.en.md](docs/external-assessment/valuation-inputs.en.md) — frameworks and comparables, no verdict.
 
 ## Core Concepts
 
@@ -317,9 +284,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/regulated/` | Regulated-by-design operating structure and controlled-document baseline. |
 | `templates/` | Copyable project, regulated, validation, evidence, and governance templates. |
 | `examples/` | Domain examples for applying the canonical-first method. |
-| `adapters/` | Adapter contract and early adapter profiles for Node/TypeScript, Python, and JVM ecosystems. |
+| `adapters/` | Adapter contracts and reference profiles for Node/TypeScript, Python, and JVM: specs and fixtures, with no executable implementation at this stage. |
 | `ci/` | Reusable CI integration documentation. |
-| `control-plane/` | Optional Go control-plane packages for dashboard, registry, and storage. |
+| `control-plane/` | Optional foundational Go packages (dashboard, registry, storage): skeleton, not wired into the CLI and not yet an operational service (roadmap v0.2+). |
+| `policies/` | Placeholder directory for a future policy framework; not operational at this stage. |
 | `scripts/` | E2E, evidence, regulated documentation, and automation helpers. |
 | `reports/` | Generated local evidence artifacts. |
 | `references/` | Methodological and external reference register material. |

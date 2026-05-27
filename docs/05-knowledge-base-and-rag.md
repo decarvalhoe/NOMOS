@@ -129,6 +129,8 @@ Un RAG Canonical-First doit être évalué sur :
 - conflict handling : signale-t-il les sources contradictoires ?
 - refusal correctness : refuse-t-il de décider sans source suffisante ?
 
+> Ces dimensions sont des cibles d'évaluation de la méthode. À ce stade, NOMOS produit des métadonnées RAG traçables ; l'évaluation RAG en production (retrieval, comportement LLM) n'est pas validée — voir [public-claim-boundary.md](public-claim-boundary.md).
+
 ## Tests Associés
 
 - Toutes les sources actives sont indexées.

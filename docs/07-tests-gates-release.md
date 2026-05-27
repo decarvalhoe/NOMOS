@@ -96,37 +96,37 @@ Gate release :
 - sauvegarde/rollback vérifiés ;
 - approbation propriétaire métier.
 
-### Strict release gate inputs and the corpus integrity section
+### Entrées du strict release gate et section d'intégrité corpus
 
-The strict release gate aggregates the inputs above (`validate`, `canonical:check`, `canonical:check:strict`, `release:compliance`). Source-to-feed fidelity is now an **opt-in additive section** wired by SFI-08 (`#346`).
+Le strict release gate agrège les entrées ci-dessus (`validate`, `canonical:check`, `canonical:check:strict`, `release:compliance`). La fidélité source-to-feed est désormais une **section additive opt-in** câblée par SFI-08 (`#346`).
 
-| Strict-gate input | Status | Notes |
+| Entrée du strict-gate | Statut | Notes |
 |---|---|---|
-| `validate` (lint, typecheck, unit, contract, `canonical:check`) | Active | Daily gate. |
-| `canonical:check` (manifest, hashes, matrix, contracts, read-model) | Active | Coherence gate. |
-| `canonical:check:strict` (no mocks, no critical missing units, golden cases) | Active | Conformance gate. |
-| `release:compliance` (strict green, coverage, changelog, ADR, rollback, owner approval) | Active | Release gate. |
-| `corpus_integrity_check` (source coverage, duplicate spans, junk content, feed linkage, RAG linkage) | Active, opt-in | Wired by `#346` (SFI-08); inputs come from `#342` (SFI-04 source-integrity gate) and `#345` (SFI-07 feed-quality gate). |
+| `validate` (lint, typecheck, unit, contract, `canonical:check`) | Actif | Gate quotidien. |
+| `canonical:check` (manifest, hashes, matrice, contrats, read-model) | Actif | Gate de cohérence. |
+| `canonical:check:strict` (no mocks, aucune unité critique manquante, golden cases) | Actif | Gate de conformité. |
+| `release:compliance` (strict vert, couverture, changelog, ADR, rollback, approbation propriétaire) | Actif | Gate de release. |
+| `corpus_integrity_check` (couverture source, spans dupliqués, contenu junk, linkage feed, linkage RAG) | Actif, opt-in | Câblé par `#346` (SFI-08) ; entrées issues de `#342` (SFI-04 source-integrity gate) et `#345` (SFI-07 feed-quality gate). |
 
-#### `corpus_integrity_check` — opt-in section
+#### `corpus_integrity_check` — section opt-in
 
-The strict gate adds a top-level `corpus_integrity_check` JSON field
-when any `--corpus-integrity-*` flag is supplied to `nomos strict`:
+Le strict gate ajoute un champ JSON de premier niveau `corpus_integrity_check`
+lorsqu'un flag `--corpus-integrity-*` est fourni à `nomos strict` :
 
-- `--corpus-integrity-report=PATH` — load a precomputed integrity / quality report;
-- `--corpus-integrity-source=DIR` — recompute the source-integrity report on the fly from a directory of `*.md` files;
-- `--corpus-integrity-feed=PATH` — combine with `--corpus-integrity-source` to also compute the feed-quality report against a `[]FeedUnit` JSON file;
-- `--corpus-integrity-rag=PATH` — combine with `--corpus-integrity-source` to feed `[]ChunkMetadata` into the same feed-quality computation.
+- `--corpus-integrity-report=PATH` — charge un rapport d'intégrité / qualité précalculé ;
+- `--corpus-integrity-source=DIR` — recalcule le rapport source-integrity à la volée depuis un répertoire de fichiers `*.md` ;
+- `--corpus-integrity-feed=PATH` — combiné à `--corpus-integrity-source` pour calculer aussi le rapport feed-quality contre un fichier JSON `[]FeedUnit` ;
+- `--corpus-integrity-rag=PATH` — combiné à `--corpus-integrity-source` pour injecter `[]ChunkMetadata` dans le même calcul feed-quality.
 
-`corpus_integrity_check.status` takes one of three values:
+`corpus_integrity_check.status` prend l'une de trois valeurs :
 
-| status | Meaning | Effect on strict gate |
+| status | Signification | Effet sur le strict gate |
 |---|---|---|
-| `pass` | every supplied sub-report (source-integrity, feed-quality) passed. | does not block the gate. |
-| `fail` | at least one supplied sub-report failed, or a load/parse error occurred. | flips `valid: false` and the CLI exits non-zero. |
-| `not_provided` | no `--corpus-integrity-*` flag was supplied. | the section is omitted entirely; existing gate JSON is unchanged for callers that do not opt in. |
+| `pass` | chaque sous-rapport fourni (source-integrity, feed-quality) a réussi. | ne bloque pas le gate. |
+| `fail` | au moins un sous-rapport fourni a échoué, ou une erreur de chargement/parsing est survenue. | bascule `valid: false` et la CLI sort en non-zéro. |
+| `not_provided` | aucun flag `--corpus-integrity-*` n'a été fourni. | la section est entièrement omise ; le JSON de gate existant est inchangé pour les appelants qui n'optent pas. |
 
-The CUE projection is `#CorpusIntegrityCheck` in `specs/corpus-integrity-report.cue`. The full method, finding-code catalogue, and operator review procedure live in [`docs/21-source-feed-integrity-engine.md`](21-source-feed-integrity-engine.md). The reserved-phrase rule for `full_fidelity_proven` (a phrase only writable for builds whose corpus integrity report is present and passing) lives in [`docs/public-claim-boundary.md`](public-claim-boundary.md). Parent epic: `#337`.
+La projection CUE est `#CorpusIntegrityCheck` dans `specs/corpus-integrity-report.cue`. La méthode complète, le catalogue de finding-codes et la procédure de revue opérateur vivent dans [`docs/21-source-feed-integrity-engine.md`](21-source-feed-integrity-engine.md). La règle de phrase réservée pour `full_fidelity_proven` (phrase écrivable uniquement pour les builds dont le rapport d'intégrité corpus est présent et passant) vit dans [`docs/public-claim-boundary.md`](public-claim-boundary.md). Épopée parente : `#337`.
 
 ## Rapport De Couverture
 
