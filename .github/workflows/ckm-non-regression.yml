@@ -39,4 +39,4 @@ jobs:
         with:
           version: v0.16.1
       - run: pip install --quiet pyyaml
-      - run: scripts/ckm-non-regression.sh
+      - run: bash scripts/ckm-non-regression.sh
