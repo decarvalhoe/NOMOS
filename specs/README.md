@@ -15,8 +15,10 @@
 - fidelity AST;
 - TOC artifact;
 - atomization spine;
-- optional CKM facets;
 - optional CKM facet ontology alignment;
+- optional point-in-time regulatory atom metadata;
+- optional CKM facets;
+- canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
 - AI/RAG controls;

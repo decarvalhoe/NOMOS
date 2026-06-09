@@ -1,0 +1,35 @@
+schema_version: ckm-sia-reference-sidecar-v1
+domain_profile: built-environment
+reference_id: SIA-REFERENCE
+reference_title: "SIA licensed built-environment standards reference"
+license_boundary: >-
+  Licensed SIA material is customer-supplied and never redistributed by NOMOS.
+  This sidecar records only a hash, citation/crosswalk intent, and custody
+  metadata needed to prove the reference boundary.
+reference_hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+hash_algorithm: sha256
+hash_scope: customer_supplied_reference_file
+full_text_committed: false
+storage_policy: hash_and_crosswalk_only
+allowed_repository_material:
+  - reference_id
+  - reference_title
+  - reference_hash
+  - citation_crosswalk
+  - license_boundary
+blocked_repository_material:
+  - full_standard_text
+  - copied_tables
+  - copied_figures
+  - paid_pdf
+  - derived_substantial_excerpt
+custody:
+  owner: customer_or_license_holder
+  intake_mode: local_customer_reference
+  nomos_access: hash_only
+  reviewer_required: true
+citation_crosswalk:
+  - crosswalk_id: SIA-XWALK-001
+    source_ref: customer-controlled SIA clause reference
+    target_ref: BE-PGA-ATOM-002
+    status: placeholder_pending_licensed_intake

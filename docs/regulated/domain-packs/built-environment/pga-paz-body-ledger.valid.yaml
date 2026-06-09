@@ -1,0 +1,81 @@
+format: nomos.corpus-body-ledger.v1
+generated_at: "2026-06-09T09:00:00Z"
+corpus_root: docs/regulated/domain-packs/built-environment/fixtures
+source_count: 1
+admitted_count: 1
+sources:
+  - source_id: VD-LAUSANNE-PGA-PAZ-PDF
+    path: lausanne-pga-paz-surrogate.pdf
+    size_bytes: 144
+    hash: sha256:5555555555555555555555555555555555555555555555555555555555555555
+    admission_status: admitted
+    atomization_status: atomized
+    source_role: canonical
+    format_support: partial
+    segments:
+      - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:0-24:title
+        source_id: VD-LAUSANNE-PGA-PAZ-PDF
+        source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+        kind: pdf_title
+        disposition: structure_only
+        start_byte: 0
+        end_byte: 24
+        start_line: 1
+        start_column: 1
+        end_line: 1
+        end_column: 24
+      - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:24-88:zone-rule
+        source_id: VD-LAUSANNE-PGA-PAZ-PDF
+        source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+        kind: pdf_paragraph
+        disposition: canonical_atom
+        start_byte: 24
+        end_byte: 88
+        start_line: 2
+        start_column: 1
+        end_line: 2
+        end_column: 64
+      - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:88-132:authority-ref
+        source_id: VD-LAUSANNE-PGA-PAZ-PDF
+        source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+        kind: pdf_paragraph
+        disposition: canonical_atom
+        start_byte: 88
+        end_byte: 132
+        start_line: 3
+        start_column: 1
+        end_line: 3
+        end_column: 44
+      - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:132-144:page-footer
+        source_id: VD-LAUSANNE-PGA-PAZ-PDF
+        source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+        kind: pdf_footer
+        disposition: coverage_only
+        start_byte: 132
+        end_byte: 144
+        start_line: 4
+        start_column: 1
+        end_line: 4
+        end_column: 12
+    byte_coverage:
+      total_bytes: 144
+      semantic_bytes: 108
+      structure_bytes: 24
+      coverage_only_bytes: 12
+      metadata_bytes: 0
+      unsupported_bytes: 0
+      binary_bytes: 0
+      uncovered_bytes: 0
+coverage_summary:
+  total_bytes: 144
+  semantic_bytes: 108
+  structure_bytes: 24
+  coverage_only_bytes: 12
+  metadata_bytes: 0
+  unsupported_bytes: 0
+  binary_bytes: 0
+  uncovered_bytes: 0
+  by_source_role:
+    canonical: 144
+  by_source_status:
+    admitted: 144
