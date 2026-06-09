@@ -18,6 +18,7 @@
 - optional CKM facet ontology alignment;
 - optional point-in-time regulatory atom metadata;
 - optional CKM facets;
+- optional CKM knowledge lens retrieval scoping;
 - canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
@@ -39,6 +40,9 @@ against `atomization-spine.cue`.
 alignment pattern for facet axes, including obligation/process/evidence ODPs
 and declared OWL `disjointUnionOf` orthogonality. This is a pack/design contract
 only; it does not tighten `#Atom` or `#Chunk`.
+
+`knowledge-lens.cue` defines the optional CKM-02 retrieval-scope lens contract
+for deterministic pre-generation filtering over facet applicability metadata.
 
 Facet values use core controlled axes for nature, scope level, trust tier,
 provenance, confidentiality, and applicability. Domain packs may add SKOS-backed

@@ -109,6 +109,11 @@ python3 scripts/ckm_point_in_time_resolve.py \
   --as-of 2024-03-01 >/dev/null
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/knowledge-lens.cue specs/examples/knowledge-lens.valid.yaml -d '#KnowledgeLensBundle'
+python3 scripts/ckm_knowledge_lens_filter.py \
+  --candidates specs/examples/knowledge-lens-candidates.valid.yaml \
+  --lens specs/examples/knowledge-lens.valid.yaml \
+  --preset architect-permit-review >/dev/null
 if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1
