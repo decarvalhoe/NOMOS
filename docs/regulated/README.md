@@ -55,6 +55,7 @@ The intended order is:
 | `release-bundle/` | Release-level evidence inventory, deviations, waivers, approvals, and claim status. |
 | `ai-rag-governance/` | AI-assisted extraction, RAG, citation, prompt-injection, and human-review controls. |
 | `atomization-certification/` | Structure-aware atomization reports, coverage evidence, review status, and certification gates. |
+| `ip-governance/` | Trademark, FTO, and third-party license guardrails before public claims or risky integrations. |
 | `operations/` | Periodic review, incident/CAPA handling, retention, backup/restore, and audit-trail review. |
 | `customer-integration/` | Client validation support, shared responsibility, deployment boundaries, and acceptance checklist. |
 | `domain-packs/` | Customer install material for domain packs: per-pack install guide, validation checklist, claim boundary, and the reusable templates new packs adopt (DOR-021). |
