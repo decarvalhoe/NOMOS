@@ -104,6 +104,8 @@ step "5/9 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.business-metier.valid.yaml -d '#FacetedAtom'
+cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.business-operations.valid.yaml -d '#DomainProfile'
 if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1
@@ -118,6 +120,7 @@ domain_profiles=(
   specs/examples/nomos-domain-profile.six-sigma-capa.valid.yaml
   specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml
   specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml
+  specs/examples/nomos-domain-profile.business-operations.valid.yaml
 )
 for profile in "${domain_profiles[@]}"; do
   cue vet specs/nomos-domain-profile.cue "$profile" -d '#DomainProfile'

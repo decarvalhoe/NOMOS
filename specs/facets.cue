@@ -21,6 +21,7 @@ import "strings"
 	"calculation" |
 	"evidence" |
 	"governance" |
+	"metier" |
 	"context"
 
 #FacetScopeLevel:
