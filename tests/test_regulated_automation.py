@@ -245,6 +245,71 @@ artifact:
                 ),
                 report.get("findings", []),
             )
+
+    def test_evidence_pack_includes_signed_claim_boundary_predicates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/claim-boundary/ckm-refused-claims.json",
+                json.dumps(
+                    {
+                        "_type": "https://in-toto.io/Statement/v1",
+                        "subject": [
+                            {
+                                "name": "rag-answer-evidence.json",
+                                "digest": {"sha256": "0123456789abcdef"},
+                            }
+                        ],
+                        "predicateType": "https://nomos.dev/claim-boundary/v1",
+                        "predicate": {
+                            "projectId": "ckm-test",
+                            "generatedAt": "2026-06-09T00:00:00Z",
+                            "refusedClaims": [
+                                {
+                                    "claimId": "claim.no-trace-for-y",
+                                    "statement": "No trace exists for Y, so Nomos refuses the claim.",
+                                    "reason": "No source-backed atom supports Y.",
+                                    "requiredEvidence": ["source_span", "atom_id"],
+                                    "decision": "refused",
+                                }
+                            ],
+                            "verifier": "nomos",
+                            "signatureMode": "dsse-cosign",
+                            "signature": {
+                                "keyId": "fixture-key",
+                                "signature": "MEUCIQDfixture-signature",
+                                "signedAt": "2026-06-09T00:00:00Z",
+                                "logUri": "rekor://fixture-entry",
+                            },
+                            "claimBoundary": "Refusal predicate only; no correctness claim.",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+            )
+            output = repo / "out/evidence-pack.json"
+
+            result = run_script(
+                "regulated_evidence_pack.py",
+                "--root",
+                str(repo),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertTrue(
+                any(
+                    record["category"] == "regulated_claim_boundary_attestation"
+                    and record["path"] == "docs/regulated/claim-boundary/ckm-refused-claims.json"
+                    for record in report["records"]
+                ),
+                report["records"],
+            )
+            self.assertEqual(report["summary"]["categories"]["regulated_claim_boundary_attestation"], 1)
     def test_validation_planner_ranks_controls_by_csa_risk(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

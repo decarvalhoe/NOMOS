@@ -111,6 +111,82 @@ func TestGenerateProvenance(t *testing.T) {
 	}
 }
 
+// --- CKM Claim Boundary ---
+
+func testClaimBoundaryPredicate() ClaimBoundaryPredicate {
+	return ClaimBoundaryPredicate{
+		ProjectID:   "ckm-test",
+		GeneratedAt: testTime,
+		RefusedClaims: []RefusedClaim{
+			{
+				ClaimID:          "claim.no-trace-for-y",
+				Statement:        "Cannot prove traceability for Y, so Nomos refuses to assert it.",
+				Reason:           "No source-backed atom or body-ledger segment supports Y.",
+				RequiredEvidence: []string{"source_span", "atom_id", "body_ledger_merkle_proof"},
+				Decision:         "refused",
+			},
+		},
+		Verifier:      "nomos",
+		SignatureMode: "dsse-cosign",
+		Signature: ClaimBoundarySignature{
+			KeyID:     "nomos-test-key",
+			Signature: "MEUCIQDfixture-signature",
+			SignedAt:  testTime,
+			LogURI:    "rekor://fixture-entry",
+		},
+		ClaimBoundary: "Refusal predicate only; no correctness or regulatory compliance claim.",
+	}
+}
+
+func TestGenerateClaimBoundaryStatementRecordsRefusedClaims(t *testing.T) {
+	predicate := testClaimBoundaryPredicate()
+	stmt, err := GenerateClaimBoundaryStatement(predicate, testSubjects())
+	if err != nil {
+		t.Fatalf("GenerateClaimBoundaryStatement failed: %v", err)
+	}
+	if stmt.PredicateType != ClaimBoundaryPredicateType {
+		t.Fatalf("expected predicate type %s, got %s", ClaimBoundaryPredicateType, stmt.PredicateType)
+	}
+
+	var decoded ClaimBoundaryPredicate
+	if err := json.Unmarshal(stmt.Predicate, &decoded); err != nil {
+		t.Fatalf("decode predicate: %v", err)
+	}
+	if len(decoded.RefusedClaims) != 1 {
+		t.Fatalf("expected one refused claim, got %d", len(decoded.RefusedClaims))
+	}
+	if decoded.RefusedClaims[0].Reason == "" {
+		t.Fatal("expected refusal reason")
+	}
+	if decoded.Signature.Signature == "" {
+		t.Fatal("expected signature metadata")
+	}
+}
+
+func TestVerifyClaimBoundaryStatementRejectsMissingRefusalReason(t *testing.T) {
+	predicate := testClaimBoundaryPredicate()
+	predicate.RefusedClaims[0].Reason = ""
+	stmt, err := GenerateClaimBoundaryStatement(predicate, testSubjects())
+	if err != nil {
+		t.Fatalf("GenerateClaimBoundaryStatement setup failed: %v", err)
+	}
+	if err := VerifyClaimBoundaryStatement(stmt); err == nil {
+		t.Fatal("expected missing refusal reason to fail verification")
+	}
+}
+
+func TestVerifyClaimBoundaryStatementRejectsSignedModeWithoutSignature(t *testing.T) {
+	predicate := testClaimBoundaryPredicate()
+	predicate.Signature.Signature = ""
+	stmt, err := GenerateClaimBoundaryStatement(predicate, testSubjects())
+	if err != nil {
+		t.Fatalf("GenerateClaimBoundaryStatement setup failed: %v", err)
+	}
+	if err := VerifyClaimBoundaryStatement(stmt); err == nil {
+		t.Fatal("expected signed mode without signature to fail verification")
+	}
+}
+
 func TestGenerateProvenance_NoSubjects(t *testing.T) {
 	_, err := GenerateProvenance(testProvenance(), nil)
 	if err == nil {

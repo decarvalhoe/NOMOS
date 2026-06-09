@@ -102,6 +102,7 @@ python3 -m unittest discover -s tests -v
 
 step "5/9 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
+cue vet attestations/nomos-attestation.cue docs/regulated/claim-boundary/ckm-refused-claims.json -d '#InTotoStatement'
 domain_profiles=(
   specs/examples/nomos-domain-profile.gxp.valid.yaml
   specs/examples/nomos-domain-profile.ai.valid.yaml
