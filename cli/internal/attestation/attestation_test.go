@@ -364,3 +364,99 @@ func TestFullPipeline_ProvenanceToCosign(t *testing.T) {
 		t.Fatalf("VerifyCosignEnvelope: %v", err)
 	}
 }
+
+// --- CKM supply-chain predicate ---
+
+func TestGenerateSupplyChainStatementRecordsPipelineStages(t *testing.T) {
+	pred := SupplyChainPredicate{
+		ProjectID: "ckm-project",
+		CorpusID:  "ckm-corpus",
+		Signature: SupplyChainSignature{
+			Mode:   SignatureModeUnsigned,
+			Status: SignatureStatusUnsigned,
+		},
+		Steps: []SupplyChainStep{
+			{Name: StepIngestion, Materials: []Subject{SubjectFromBytes("source.md", []byte("source"))}, Products: []Subject{SubjectFromBytes("snapshot.json", []byte("snapshot"))}},
+			{Name: StepCanon, Materials: []Subject{SubjectFromBytes("snapshot.json", []byte("snapshot"))}, Products: []Subject{SubjectFromBytes("feed.json", []byte("feed"))}},
+			{Name: StepEmbedding, Materials: []Subject{SubjectFromBytes("feed.json", []byte("feed"))}, Products: []Subject{SubjectFromBytes("rag.json", []byte("rag"))}},
+		},
+	}
+
+	stmt, err := GenerateSupplyChainStatement(pred)
+	if err != nil {
+		t.Fatalf("GenerateSupplyChainStatement: %v", err)
+	}
+	if stmt.Type != InTotoStatementType {
+		t.Fatalf("expected in-toto type, got %s", stmt.Type)
+	}
+	if stmt.PredicateType != SupplyChainPredicateType {
+		t.Fatalf("expected supply-chain predicate, got %s", stmt.PredicateType)
+	}
+	if len(stmt.Subject) != 4 {
+		t.Fatalf("expected deduplicated subjects for all products/materials, got %d", len(stmt.Subject))
+	}
+
+	var decoded SupplyChainPredicate
+	if err := json.Unmarshal(stmt.Predicate, &decoded); err != nil {
+		t.Fatalf("decode supply-chain predicate: %v", err)
+	}
+	if decoded.Signature.Status != SignatureStatusUnsigned {
+		t.Fatalf("unsigned mode must be explicit, got %q", decoded.Signature.Status)
+	}
+	if decoded.Signature.TrustTier != "unverified" {
+		t.Fatalf("unsigned mode must be lower trust, got %q", decoded.Signature.TrustTier)
+	}
+	for _, name := range []SupplyChainStepName{StepIngestion, StepCanon, StepEmbedding} {
+		if !decoded.HasStep(name) {
+			t.Fatalf("missing step %s", name)
+		}
+	}
+}
+
+func TestVerifySupplyChainStatementFailsWhenArtifactHashChanges(t *testing.T) {
+	pred := SupplyChainPredicate{
+		ProjectID: "ckm-project",
+		CorpusID:  "ckm-corpus",
+		Signature: SupplyChainSignature{
+			Mode:      SignatureModeSigstoreKeyless,
+			Status:    SignatureStatusSigned,
+			RekorUUID: "rekor-entry-1",
+		},
+		Steps: []SupplyChainStep{
+			{Name: StepCanon, Products: []Subject{SubjectFromBytes("feed.json", []byte("feed-v1"))}},
+		},
+	}
+	stmt, err := GenerateSupplyChainStatement(pred)
+	if err != nil {
+		t.Fatalf("GenerateSupplyChainStatement: %v", err)
+	}
+
+	if err := VerifySupplyChainStatement(stmt, map[string][]byte{"feed.json": []byte("feed-v1")}); err != nil {
+		t.Fatalf("expected matching artifact to verify: %v", err)
+	}
+	if err := VerifySupplyChainStatement(stmt, map[string][]byte{"feed.json": []byte("feed-v2")}); err == nil {
+		t.Fatal("expected changed artifact hash to fail verification")
+	}
+}
+
+func TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry(t *testing.T) {
+	pred := SupplyChainPredicate{
+		ProjectID: "ckm-project",
+		CorpusID:  "ckm-corpus",
+		Signature: SupplyChainSignature{
+			Mode:   SignatureModeSigstoreKeyless,
+			Status: SignatureStatusSigned,
+		},
+		Steps: []SupplyChainStep{
+			{Name: StepCanon, Products: []Subject{SubjectFromBytes("feed.json", []byte("feed-v1"))}},
+		},
+	}
+	stmt, err := GenerateSupplyChainStatement(pred)
+	if err != nil {
+		t.Fatalf("GenerateSupplyChainStatement: %v", err)
+	}
+
+	if err := VerifySupplyChainStatement(stmt, map[string][]byte{"feed.json": []byte("feed-v1")}); err == nil {
+		t.Fatal("expected signed claim without Rekor UUID to fail verification")
+	}
+}
