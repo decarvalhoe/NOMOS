@@ -1,18 +1,18 @@
-schema_version: "0.2.0"
+schema_version: "0.3.0"
 pack_id: PQ-RBOK-NOMOS-READONLY-2026-05-14
 record_type: rbok_nomos_readonly_pq_evidence_pack
 qualification_phase: PQ
-recorded_at_utc: "2026-06-09T13:41:46Z"
+recorded_at_utc: "2026-06-09T14:13:08Z"
 related_issue: "#410"
 parent_epic: "#314"
 claim_boundary: >-
-  PQ evidence pack with public and authenticated production observations plus
-  explicit blockers only; no PQ pass claim, no production validation, no
+  PQ evidence execution record with public and authenticated production
+  observations plus explicit child findings only; no production validation, no
   customer acceptance, and no regulated certification claim.
 environment:
   name: RBOK production
   url: https://app.realisons.com
-  access_context: authenticated_client_browser_session_and_public_network_probe
+  access_context: authenticated_client_and_collaborateur_browser_sessions_plus_public_network_probe
 historical_environment_replaced:
   name: RBOK dev
   url: https://dev.realisons.com
@@ -45,6 +45,21 @@ authenticated_profile:
     url: https://app.realisons.com/api/v1/users/me/capabilities
     http_status: 200
     capabilities: []
+collaborateur_profile:
+  observed_at_utc: "2026-06-09T14:10:58Z"
+  profile: manus@rbok.dev
+  role: collaborateur
+  session_endpoint:
+    url: https://app.realisons.com/auth/session
+    http_status: 200
+  capabilities_endpoint:
+    url: https://app.realisons.com/api/v1/users/me/capabilities
+    http_status: 200
+    capability_count: 63
+    relevant_capabilities:
+      - view_rbok_editor
+      - manage_knowledge
+      - link_rbok_to_modules
 evidence_artifacts:
   - id: client_modules_screenshot
     path: C:\Dev\nomos-pq-prod-20260609-client-modules-current.png
@@ -58,8 +73,32 @@ evidence_artifacts:
     path: C:\Dev\nomos-pq-prod-20260609-published-summary.json
     artifact_type: browser_fetch_summary_without_secrets
     stored_in_repo: false
-  - id: lighthouse_snapshot
+  - id: client_lighthouse_snapshot
     path: C:\Dev\nomos-pq-prod-20260609-lighthouse\report.json
+    artifact_type: lighthouse_snapshot
+    stored_in_repo: false
+  - id: collaborateur_session_summary
+    path: C:\Dev\nomos-pq-prod-20260609-collab-session-summary.json
+    artifact_type: browser_fetch_summary_without_secrets
+    stored_in_repo: false
+  - id: collaborateur_documents_screenshot
+    path: C:\Dev\nomos-pq-prod-20260609-collab-rbok-documents.png
+    artifact_type: screenshot
+    stored_in_repo: false
+  - id: collaborateur_documents_summary
+    path: C:\Dev\nomos-pq-prod-20260609-collab-rbok-documents-summary.json
+    artifact_type: browser_fetch_summary_without_secrets
+    stored_in_repo: false
+  - id: collaborateur_detail_screenshot
+    path: C:\Dev\nomos-pq-prod-20260609-collab-rbok-detail.png
+    artifact_type: screenshot
+    stored_in_repo: false
+  - id: collaborateur_detail_summary
+    path: C:\Dev\nomos-pq-prod-20260609-collab-rbok-detail-summary.json
+    artifact_type: browser_fetch_summary_without_secrets
+    stored_in_repo: false
+  - id: collaborateur_lighthouse_snapshot
+    path: C:\Dev\nomos-pq-prod-20260609-collab-lighthouse\report.json
     artifact_type: lighthouse_snapshot
     stored_in_repo: false
 readonly_journeys:
@@ -85,9 +124,9 @@ readonly_journeys:
         revision_count: 893
       readonly_assertion: "Observed through GET list endpoint only; no mutation endpoint was exercised."
   - id: document_detail_citation
-    name: "NOMOS document detail, anchors, and published revision journey"
-    url: https://app.realisons.com/api/v1/rbok/documents/dc1a32b2-22b8-5020-90d0-9319c768b934
-    profile_or_capability: authenticated_client_read_context
+    name: "NOMOS document detail, anchors, citation, and published revision journey"
+    url: https://app.realisons.com/collaborateur/rbok/dc1a32b2-22b8-5020-90d0-9319c768b934
+    profile_or_capability: authenticated_client_and_collaborateur_read_context
     result: PASS
     evidence_required:
       - authenticated_user_profile
@@ -107,22 +146,46 @@ readonly_journeys:
       published_title: INTRODUCTION
       published_status: published
       source_hash_present: true
+      collaborateur_ui:
+        url: https://app.realisons.com/collaborateur/rbok/dc1a32b2-22b8-5020-90d0-9319c768b934?node=c3a5b7fa-7ac9-5ec8-8a72-8d8a24f98a55
+        readonly_badge_visible: true
+        citation_visible: true
+        citation_sample: "RBOK canonical · 2 · version 1"
+        node_links_http_status: 200
+        node_links_count: 0
+        node_impact_http_status: 200
+        no_mutation_actions_detected: true
   - id: collaborateur_docs_workspace
     name: "Collaborateur docs readonly workspace journey"
     url: https://app.realisons.com/collaborateur/rbok/documents
     profile_or_capability: collaborateur_docs_read
-    result: PENDING
+    result: PASS
     evidence_required:
       - collaborateur_profile
       - screenshot_or_trace
       - workspace_readonly_assertion
       - api_response_summary_without_secrets
-    blocker: collaborator_profile_unavailable
     evidence_observed:
-      collaborator_login_attempt_result: invalid_credentials_alert
-      client_role_route_observation: >-
-        Authenticated client profile was redirected back to /client/modules
-        from the collaborateur RBOK documents route.
+      profile: manus@rbok.dev
+      role: collaborateur
+      capabilities_http_status: 200
+      capability_count: 63
+      relevant_capabilities:
+        - view_rbok_editor
+        - manage_knowledge
+        - link_rbok_to_modules
+      documents_http_status: 200
+      documents_count: 6
+      canonical_documents_count: 1
+      total_nodes_exposed: 968
+      ui_route_visible: true
+      endpoints_visible: true
+      zero_edition_visible: true
+      no_mutation_actions_detected: true
+      readonly_assertion: >-
+        The collaborateur workspace rendered the Nomus docs list and detail
+        reader with zero-editing language; no create, edit, delete, save, or
+        publish action was exposed in the captured DOM.
   - id: permission_denied_missing_capability
     name: "Permission/visibility path for missing collaborateur RBOK workspace capability"
     url: https://app.realisons.com/collaborateur/rbok/documents
@@ -160,34 +223,47 @@ readonly_journeys:
       no_hallucinated_content_assertion: true
   - id: accessibility_readonly_surfaces
     name: "Critical accessibility assertions for readonly surfaces"
-    url: https://app.realisons.com/client/modules
-    profile_or_capability: authenticated_client_empty_parcours
-    result: PASS
+    url: https://app.realisons.com/collaborateur/rbok/dc1a32b2-22b8-5020-90d0-9319c768b934?node=c3a5b7fa-7ac9-5ec8-8a72-8d8a24f98a55
+    profile_or_capability: authenticated_client_and_collaborateur_read_context
+    result: FAIL
+    child_issue: https://github.com/RBOKproject/RBOK/issues/4016
     evidence_required:
       - axe_or_equivalent_a11y_summary
       - keyboard_navigation_observation
       - focus_and_landmark_summary
       - screenshot_or_trace
     evidence_observed:
-      lighthouse_snapshot:
+      client_modules_lighthouse_snapshot:
         accessibility_score: 100
         failed_audits: 0
         passed_audits: 31
+      collaborateur_detail_lighthouse_snapshot:
+        accessibility_score: 96
+        failed_audits: 2
+        passed_audits: 32
+        failed_audit_ids:
+          - color-contrast
+          - label-content-name-mismatch
       dom_signals:
         skip_link: true
         banner: true
         main: true
         live_status: true
-blockers:
-  - collaborator_profile_unavailable
-  - full_collaborateur_workspace_trace_missing
-overall_result: PARTIAL
+findings:
+  - id: rbok_collaborateur_readonly_accessibility
+    result: FAIL
+    child_issue: https://github.com/RBOKproject/RBOK/issues/4016
+    summary: >-
+      Lighthouse snapshot on the collaborateur RBOK/Nomus readonly detail route
+      reported color-contrast and label-content-name-mismatch failures.
+blockers: []
+overall_result: EXECUTED_WITH_FINDINGS
 child_issue_policy:
   required_when: "A journey result is FAIL after authenticated execution."
   current_disposition: >-
-    No FAIL claim is recorded. The collaborateur workspace journey remains
-    PENDING because a valid collaborateur profile was not available in this
-    browser session; the blocker remains tracked on #410.
+    A FAIL claim is recorded for accessibility assertions and the frontend child
+    issue RBOKproject/RBOK#4016 tracks remediation. No remaining authentication
+    or evidence-capture blocker is recorded for #410.
 verification:
   - id: pq-readonly-pack-contract-test
     command: >-

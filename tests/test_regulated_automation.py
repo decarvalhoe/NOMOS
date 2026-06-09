@@ -1087,8 +1087,9 @@ answers:
         self.assertTrue(pack_path.exists(), f"missing PQ pack: {pack_path}")
         pack = yaml.safe_load(pack_path.read_text(encoding="utf-8"))
         self.assertEqual(pack["pack_id"], "PQ-RBOK-NOMOS-READONLY-2026-05-14")
+        self.assertEqual(pack["schema_version"], "0.3.0")
         self.assertEqual(pack["qualification_phase"], "PQ")
-        self.assertIn("no PQ pass claim", pack["claim_boundary"])
+        self.assertIn("no production validation", pack["claim_boundary"])
         self.assertEqual(pack["environment"]["url"], "https://app.realisons.com")
         self.assertEqual(pack["historical_environment_replaced"]["url"], "https://dev.realisons.com")
         self.assertEqual(pack["observed_public_checks"]["health"]["result"], "PASS")
@@ -1096,6 +1097,12 @@ answers:
         self.assertEqual(pack["observed_public_checks"]["root_redirect"]["location"], "/login")
         self.assertEqual(pack["authenticated_profile"]["role"], "client")
         self.assertEqual(pack["authenticated_profile"]["capabilities_endpoint"]["capabilities"], [])
+        self.assertEqual(pack["collaborateur_profile"]["role"], "collaborateur")
+        self.assertEqual(pack["collaborateur_profile"]["capabilities_endpoint"]["capability_count"], 63)
+        self.assertIn(
+            "view_rbok_editor",
+            pack["collaborateur_profile"]["capabilities_endpoint"]["relevant_capabilities"],
+        )
 
         journeys = {journey["id"]: journey for journey in pack["readonly_journeys"]}
         self.assertLessEqual(
@@ -1118,17 +1125,27 @@ answers:
         )
         self.assertEqual(journeys["document_detail_citation"]["result"], "PASS")
         self.assertTrue(journeys["document_detail_citation"]["evidence_observed"]["source_hash_present"])
-        self.assertEqual(journeys["collaborateur_docs_workspace"]["result"], "PENDING")
-        self.assertEqual(journeys["collaborateur_docs_workspace"]["blocker"], "collaborator_profile_unavailable")
+        self.assertEqual(
+            journeys["document_detail_citation"]["evidence_observed"]["collaborateur_ui"]["citation_sample"],
+            "RBOK canonical · 2 · version 1",
+        )
+        self.assertEqual(journeys["collaborateur_docs_workspace"]["result"], "PASS")
+        self.assertTrue(journeys["collaborateur_docs_workspace"]["evidence_observed"]["zero_edition_visible"])
+        self.assertEqual(journeys["collaborateur_docs_workspace"]["evidence_observed"]["documents_count"], 6)
         self.assertEqual(journeys["permission_denied_missing_capability"]["result"], "PASS")
         self.assertEqual(journeys["empty_endpoint_data"]["evidence_observed"]["response_count"], 0)
+        self.assertEqual(journeys["accessibility_readonly_surfaces"]["result"], "FAIL")
         self.assertEqual(
-            journeys["accessibility_readonly_surfaces"]["evidence_observed"]["lighthouse_snapshot"]["failed_audits"],
-            0,
+            journeys["accessibility_readonly_surfaces"]["child_issue"],
+            "https://github.com/RBOKproject/RBOK/issues/4016",
         )
-        self.assertIn("collaborator_profile_unavailable", pack["blockers"])
-        self.assertIn("full_collaborateur_workspace_trace_missing", pack["blockers"])
-        self.assertEqual(pack["overall_result"], "PARTIAL")
+        self.assertEqual(
+            journeys["accessibility_readonly_surfaces"]["evidence_observed"]["collaborateur_detail_lighthouse_snapshot"]["failed_audits"],
+            2,
+        )
+        self.assertEqual(pack["blockers"], [])
+        self.assertEqual(pack["findings"][0]["child_issue"], "https://github.com/RBOKproject/RBOK/issues/4016")
+        self.assertEqual(pack["overall_result"], "EXECUTED_WITH_FINDINGS")
 
     def test_ordo_finding_capa_intake_rule_links_qualification_findings(self) -> None:
         import yaml
