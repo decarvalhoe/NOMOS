@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import shutil
 import unittest
 from pathlib import Path
 
@@ -13,6 +14,8 @@ PROFILE = ROOT / "specs/examples/nomos-domain-profile.built-environment.valid.ya
 
 class CKMBuiltEnvironmentProfileTests(unittest.TestCase):
     def test_profile_passes_domain_profile_contract(self) -> None:
+        if shutil.which("cue") is None:
+            self.skipTest("cue not available")
         result = subprocess.run(
             [
                 "cue",
