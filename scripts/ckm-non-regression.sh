@@ -102,6 +102,11 @@ python3 -m unittest discover -s tests -v
 
 step "5/9 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
+cue vet specs/atomization-spine.cue specs/point-in-time.cue specs/examples/point-in-time-atoms.valid.yaml -d '#TemporalAtomSet'
+python3 scripts/ckm_point_in_time_resolve.py \
+  --atoms specs/examples/point-in-time-atoms.valid.yaml \
+  --work-id eli:example:regulation:demo \
+  --as-of 2024-03-01 >/dev/null
 domain_profiles=(
   specs/examples/nomos-domain-profile.gxp.valid.yaml
   specs/examples/nomos-domain-profile.ai.valid.yaml
