@@ -1,0 +1,25 @@
+record_type: ckm_knowledge_lens_bundle
+schema_version: "0.1.0"
+default_behavior: include_all_when_no_lens
+epistemology:
+  applicability: objective_fact
+  activation: subjective_choice
+lenses:
+  - id: LENS-PERMIT-REVIEW
+    description: Base retrieval scope for architect permit review.
+    default_behavior: include_all_when_no_lens
+    include:
+      all_of:
+        - activity:
+            - permit.review
+          confidentiality: public
+    exclude:
+      any_of:
+        - applicability: not_applicable
+        - applicability: blocked
+presets:
+  - id: architect-permit-review
+    role: architect.reviewer
+    activity: permit.review
+    lens_id: LENS-PERMIT-REVIEW
+    activation_reason: Reviewer chose a permit-review lens before retrieval.
