@@ -104,6 +104,12 @@ step "5/9 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/canon-promotion.cue specs/examples/canon-promotion.valid.yaml -d '#CanonPromotionBundle'
+python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.valid.yaml
+if python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.invalid-shared.yaml; then
+  echo "FAIL: invalid CKM canon promotion fixture passed" >&2
+  exit 1
+fi
 if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1

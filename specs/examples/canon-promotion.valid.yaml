@@ -1,0 +1,72 @@
+record_type: ckm_canon_promotion_bundle
+schema_version: "0.1.0"
+source:
+  source_id: SRC-CUSTOMER-CLAIMS
+  authority_type: customer_source
+  access_policy: customer_confidential
+  silo_id: customer-alpha
+  committed_full_text: false
+atoms:
+  - atom_id: ATOM-CANON-PROMOTED-001
+    kind: definition
+    structure_id: STRUCT-CANON-001
+    document_id: DOC-CUSTOMER-CLAIMS
+    domain: customer-claims
+    title: Customer claim triage threshold
+    content: Customer-owned threshold used for this customer's claim triage only.
+    source_span:
+      source_id: SRC-CUSTOMER-CLAIMS
+      path: customer-alpha/claims-policy.sidecar.yaml
+      start_line: 1
+      end_line: 4
+      hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    hash: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    review_state: approved
+    created_at: "2026-06-09T00:00:00Z"
+    updated_at: "2026-06-09T00:00:00Z"
+    priority: medium
+    metadata:
+      facets:
+        nature: definition
+        discipline_role:
+          - claims.owner
+        activity:
+          - claim.triage
+        scope_level: atom
+        trust_tier: indicative
+        provenance: user_promoted
+        confidentiality: customer_confidential
+        applicability: applicable
+      canon_promotion:
+        promotion_id: PROMO-CANON-001
+        source_id: SRC-CUSTOMER-CLAIMS
+        certificate_id: CERT-CANON-PROMO-001
+        silo_id: customer-alpha
+        surfacing: silo_only
+        shared_catalog: false
+certificates:
+  - cert_id: CERT-CANON-PROMO-001
+    atom_ids:
+      - ATOM-CANON-PROMOTED-001
+    issued_at: "2026-06-09T00:00:00Z"
+    issuer: customer-knowledge-owner
+    cert_type: review_approval
+    scope: customer-alpha canon promotion
+    hash: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    evidence_refs:
+      - review:customer-alpha:PROMO-CANON-001
+    revoked: false
+    metadata:
+      promotion_id: PROMO-CANON-001
+      source_authority_type: customer_source
+      confidentiality: customer_confidential
+      promotion_status: active
+shared_catalog:
+  exported_source_ids: []
+  exported_atom_ids: []
+silo_catalog:
+  silo_id: customer-alpha
+  source_ids:
+    - SRC-CUSTOMER-CLAIMS
+  atom_ids:
+    - ATOM-CANON-PROMOTED-001
