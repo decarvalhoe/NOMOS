@@ -1089,9 +1089,13 @@ answers:
         self.assertEqual(pack["pack_id"], "PQ-RBOK-NOMOS-READONLY-2026-05-14")
         self.assertEqual(pack["qualification_phase"], "PQ")
         self.assertIn("no PQ pass claim", pack["claim_boundary"])
-        self.assertEqual(pack["environment"]["url"], "https://dev.realisons.com")
+        self.assertEqual(pack["environment"]["url"], "https://app.realisons.com")
+        self.assertEqual(pack["historical_environment_replaced"]["url"], "https://dev.realisons.com")
         self.assertEqual(pack["observed_public_checks"]["health"]["result"], "PASS")
+        self.assertEqual(pack["observed_public_checks"]["health"]["http_status"], 200)
         self.assertEqual(pack["observed_public_checks"]["root_redirect"]["location"], "/login")
+        self.assertEqual(pack["authenticated_profile"]["role"], "client")
+        self.assertEqual(pack["authenticated_profile"]["capabilities_endpoint"]["capabilities"], [])
 
         journeys = {journey["id"]: journey for journey in pack["readonly_journeys"]}
         self.assertLessEqual(
@@ -1107,9 +1111,24 @@ answers:
         )
         self.assertTrue(all("url" in journey for journey in journeys.values()))
         self.assertTrue(all("evidence_required" in journey for journey in journeys.values()))
-        self.assertIn("auth_required_for_role_journeys", pack["blockers"])
-        self.assertIn("screenshot_trace_missing", pack["blockers"])
-        self.assertEqual(pack["overall_result"], "PENDING")
+        self.assertEqual(journeys["documents_list_readonly"]["result"], "PASS")
+        self.assertEqual(
+            journeys["documents_list_readonly"]["evidence_observed"]["document"]["document_code"],
+            "rbok-core-v0.01",
+        )
+        self.assertEqual(journeys["document_detail_citation"]["result"], "PASS")
+        self.assertTrue(journeys["document_detail_citation"]["evidence_observed"]["source_hash_present"])
+        self.assertEqual(journeys["collaborateur_docs_workspace"]["result"], "PENDING")
+        self.assertEqual(journeys["collaborateur_docs_workspace"]["blocker"], "collaborator_profile_unavailable")
+        self.assertEqual(journeys["permission_denied_missing_capability"]["result"], "PASS")
+        self.assertEqual(journeys["empty_endpoint_data"]["evidence_observed"]["response_count"], 0)
+        self.assertEqual(
+            journeys["accessibility_readonly_surfaces"]["evidence_observed"]["lighthouse_snapshot"]["failed_audits"],
+            0,
+        )
+        self.assertIn("collaborator_profile_unavailable", pack["blockers"])
+        self.assertIn("full_collaborateur_workspace_trace_missing", pack["blockers"])
+        self.assertEqual(pack["overall_result"], "PARTIAL")
 
     def test_ordo_finding_capa_intake_rule_links_qualification_findings(self) -> None:
         import yaml
