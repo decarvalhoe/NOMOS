@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import unittest
@@ -12,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class CKMPointInTimeTests(unittest.TestCase):
     def test_temporal_atoms_validate_optionally(self) -> None:
+        if shutil.which("cue") is None:
+            raise unittest.SkipTest("cue is not installed")
+
         result = subprocess.run(
             [
                 "cue",
