@@ -1,0 +1,101 @@
+schema_version: "0.1.0"
+record_type: built_environment_thin_pack_fixture
+domain_profile: built-environment
+claim_boundary: >-
+  Built-environment source registration, vocabulary, and golden corpus evidence
+  fixture only; no building compliance certification, legal sufficiency,
+  permit approval, safety approval, or licensed standard redistribution.
+vocabularies:
+  discipline_role:
+    source_pattern: "AEC3PO/ACCORD-inspired discipline role seed; no imported proprietary content."
+    terms:
+      - id: architect
+        label: Architect
+        scope_note: "Design coordination role for source mapping only."
+      - id: civil_engineer
+        label: Civil engineer
+        scope_note: "Engineering review role for source mapping only."
+      - id: fire_safety_specialist
+        label: Fire safety specialist
+        scope_note: "Fire-safety review role for source mapping only."
+  activity:
+    source_pattern: "AEC3PO/ACCORD-inspired jurisdiction and phase seed; no imported proprietary content."
+    terms:
+      - id: permit_screening
+        label: Permit screening
+        phase: pre-application
+      - id: authority_coordination
+        label: Authority coordination
+        phase: review
+      - id: source_crosswalk
+        label: Source crosswalk
+        phase: evidence-preparation
+source_authority_register:
+  - source_id: CH-RPG
+    level: confederation
+    theme: spatial_planning
+    title: "Swiss federal spatial planning authority reference"
+    access_policy: repository_public
+    machine_readability: semi_structured
+    source_kind: official_public_authority
+    citation_policy: cite_public_title_and_article_only
+    content_policy: no_full_text_copy_required
+  - source_id: VD-LATC
+    level: canton
+    theme: construction_land_use
+    title: "Vaud construction and land-use planning authority reference"
+    access_policy: repository_public
+    machine_readability: pdf_text
+    source_kind: official_public_authority
+    citation_policy: cite_public_title_and_article_only
+    content_policy: public_source_snapshot_required_for_project_use
+  - source_id: LAUSANNE-RPGA
+    level: commune
+    theme: municipal_land_use
+    title: "Lausanne municipal land-use planning authority reference"
+    access_policy: repository_public
+    machine_readability: pdf_text
+    source_kind: official_public_authority
+    citation_policy: cite_public_title_and_article_only
+    content_policy: public_source_snapshot_required_for_project_use
+  - source_id: SIA-REFERENCE
+    level: confederation
+    theme: licensed_technical_standard
+    title: "SIA licensed built-environment standards reference"
+    access_policy: licensed_reference_only
+    machine_readability: human_only
+    source_kind: licensed_standard
+    citation_policy: hash_and_crosswalk_only
+    content_policy: no_full_text_redistribution
+golden_corpus:
+  - case_id: VD-LAUSANNE-PERMIT-001
+    jurisdiction: Lausanne
+    source_ids: [VD-LATC, LAUSANNE-RPGA]
+    scenario: "Map a Lausanne permit-screening corpus to source-backed feed nodes."
+    expected_outputs:
+      feed: "source-backed canonical feed"
+      toc: "certified source-level TOC"
+      gate: "strict fidelity gate"
+    feed_status: pass
+    toc_status: pass
+    gate_status: pass
+    claim_boundary: "Evidence pipeline pass only; no permit compliance claim."
+  - case_id: VD-LAUSANNE-FIRE-001
+    jurisdiction: VD
+    source_ids: [VD-LATC, SIA-REFERENCE]
+    scenario: "Map a VD fire-safety review corpus with licensed-reference boundary."
+    expected_outputs:
+      feed: "source-backed canonical feed"
+      toc: "certified source-level TOC"
+      gate: "strict fidelity gate"
+    feed_status: pass
+    toc_status: pass
+    gate_status: pass
+    claim_boundary: "Evidence pipeline pass only; no fire-safety or SIA compliance claim."
+unsupported_outputs:
+  - kind: permit_approval
+    status: blocked
+    rationale: "Permit approval belongs to competent authorities and project professionals."
+  - kind: building_compliance_certification
+    status: blocked
+    rationale: "Compliance certification requires current sources, project facts, licensed references, and qualified review."

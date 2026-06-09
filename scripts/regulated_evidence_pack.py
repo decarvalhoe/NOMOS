@@ -48,6 +48,7 @@ REQUIRED_ALCOA_ENVELOPE_PATHS = (
 
 EVIDENCE_PATTERNS = [
     ("regulated_document", "docs/regulated/**/*.md"),
+    ("regulated_claim_boundary_attestation", "docs/regulated/claim-boundary/**/*.json"),
     ("regulated_data", "docs/regulated/**/*.yaml"),
     ("regulated_data", "docs/regulated/**/*.yml"),
     ("regulated_template", "templates/regulated/**/*.md"),

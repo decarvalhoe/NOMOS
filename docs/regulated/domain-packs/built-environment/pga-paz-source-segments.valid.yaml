@@ -1,0 +1,63 @@
+source_id: VD-LAUSANNE-PGA-PAZ-PDF
+source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+source_hash: sha256:5555555555555555555555555555555555555555555555555555555555555555
+ingestion_version: ckm-10-pga-paz-pdf-v1
+segments:
+  - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:0-24:title
+    source_id: VD-LAUSANNE-PGA-PAZ-PDF
+    source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+    kind: pdf_title
+    disposition: structure_only
+    start_byte: 0
+    end_byte: 24
+    start_line: 1
+    start_column: 1
+    end_line: 1
+    end_column: 24
+    include_in_feed: false
+    include_in_rag: false
+  - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:24-88:zone-rule
+    source_id: VD-LAUSANNE-PGA-PAZ-PDF
+    source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+    kind: pdf_paragraph
+    disposition: canonical_atom
+    start_byte: 24
+    end_byte: 88
+    start_line: 2
+    start_column: 1
+    end_line: 2
+    end_column: 64
+    raw_text_hash: sha256:6666666666666666666666666666666666666666666666666666666666666666
+    normalized_text_hash: sha256:7777777777777777777777777777777777777777777777777777777777777777
+    canonical_unit_id: BE-PGA-ATOM-001
+    include_in_feed: true
+    include_in_rag: true
+  - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:88-132:authority-ref
+    source_id: VD-LAUSANNE-PGA-PAZ-PDF
+    source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+    kind: pdf_paragraph
+    disposition: canonical_atom
+    start_byte: 88
+    end_byte: 132
+    start_line: 3
+    start_column: 1
+    end_line: 3
+    end_column: 44
+    raw_text_hash: sha256:8888888888888888888888888888888888888888888888888888888888888888
+    normalized_text_hash: sha256:9999999999999999999999999999999999999999999999999999999999999999
+    canonical_unit_id: BE-PGA-ATOM-002
+    include_in_feed: true
+    include_in_rag: true
+  - segment_id: seg:VD-LAUSANNE-PGA-PAZ-PDF:132-144:page-footer
+    source_id: VD-LAUSANNE-PGA-PAZ-PDF
+    source_path: docs/regulated/domain-packs/built-environment/fixtures/lausanne-pga-paz-surrogate.pdf
+    kind: pdf_footer
+    disposition: coverage_only
+    start_byte: 132
+    end_byte: 144
+    start_line: 4
+    start_column: 1
+    end_line: 4
+    end_column: 12
+    include_in_feed: false
+    include_in_rag: false
