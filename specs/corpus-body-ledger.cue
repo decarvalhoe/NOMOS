@@ -21,6 +21,7 @@ package nomos
 	admitted_count:   int & >=0 & <=source_count
 	sources:          [...#BodyLedgerSource]
 	coverage_summary: #CoverageSummary
+	merkle?:          #MerkleSummary
 }
 
 // #BodyLedgerSource is the per-source entry. For text sources the
@@ -60,6 +61,22 @@ package nomos
 		...
 	}]
 	byte_coverage: #ByteCoverageReport
+	merkle_proof?: #MerkleProof
+}
+
+#MerkleSummary: {
+	algorithm: "sha256-pair-v1"
+	root:      =~"^[A-Fa-f0-9]{64}$"
+	leaf_count: int & >=1
+}
+
+#MerkleProof: {
+	leaf_hash:  =~"^[A-Fa-f0-9]{64}$"
+	leaf_index: int & >=0
+	path?: [...{
+		position: "left" | "right"
+		hash:     =~"^[A-Fa-f0-9]{64}$"
+	}]
 }
 
 // #ByteCoverageReport partitions one source's bytes by disposition.

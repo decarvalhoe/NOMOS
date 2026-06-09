@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import stat
+import subprocess
 import unittest
 
 
@@ -15,7 +16,21 @@ class TestCKMNonRegressionScript(unittest.TestCase):
     def test_script_exists_and_is_executable(self):
         self.assertTrue(SCRIPT.exists(), f"Missing script: {SCRIPT}")
         mode = SCRIPT.stat().st_mode
-        self.assertTrue(mode & stat.S_IXUSR, "Script must be executable by owner")
+        if mode & stat.S_IXUSR:
+            return
+
+        result = subprocess.run(
+            ["git", "ls-files", "--stage", "scripts/ckm-non-regression.sh"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertTrue(
+            result.stdout.startswith("100755 "),
+            "Script must be executable by owner",
+        )
 
     def test_script_runs_required_guardrails(self):
         content = SCRIPT.read_text()

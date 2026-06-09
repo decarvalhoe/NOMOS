@@ -524,6 +524,138 @@ answers:
                 report.get("findings", []),
             )
 
+    def test_rag_answer_evidence_emits_ckm08_metrics_and_certified_trust_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            source_hash = "0123456789abcdef"
+            write(
+                fixtures,
+                f"""
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-CERTIFIED
+    prompt_id: PROMPT-CERTIFIED-001
+    fixture_type: citation
+    answer: "Only cited governed facts are used."
+    structured_facts:
+      - unit_id: RULE-001
+        source: read_model
+    citations:
+      - source_id: SRC-001
+        locator: "section 1"
+        chunk_id: CHUNK-001
+    uncertainties: []
+    requires_human_decision: false
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+    source_spans:
+      - source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+        chunk_id: CHUNK-001
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.96
+    faithfulness_score: 0.98
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "generated")
+            self.assertEqual(report["summary"]["trust_tier"], "certified")
+            metrics = report["summary"]["metrics"]
+            self.assertEqual(metrics["alce"]["citation_recall"], 1.0)
+            self.assertEqual(metrics["alce"]["citation_precision"], 1.0)
+            self.assertGreaterEqual(metrics["trust_score"], 0.95)
+            self.assertGreaterEqual(metrics["deepeval"]["faithfulness"], 0.95)
+            self.assertEqual(report["answers"][0]["trust_tier"], "certified")
+            self.assertTrue(report["answers"][0]["response_contract"]["fields"]["structured_facts"])
+
+    def test_rag_answer_evidence_blocks_unfaithful_citation_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            write(
+                fixtures,
+                """
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-MISMATCHED-CITATION
+    prompt_id: PROMPT-CITATION-001
+    fixture_type: citation
+    answer: "This answer cites the wrong chunk."
+    structured_facts: []
+    citations:
+      - source_id: SRC-001
+        locator: "section 1"
+        chunk_id: CHUNK-OTHER
+    uncertainties: []
+    requires_human_decision: false
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: 0123456789abcdef
+        span: "1-3"
+    source_spans:
+      - source_id: SRC-001
+        source_hash: 0123456789abcdef
+        span: "1-3"
+        chunk_id: CHUNK-OTHER
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.96
+    faithfulness_score: 0.98
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(report["summary"]["trust_tier"], "unverified")
+            self.assertTrue(
+                any(finding["code"] == "ALCE_CITATION_RECALL_BELOW_GATE" for finding in report["findings"]),
+                report.get("findings", []),
+            )
+
     def test_legal_domain_profile_links_citation_custody_and_privilege_fixture(self) -> None:
         import yaml
 
