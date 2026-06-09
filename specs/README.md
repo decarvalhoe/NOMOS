@@ -16,6 +16,7 @@
 - TOC artifact;
 - atomization spine;
 - optional CKM facets;
+- canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
 - AI/RAG controls;

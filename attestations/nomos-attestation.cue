@@ -4,7 +4,7 @@ package nomos
 // used by Nomos for both admission attestations and SLSA provenance.
 
 #InTotoStatement: {
-	_type:         "https://in-toto.io/Statement/v1"
+	"_type":       "https://in-toto.io/Statement/v1"
 	subject:       [#Subject, ...#Subject]
 	predicateType: #PredicateType
 	predicate:     #NomosAttestation | #SLSAProvenance
