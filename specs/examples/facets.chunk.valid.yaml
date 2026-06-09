@@ -1,0 +1,26 @@
+chunk_id: "CHUNK-FACET-001"
+atom_ids:
+  - "ATOM-FACET-001"
+structure_id: "STRUCT-FACET-001"
+document_id: "DOC-FACET"
+domain: "legal-ediscovery"
+content: "A governed answer must cite the retained source span or abstain."
+token_count: 14
+source_hash: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+parent_chain:
+  - "STRUCT-FACET-001"
+governance_status: "active"
+review_state: "approved"
+priority: "critical"
+metadata:
+  facets:
+    nature: "evidence"
+    discipline_role:
+      - "legal.owner"
+    activity:
+      - "retrieval"
+    scope_level: "chunk"
+    trust_tier: "indicative"
+    provenance: "derived"
+    confidentiality: "restricted"
+    applicability: "applicable"
