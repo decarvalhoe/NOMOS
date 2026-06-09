@@ -113,6 +113,12 @@ if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.in
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1
 fi
+cue vet specs/facet-ontology.cue specs/examples/facet-ontology.valid.yaml -d '#FacetOntology'
+python3 scripts/ckm_facet_ontology_validate.py --ontology specs/examples/facet-ontology.valid.yaml >/dev/null
+if python3 scripts/ckm_facet_ontology_validate.py --ontology specs/examples/facet-ontology.invalid-overlap.yaml >/dev/null 2>&1; then
+  echo "FAIL: invalid CKM facet ontology disjoint overlap passed" >&2
+  exit 1
+fi
 cue vet specs/atomization-spine.cue specs/facets.cue specs/nomos-trace-manifest.cue attestations/nomos-attestation.cue specs/canonical-knowledge-bundle.cue specs/examples/canonical-knowledge-bundle.valid.json -d '#CanonicalKnowledgeBundle'
 python3 scripts/ckm_bundle_validate.py --bundle specs/examples/canonical-knowledge-bundle.valid.json
 domain_profiles=(

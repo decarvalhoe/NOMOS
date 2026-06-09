@@ -15,6 +15,7 @@
 - fidelity AST;
 - TOC artifact;
 - atomization spine;
+- optional CKM facet ontology alignment;
 - optional point-in-time regulatory atom metadata;
 - optional CKM facets;
 - canonical knowledge bundle;
@@ -33,6 +34,11 @@ Schema changes are evidence-affecting changes. They require tests, documentation
 `facets.cue` defines optional multidimensional facet shapes for `#Atom.metadata`
 and `#Chunk.metadata`. Existing atoms and chunks without facets remain valid
 against `atomization-spine.cue`.
+
+`facet-ontology.cue` defines the optional CKM-12 BFO -> IOF Core -> domain-pack
+alignment pattern for facet axes, including obligation/process/evidence ODPs
+and declared OWL `disjointUnionOf` orthogonality. This is a pack/design contract
+only; it does not tighten `#Atom` or `#Chunk`.
 
 Facet values use core controlled axes for nature, scope level, trust tier,
 provenance, confidentiality, and applicability. Domain packs may add SKOS-backed

@@ -1,0 +1,70 @@
+schema_version: ckm-facet-ontology-v1
+anchors:
+  bfo:
+    standard: BFO
+    iri: http://purl.obolibrary.org/obo/BFO_0000001
+    version: ISO 21838-2
+  iof_core:
+    standard: IOF Core
+    iri: https://spec.industrialontologies.org/ontology/core/Core/Process
+  domain_pack:
+    standard: domain-pack
+    iri: https://nomos.dev/domain-packs/legal-ediscovery
+facet_axes:
+  - id: nature
+    label: Claim nature
+    root: http://purl.obolibrary.org/obo/BFO_0000002
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    terms:
+      - id: obligation
+        label: Obligation
+        iri: https://nomos.dev/facets/core/obligation
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000031
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+          domain: https://nomos.dev/domain-packs/legal-ediscovery/Obligation
+      - id: evidence
+        label: Evidence
+        iri: https://nomos.dev/facets/core/evidence
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000031
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+  - id: activity
+    label: Activity
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: review
+        label: Review
+        iri: https://nomos.dev/facets/core/review
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+          domain: https://nomos.dev/domain-packs/legal-ediscovery/Review
+odp_patterns:
+  obligation:
+    kind: obligation
+    intent: Represent a normative commitment without certifying external legal effect.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000031
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    facet_axis: nature
+    required_facets: [nature, provenance, trust_tier]
+  process:
+    kind: process
+    intent: Represent an activity or workflow step as an occurrent process.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/Process
+    facet_axis: activity
+    required_facets: [activity, scope_level, provenance]
+  evidence:
+    kind: evidence
+    intent: Represent evidential information content and its trust boundary.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000031
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    facet_axis: nature
+    required_facets: [nature, trust_tier, provenance]
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [nature, activity]
+  validation: ckm_facet_ontology_validate.py
+claim_boundary: Ontology alignment supports facet interoperability only; it does not certify domain truth.
