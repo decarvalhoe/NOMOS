@@ -19,6 +19,7 @@
 - optional point-in-time regulatory atom metadata;
 - optional CKM facets;
 - optional CKM knowledge lens retrieval scoping;
+- optional CKM canon promotion guardrails;
 - canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
@@ -43,6 +44,9 @@ only; it does not tighten `#Atom` or `#Chunk`.
 
 `knowledge-lens.cue` defines the optional CKM-02 retrieval-scope lens contract
 for deterministic pre-generation filtering over facet applicability metadata.
+
+`canon-promotion.cue` defines the optional CKM-03 guardrail contract for
+customer-confidential user-promoted canon and its certificate evidence.
 
 Facet values use core controlled axes for nature, scope level, trust tier,
 provenance, confidentiality, and applicability. Domain packs may add SKOS-backed

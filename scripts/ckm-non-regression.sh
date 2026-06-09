@@ -114,6 +114,12 @@ python3 scripts/ckm_knowledge_lens_filter.py \
   --candidates specs/examples/knowledge-lens-candidates.valid.yaml \
   --lens specs/examples/knowledge-lens.valid.yaml \
   --preset architect-permit-review >/dev/null
+cue vet specs/atomization-spine.cue specs/facets.cue specs/canon-promotion.cue specs/examples/canon-promotion.valid.yaml -d '#CanonPromotionBundle'
+python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.valid.yaml >/dev/null
+if python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.invalid-shared.yaml >/dev/null 2>&1; then
+  echo "FAIL: invalid CKM canon promotion fixture passed" >&2
+  exit 1
+fi
 if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1
