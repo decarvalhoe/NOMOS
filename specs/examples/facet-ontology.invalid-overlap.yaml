@@ -1,0 +1,61 @@
+schema_version: ckm-facet-ontology-v1
+anchors:
+  bfo:
+    standard: BFO
+    iri: http://purl.obolibrary.org/obo/BFO_0000001
+  iof_core:
+    standard: IOF Core
+    iri: https://spec.industrialontologies.org/ontology/core/Core/Process
+  domain_pack:
+    standard: domain-pack
+    iri: https://nomos.dev/domain-packs/demo
+facet_axes:
+  - id: nature
+    label: Claim nature
+    root: http://purl.obolibrary.org/obo/BFO_0000002
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    terms:
+      - id: obligation
+        label: Obligation
+        iri: https://nomos.dev/facets/core/obligation
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000031
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+  - id: activity
+    label: Activity
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: obligation
+        label: Incorrect duplicate term
+        iri: https://nomos.dev/facets/core/obligation-as-activity
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+odp_patterns:
+  obligation:
+    kind: obligation
+    intent: Represent a normative commitment.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000031
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    facet_axis: nature
+    required_facets: [nature]
+  process:
+    kind: process
+    intent: Represent an activity.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/Process
+    facet_axis: activity
+    required_facets: [activity]
+  evidence:
+    kind: evidence
+    intent: Represent evidence.
+    bfo_anchor: http://purl.obolibrary.org/obo/BFO_0000031
+    iof_core_anchor: https://spec.industrialontologies.org/ontology/core/Core/InformationContentEntity
+    facet_axis: nature
+    required_facets: [nature, trust_tier]
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [nature, activity]
+  validation: ckm_facet_ontology_validate.py
+claim_boundary: Invalid fixture with overlapping disjoint axis term.

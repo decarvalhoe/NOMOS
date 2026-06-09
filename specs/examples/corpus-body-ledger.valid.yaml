@@ -67,6 +67,12 @@ sources:
       unsupported_bytes: 0
       binary_bytes: 0
       uncovered_bytes: 0
+    merkle_proof:
+      leaf_hash: "1111111111111111111111111111111111111111111111111111111111111111"
+      leaf_index: 0
+      path:
+        - position: right
+          hash: "2222222222222222222222222222222222222222222222222222222222222222"
   - source_id: REF-SPEC-001
     path: refs/external-spec.pdf
     size_bytes: 524288
@@ -85,6 +91,12 @@ sources:
       unsupported_bytes: 524288
       binary_bytes: 0
       uncovered_bytes: 0
+    merkle_proof:
+      leaf_hash: "2222222222222222222222222222222222222222222222222222222222222222"
+      leaf_index: 1
+      path:
+        - position: left
+          hash: "1111111111111111111111111111111111111111111111111111111111111111"
 coverage_summary:
   total_bytes: 524360
   semantic_bytes: 54
@@ -99,3 +111,7 @@ coverage_summary:
     reference: 524288
   by_source_status:
     admitted: 524360
+merkle:
+  algorithm: sha256-pair-v1
+  root: "3333333333333333333333333333333333333333333333333333333333333333"
+  leaf_count: 2

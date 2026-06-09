@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -84,7 +85,7 @@ class CKMKnowledgeLensTests(unittest.TestCase):
         self.assertTrue(FILTER_SCRIPT.exists(), f"Missing filter script: {FILTER_SCRIPT}")
         result = subprocess.run(
             [
-                "python",
+                sys.executable,
                 str(FILTER_SCRIPT),
                 "--candidates",
                 str(CANDIDATE_FIXTURE),

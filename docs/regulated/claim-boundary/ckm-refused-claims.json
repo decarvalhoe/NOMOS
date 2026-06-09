@@ -1,0 +1,38 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml",
+      "digest": {
+        "sha256": "4a88b79f4a88b79f4a88b79f4a88b79f4a88b79f4a88b79f4a88b79f4a88b79f"
+      }
+    }
+  ],
+  "predicateType": "https://nomos.dev/claim-boundary/v1",
+  "predicate": {
+    "projectId": "nomos-ckm",
+    "generatedAt": "2026-06-09T00:00:00Z",
+    "refusedClaims": [
+      {
+        "claimId": "ckm.no-live-llm-correctness-proof",
+        "statement": "Nomos refuses to claim that recorded RAG answer evidence proves live LLM correctness.",
+        "reason": "The evidence records citation support, refusal behavior, and trust tier only; no production retrieval or model-correctness validation is present.",
+        "requiredEvidence": [
+          "production_retrieval_evaluation",
+          "model_correctness_validation",
+          "domain_owner_approval"
+        ],
+        "decision": "refused"
+      }
+    ],
+    "verifier": "nomos",
+    "signatureMode": "dsse-cosign",
+    "signature": {
+      "keyId": "nomos-fixture-key",
+      "signature": "MEUCIQDfixture-signature-claim-boundary",
+      "signedAt": "2026-06-09T00:00:00Z",
+      "logUri": "rekor://fixture/ckm-refused-claims"
+    },
+    "claimBoundary": "Refusal predicate only; no live LLM correctness, legal, regulatory, clinical, or business correctness claim."
+  }
+}

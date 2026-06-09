@@ -1,0 +1,91 @@
+schema_version: ckm-built-environment-connectors-v1
+domain_profile: built-environment
+claim_boundary: >-
+  Read-only source connector snapshots only; no permitting, zoning,
+  geodata, statistical, legal, or construction compliance certification.
+sia_sidecar_ref: docs/regulated/domain-packs/built-environment/sia-reference-sidecar.yaml
+connectors:
+  - id: fedlex-eli
+    source_family: fedlex_eli
+    authority_level: confederation
+    machine_source: true
+    retrieval:
+      mode: read_only_api
+      write_policy: read_only
+      endpoint_pattern: "https://www.fedlex.admin.ch/eli/{eli_id}"
+      retrieved_at_utc: "2026-06-09T09:00:00Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [eli_id, publication_date, effective_date]
+      timezone: Europe/Zurich
+    hashing:
+      content_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      hash_scope: canonical_snapshot
+      canonicalization: "Sort metadata keys, preserve ELI identifiers, hash UTF-8 snapshot bytes."
+    outputs:
+      source_manifest_type: api_export
+      stores_full_text: false
+      evidence_role: source_authority_register
+  - id: swisstopo-stac
+    source_family: swisstopo_stac
+    authority_level: confederation
+    machine_source: true
+    retrieval:
+      mode: read_only_api
+      write_policy: read_only
+      endpoint_pattern: "https://data.geo.admin.ch/api/stac/v0.9/collections/{collection_id}"
+      retrieved_at_utc: "2026-06-09T09:00:00Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [datetime, updated, collection_version]
+      timezone: UTC
+    hashing:
+      content_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
+      hash_scope: metadata_and_assets
+      canonicalization: "Hash STAC collection metadata plus asset href and checksum fields."
+    outputs:
+      source_manifest_type: api_export
+      stores_full_text: false
+      evidence_role: geodata_snapshot
+  - id: rdppf-oereb
+    source_family: rdppf_oereb
+    authority_level: mixed
+    machine_source: true
+    retrieval:
+      mode: read_only_api
+      write_policy: read_only
+      endpoint_pattern: "https://{cantonal-oereb-endpoint}/extract/reduced/{egrid}"
+      retrieved_at_utc: "2026-06-09T09:00:00Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [extract_identifier, extract_date, legal_provision_date]
+      timezone: Europe/Zurich
+    hashing:
+      content_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
+      hash_scope: canonical_snapshot
+      canonicalization: "Hash reduced extract metadata, topic ids, legal provision refs, and geometry refs."
+    outputs:
+      source_manifest_type: api_export
+      stores_full_text: false
+      evidence_role: source_authority_register
+  - id: ofs-stat-tab
+    source_family: ofs
+    authority_level: confederation
+    machine_source: true
+    retrieval:
+      mode: read_only_http
+      write_policy: read_only
+      endpoint_pattern: "https://www.pxweb.bfs.admin.ch/api/v1/{dataset_id}"
+      retrieved_at_utc: "2026-06-09T09:00:00Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [dataset_id, period, last_update]
+      timezone: Europe/Zurich
+    hashing:
+      content_hash: sha256:4444444444444444444444444444444444444444444444444444444444444444
+      hash_scope: raw_response
+      canonicalization: "Hash raw PXWeb response bytes and request parameter JSON."
+    outputs:
+      source_manifest_type: database_export
+      stores_full_text: false
+      evidence_role: statistical_reference

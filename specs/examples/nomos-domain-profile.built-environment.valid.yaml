@@ -1,0 +1,155 @@
+schema_version: "0.1.0"
+domain_profile: built-environment
+name: "Built environment authority mapping"
+summary: >-
+  Thin built-environment pack for source authority registration, discipline and
+  activity vocabularies, and VD/Lausanne golden corpus evidence planning.
+intended_use:
+  statement: >-
+    Register Swiss built-environment authority sources and map them to
+    read-only canonical evidence workflows without claiming permitting,
+    construction, or regulatory compliance.
+  allowed_uses:
+    - "Map CH/VD/Lausanne authority sources to source registers and golden corpus fixtures."
+    - "Provide discipline and activity vocabulary seeds for downstream built-environment packs."
+    - "Record feed, TOC, and gate evidence status for VD/Lausanne pilot corpora."
+  not_authorized:
+    - "Claim building permit compliance, design approval, or construction-law sufficiency."
+    - "Redistribute licensed standards or proprietary municipal/cantonal source text."
+references:
+  - id: CH-RPG
+    title: "Swiss federal spatial planning authority reference"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Confederation-level planning authority anchor for built-environment source registration."
+  - id: VD-LATC
+    title: "Vaud construction and land-use planning authority reference"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Cantonal VD authority anchor for pilot source registration and golden cases."
+  - id: LAUSANNE-RPGA
+    title: "Lausanne municipal land-use planning authority reference"
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Commune-level Lausanne authority anchor for pilot source registration and golden cases."
+  - id: SIA-REFERENCE
+    title: "SIA licensed built-environment standards reference"
+    authority_type: licensed_standard
+    access_policy: licensed_reference_only
+    status: optional
+    purpose: "Records that licensed standards may be referenced by hash/crosswalk only, never copied in full."
+applicability:
+  status: partially_applicable
+  applies_when:
+    - "The customer supplies or approves the authority source register and access policy."
+    - "The workflow needs source mapping, vocabulary alignment, or golden corpus evidence only."
+  does_not_apply_when:
+    - "A project asks Nomos to certify legal, permitting, safety, or design compliance."
+    - "Licensed standards text would need to be redistributed into the repository."
+risk_class:
+  level: high
+  rationale: >-
+    Incorrect authority mapping can support false permitting or building
+    compliance claims; the pack is therefore limited to evidence planning.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: BUILT-PLAN-001
+      level: registered
+      kind: planning
+      statement: "Nomos can register built-environment authority sources and pilot golden corpus evidence."
+      evidence:
+        - "docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml"
+    - id: BUILT-SCOPE-001
+      level: mapped
+      kind: scope_boundary
+      statement: "Nomos can distinguish CH, VD, and Lausanne source levels for downstream review."
+      evidence:
+        - "docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml#source_authority_register"
+  blocked_claims:
+    - id: BUILT-BLOCK-001
+      kind: legal_compliance
+      statement: "Nomos output proves building, zoning, or permit compliance."
+      reason: "Compliance depends on current official sources, project facts, competent authority review, and licensed references outside this fixture."
+    - id: BUILT-BLOCK-002
+      kind: certification
+      statement: "Nomos certifies architectural, engineering, fire-safety, or construction approval."
+      reason: "Certification and design approval require qualified external professionals and authorities."
+required_artifacts:
+  - id: ch-source-authority-register
+    type: source_manifest
+    path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: built-environment-vocabularies
+    type: other
+    path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: vd-lausanne-golden-corpus
+    type: evidence_pack
+    path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: ch-source-connectors
+    type: source_manifest
+    path: docs/regulated/domain-packs/built-environment/ch-source-connectors.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: pga-paz-source-segment-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/built-environment/pga-paz-source-segments.valid.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: pga-paz-body-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/built-environment/pga-paz-body-ledger.valid.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: sia-reference-sidecar
+    type: source_manifest
+    path: docs/regulated/domain-packs/built-environment/sia-reference-sidecar.yaml
+    required: true
+    minimum_claim_level: mapped
+evidence_placeholders:
+  - id: official-source-refresh-placeholder
+    kind: source_processing_evidence
+    path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
+    status: planned
+    reason: "Project use requires customer-approved current official source snapshots."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+  - id: licensed-standard-placeholder
+    kind: licensed_reference_intake
+    path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
+    status: deferred_until_licensed_intake
+    reason: "SIA/ISO-style references must remain hash/crosswalk-only unless licensed intake is supplied."
+    blocks_claim_levels:
+      - evidence_ready
+      - independent_review_ready
+validation_gates:
+  - id: built-environment-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.built-environment.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: built-environment-fixture-test
+    command: "python3 -m unittest tests.test_ckm_built_environment_profile -v"
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: built-environment-source-connectors-test
+    command: "python3 -m unittest tests.test_ckm_ch_source_connectors -v"
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
