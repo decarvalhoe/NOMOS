@@ -102,6 +102,12 @@ python3 -m unittest discover -s tests -v
 
 step "5/11 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
+cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then
+  echo "FAIL: invalid CKM facet trust tier passed" >&2
+  exit 1
+fi
 domain_profiles=(
   specs/examples/nomos-domain-profile.gxp.valid.yaml
   specs/examples/nomos-domain-profile.ai.valid.yaml
