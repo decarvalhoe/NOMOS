@@ -1,0 +1,392 @@
+schema_version: "0.1.0"
+matrix_id: HPF-001
+record_type: high_potential_pilot_readiness_matrix
+decision_date: "2026-06-09"
+owner: product_architecture
+claim_boundary: >-
+  Planning and evidence-readiness artifact only. This matrix makes no
+  certification, no customer validation, no legal sufficiency, no regulatory
+  approval, no medical-device claim, no financial-regulatory claim, no
+  security-audit claim, and no compliance claim.
+status_semantics:
+  go: >-
+    Repository evidence, claim boundary, and at least one automated gate are
+    present for a bounded pilot conversation.
+  wait: >-
+    Repository evidence exists, but customer-owned execution, licensed
+    references, external reviewers, or product packaging must land before
+    external pilot commitment.
+  blocked: >-
+    A non-repository dependency is missing and cannot be resolved by a code
+    change alone.
+first_two_pilot_lanes:
+  - ai_rag_governance
+  - gxp_csv
+shared_release_gates:
+  - id: hpf-readiness-contract-test
+    command: python -m unittest tests.test_hpf_readiness -v
+    required: true
+  - id: regulated-docs-gate
+    command: >-
+      python scripts/regulated_docs_gate.py --report
+      .regulated-doc-gate/regulated-doc-gate-report.json
+    required: true
+  - id: regulated-evidence-pack
+    command: >-
+      python scripts/regulated_evidence_pack.py --output
+      .regulated-evidence-pack/evidence-pack.json
+    required: true
+lanes:
+  - id: ai_rag_governance
+    name: AI/RAG governance pilot pack
+    issue: "#473"
+    rank: 1
+    status: go
+    why_now: >-
+      The AI/RAG pack already has a domain profile, customer install guide,
+      claim boundary, validation checklist, answer fixtures, and provider
+      change ledger. It is the clearest bounded pilot because its outputs are
+      source-backed and claim-limited.
+    evidence_gate_or_dependency: >-
+      Gate on the AI/RAG domain profile plus regulated docs and evidence-pack
+      generation. Customer deployment still owns model scope, human review,
+      and AI governance approval.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.ai.valid.yaml
+      - docs/regulated/domain-packs/ai-rag/install-guide.md
+      - docs/regulated/domain-packs/ai-rag/claim-boundary.md
+      - docs/regulated/domain-packs/ai-rag/validation-checklist.md
+      - docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml
+      - docs/regulated/ai-rag-governance/ai-provider-change-ledger.yaml
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_rag_answer_evidence_emits_ckm08_metrics_and_certified_trust_tier
+        -v
+      - >-
+        python scripts/regulated_docs_gate.py --report
+        .regulated-doc-gate/regulated-doc-gate-report.json
+    claim_impact:
+      allowed: >-
+        NOMOS can structure source-backed AI/RAG governance evidence for
+        customer review.
+      prohibited: >-
+        No model certification, AI regulatory compliance, legal sufficiency,
+        or autonomous high-risk decision claim.
+      blocked_levels:
+        - certified_ai
+        - legal_or_regulatory_compliance
+        - autonomous_decision_approval
+
+  - id: gxp_csv
+    name: GxP/CSV pilot evidence pack
+    issue: "#472"
+    rank: 2
+    status: go
+    why_now: >-
+      The GxP/CSV profile, control crosswalk, ALCOA evidence contract,
+      validation inventory, IQ/OQ/PQ skeletons, and regulated evidence pack
+      give a customer-reviewable evidence spine without claiming validation.
+    evidence_gate_or_dependency: >-
+      Gate on the GxP/CSV profile, regulated docs gate, evidence-pack
+      generation, and customer validation ownership. GAMP 5 remains a
+      licensed-reference dependency for clause-level use.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.gxp.valid.yaml
+      - docs/regulated/control-matrix/gxp-csv-control-crosswalk.yaml
+      - specs/alcoa-evidence.cue
+      - docs/regulated/evidence-index/evidence-contract.md
+      - docs/regulated/validation-pack/validation-inventory.yaml
+      - docs/regulated/qualification/rbok-nomos-iq-baseline.yaml
+      - docs/regulated/qualification/rbok-nomos-oq-ci-signal-protocol.yaml
+      - docs/regulated/qualification/rbok-nomos-pq-readonly-journey-pack.yaml
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_regulated_docs_gate_blocks_incomplete_gxp_csv_crosswalk
+        -v
+      - >-
+        python scripts/regulated_evidence_pack.py --output
+        .regulated-evidence-pack/evidence-pack.json
+    claim_impact:
+      allowed: >-
+        NOMOS can prepare GxP/CSV evidence candidates and validation planning
+        records for customer-owned review.
+      prohibited: >-
+        No GxP compliance, Part 11 compliance, validated-system, or customer
+        release approval claim.
+      blocked_levels:
+        - gxp_compliance
+        - part11_compliance
+        - validated_system
+
+  - id: verifiable_evidence
+    name: Verifiable evidence product layer
+    issue: "#476"
+    rank: 3
+    status: go
+    why_now: >-
+      The verifiable-evidence profile and mechanism decision are implemented,
+      and the evidence pack records hashes, provenance-oriented fields, and
+      reconstructable artifact references.
+    evidence_gate_or_dependency: >-
+      Gate on the verifiable-evidence profile and generated evidence pack.
+      External signing, transparency logs, and independent verification remain
+      optional productization layers.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml
+      - specs/evidence-contract.cue
+      - docs/regulated/domain-packs/verifiable-evidence/verifiability-mechanism-decision.yaml
+      - docs/regulated/evidence-index/evidence-contract.md
+      - scripts/regulated_evidence_pack.py
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_verifiable_evidence_profile_selects_mechanisms_and_bundle_fields
+        -v
+      - >-
+        python scripts/regulated_evidence_pack.py --output
+        .regulated-evidence-pack/evidence-pack.json
+    claim_impact:
+      allowed: >-
+        NOMOS evidence can be prepared for hash-based reconstruction and
+        later signing or transparency recording.
+      prohibited: >-
+        No tamper-proof, legally binding signature, regulated validation, or
+        independent audit acceptance claim.
+      blocked_levels:
+        - legally_binding_signature
+        - external_audit_acceptance
+
+  - id: cyber_supplier_assurance
+    name: Cyber supplier assurance profile
+    issue: "#475"
+    rank: 4
+    status: go
+    why_now: >-
+      The cyber supplier profile and assurance pack already separate
+      implemented, manual, blocked, and customer-owned controls for supplier
+      review conversations.
+    evidence_gate_or_dependency: >-
+      Gate on the cyber supplier profile and supplier assurance pack. Customer
+      questionnaires, external audits, and contract-specific acceptance remain
+      customer-owned.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml
+      - docs/regulated/domain-packs/cyber-supplier/supplier-assurance-pack.yaml
+      - docs/regulated/supplier-pack/README.md
+      - docs/regulated/github-operating-model/branch-protection-config.yaml
+      - docs/regulated/github-operating-model/github-qms-control-baseline.yaml
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_cyber_supplier_profile_distinguishes_supplier_control_statuses
+        -v
+      - >-
+        python scripts/regulated_docs_gate.py --report
+        .regulated-doc-gate/regulated-doc-gate-report.json
+    claim_impact:
+      allowed: >-
+        NOMOS can assemble bounded supplier security evidence for customer
+        security review.
+      prohibited: >-
+        No security certification, audit acceptance, legal sufficiency, or
+        customer supplier qualification claim.
+      blocked_levels:
+        - security_certification
+        - supplier_qualification
+
+  - id: github_app_workflow
+    name: GitHub App and workflow productization
+    issue: "#477"
+    rank: 5
+    status: go
+    why_now: >-
+      The GitHub workflow documentation, CUE contract, app readiness boundary,
+      and publish/comment scripts establish a bounded GitHub operating model
+      for pilots.
+    evidence_gate_or_dependency: >-
+      Gate on workflow contract tests and keep the product boundary explicit:
+      the GitHub integration opens and comments on evidence work, but does
+      not replace QMS approvals or customer branch protection.
+    evidence_artifacts:
+      - docs/31-github-workflow-setup.md
+      - docs/32-github-app-readiness-boundary.md
+      - specs/nomos-github-workflow.cue
+      - specs/examples/nomos-github-workflow.output-owned.valid.yaml
+      - scripts/nomos_github_publish.py
+      - scripts/nomos_github_comment.py
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - python -m unittest tests.test_nomos_github_publish -v
+      - python -m unittest tests.test_nomos_github_comment -v
+    claim_impact:
+      allowed: >-
+        NOMOS can publish bounded GitHub workflow artifacts for customer-owned
+        review and issue workflows.
+      prohibited: >-
+        No automatic QMS approval, Part 11 platform, or validated workflow
+        execution claim.
+      blocked_levels:
+        - qms_approval_replacement
+        - validated_workflow_execution
+
+  - id: control_plane_portfolio
+    name: Portfolio control plane MVP
+    issue: "#478"
+    rank: 6
+    status: wait
+    why_now: >-
+      The portfolio evidence model is ready enough to define MVP records and
+      exports, but dashboard UI, multi-tenant authz, and background workers
+      are intentionally deferred.
+    evidence_gate_or_dependency: >-
+      Gate on the control-plane roadmap and evidence pack. External pilot
+      commitment should wait until the customer accepts a CLI/export-first
+      control-plane MVP instead of a dashboard-first product.
+    evidence_artifacts:
+      - docs/regulated/control-plane/multi-corpus-roadmap.yaml
+      - docs/regulated/evidence-index/evidence-ledger.yaml
+      - scripts/regulated_evidence_pack.py
+      - docs/38-domain-opportunity-roadmap.md
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_control_plane_roadmap_separates_evidence_model_from_optional_ui
+        -v
+      - >-
+        python scripts/regulated_evidence_pack.py --output
+        .regulated-evidence-pack/evidence-pack.json
+    claim_impact:
+      allowed: >-
+        NOMOS can define and export portfolio supervision records for
+        multiple corpora and domain profiles.
+      prohibited: >-
+        No enterprise dashboard, multi-tenant production control plane, or
+        ALM/QMS replacement claim.
+      blocked_levels:
+        - production_control_plane
+        - alm_qms_replacement
+
+  - id: finance_regtech
+    name: Finance, DORA, and RegTech profile
+    issue: "#475"
+    rank: 7
+    status: wait
+    why_now: >-
+      Finance/RegTech has strong buyer signal and a profile covering DORA,
+      cyber disclosure, AI supervision, and crypto disclosure, but customer
+      facts and legal review are mandatory before any external pilot claim.
+    evidence_gate_or_dependency: >-
+      Gate on the finance profile and regulated docs gate. Wait for
+      customer-owned ICT risk, third-party, disclosure, and legal-review
+      evidence before offering a finance pilot beyond planning.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.finance.valid.yaml
+      - docs/38-domain-opportunity-roadmap.md
+      - docs/regulated/reference-basis/external-reference-register.yaml
+      - docs/regulated/domain-packs/commercial-positioning/commercial-positioning-pack.yaml
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_commercial_positioning_pack_bounds_pricing_and_public_claims
+        -v
+      - >-
+        python scripts/regulated_docs_gate.py --report
+        .regulated-doc-gate/regulated-doc-gate-report.json
+    claim_impact:
+      allowed: >-
+        NOMOS can map finance and operational-resilience evidence gaps for
+        customer review.
+      prohibited: >-
+        No DORA, SEC, FINRA, MiCA, disclosure approval, legal advice, or
+        financial regulatory compliance claim.
+      blocked_levels:
+        - financial_regulatory_compliance
+        - disclosure_approval
+        - legal_advice
+
+  - id: medical_samd
+    name: Medical/SaMD readiness boundary
+    issue: "#474"
+    rank: 8
+    status: wait
+    why_now: >-
+      The Medical/SaMD profile provides a clear boundary and evidence
+      placeholders, but clause-level ISO 13485 and ISO/IEC/IEEE 12207 use
+      remain blocked by licensed-reference intake.
+    evidence_gate_or_dependency: >-
+      Gate on the medical/SaMD profile and public-surrogate references. Wait
+      for licensed ISO 13485 and ISO/IEC/IEEE 12207 intake issues before any
+      clause-level or medical-device pilot claim.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.medical-samd.valid.yaml
+      - docs/regulated/validation-pack/intended-use-model.yaml
+      - docs/regulated/validation-pack/validation-master-plan.md
+      - docs/regulated/reference-basis/external-reference-register.yaml
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python -m unittest
+        tests.test_regulated_automation.RegulatedAutomationTests.test_regulated_docs_gate_emits_domain_applicability_report
+        -v
+      - >-
+        python scripts/regulated_docs_gate.py --report
+        .regulated-doc-gate/regulated-doc-gate-report.json
+    claim_impact:
+      allowed: >-
+        NOMOS can structure a medical/SaMD evidence planning boundary for
+        customer-owned intended use and review.
+      prohibited: >-
+        No medical-device compliance, clinical validation, FDA clearance,
+        ISO 13485 certification, or SaMD validation claim.
+      blocked_levels:
+        - medical_device_compliance
+        - clinical_validation
+        - iso13485_certification
+    external_dependencies:
+      - "#192"
+      - "#193"
+
+  - id: legal_ediscovery
+    name: Legal/eDiscovery readiness boundary
+    issue: "#470"
+    rank: 9
+    status: blocked
+    why_now: >-
+      Legal/eDiscovery has a small fixture and a domain profile, but legal
+      sufficiency, privilege, hold, and discovery obligations require
+      customer counsel and matter-specific data.
+    evidence_gate_or_dependency: >-
+      Blocked for pilot commitment until customer counsel supplies the matter
+      boundary, legal hold policy, privilege rules, retention policy, and
+      acceptance criteria.
+    evidence_artifacts:
+      - specs/examples/nomos-domain-profile.legal.valid.yaml
+      - docs/regulated/domain-packs/legal-ediscovery/legal-corpus-fixture.yaml
+      - docs/38-domain-opportunity-roadmap.md
+      - docs/public-claim-boundary.md
+    verification_commands:
+      - python -m unittest tests.test_hpf_readiness -v
+      - >-
+        python scripts/regulated_docs_gate.py --report
+        .regulated-doc-gate/regulated-doc-gate-report.json
+    claim_impact:
+      allowed: >-
+        NOMOS can hold a planning fixture for legal/eDiscovery corpus evidence.
+      prohibited: >-
+        No legal advice, litigation sufficiency, privilege determination,
+        discovery compliance, or court acceptance claim.
+      blocked_levels:
+        - legal_sufficiency
+        - privilege_determination
+        - discovery_compliance
+    external_dependencies:
+      - customer_counsel_review
+      - matter_specific_source_authority
