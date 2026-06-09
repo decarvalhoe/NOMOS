@@ -38,7 +38,10 @@ Do not claim that Nomos is:
 - a complete eQMS;
 - a substitute for customer validation;
 - universally faithful across all PDFs, DOCX, images, scanned documents, legal codes, regulations, or game-rule books without corpus-specific evidence;
-- legally authorized to redistribute licensed standards.
+- legally authorized to redistribute licensed standards;
+- cleared for trademark use or registration without a recorded trademark clearance decision;
+- backed by a freedom-to-operate opinion for RAG governance, patent-search automation, or source-grounded retrieval;
+- cleared for unrestricted third-party license use without a recorded third-party license clearance review.
 
 ## Evidence Rule
 
@@ -71,7 +74,10 @@ NOMOS does **not** yet prove, at platform scope:
 - absence of all semantic warnings across arbitrary corpora;
 - support for every PDF, DOCX, scanned document, image, legal code, regulation, rule book, or customer-specific format;
 - that attestation `claim_coverage` is fully wired to the body ledger;
-- customer-specific regulated validation, intended-use approval, supplier qualification, or certification.
+- customer-specific regulated validation, intended-use approval, supplier qualification, or certification;
+- trademark clearance for the NOMOS name or related wordmarks;
+- a freedom-to-operate opinion for implementation or public claims;
+- third-party license clearance for dependencies that require OSS or counsel review.
 
 The remaining proof chain is release-scoped: repeated CI evidence on private corpora, attestation `claim_coverage` wiring, broader document-format adapters, and customer validation packs.
 
