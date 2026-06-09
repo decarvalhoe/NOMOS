@@ -17,6 +17,7 @@
 - atomization spine;
 - optional point-in-time regulatory atom metadata;
 - optional CKM facets;
+- canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
 - AI/RAG controls;
