@@ -38,6 +38,7 @@ type CorpusBodyLedger struct {
 	AdmittedCount   int                `json:"admitted_count"`
 	Sources         []BodyLedgerSource `json:"sources"`
 	CoverageSummary CoverageSummary    `json:"coverage_summary"`
+	Merkle          *MerkleSummary     `json:"merkle,omitempty"`
 }
 
 // BodyLedgerSource is one source's row in the body ledger. For text
@@ -57,6 +58,28 @@ type BodyLedgerSource struct {
 	ExclusionReason   string             `json:"exclusion_reason,omitempty"`
 	Segments          []SourceSegment    `json:"segments,omitempty"`
 	ByteCoverage      ByteCoverageReport `json:"byte_coverage"`
+	MerkleProof       *MerkleProof       `json:"merkle_proof,omitempty"`
+}
+
+// MerkleSummary binds all body-ledger source and root-segment leaves into a
+// single corpus-level inclusion root.
+type MerkleSummary struct {
+	Algorithm string `json:"algorithm"`
+	Root      string `json:"root"`
+	LeafCount int    `json:"leaf_count"`
+}
+
+// MerkleProof proves one leaf's inclusion in MerkleSummary.Root.
+type MerkleProof struct {
+	LeafHash  string           `json:"leaf_hash"`
+	LeafIndex int              `json:"leaf_index"`
+	Path      []MerkleProofHop `json:"path,omitempty"`
+}
+
+// MerkleProofHop is one sibling hash in an inclusion proof.
+type MerkleProofHop struct {
+	Position string `json:"position"` // left or right relative to the current hash
+	Hash     string `json:"hash"`
 }
 
 // ByteCoverageReport partitions a single source's bytes by the disposition
@@ -192,6 +215,7 @@ func BuildCorpusBodyLedger(input BodyLedgerInput) (CorpusBodyLedger, error) {
 			s.BySourceStatus[st] += c.TotalBytes
 		}
 	}
+	attachBodyLedgerMerkle(&ledger)
 
 	return ledger, nil
 }
@@ -300,4 +324,142 @@ func (s CoverageSummary) SortedSourceRoles() []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+type merkleLeafRef struct {
+	Hash        string
+	SourceIdx   int
+	SegmentIdx  int
+	IsSourceRow bool
+}
+
+func attachBodyLedgerMerkle(ledger *CorpusBodyLedger) {
+	refs := make([]merkleLeafRef, 0)
+	for sourceIdx, source := range ledger.Sources {
+		refs = append(refs, merkleLeafRef{
+			Hash:        bodyLedgerSourceLeafHash(source),
+			SourceIdx:   sourceIdx,
+			IsSourceRow: true,
+		})
+		for segmentIdx, segment := range source.Segments {
+			if segment.ParentSegmentID != "" {
+				continue
+			}
+			refs = append(refs, merkleLeafRef{
+				Hash:       bodyLedgerSegmentLeafHash(segment),
+				SourceIdx:  sourceIdx,
+				SegmentIdx: segmentIdx,
+			})
+		}
+	}
+	if len(refs) == 0 {
+		return
+	}
+	leaves := make([]string, len(refs))
+	for i, ref := range refs {
+		leaves[i] = ref.Hash
+	}
+	root, proofs := buildMerkleProofs(leaves)
+	ledger.Merkle = &MerkleSummary{
+		Algorithm: "sha256-pair-v1",
+		Root:      root,
+		LeafCount: len(leaves),
+	}
+	for i, ref := range refs {
+		proof := proofs[i]
+		if ref.IsSourceRow {
+			ledger.Sources[ref.SourceIdx].MerkleProof = &proof
+			continue
+		}
+		ledger.Sources[ref.SourceIdx].Segments[ref.SegmentIdx].MerkleProof = &proof
+	}
+}
+
+func bodyLedgerSourceLeafHash(source BodyLedgerSource) string {
+	return ComputeRawTextHash([]byte(fmt.Sprintf(
+		"source\x00%s\x00%s\x00%d\x00%s\x00%d\x00%d",
+		source.SourceID,
+		source.Hash,
+		source.SizeBytes,
+		source.AdmissionStatus,
+		source.ByteCoverage.TotalBytes,
+		source.ByteCoverage.UncoveredBytes,
+	)))
+}
+
+func bodyLedgerSegmentLeafHash(segment SourceSegment) string {
+	return ComputeRawTextHash([]byte(fmt.Sprintf(
+		"segment\x00%s\x00%s\x00%d\x00%d\x00%s\x00%s",
+		segment.SegmentID,
+		segment.SourceID,
+		segment.StartByte,
+		segment.EndByte,
+		segment.RawTextHash,
+		segment.Disposition,
+	)))
+}
+
+func buildMerkleProofs(leaves []string) (string, []MerkleProof) {
+	proofs := make([]MerkleProof, len(leaves))
+	for i, leaf := range leaves {
+		proofs[i] = MerkleProof{LeafHash: leaf, LeafIndex: i}
+	}
+	level := append([]string(nil), leaves...)
+	indexes := make([][]int, len(leaves))
+	for i := range leaves {
+		indexes[i] = []int{i}
+	}
+	for len(level) > 1 {
+		nextLevel := make([]string, 0, (len(level)+1)/2)
+		nextIndexes := make([][]int, 0, (len(indexes)+1)/2)
+		for i := 0; i < len(level); i += 2 {
+			left := level[i]
+			right := left
+			rightIndexes := indexes[i]
+			if i+1 < len(level) {
+				right = level[i+1]
+				rightIndexes = indexes[i+1]
+			}
+			for _, original := range indexes[i] {
+				proofs[original].Path = append(proofs[original].Path, MerkleProofHop{Position: "right", Hash: right})
+			}
+			for _, original := range rightIndexes {
+				proofs[original].Path = append(proofs[original].Path, MerkleProofHop{Position: "left", Hash: left})
+			}
+			nextLevel = append(nextLevel, merklePairHash(left, right))
+			nextIndexes = append(nextIndexes, append(append([]int{}, indexes[i]...), rightIndexes...))
+		}
+		level = nextLevel
+		indexes = nextIndexes
+	}
+	return level[0], proofs
+}
+
+// VerifyMerkleProof verifies one body-ledger inclusion proof against a root.
+func VerifyMerkleProof(leafHash string, proof MerkleProof, root string) error {
+	if leafHash == "" {
+		return fmt.Errorf("merkle proof leaf hash is required")
+	}
+	if root == "" {
+		return fmt.Errorf("merkle root is required")
+	}
+	current := leafHash
+	for _, hop := range proof.Path {
+		switch hop.Position {
+		case "left":
+			current = merklePairHash(hop.Hash, current)
+		case "right":
+			current = merklePairHash(current, hop.Hash)
+		default:
+			return fmt.Errorf("unknown merkle proof hop position %q", hop.Position)
+		}
+	}
+	if current != root {
+		return fmt.Errorf("merkle proof root mismatch: got %s want %s", current, root)
+	}
+	return nil
+}
+
+func merklePairHash(left, right string) string {
+	return ComputeRawTextHash([]byte(left + "\n" + right))
 }

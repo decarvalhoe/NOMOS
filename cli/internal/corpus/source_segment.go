@@ -65,6 +65,10 @@ type SourceSegment struct {
 	RowIndex         int      `json:"row_index,omitempty"`
 	TableID          string   `json:"table_id,omitempty"`
 	TableRole        string   `json:"table_role,omitempty"`
+
+	// CKM-06: optional inclusion proof binding this segment into the
+	// corpus body-ledger Merkle root. Omitted by older ledgers.
+	MerkleProof *MerkleProof `json:"merkle_proof,omitempty"`
 }
 
 // validDispositions enumerates the allowed Disposition values for fast
