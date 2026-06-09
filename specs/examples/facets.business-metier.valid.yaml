@@ -1,0 +1,34 @@
+atom_id: ATOM-METIER-001
+kind: rule
+structure_id: STRUCT-METIER-001
+document_id: DOC-BIZ-OPS-BIBLE
+domain: business-operations
+title: Standard refund triage rule
+content: A refund request with a receipt and delivery defect is routed to priority support.
+source_span:
+  source_id: BIZ-OPS-BIBLE
+  path: business-operations/refund-playbook.md
+  start_line: 1
+  end_line: 6
+  hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+hash: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+review_state: approved
+created_at: "2026-06-09T00:00:00Z"
+updated_at: "2026-06-09T00:00:00Z"
+priority: medium
+metadata:
+  facets:
+    nature: metier
+    discipline_role:
+      - operations.owner
+      - support.lead
+    activity:
+      - refund.triage
+      - customer.support
+    scope_level: atom
+    trust_tier: indicative
+    provenance: source_backed
+    confidentiality: internal
+    applicability: applicable
+    vocabulary_refs:
+      - business-operations-core

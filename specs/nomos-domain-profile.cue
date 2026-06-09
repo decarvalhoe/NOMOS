@@ -52,7 +52,8 @@ package nomos
 	"licensed_standard" |
 	"private_source" |
 	"customer_source" |
-	"internal_policy"
+	"internal_policy" |
+	"business_bible"
 
 #AccessPolicy:
 	"repository_public" |

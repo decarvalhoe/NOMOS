@@ -1,0 +1,47 @@
+pack_id: business-operations
+schema_version: "0.1.0"
+claim_boundary: >-
+  Business-operations fixture only; no legal, regulated, HR, finance, or
+  contractual compliance claim.
+source_authority_register:
+  - source_id: BIZ-OPS-BIBLE
+    title: Internal refund operations playbook
+    source_class: business_bible
+    nature: metier
+    access_policy: internal_only
+    machine_readability: structured_markdown
+    hash: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    processing_mode: read_only_local_artifact
+vocabularies:
+  discipline_role:
+    - id: operations.owner
+      prefLabel: Operations owner
+    - id: support.lead
+      prefLabel: Support lead
+  activity:
+    - id: refund.triage
+      prefLabel: Refund triage
+    - id: customer.support
+      prefLabel: Customer support
+golden_corpus:
+  corpus_id: business-operations-refund-playbook
+  aec_domain: false
+  non_aec_domain: internal-business-operations
+  fixtures:
+    source_manifest: green
+    feed_nodes: 4
+    certified_toc_entries: 3
+    body_ledger_uncovered_bytes: 0
+  core_mechanics:
+    feed: green
+    certified_toc: green
+    body_ledger: green
+    release_gate: green
+  vocabulary_overlay:
+    nature: metier
+    discipline_role_axis: business-operations roles
+    activity_axis: support and refund operations
+demonstration:
+  - same_core_mechanics_different_vocabularies
+  - business_bible_source_class_not_regulatory_authority
+  - non_aec_fixture_preserves_canonical_first_traceability

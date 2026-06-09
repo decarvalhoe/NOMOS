@@ -20,6 +20,7 @@
 - optional CKM facets;
 - optional CKM knowledge lens retrieval scoping;
 - optional CKM canon promotion guardrails;
+- optional CKM business-bible domain fixture;
 - canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
@@ -47,6 +48,10 @@ for deterministic pre-generation filtering over facet applicability metadata.
 
 `canon-promotion.cue` defines the optional CKM-03 guardrail contract for
 customer-confidential user-promoted canon and its certificate evidence.
+
+The business-operations example profile demonstrates the same CKM mechanics for
+non-AEC business bibles through `business_bible` sources and `nature: metier`
+facet metadata.
 
 Facet values use core controlled axes for nature, scope level, trust tier,
 provenance, confidentiality, and applicability. Domain packs may add SKOS-backed

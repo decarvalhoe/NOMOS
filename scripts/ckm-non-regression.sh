@@ -109,6 +109,7 @@ python3 scripts/ckm_point_in_time_resolve.py \
   --as-of 2024-03-01 >/dev/null
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.business-metier.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/knowledge-lens.cue specs/examples/knowledge-lens.valid.yaml -d '#KnowledgeLensBundle'
 python3 scripts/ckm_knowledge_lens_filter.py \
   --candidates specs/examples/knowledge-lens-candidates.valid.yaml \
@@ -142,6 +143,7 @@ domain_profiles=(
   specs/examples/nomos-domain-profile.six-sigma-capa.valid.yaml
   specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml
   specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml
+  specs/examples/nomos-domain-profile.business-operations.valid.yaml
 )
 for profile in "${domain_profiles[@]}"; do
   cue vet specs/nomos-domain-profile.cue "$profile" -d '#DomainProfile'

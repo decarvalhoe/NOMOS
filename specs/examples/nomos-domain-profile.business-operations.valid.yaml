@@ -1,0 +1,94 @@
+schema_version: "0.1.0"
+domain_profile: business-operations
+name: "Business operations knowledge bible"
+summary: >-
+  Demonstrates CKM mechanics on non-AEC, non-regulatory business operations
+  knowledge using a business bible source class and metier facets.
+intended_use:
+  statement: >-
+    Plan traceable processing of internal business playbooks into source-backed
+    atoms, TOC evidence, body-ledger coverage, and release-gate evidence.
+  allowed_uses:
+    - "Map business bible sections into canonical atoms and RAG metadata."
+    - "Demonstrate the same core mechanics with business-specific vocabularies."
+  not_authorized:
+    - "Claim legal, regulatory, financial, or HR compliance."
+    - "Claim that internal playbooks are official external authority."
+references:
+  - id: BIZ-OPS-BIBLE
+    title: "Internal refund operations playbook"
+    authority_type: business_bible
+    access_policy: internal_only
+    status: required
+    purpose: >-
+      Acts as the domain bible for customer-support refund triage vocabulary,
+      rules, and examples.
+  - id: CUSTOMER-SUPPORT-TAXONOMY
+    title: "Support role and activity vocabulary"
+    authority_type: internal_policy
+    access_policy: internal_only
+    status: required
+    purpose: "Populates discipline_role and activity vocabularies for the pack."
+applicability:
+  status: applicable
+  applies_when:
+    - "The organization controls the business bible and allows internal processing."
+    - "The output is used as internal knowledge evidence, not external compliance."
+  does_not_apply_when:
+    - "The workflow requires regulated or legal authority."
+    - "The business bible cannot be processed read-only with a recorded hash."
+risk_class:
+  level: medium
+  rationale: >-
+    Incorrect business routing can affect customer operations, but the fixture
+    does not claim regulated, legal, or external compliance status.
+claim_ladder:
+  current_level: mapped
+  authorized_claims:
+    - id: BIZ-OPS-MAP-001
+      level: mapped
+      kind: evidence_available
+      statement: >-
+        NOMOS can apply the same feed, TOC, body-ledger, and release-gate
+        mechanics to a business bible fixture with different vocabularies.
+      evidence:
+        - docs/regulated/domain-packs/business-operations/business-operations-fixture.yaml
+  blocked_claims:
+    - id: BIZ-OPS-BLOCK-001
+      kind: legal_compliance
+      statement: "NOMOS business bible output is legally or contractually sufficient."
+      reason: "Internal business rules require owner review and are not legal authority."
+    - id: BIZ-OPS-BLOCK-002
+      kind: financial_regulatory_compliance
+      statement: "NOMOS certifies regulated financial operations compliance."
+      reason: "The fixture is non-regulatory and does not include regulated controls."
+required_artifacts:
+  - id: business-operations-fixture
+    type: evidence_pack
+    path: docs/regulated/domain-packs/business-operations/business-operations-fixture.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: business-metier-atom
+    type: canonical_matrix
+    path: specs/examples/facets.business-metier.valid.yaml
+    required: true
+    minimum_claim_level: mapped
+validation_gates:
+  - id: business-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.business-operations.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: business-metier-facet-vet
+    command: >-
+      cue vet specs/atomization-spine.cue specs/facets.cue
+      specs/examples/facets.business-metier.valid.yaml
+      -d '#FacetedAtom'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
