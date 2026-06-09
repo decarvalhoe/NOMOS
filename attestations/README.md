@@ -25,6 +25,14 @@ Future attestation work may include:
 - release-bundle signatures;
 - customer evidence export.
 
+## Signed Claim Boundary
+
+Nomos also records negative attestations for claims it cannot prove. A
+claim-boundary predicate lists each refused claim, the reason, the evidence that
+would be required, and signing metadata. This inverts the normal provenance
+model: the signed artifact is not "Y is true", but "Nomos cannot produce the
+required trace for Y, therefore Nomos refuses to assert Y."
+
 ## CKM Supply-Chain Predicate
 
 The CKM predicate type is `https://nomos.dev/ckm/supply-chain/v1`. It records
