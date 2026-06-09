@@ -371,3 +371,68 @@ func TestFSQ05AttestationClaimCoverage(t *testing.T) {
 		t.Fatalf("predicate JSON unexpectedly contains claim_coverage: %s", string(stmtWithout.Predicate))
 	}
 }
+
+// CKM-06: the body ledger exposes a corpus Merkle root and per-row inclusion
+// proofs so reviewers can verify coverage membership independently.
+func TestCKM06BodyLedgerMerkleProofsVerify(t *testing.T) {
+	in, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
+		"# Rule\n\nBody paragraph carries enough semantic test content.\n")
+	ledger, err := BuildCorpusBodyLedger(BodyLedgerInput{
+		GeneratedAt: fsq05BodyLedgerNow,
+		Sources:     []BodyLedgerSourceInput{in},
+	})
+	if err != nil {
+		t.Fatalf("BuildCorpusBodyLedger: %v", err)
+	}
+
+	if ledger.Merkle == nil {
+		t.Fatal("expected corpus Merkle metadata")
+	}
+	if ledger.Merkle.Root == "" {
+		t.Fatal("expected non-empty Merkle root")
+	}
+	if ledger.Merkle.LeafCount < 2 {
+		t.Fatalf("expected source and segment leaves, got %d", ledger.Merkle.LeafCount)
+	}
+	sourceProof := ledger.Sources[0].MerkleProof
+	if sourceProof == nil {
+		t.Fatal("expected source Merkle proof")
+	}
+	if err := VerifyMerkleProof(sourceProof.LeafHash, *sourceProof, ledger.Merkle.Root); err != nil {
+		t.Fatalf("source proof should verify: %v", err)
+	}
+
+	var segmentProof *MerkleProof
+	for _, segment := range ledger.Sources[0].Segments {
+		if segment.ParentSegmentID == "" && segment.MerkleProof != nil {
+			segmentProof = segment.MerkleProof
+			break
+		}
+	}
+	if segmentProof == nil {
+		t.Fatal("expected root segment Merkle proof")
+	}
+	if err := VerifyMerkleProof(segmentProof.LeafHash, *segmentProof, ledger.Merkle.Root); err != nil {
+		t.Fatalf("segment proof should verify: %v", err)
+	}
+}
+
+func TestCKM06MerkleProofRejectsChangedLeaf(t *testing.T) {
+	in, _ := fsq05ScanFixture(t, "RULE", "docs/rule.md",
+		"# Rule\n\nBody paragraph carries enough semantic test content.\n")
+	ledger, err := BuildCorpusBodyLedger(BodyLedgerInput{
+		GeneratedAt: fsq05BodyLedgerNow,
+		Sources:     []BodyLedgerSourceInput{in},
+	})
+	if err != nil {
+		t.Fatalf("BuildCorpusBodyLedger: %v", err)
+	}
+	proof := ledger.Sources[0].MerkleProof
+	if proof == nil {
+		t.Fatal("expected source Merkle proof")
+	}
+	changedLeaf := ComputeRawTextHash([]byte("changed coverage leaf"))
+	if err := VerifyMerkleProof(changedLeaf, *proof, ledger.Merkle.Root); err == nil {
+		t.Fatal("expected changed leaf to fail Merkle proof verification")
+	}
+}

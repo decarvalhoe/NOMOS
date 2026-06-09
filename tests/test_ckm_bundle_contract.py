@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def run_cue(*args: str) -> subprocess.CompletedProcess[str]:
+    if shutil.which("cue") is None:
+        raise unittest.SkipTest("cue is not installed")
+
     return subprocess.run(["cue", *args], cwd=ROOT, text=True, capture_output=True, check=False)
 
 
