@@ -102,6 +102,11 @@ python3 -m unittest discover -s tests -v
 
 step "5/11 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
+cue vet specs/atomization-spine.cue specs/point-in-time.cue specs/examples/point-in-time-atoms.valid.yaml -d '#TemporalAtomSet'
+python3 scripts/ckm_point_in_time_resolve.py \
+  --atoms specs/examples/point-in-time-atoms.valid.yaml \
+  --work-id eli:example:regulation:demo \
+  --as-of 2024-03-01 >/dev/null
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
 if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.invalid-trust-tier.yaml -d '#FacetedAtom'; then

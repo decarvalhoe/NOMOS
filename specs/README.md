@@ -15,6 +15,7 @@
 - fidelity AST;
 - TOC artifact;
 - atomization spine;
+- optional point-in-time regulatory atom metadata;
 - optional CKM facets;
 - provenance gate;
 - ALCOA evidence;
