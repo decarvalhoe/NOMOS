@@ -94,6 +94,26 @@ required_artifacts:
     path: docs/regulated/domain-packs/built-environment/built-environment-fixture.yaml
     required: true
     minimum_claim_level: mapped
+  - id: ch-source-connectors
+    type: source_manifest
+    path: docs/regulated/domain-packs/built-environment/ch-source-connectors.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: pga-paz-source-segment-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/built-environment/pga-paz-source-segments.valid.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: pga-paz-body-ledger
+    type: evidence_pack
+    path: docs/regulated/domain-packs/built-environment/pga-paz-body-ledger.valid.yaml
+    required: true
+    minimum_claim_level: mapped
+  - id: sia-reference-sidecar
+    type: source_manifest
+    path: docs/regulated/domain-packs/built-environment/sia-reference-sidecar.yaml
+    required: true
+    minimum_claim_level: mapped
 evidence_placeholders:
   - id: official-source-refresh-placeholder
     kind: source_processing_evidence
@@ -123,6 +143,12 @@ validation_gates:
       - evidence_ready
   - id: built-environment-fixture-test
     command: "python3 -m unittest tests.test_ckm_built_environment_profile -v"
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: built-environment-source-connectors-test
+    command: "python3 -m unittest tests.test_ckm_ch_source_connectors -v"
     required: true
     blocks_claim_levels:
       - mapped
