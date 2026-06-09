@@ -1,0 +1,30 @@
+record_type: ckm_knowledge_lens_candidates
+candidates:
+  - id: CHUNK-LENS-APPLICABLE
+    content: The permit submission must include the source-backed building envelope evidence.
+    metadata:
+      facets:
+        nature: obligation
+        discipline_role:
+          - architect.reviewer
+        activity:
+          - permit.review
+        scope_level: chunk
+        trust_tier: certified
+        provenance: source_backed
+        confidentiality: public
+        applicability: applicable
+  - id: CHUNK-LENS-PLAUSIBLE-NOT-APPLICABLE
+    content: A plausible acoustic worksheet exists but is excluded from this permit-review context.
+    metadata:
+      facets:
+        nature: evidence
+        discipline_role:
+          - architect.reviewer
+        activity:
+          - permit.review
+        scope_level: chunk
+        trust_tier: indicative
+        provenance: source_backed
+        confidentiality: public
+        applicability: not_applicable

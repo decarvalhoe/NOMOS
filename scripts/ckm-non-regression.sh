@@ -72,7 +72,7 @@ YAML
   printf '%%PDF-1.4 original\n' > "$corpus/99_RBOK_initial_pdf/contract.pdf"
 }
 
-step "1/9 - Toolchain"
+step "1/11 - Toolchain"
 require_tool go
 require_tool cue
 require_tool python3
@@ -80,12 +80,12 @@ echo "go: $(go version)"
 echo "cue: $(cue version | head -1)"
 echo "python3: $(python3 --version)"
 
-step "2/9 - CLI build"
+step "2/11 - CLI build"
 cd "$ROOT_DIR/cli"
 go build -o ../nomos .
 go build -o "$CLI_BIN" .
 
-step "3/9 - Go tests"
+step "3/11 - Go tests"
 go vet ./...
 go test ./...
 
@@ -96,17 +96,27 @@ for mod in "$ROOT_DIR"/control-plane/*/go.mod; do
   (cd "$dir" && go vet ./... && go test ./...)
 done
 
-step "4/9 - Python workflow tests"
+step "4/11 - Python workflow tests"
 cd "$ROOT_DIR"
 python3 -m unittest discover -s tests -v
 
-step "5/9 - CUE schemas and existing domain profiles"
+step "5/11 - CUE schemas and existing domain profiles"
 cue vet specs/*.cue
+cue vet specs/atomization-spine.cue specs/point-in-time.cue specs/examples/point-in-time-atoms.valid.yaml -d '#TemporalAtomSet'
+python3 scripts/ckm_point_in_time_resolve.py \
+  --atoms specs/examples/point-in-time-atoms.valid.yaml \
+  --work-id eli:example:regulation:demo \
+  --as-of 2024-03-01 >/dev/null
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.atom.valid.yaml -d '#FacetedAtom'
 cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.chunk.valid.yaml -d '#FacetedChunk'
+cue vet specs/atomization-spine.cue specs/facets.cue specs/knowledge-lens.cue specs/examples/knowledge-lens.valid.yaml -d '#KnowledgeLensBundle'
+python3 scripts/ckm_knowledge_lens_filter.py \
+  --candidates specs/examples/knowledge-lens-candidates.valid.yaml \
+  --lens specs/examples/knowledge-lens.valid.yaml \
+  --preset architect-permit-review >/dev/null
 cue vet specs/atomization-spine.cue specs/facets.cue specs/canon-promotion.cue specs/examples/canon-promotion.valid.yaml -d '#CanonPromotionBundle'
-python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.valid.yaml
-if python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.invalid-shared.yaml; then
+python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.valid.yaml >/dev/null
+if python3 scripts/ckm_canon_promotion_validate.py --bundle specs/examples/canon-promotion.invalid-shared.yaml >/dev/null 2>&1; then
   echo "FAIL: invalid CKM canon promotion fixture passed" >&2
   exit 1
 fi
@@ -114,6 +124,14 @@ if cue vet specs/atomization-spine.cue specs/facets.cue specs/examples/facets.in
   echo "FAIL: invalid CKM facet trust tier passed" >&2
   exit 1
 fi
+cue vet specs/facet-ontology.cue specs/examples/facet-ontology.valid.yaml -d '#FacetOntology'
+python3 scripts/ckm_facet_ontology_validate.py --ontology specs/examples/facet-ontology.valid.yaml >/dev/null
+if python3 scripts/ckm_facet_ontology_validate.py --ontology specs/examples/facet-ontology.invalid-overlap.yaml >/dev/null 2>&1; then
+  echo "FAIL: invalid CKM facet ontology disjoint overlap passed" >&2
+  exit 1
+fi
+cue vet specs/atomization-spine.cue specs/facets.cue specs/nomos-trace-manifest.cue attestations/nomos-attestation.cue specs/canonical-knowledge-bundle.cue specs/examples/canonical-knowledge-bundle.valid.json -d '#CanonicalKnowledgeBundle'
+python3 scripts/ckm_bundle_validate.py --bundle specs/examples/canonical-knowledge-bundle.valid.json
 domain_profiles=(
   specs/examples/nomos-domain-profile.gxp.valid.yaml
   specs/examples/nomos-domain-profile.ai.valid.yaml
@@ -133,7 +151,10 @@ if cue vet specs/nomos-domain-profile.cue specs/examples/nomos-domain-profile.un
   exit 1
 fi
 
-step "6/9 - CKM additive metadata guard"
+step "6/11 - CKM signed claim-boundary predicate gate"
+cue vet attestations/nomos-attestation.cue docs/regulated/claim-boundary/ckm-refused-claims.json -d '#InTotoStatement'
+
+step "7/11 - CKM additive metadata guard"
 # metadata remains open for CKM additive fields until an explicit schema_version bump + migration.
 python3 - <<'PY'
 from pathlib import Path
@@ -148,10 +169,14 @@ for block in ("#Atom:", "#Chunk:"):
 print("metadata remains open for CKM additive fields")
 PY
 
-step "7/9 - Baseline e2e"
+step "8/11 - CKM cite-or-abstain metrics gate"
+python3 scripts/regulated_rag_answer_evidence.py \
+  --output "$OUT_DIR/rag-answer-evidence.json"
+
+step "9/11 - Baseline e2e"
 bash scripts/e2e.sh
 
-step "8/9 - RBOK runtime E2E fixture"
+step "10/11 - RBOK runtime E2E fixture"
 runtime_corpus="$OUT_DIR/rbok-runtime-corpus"
 write_runtime_fixture "$runtime_corpus"
 bash scripts/rbok-runtime-e2e.sh \
@@ -161,7 +186,7 @@ bash scripts/rbok-runtime-e2e.sh \
   --corpus-id realisons-business \
   --project-id rbok
 
-step "9/9 - RBOK lawbook E2E fixture"
+step "11/11 - RBOK lawbook E2E fixture"
 lawbook_corpus="${CKM_RBOK_LAWBOOK_CORPUS:-}"
 if [ -z "$lawbook_corpus" ]; then
   lawbook_corpus="$OUT_DIR/rbok-lawbook-corpus"

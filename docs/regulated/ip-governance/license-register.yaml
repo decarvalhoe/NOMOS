@@ -1,0 +1,49 @@
+record_type: ckm_license_register
+record_id: CKM-14-license-register
+status: review_required
+updated: "2026-06-09"
+owner: NOMOS maintainers
+policy:
+  agpl_boundary: process_api_boundary
+  default_for_copyleft_or_uncleared_dependencies: process_api_boundary
+  no_committed_third_party_full_text: true
+  no_vendored_uncleared_code: true
+dependencies:
+  - id: openfisca-core
+    display_name: OpenFisca-Core
+    intended_use: Rules computation and public-policy modelling reference candidate.
+    license_status: AGPL-risk pending package-level verification.
+    risk_basis: AGPL copyleft risk; isolate unless counsel approves a different integration boundary.
+    integration_policy: process_api_boundary
+    allowed_use: External service or command process with documented input/output contract.
+    blocked_use: Vendored module, in-process import, static linking, dynamic linking, or copied source.
+    may_vendor_code: false
+    may_link_in_process: false
+    review_required_before:
+      - production integration
+      - public claim of compatibility
+      - redistribution
+  - id: lexnlp
+    display_name: LexNLP
+    intended_use: Legal-text NLP reference candidate.
+    license_status: AGPL-risk pending package-level verification.
+    risk_basis: AGPL copyleft risk; isolate unless counsel approves a different integration boundary.
+    integration_policy: process_api_boundary
+    allowed_use: External service or command process with documented input/output contract.
+    blocked_use: Vendored module, in-process import, static linking, dynamic linking, or copied source.
+    may_vendor_code: false
+    may_link_in_process: false
+    review_required_before:
+      - production integration
+      - public claim of compatibility
+      - redistribution
+blocked_claims:
+  - license_review_required_before_integration
+  - third_party_license_clearance_complete
+  - agpl_in_process_integration_allowed
+  - unrestricted_redistribution_allowed
+evidence_requirements:
+  - exact package name, version, and artifact hash
+  - upstream license file and SPDX identifier
+  - dependency tree and transitive license review
+  - counsel or qualified OSS review decision for any non-permissive dependency

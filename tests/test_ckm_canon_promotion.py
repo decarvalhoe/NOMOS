@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -61,7 +62,7 @@ class CKMCanonPromotionTests(unittest.TestCase):
     def test_shared_export_or_certified_trust_is_rejected(self) -> None:
         self.assertTrue(INVALID_FIXTURE.exists(), f"Missing invalid fixture: {INVALID_FIXTURE}")
         result = subprocess.run(
-            ["python", str(VALIDATOR), "--bundle", str(INVALID_FIXTURE)],
+            [sys.executable, str(VALIDATOR), "--bundle", str(INVALID_FIXTURE)],
             cwd=ROOT,
             text=True,
             capture_output=True,
@@ -75,7 +76,7 @@ class CKMCanonPromotionTests(unittest.TestCase):
     def _validate(self, fixture: Path) -> dict:
         self.assertTrue(VALIDATOR.exists(), f"Missing validator: {VALIDATOR}")
         result = subprocess.run(
-            ["python", str(VALIDATOR), "--bundle", str(fixture)],
+            [sys.executable, str(VALIDATOR), "--bundle", str(fixture)],
             cwd=ROOT,
             text=True,
             capture_output=True,
