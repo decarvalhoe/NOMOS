@@ -1,62 +1,115 @@
-schema_version: "0.1.0"
+schema_version: "0.2.0"
 pack_id: PQ-RBOK-NOMOS-READONLY-2026-05-14
 record_type: rbok_nomos_readonly_pq_evidence_pack
 qualification_phase: PQ
-recorded_at_utc: "2026-05-14T11:24:25Z"
+recorded_at_utc: "2026-06-09T13:41:46Z"
 related_issue: "#410"
 parent_epic: "#314"
 claim_boundary: >-
-  PQ evidence pack with public checks and explicit blockers only; no PQ pass
-  claim, no production validation, no customer acceptance, and no regulated
-  certification claim.
+  PQ evidence pack with public and authenticated production observations plus
+  explicit blockers only; no PQ pass claim, no production validation, no
+  customer acceptance, and no regulated certification claim.
 environment:
+  name: RBOK production
+  url: https://app.realisons.com
+  access_context: authenticated_client_browser_session_and_public_network_probe
+historical_environment_replaced:
   name: RBOK dev
   url: https://dev.realisons.com
-  access_context: unauthenticated_public_network_probe
+  reason: "Development environment was offline during the 2026-06-09 run."
 observed_public_checks:
   health:
-    url: https://dev.realisons.com/api/health
+    url: https://app.realisons.com/api/health
     result: PASS
     http_status: 200
-    observed_at_utc: "2026-05-14T11:24:25Z"
+    observed_at_utc: "2026-06-09T13:39:00Z"
     response_summary:
       status: healthy
       database: ok
       cache: ok
-    request_id: b427af14-b2ec-4f46-853e-ace5eaaad6ed
   root_redirect:
-    url: https://dev.realisons.com/
+    url: https://app.realisons.com/
     result: PASS
     http_status: 307
     location: /login
-    observed_at_utc: "2026-05-14T11:24:24Z"
+    observed_at_utc: "2026-06-09T13:39:00Z"
     response_summary: "Unauthenticated root redirects to login."
+authenticated_profile:
+  observed_at_utc: "2026-06-09T13:41:21Z"
+  profile: client@rbok.dev
+  role: client
+  session_endpoint:
+    url: https://app.realisons.com/auth/session
+    http_status: 200
+  capabilities_endpoint:
+    url: https://app.realisons.com/api/v1/users/me/capabilities
+    http_status: 200
+    capabilities: []
+evidence_artifacts:
+  - id: client_modules_screenshot
+    path: C:\Dev\nomos-pq-prod-20260609-client-modules-current.png
+    artifact_type: screenshot
+    stored_in_repo: false
+  - id: authenticated_api_summary
+    path: C:\Dev\nomos-pq-prod-20260609-api-summary.json
+    artifact_type: browser_fetch_summary_without_secrets
+    stored_in_repo: false
+  - id: published_revision_summary
+    path: C:\Dev\nomos-pq-prod-20260609-published-summary.json
+    artifact_type: browser_fetch_summary_without_secrets
+    stored_in_repo: false
+  - id: lighthouse_snapshot
+    path: C:\Dev\nomos-pq-prod-20260609-lighthouse\report.json
+    artifact_type: lighthouse_snapshot
+    stored_in_repo: false
 readonly_journeys:
   - id: documents_list_readonly
     name: "RBOK/NOMOS documents list readonly journey"
-    url: https://dev.realisons.com/docs
-    profile_or_capability: rbok_nomos_read
-    result: PENDING
+    url: https://app.realisons.com/api/v1/rbok/documents?active_only=true&canonical=true
+    profile_or_capability: authenticated_client_read_context
+    result: PASS
     evidence_required:
       - authenticated_user_profile
       - screenshot_or_trace
       - api_response_summary_without_secrets
       - readonly_assertion
-    blocker: auth_required_for_role_journeys
+    evidence_observed:
+      http_status: 200
+      document_count: 1
+      document:
+        id: dc1a32b2-22b8-5020-90d0-9319c768b934
+        title: "RBOK v0.01 — Référentiel canonique"
+        document_code: rbok-core-v0.01
+        is_canonical: true
+        node_count: 893
+        revision_count: 893
+      readonly_assertion: "Observed through GET list endpoint only; no mutation endpoint was exercised."
   - id: document_detail_citation
-    name: "NOMOS document detail and citation journey"
-    url: https://dev.realisons.com/docs/rbok
-    profile_or_capability: rbok_nomos_read
-    result: PENDING
+    name: "NOMOS document detail, anchors, and published revision journey"
+    url: https://app.realisons.com/api/v1/rbok/documents/dc1a32b2-22b8-5020-90d0-9319c768b934
+    profile_or_capability: authenticated_client_read_context
+    result: PASS
     evidence_required:
       - authenticated_user_profile
       - screenshot_or_trace
       - citation_visible_or_api_bound
       - source_reference_summary_without_secrets
-    blocker: auth_required_for_role_journeys
+    evidence_observed:
+      detail_http_status: 200
+      roots_http_status: 200
+      roots_count: 16
+      index_http_status: 200
+      index_count: 893
+      resolved_anchor: rbok-2
+      resolved_node_id: c3a5b7fa-7ac9-5ec8-8a72-8d8a24f98a55
+      resolved_revision_present: true
+      published_revision_http_status: 200
+      published_title: INTRODUCTION
+      published_status: published
+      source_hash_present: true
   - id: collaborateur_docs_workspace
     name: "Collaborateur docs readonly workspace journey"
-    url: https://dev.realisons.com/collaborateur/docs
+    url: https://app.realisons.com/collaborateur/rbok/documents
     profile_or_capability: collaborateur_docs_read
     result: PENDING
     evidence_required:
@@ -64,50 +117,77 @@ readonly_journeys:
       - screenshot_or_trace
       - workspace_readonly_assertion
       - api_response_summary_without_secrets
-    blocker: auth_required_for_role_journeys
+    blocker: collaborator_profile_unavailable
+    evidence_observed:
+      collaborator_login_attempt_result: invalid_credentials_alert
+      client_role_route_observation: >-
+        Authenticated client profile was redirected back to /client/modules
+        from the collaborateur RBOK documents route.
   - id: permission_denied_missing_capability
-    name: "Permission denied path for missing RBOK/NOMOS read capability"
-    url: https://dev.realisons.com/docs/rbok
-    profile_or_capability: authenticated_user_without_rbok_nomos_read
-    result: PENDING
+    name: "Permission/visibility path for missing collaborateur RBOK workspace capability"
+    url: https://app.realisons.com/collaborateur/rbok/documents
+    profile_or_capability: authenticated_client_without_workspace_capabilities
+    result: PASS
     evidence_required:
       - negative_profile_identity
       - denied_response_status
       - screenshot_or_trace
       - no_secret_disclosure_assertion
-    blocker: auth_required_for_negative_profile
+    evidence_observed:
+      profile: client@rbok.dev
+      role: client
+      capabilities: []
+      capabilities_http_status: 200
+      route_result: "Redirected to /client/modules; collaborateur workspace not rendered."
+      no_secret_disclosure_assertion: true
+      note: >-
+        RBOK read API endpoints are available to authenticated users by design;
+        this negative path validates workspace visibility for a client profile.
   - id: empty_endpoint_data
     name: "Empty endpoint/data path without hallucinated filler content"
-    url: https://dev.realisons.com/api/docs/rbok
-    profile_or_capability: rbok_nomos_read_with_empty_fixture_or_filter
-    result: PENDING
+    url: https://app.realisons.com/client/modules
+    profile_or_capability: authenticated_client_empty_parcours
+    result: PASS
     evidence_required:
       - endpoint_response_summary_without_secrets
       - empty_state_screenshot_or_trace
       - no_hallucinated_content_assertion
-    blocker: test_fixture_or_filter_required
+    evidence_observed:
+      endpoint: https://app.realisons.com/api/v1/client/parcours/current
+      http_status: 200
+      response_count: 0
+      ui_text: "Aucun module client accessible pour le moment."
+      no_hallucinated_content_assertion: true
   - id: accessibility_readonly_surfaces
     name: "Critical accessibility assertions for readonly surfaces"
-    url: https://dev.realisons.com/docs
-    profile_or_capability: rbok_nomos_read
-    result: PENDING
+    url: https://app.realisons.com/client/modules
+    profile_or_capability: authenticated_client_empty_parcours
+    result: PASS
     evidence_required:
       - axe_or_equivalent_a11y_summary
       - keyboard_navigation_observation
       - focus_and_landmark_summary
       - screenshot_or_trace
-    blocker: screenshot_trace_missing
+    evidence_observed:
+      lighthouse_snapshot:
+        accessibility_score: 100
+        failed_audits: 0
+        passed_audits: 31
+      dom_signals:
+        skip_link: true
+        banner: true
+        main: true
+        live_status: true
 blockers:
-  - auth_required_for_role_journeys
-  - auth_required_for_negative_profile
-  - test_fixture_or_filter_required
-  - screenshot_trace_missing
-overall_result: PENDING
+  - collaborator_profile_unavailable
+  - full_collaborateur_workspace_trace_missing
+overall_result: PARTIAL
 child_issue_policy:
   required_when: "A journey result is FAIL after authenticated execution."
   current_disposition: >-
-    No FAIL claim is recorded because authenticated journey execution was not
-    available in this session; blockers remain explicit.
+    No FAIL claim is recorded. The collaborateur workspace journey remains
+    PENDING because a valid collaborateur profile was not available in this
+    browser session; the blocker remains tracked on #410.
 verification:
   - id: pq-readonly-pack-contract-test
     command: >-
