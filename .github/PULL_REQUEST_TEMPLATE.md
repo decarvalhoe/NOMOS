@@ -21,6 +21,9 @@ Describe the change and the intended use it affects.
 - [ ] Regulated documentation gate considered.
 - [ ] CUE/YAML/schema impact considered.
 - [ ] RBOK real corpus E2E considered when corpus behavior changes.
+- [ ] CKM non-regression harness considered for pivot changes.
+- [ ] CKM metadata-first additive change considered.
+- [ ] CKM schema_version bump + migration considered for contract changes.
 
 ## Non-Invention Attestation
 

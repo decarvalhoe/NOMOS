@@ -1,0 +1,42 @@
+name: CKM Non-Regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "cli/**"
+      - "control-plane/**"
+      - "scripts/**"
+      - "specs/**"
+      - "tests/**"
+      - ".github/workflows/**"
+      - "docs/05-knowledge-base-and-rag.md"
+      - "docs/09-adaptation-guide.md"
+      - "docs/36-rbok-integration-recommendation-plan.md"
+      - "docs/38-domain-opportunity-roadmap.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ckm-non-regression:
+    name: CKM non-regression harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: cue-lang/setup-cue@v1.0.1
+        with:
+          version: v0.16.1
+      - run: pip install --quiet pyyaml
+      - run: bash scripts/ckm-non-regression.sh

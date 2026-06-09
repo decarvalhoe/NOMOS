@@ -1,0 +1,34 @@
+atom_id: "ATOM-FACET-001"
+kind: "obligation"
+structure_id: "STRUCT-FACET-001"
+document_id: "DOC-FACET"
+domain: "legal-ediscovery"
+title: "Preserve source-backed citations"
+content: "A governed answer must cite the retained source span or abstain."
+source_span:
+  source_id: "SRC-FACET"
+  path: "sources/facet.md"
+  start_line: 1
+  end_line: 3
+  hash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+hash: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+review_state: "approved"
+created_at: "2026-06-09T00:00:00Z"
+updated_at: "2026-06-09T00:00:00Z"
+priority: "critical"
+metadata:
+  facets:
+    nature: "obligation"
+    discipline_role:
+      - "legal.owner"
+      - "knowledge.engineer"
+    activity:
+      - "rag.answering"
+      - "citation.review"
+    scope_level: "atom"
+    trust_tier: "certified"
+    provenance: "source_backed"
+    confidentiality: "restricted"
+    applicability: "applicable"
+    vocabulary_refs:
+      - "nomos-facet-core"
