@@ -15,6 +15,10 @@
 - fidelity AST;
 - TOC artifact;
 - atomization spine;
+- optional CKM facet ontology alignment;
+- optional point-in-time regulatory atom metadata;
+- optional CKM facets;
+- canonical knowledge bundle;
 - provenance gate;
 - ALCOA evidence;
 - AI/RAG controls;
@@ -24,6 +28,23 @@
 ## Release Rule
 
 Schema changes are evidence-affecting changes. They require tests, documentation updates, and a migration note when the change can affect generated artifacts or customer validation records.
+
+## CKM Facets
+
+`facets.cue` defines optional multidimensional facet shapes for `#Atom.metadata`
+and `#Chunk.metadata`. Existing atoms and chunks without facets remain valid
+against `atomization-spine.cue`.
+
+`facet-ontology.cue` defines the optional CKM-12 BFO -> IOF Core -> domain-pack
+alignment pattern for facet axes, including obligation/process/evidence ODPs
+and declared OWL `disjointUnionOf` orthogonality. This is a pack/design contract
+only; it does not tighten `#Atom` or `#Chunk`.
+
+Facet values use core controlled axes for nature, scope level, trust tier,
+provenance, confidentiality, and applicability. Domain packs may add SKOS-backed
+terms for `discipline_role`, `activity`, and extensions. Promoting facets from
+metadata into a required top-level `#Facets` contract requires a future
+`schema_version` bump, migration note, and compatibility fixture.
 
 ## Alpha Boundary
 

@@ -1,0 +1,132 @@
+{
+  "schema_version": "ckm-bundle-v1",
+  "bundle_id": "aedifica-fixture",
+  "generated_at": "2026-06-09T00:00:00Z",
+  "producer": "nomos",
+  "claim_boundary": "Canonical bundle handoff only; no downstream import success or regulatory correctness claim.",
+  "feeds": [
+    {
+      "feed_id": "aedifica-feed",
+      "format": "nomos.canonical-knowledge-feed.v1",
+      "nodes": [
+        {
+          "node_id": "NODE-CKM-001",
+          "text": "A governed answer must cite the retained source span or abstain.",
+          "source_path": "sources/facet.md",
+          "source_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "span": {
+            "start_line": 1,
+            "end_line": 3,
+            "locator": "section 1"
+          },
+          "parent_chain": [
+            "DOC-FACET",
+            "STRUCT-FACET-001"
+          ],
+          "facets": {
+            "nature": "obligation",
+            "discipline_role": [
+              "knowledge.engineer"
+            ],
+            "activity": [
+              "rag.answering"
+            ],
+            "scope_level": "atom",
+            "trust_tier": "certified",
+            "provenance": "source_backed",
+            "confidentiality": "restricted",
+            "applicability": "applicable"
+          }
+        }
+      ]
+    }
+  ],
+  "rag_metadata": [
+    {
+      "node_id": "NODE-CKM-001",
+      "chunk_id": "CHUNK-CKM-001",
+      "source_path": "sources/facet.md",
+      "source_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "parent_chain": [
+        "DOC-FACET",
+        "STRUCT-FACET-001"
+      ],
+      "facets": {
+        "nature": "evidence",
+        "scope_level": "chunk",
+        "trust_tier": "certified",
+        "provenance": "derived",
+        "confidentiality": "restricted",
+        "applicability": "applicable"
+      },
+      "embedding_model": "fixture-model",
+      "embedding_dim": 1536
+    }
+  ],
+  "trace_manifest": {
+    "schema_version": "0.1.0",
+    "run": {
+      "event": "workflow_dispatch",
+      "workflow_run_id": "123456",
+      "generated_at": "2026-06-09T00:00:00Z"
+    },
+    "corpus": {
+      "repo": "RBOKproject/NOMOS",
+      "base_ref": "main",
+      "base_sha": "7436e94",
+      "head_ref": "ckm/13-bundle-contract",
+      "head_sha": "a0dc74a"
+    },
+    "scope": {
+      "id": "ckm-bundle",
+      "paths": [
+        "specs/**",
+        "docs/**"
+      ]
+    },
+    "diff": {
+      "changed_paths": [
+        "specs/canonical-knowledge-bundle.cue"
+      ],
+      "impacted": true
+    },
+    "output": {
+      "repo": "output",
+      "path": "bundles/aedifica-fixture"
+    },
+    "artifacts": {
+      "feed": "canonical-knowledge-bundle.valid.json",
+      "rag_metadata": "canonical-knowledge-bundle.valid.json",
+      "attestation": "canonical-knowledge-bundle.valid.json"
+    },
+    "policy": {
+      "publish_mode": "artifact_only",
+      "risk_class": "regulated",
+      "generated_path_guard": "pass",
+      "source_read_only_guard": "pass"
+    }
+  },
+  "attestation": {
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+      {
+        "name": "canonical-knowledge-bundle.valid.json",
+        "digest": {
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      }
+    ],
+    "predicateType": "https://nomos.dev/attestation/v1",
+    "predicate": {
+      "projectId": "nomos-ckm",
+      "verdict": "admitted",
+      "confidence": "high",
+      "timestamp": "2026-06-09T00:00:00Z",
+      "evidence": [
+        "canonical-knowledge-bundle.valid.json"
+      ],
+      "attesterId": "nomos",
+      "attestLevel": "signed"
+    }
+  }
+}
