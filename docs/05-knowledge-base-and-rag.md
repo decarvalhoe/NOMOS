@@ -131,6 +131,29 @@ Un RAG Canonical-First doit être évalué sur :
 
 > Ces dimensions sont des cibles d'évaluation de la méthode. À ce stade, NOMOS produit des métadonnées RAG traçables ; l'évaluation RAG en production (retrieval, comportement LLM) n'est pas validée — voir [public-claim-boundary.md](public-claim-boundary.md).
 
+### Gate Cite-Or-Abstain CKM
+
+Le gate CKM mesure les réponses RAG conservées comme preuves avec
+`scripts/regulated_rag_answer_evidence.py`. Il expose, par réponse et en
+synthèse :
+
+- `metrics.alce.citation_recall` : part des chunks récupérés couverte par des citations source-backed ;
+- `metrics.alce.citation_precision` : part des citations qui se lient aux chunks récupérés ;
+- `metrics.deepeval.faithfulness` : score de support par les citations ou score de fixture explicite ;
+- `metrics.trust_score` : moyenne déterministe recall/precision/faithfulness/confidence ;
+- `trust_tier` : `certified`, `indicative` ou `unverified`.
+
+Le tiers `certified` exige recall, precision, faithfulness et trust-score au-dessus
+du seuil du gate. `indicative` signale une preuve exploitable mais insuffisante
+pour une revendication certifiée. `unverified` est utilisé dès qu'un finding
+bloquant existe.
+
+Ce gate ne prouve pas la justesse métier finale d'une réponse LLM. Il prouve
+seulement que la réponse suit le contrat cite-or-abstain, cite des spans
+traçables, conserve les faits structurés et expose les incertitudes ou la décision
+humaine requise. La décision réglementaire, juridique, clinique ou métier reste
+hors revendication NOMOS.
+
 ## Tests Associés
 
 - Toutes les sources actives sont indexées.

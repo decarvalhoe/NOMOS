@@ -245,6 +245,71 @@ artifact:
                 ),
                 report.get("findings", []),
             )
+
+    def test_evidence_pack_includes_signed_claim_boundary_predicates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_minimal_regulated_repo(Path(tmp))
+            write(
+                repo / "docs/regulated/claim-boundary/ckm-refused-claims.json",
+                json.dumps(
+                    {
+                        "_type": "https://in-toto.io/Statement/v1",
+                        "subject": [
+                            {
+                                "name": "rag-answer-evidence.json",
+                                "digest": {"sha256": "0123456789abcdef"},
+                            }
+                        ],
+                        "predicateType": "https://nomos.dev/claim-boundary/v1",
+                        "predicate": {
+                            "projectId": "ckm-test",
+                            "generatedAt": "2026-06-09T00:00:00Z",
+                            "refusedClaims": [
+                                {
+                                    "claimId": "claim.no-trace-for-y",
+                                    "statement": "No trace exists for Y, so Nomos refuses the claim.",
+                                    "reason": "No source-backed atom supports Y.",
+                                    "requiredEvidence": ["source_span", "atom_id"],
+                                    "decision": "refused",
+                                }
+                            ],
+                            "verifier": "nomos",
+                            "signatureMode": "dsse-cosign",
+                            "signature": {
+                                "keyId": "fixture-key",
+                                "signature": "MEUCIQDfixture-signature",
+                                "signedAt": "2026-06-09T00:00:00Z",
+                                "logUri": "rekor://fixture-entry",
+                            },
+                            "claimBoundary": "Refusal predicate only; no correctness claim.",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+            )
+            output = repo / "out/evidence-pack.json"
+
+            result = run_script(
+                "regulated_evidence_pack.py",
+                "--root",
+                str(repo),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertTrue(
+                any(
+                    record["category"] == "regulated_claim_boundary_attestation"
+                    and record["path"] == "docs/regulated/claim-boundary/ckm-refused-claims.json"
+                    for record in report["records"]
+                ),
+                report["records"],
+            )
+            self.assertEqual(report["summary"]["categories"]["regulated_claim_boundary_attestation"], 1)
     def test_validation_planner_ranks_controls_by_csa_risk(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -456,6 +521,138 @@ answers:
                     finding["code"] == "ACCEPTABLE_WITHOUT_CITATION_OR_REFUSAL"
                     for finding in report["findings"]
                 ),
+                report.get("findings", []),
+            )
+
+    def test_rag_answer_evidence_emits_ckm08_metrics_and_certified_trust_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            source_hash = "0123456789abcdef"
+            write(
+                fixtures,
+                f"""
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-CERTIFIED
+    prompt_id: PROMPT-CERTIFIED-001
+    fixture_type: citation
+    answer: "Only cited governed facts are used."
+    structured_facts:
+      - unit_id: RULE-001
+        source: read_model
+    citations:
+      - source_id: SRC-001
+        locator: "section 1"
+        chunk_id: CHUNK-001
+    uncertainties: []
+    requires_human_decision: false
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+    source_spans:
+      - source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+        chunk_id: CHUNK-001
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.96
+    faithfulness_score: 0.98
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "generated")
+            self.assertEqual(report["summary"]["trust_tier"], "certified")
+            metrics = report["summary"]["metrics"]
+            self.assertEqual(metrics["alce"]["citation_recall"], 1.0)
+            self.assertEqual(metrics["alce"]["citation_precision"], 1.0)
+            self.assertGreaterEqual(metrics["trust_score"], 0.95)
+            self.assertGreaterEqual(metrics["deepeval"]["faithfulness"], 0.95)
+            self.assertEqual(report["answers"][0]["trust_tier"], "certified")
+            self.assertTrue(report["answers"][0]["response_contract"]["fields"]["structured_facts"])
+
+    def test_rag_answer_evidence_blocks_unfaithful_citation_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            write(
+                fixtures,
+                """
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-MISMATCHED-CITATION
+    prompt_id: PROMPT-CITATION-001
+    fixture_type: citation
+    answer: "This answer cites the wrong chunk."
+    structured_facts: []
+    citations:
+      - source_id: SRC-001
+        locator: "section 1"
+        chunk_id: CHUNK-OTHER
+    uncertainties: []
+    requires_human_decision: false
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: 0123456789abcdef
+        span: "1-3"
+    source_spans:
+      - source_id: SRC-001
+        source_hash: 0123456789abcdef
+        span: "1-3"
+        chunk_id: CHUNK-OTHER
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.96
+    faithfulness_score: 0.98
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(report["summary"]["trust_tier"], "unverified")
+            self.assertTrue(
+                any(finding["code"] == "ALCE_CITATION_RECALL_BELOW_GATE" for finding in report["findings"]),
                 report.get("findings", []),
             )
 
