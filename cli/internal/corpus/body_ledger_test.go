@@ -2,6 +2,7 @@ package corpus
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -434,5 +435,45 @@ func TestCKM06MerkleProofRejectsChangedLeaf(t *testing.T) {
 	changedLeaf := ComputeRawTextHash([]byte("changed coverage leaf"))
 	if err := VerifyMerkleProof(changedLeaf, *proof, ledger.Merkle.Root); err == nil {
 		t.Fatal("expected changed leaf to fail Merkle proof verification")
+	}
+}
+
+// CKM-06 (regression): inclusion proofs must verify for EVERY leaf at any leaf
+// count, not just powers of two. When a level has an odd number of nodes its
+// tail node is duplicated as its own sibling; that node — and every leaf
+// carried up through it — must record exactly one sibling hop per level.
+// Before the fix the duplicated node received two hops at the duplication
+// level (and repeated it at every higher level via doubled indexes), so proofs
+// failed for n=3 (leaf 2), n=5 (leaf 4), n=6 (leaves 4,5), n=7 (leaf 6), and
+// n=9 (leaf 8). TestCKM06BodyLedgerMerkleProofsVerify never caught this because
+// its ledger has exactly 2 leaves (a power of 2). This sweeps counts 1..9 and
+// asserts both verification of genuine leaves and rejection of tampered ones.
+func TestCKM06MerkleProofsVerifyAtEveryLeafCount(t *testing.T) {
+	for n := 1; n <= 9; n++ {
+		leaves := make([]string, n)
+		for i := range leaves {
+			leaves[i] = ComputeRawTextHash([]byte(fmt.Sprintf("leaf-%d-of-%d", i, n)))
+		}
+		root, proofs := buildMerkleProofs(leaves)
+		if root == "" {
+			t.Fatalf("n=%d: empty Merkle root", n)
+		}
+		if len(proofs) != n {
+			t.Fatalf("n=%d: got %d proofs, want %d", n, len(proofs), n)
+		}
+		for i, proof := range proofs {
+			if proof.LeafHash != leaves[i] || proof.LeafIndex != i {
+				t.Fatalf("n=%d leaf %d: proof header = {%q,%d}, want {%q,%d}",
+					n, i, proof.LeafHash, proof.LeafIndex, leaves[i], i)
+			}
+			if err := VerifyMerkleProof(leaves[i], proof, root); err != nil {
+				t.Fatalf("n=%d: leaf %d proof should verify against root: %v", n, i, err)
+			}
+			// Tamper case: the genuine path against a changed leaf must not verify.
+			tampered := ComputeRawTextHash([]byte(fmt.Sprintf("tampered-%d-of-%d", i, n)))
+			if err := VerifyMerkleProof(tampered, proof, root); err == nil {
+				t.Fatalf("n=%d: leaf %d tampered hash unexpectedly verified against root", n, i)
+			}
+		}
 	}
 }
