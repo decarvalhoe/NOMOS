@@ -1,0 +1,741 @@
+{
+  "schema_version": "vrc-wiring-matrix-v1",
+  "generated_by": "scripts/vrc_wiring_matrix.py",
+  "generated_note": "GENERATED FILE — do not edit by hand. Regenerate with: python3 scripts/vrc_wiring_matrix.py --root .",
+  "registry": "scripts/vrc_wiring_matrix_registry.json",
+  "registry_schema_version": "vrc-wiring-matrix-registry-v1",
+  "claim_boundary": "Wiring presence computed from tree anchors; not a proof of functional correctness; no compliance certification.",
+  "capabilities": [
+    {
+      "id": "attestation_dsse_signing",
+      "title": "ECDSA P-256 DSSE attestation signing (CKM-H1 #529, #542)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/attestation/signing.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/attest_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/attestation/signing_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/attest_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "atom_facets_engine",
+      "title": "#Facets derivation wired into atomization (CKM-01/H3 #527)",
+      "pillar": "P3",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/atomization/facets.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/atomization/atoms.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/atomization/facets_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/atomization/facets_cue_conformance_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "knowledge_lens",
+      "title": "Knowledge Lens scoping in the engine + CLI (CKM-02, #540/#543)",
+      "pillar": "P4",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/atomization/facets.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/atomize_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/atomize_lens_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/atomization/facets_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/ckm_knowledge_lens_filter.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "body_ledger_merkle_emission",
+      "title": "Body-ledger Merkle proofs emitted with the ledger (CKM-06 #501, #525)",
+      "pillar": "P7",
+      "claim_level": "source-integrity-proven (POC-scoped)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/body_ledger.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/corpus_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/corpus/body_ledger_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "body_ledger_merkle_verification",
+      "title": "Merkle inclusion-proof verification (engine only — no production verifier)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-07",
+      "expected": "partial",
+      "computed": "partial",
+      "mismatch": false,
+      "reasons": [
+        "no production caller declared (the #540 class)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/body_ledger.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/corpus/body_ledger_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "claim_coverage_attestation",
+      "title": "claim_coverage computed in the corpus attestation generator (FSQ-05 #368) — CLI wiring missing (FSQ-08-followup)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-07",
+      "expected": "partial",
+      "computed": "partial",
+      "mismatch": false,
+      "reasons": [
+        "no production caller declared (the #540 class)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/attestation.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/corpus/body_ledger_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "supply_chain_attestation",
+      "title": "Supply-chain in-toto predicate (CKM-05 #500) — defined and tested, zero production callers",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-08",
+      "expected": "partial",
+      "computed": "partial",
+      "mismatch": false,
+      "reasons": [
+        "no production caller declared (the #540 class)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/attestation/attestation.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/attestation/attestation_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "swiss_live_connector",
+      "title": "Live Swiss source connector — real fetch, real hash (CKM-H5 #531, #539)",
+      "pillar": "P6",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/connector/connector.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/connector_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/connector/connector_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/connector/connector_live_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "canonical_knowledge_bundle",
+      "title": "Canonical Knowledge Bundle emission + conformance (CKM-13/H4, #534-#536)",
+      "pillar": "P6-gen",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/bundle/bundle.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/bundle_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/bundle/bundle_conformance_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "cite_or_abstain_gate",
+      "title": "Cite-or-abstain gate with faithfulness recomputed from spans (CKM-08/H6 #502, #530, #542) — Python sidecar only",
+      "pillar": "P2",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-10",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/regulated_rag_answer_evidence.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_ckm_faithfulness_recompute.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "canon_promotion",
+      "title": "Canon promotion workflow (CKM-03 #512) — CUE spec + Python sidecar only",
+      "pillar": "P5",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-11",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/ckm_canon_promotion_validate.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "specs/canon-promotion.cue",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "point_in_time_resolver",
+      "title": "Point-in-time atom resolver (CKM-11 #506) — CUE spec + Python sidecar only",
+      "pillar": "P6",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-12",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/ckm_point_in_time_resolve.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "specs/point-in-time.cue",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "facet_ontology_alignment",
+      "title": "BFO/IOF facet-ontology alignment (CKM-12 #507) — CUE spec + Python sidecar only",
+      "pillar": "P3",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-45",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/ckm_facet_ontology_validate.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "specs/facet-ontology.cue",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "pdf_adapter",
+      "title": "PDF structure-aware adapter — honest placeholder",
+      "pillar": "ingestion",
+      "claim_level": "not claimable",
+      "promotion_issue": "VRC-30",
+      "expected": "stub",
+      "computed": "stub",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": [
+          {
+            "path": "cli/internal/fidelity/adapter_registry.go",
+            "ok": true,
+            "missing": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "docx_adapter",
+      "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
+      "pillar": "ingestion",
+      "claim_level": "not claimable",
+      "promotion_issue": "VRC-41",
+      "expected": "partial",
+      "computed": "partial",
+      "mismatch": false,
+      "reasons": [
+        "no production caller declared (the #540 class)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/fidelity/docx_adapter.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/fidelity/docx_adapter_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "sigstore_keyless",
+      "title": "Keyless Sigstore/Fulcio/Rekor signing — documented follow-up, not implemented (vocabulary exists, SDK does not)",
+      "pillar": "P7",
+      "claim_level": "prohibited (claim_boundary_guard enforces)",
+      "promotion_issue": "VRC-40",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "strict_fidelity_gate",
+      "title": "Strict release/integrity gate wired as a CLI command",
+      "pillar": "P1",
+      "claim_level": "full-fidelity-proven (POC-scoped)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/app/strict_gate.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/strict_gate_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    }
+  ],
+  "generic_checks": [
+    {
+      "name": "command_registration",
+      "status": "pass",
+      "registered_commands": [
+        "atomize",
+        "attest",
+        "bundle",
+        "connector",
+        "corpus",
+        "diagnose",
+        "evidence",
+        "github",
+        "help",
+        "init",
+        "strict",
+        "validate",
+        "version"
+      ],
+      "failures": [],
+      "known_unwired": [
+        "checks.go: SourcesCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `nomos sources check`; not in the command map",
+        "checks.go: ContractsCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
+        "checks.go: MatrixCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
+        "checks.go: StrictCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: legacy `nomos strict` implementation shadowed by the registered StrictGateCommand",
+        "checks.go: ExceptionsCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
+        "product_check.go: ProductCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `product-check`; not in the command map",
+        "report_cmds.go: ReportCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `nomos report`; not in the command map",
+        "report_cmds.go: ExportSPDXCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: SPDX BOM exporter exists but is unreachable — feeds VRC-23",
+        "report_cmds.go: ExportCycloneDXCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: CycloneDX BOM exporter exists but is unreachable — feeds VRC-23",
+        "report_cmds.go: AttestCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: exported one-shot signing path (re-routed to the real signer by #542, cited by decision 0005) shadowed by the registered attestCommand"
+      ]
+    }
+  ],
+  "summary": {
+    "capabilities": 17,
+    "computed": {
+      "real": 7,
+      "partial": 4,
+      "sidecar": 4,
+      "stub": 1,
+      "absent": 1
+    },
+    "mismatches": 0,
+    "generic_check_failures": 0,
+    "known_unwired": 10
+  }
+}

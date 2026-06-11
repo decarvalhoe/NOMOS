@@ -1,0 +1,323 @@
+{
+  "schema_version": "vrc-wiring-matrix-registry-v1",
+  "doctrine": "This registry declares WHERE to look (anchors) and the EXPECTED status per capability. Statuses are computed by scripts/vrc_wiring_matrix.py — never declared here. Promoting a capability (sidecar/stub/absent/partial -> real) MUST flip 'expected' and add the new anchors in the same PR; must_be_absent probes turn the matrix red until that happens. See docs/45-vision-reality-closure-plan.md §8 G3 and docs/46-vrc-epic-issue-list.md.",
+  "capabilities": [
+    {
+      "id": "attestation_dsse_signing",
+      "title": "ECDSA P-256 DSSE attestation signing (CKM-H1 #529, #542)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/attestation/signing.go", "contains": ["ecdsa", "dsse", "SignASN1", "VerifyASN1"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/attest_cmd.go", "contains": ["GenerateSigner", "VerifyEnvelope"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"attest\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/attestation/signing_test.go", "contains": ["TestVerify_FailsWhenArtifactDigestTampered"]},
+        {"path": "cli/internal/app/attest_cmd_test.go", "contains": ["TestAttestCLI_VerifyFailsOnTamper"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ]
+    },
+    {
+      "id": "atom_facets_engine",
+      "title": "#Facets derivation wired into atomization (CKM-01/H3 #527)",
+      "pillar": "P3",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/atomization/facets.go", "contains": ["func DeriveFacets("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/atomization/atoms.go", "contains": ["DeriveFacets("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/atomization/facets_test.go", "contains": ["DeriveFacets("]},
+        {"path": "cli/internal/atomization/facets_cue_conformance_test.go", "contains": ["DeriveFacets("]}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["specs/facets.cue"]}
+      ]
+    },
+    {
+      "id": "knowledge_lens",
+      "title": "Knowledge Lens scoping in the engine + CLI (CKM-02, #540/#543)",
+      "pillar": "P4",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/atomization/facets.go", "contains": ["func ApplyLens(", "KnowledgeLens"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/atomize_cmd.go", "contains": ["ApplyLens(", "loadKnowledgeLens"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/app/atomize_lens_test.go", "contains": ["TestAtomizeChunksLensExcludesFacet"]},
+        {"path": "cli/internal/atomization/facets_test.go", "contains": ["TestApplyLens"]}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_knowledge_lens_filter.py"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/ckm_knowledge_lens_filter.py", "contains": []}
+      ]
+    },
+    {
+      "id": "body_ledger_merkle_emission",
+      "title": "Body-ledger Merkle proofs emitted with the ledger (CKM-06 #501, #525)",
+      "pillar": "P7",
+      "claim_level": "source-integrity-proven (POC-scoped)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["buildMerkleProofs("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpusBodyLedgerCommand", "body-ledger"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"corpus\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestCKM06"]}
+      ]
+    },
+    {
+      "id": "body_ledger_merkle_verification",
+      "title": "Merkle inclusion-proof verification (engine only — no production verifier)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-07",
+      "expected": "partial",
+      "engine": [
+        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["func VerifyMerkleProof("]}
+      ],
+      "production_callers": [],
+      "adversarial_tests": [
+        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["VerifyMerkleProof("]}
+      ]
+    },
+    {
+      "id": "claim_coverage_attestation",
+      "title": "claim_coverage computed in the corpus attestation generator (FSQ-05 #368) — CLI wiring missing (FSQ-08-followup)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-07",
+      "expected": "partial",
+      "engine": [
+        {"path": "cli/internal/corpus/attestation.go", "contains": ["func computeClaimCoverage(", "ClaimCoverage"]}
+      ],
+      "production_callers": [],
+      "adversarial_tests": [
+        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestFSQ05AttestationClaimCoverage"]}
+      ]
+    },
+    {
+      "id": "supply_chain_attestation",
+      "title": "Supply-chain in-toto predicate (CKM-05 #500) — defined and tested, zero production callers",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "VRC-08",
+      "expected": "partial",
+      "engine": [
+        {"path": "cli/internal/attestation/attestation.go", "contains": ["SupplyChainPredicate", "VerifySupplyChainStatement"]}
+      ],
+      "production_callers": [],
+      "adversarial_tests": [
+        {"path": "cli/internal/attestation/attestation_test.go", "contains": ["TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry"]}
+      ]
+    },
+    {
+      "id": "swiss_live_connector",
+      "title": "Live Swiss source connector — real fetch, real hash (CKM-H5 #531, #539)",
+      "pillar": "P6",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/connector/connector.go", "contains": ["func Fetch(", "sha256.Sum256"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/connector_cmd.go", "contains": ["connector.Fetch("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"connector\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/connector/connector_test.go", "contains": ["func Test"]},
+        {"path": "cli/internal/connector/connector_live_test.go", "contains": ["func Test"]}
+      ]
+    },
+    {
+      "id": "canonical_knowledge_bundle",
+      "title": "Canonical Knowledge Bundle emission + conformance (CKM-13/H4, #534-#536)",
+      "pillar": "P6-gen",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/bundle/bundle.go", "contains": ["BuildInput"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/bundle_cmd.go", "contains": ["bundle.Build("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"bundle\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/bundle/bundle_conformance_test.go", "contains": ["func Test"]}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_bundle_validate.py", "out-of-vocabulary facet value"]}
+      ]
+    },
+    {
+      "id": "cite_or_abstain_gate",
+      "title": "Cite-or-abstain gate with faithfulness recomputed from spans (CKM-08/H6 #502, #530, #542) — Python sidecar only",
+      "pillar": "P2",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-10",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["faithfulness"]},
+        {"path": "tests/test_ckm_faithfulness_recompute.py", "contains": []}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["regulated_rag_answer_evidence.py"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "(?i)faithfulness|cite[_-]?or[_-]?abstain", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "canon_promotion",
+      "title": "Canon promotion workflow (CKM-03 #512) — CUE spec + Python sidecar only",
+      "pillar": "P5",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-11",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/ckm_canon_promotion_validate.py", "contains": []},
+        {"path": "specs/canon-promotion.cue", "contains": []}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_canon_promotion_validate.py"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "CanonPromotion|PromoteCanon|CanonPromote", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "point_in_time_resolver",
+      "title": "Point-in-time atom resolver (CKM-11 #506) — CUE spec + Python sidecar only",
+      "pillar": "P6",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-12",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/ckm_point_in_time_resolve.py", "contains": []},
+        {"path": "specs/point-in-time.cue", "contains": []}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_point_in_time_resolve.py"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "ResolvePointInTime|PointInTimeResolver|PointInTimeResolve", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "facet_ontology_alignment",
+      "title": "BFO/IOF facet-ontology alignment (CKM-12 #507) — CUE spec + Python sidecar only",
+      "pillar": "P3",
+      "claim_level": "not claimable as engine capability",
+      "promotion_issue": "VRC-45",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/ckm_facet_ontology_validate.py", "contains": []},
+        {"path": "specs/facet-ontology.cue", "contains": []}
+      ],
+      "ci_gates": [
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_facet_ontology_validate.py"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "FacetOntology", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "pdf_adapter",
+      "title": "PDF structure-aware adapter — honest placeholder",
+      "pillar": "ingestion",
+      "claim_level": "not claimable",
+      "promotion_issue": "VRC-30",
+      "expected": "stub",
+      "stub_markers": [
+        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["PlaceholderAdapter is a stub for formats not yet implemented"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "(?i)pdfium|poppler|ParsePDF", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "docx_adapter",
+      "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
+      "pillar": "ingestion",
+      "claim_level": "not claimable",
+      "promotion_issue": "VRC-41",
+      "expected": "partial",
+      "engine": [
+        {"path": "cli/internal/fidelity/docx_adapter.go", "contains": ["func ExtractDocx(", "feasibility"]}
+      ],
+      "production_callers": [],
+      "adversarial_tests": [
+        {"path": "cli/internal/fidelity/docx_adapter_test.go", "contains": ["TestExtractDocxInvalidZip"]}
+      ]
+    },
+    {
+      "id": "sigstore_keyless",
+      "title": "Keyless Sigstore/Fulcio/Rekor signing — documented follow-up, not implemented (vocabulary exists, SDK does not)",
+      "pillar": "P7",
+      "claim_level": "prohibited (claim_boundary_guard enforces)",
+      "promotion_issue": "VRC-40",
+      "expected": "absent",
+      "must_be_absent": [
+        {"dir": "cli", "regex": "github\\.com/sigstore", "suffixes": [".go"]}
+      ]
+    },
+    {
+      "id": "strict_fidelity_gate",
+      "title": "Strict release/integrity gate wired as a CLI command",
+      "pillar": "P1",
+      "claim_level": "full-fidelity-proven (POC-scoped)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/app/strict_gate.go", "contains": ["StrictGateCommand"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/app.go", "contains": ["\"strict\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/app/strict_gate_test.go", "contains": ["func Test"]}
+      ]
+    }
+  ],
+  "generic_allowlist": {
+    "command_registration": {
+      "known_unwired": [
+        {"name": "SourcesCheckCommand", "issue": "VRC-09", "note": "doc-comment claims `nomos sources check`; not in the command map"},
+        {"name": "ContractsCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
+        {"name": "MatrixCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
+        {"name": "ExceptionsCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
+        {"name": "StrictCommand", "issue": "VRC-09", "note": "legacy `nomos strict` implementation shadowed by the registered StrictGateCommand"},
+        {"name": "ProductCheckCommand", "issue": "VRC-09", "note": "doc-comment claims `product-check`; not in the command map"},
+        {"name": "ReportCommand", "issue": "VRC-09", "note": "doc-comment claims `nomos report`; not in the command map"},
+        {"name": "ExportSPDXCommand", "issue": "VRC-09", "note": "SPDX BOM exporter exists but is unreachable — feeds VRC-23"},
+        {"name": "ExportCycloneDXCommand", "issue": "VRC-09", "note": "CycloneDX BOM exporter exists but is unreachable — feeds VRC-23"},
+        {"name": "AttestCommand", "issue": "VRC-09", "note": "exported one-shot signing path (re-routed to the real signer by #542, cited by decision 0005) shadowed by the registered attestCommand"}
+      ]
+    }
+  }
+}

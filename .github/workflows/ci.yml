@@ -131,4 +131,8 @@ jobs:
       - run: pip install --quiet pyyaml
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
+      - name: VRC wiring matrix guard (computed statuses match registry, committed matrix has no drift)
+        run: |
+          python scripts/vrc_wiring_matrix.py --root .
+          git diff --exit-code .vrc-wiring-matrix
       - run: python -m unittest discover -s tests -v
