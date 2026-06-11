@@ -275,6 +275,26 @@
       ]
     },
     {
+      "id": "domain_pack_gate",
+      "title": "Domain-pack conformance gate — `nomos pack validate` runs the VRC-20 contract in-engine, resolves lens presets against the pack vocabulary, and rides the golden corpus through the real bundle chain (VRC-21 #564)",
+      "pillar": "D2",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/app/pack_cmd.go", "contains": ["func packValidateCommand(", "FAIL [%s]", "golden_corpus", "bundle.Build("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/app.go", "contains": ["\"pack\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/app/pack_cmd_test.go", "contains": ["TestPackValidate_MissingVocabularyFailsClosed", "TestPackValidate_RedGoldenCorpusFailsClosed", "TestPackValidate_BrokenPresetUnresolvedTermFailsClosed", "TestPackValidate_AbsentClaimBoundaryFailsClosed", "TestPackValidate_SmuggledFieldFailsClosed"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["pack validate --manifest"]}
+      ]
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",

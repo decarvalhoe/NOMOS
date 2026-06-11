@@ -27,6 +27,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"connector":     connectorCommand,
 		"atomize":       AtomizeCommand,
 		"bundle":        bundleCommand,
+		"pack":          packCommand,
 		"strict":        StrictGateCommand,
 		"check":         checkCommand,
 		"report":        ReportCommand,
@@ -69,6 +70,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  connector  Read-only live fetch of an open source with hash + span coverage")
 	fmt.Fprintln(stdout, "  atomize    Atomize Markdown into atoms/chunks (facets, knowledge-lens scoping)")
 	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
+	fmt.Fprintln(stdout, "  pack       Validate a domain pack against its declarative contract (golden corpus included)")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
 	fmt.Fprintln(stdout, "  check      Granular manifest checks (sources, contracts, matrix, exceptions, strict)")
 	fmt.Fprintln(stdout, "  report     Generate the project detection report (JSON)")
