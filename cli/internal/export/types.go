@@ -27,9 +27,16 @@ type SPDXPackage struct {
 	DownloadLocation     string            `json:"downloadLocation"`
 	FilesAnalyzed        bool              `json:"filesAnalyzed"`
 	Supplier             string            `json:"supplier,omitempty"`
+	Checksums            []SPDXChecksum    `json:"checksums,omitempty"`
 	ExternalRefs         []SPDXExternalRef `json:"externalRefs,omitempty"`
 	PrimaryPackagePurpose string           `json:"primaryPackagePurpose,omitempty"`
 	Comment              string            `json:"comment,omitempty"`
+}
+
+// SPDXChecksum carries a content digest for a package (SPDX 2.3 §7.10).
+type SPDXChecksum struct {
+	Algorithm     string `json:"algorithm"`     // e.g. "SHA256"
+	ChecksumValue string `json:"checksumValue"` // hex, no algorithm prefix
 }
 
 type SPDXExternalRef struct {
@@ -76,8 +83,15 @@ type CDXComponent struct {
 	Name       string            `json:"name"`
 	Version    string            `json:"version"`
 	Purl       string            `json:"purl,omitempty"`
+	Hashes     []CDXHash         `json:"hashes,omitempty"`
 	Properties []CDXProperty     `json:"properties,omitempty"`
 	ExternalReferences []CDXExternalReference `json:"externalReferences,omitempty"`
+}
+
+// CDXHash carries a content digest for a component (CycloneDX 1.5 hash object).
+type CDXHash struct {
+	Alg     string `json:"alg"`     // e.g. "SHA-256"
+	Content string `json:"content"` // hex, no algorithm prefix
 }
 
 type CDXProperty struct {

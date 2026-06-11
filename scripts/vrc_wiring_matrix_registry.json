@@ -371,6 +371,28 @@
       ]
     },
     {
+      "id": "evidence_pack_bom",
+      "title": "Evidence packs as CycloneDX/SPDX BOMs — each source's sha256 cross-checked against the Merkle-verified body ledger; a tampered hash refuses emission (VRC-23 #566, A5)",
+      "pillar": "A5",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/export/evidence_bom.go", "contains": ["func GenerateEvidenceCycloneDX(", "func GenerateEvidenceSPDX(", "VerifyCorpusBodyLedgerProofs"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/report_cmds.go", "contains": ["ExportEvidenceBOMCommand", "export.GenerateEvidenceCycloneDX(", "export.GenerateEvidenceSPDX("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"export\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/export/evidence_bom_test.go", "contains": ["TestEvidenceBOM_FailsClosedOnTamperedHash", "TestEvidenceBOM_RejectsLedgerWithoutMerkle"]},
+        {"path": "cli/internal/app/export_evidence_bom_test.go", "contains": ["TestExportEvidenceBOM_FailsClosedOnTamperedLedger"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ]
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
