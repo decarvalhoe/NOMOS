@@ -349,6 +349,27 @@
       ]
     },
     {
+      "id": "rag_eval_harness",
+      "title": "Regulated RAG evaluation harness — the cite-or-abstain gate over a golden corpus vs VERSIONED thresholds; a citation-recall/faithfulness regression turns the CI job red (VRC-13 #559, B2)",
+      "pillar": "B2",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/answer/eval.go", "contains": ["func Eval(", "EvalThresholds", "MinMeanCitationRecall"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Eval(", "answerEvalCommand"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/answer/eval_test.go", "contains": ["TestEval_CitationRecallRegressionTurnsRed", "TestEval_EmptyCorpusFailsClosed"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["answer eval --corpus"]}
+      ]
+    },
+    {
       "id": "reference_retrieval_kit",
       "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
       "pillar": "B1",
