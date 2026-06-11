@@ -162,6 +162,85 @@ func TestNodeIDsAreContractValid(t *testing.T) {
 	}
 }
 
+// SEAM-1 (#534): --feed-version and jurisdiction flags populate the optional
+// feeds[].version / feeds[].jurisdiction fields when given.
+func TestBuild_FeedVersionAndJurisdictionPopulated(t *testing.T) {
+	b, err := Build(BuildInput{
+		BundleID:     "nomos-test-bundle",
+		Producer:     "nomos",
+		Domain:       "built-environment",
+		FeedVersion:  "2026.1-lausanne",
+		Jurisdiction: &Jurisdiction{Country: "CH", Canton: "VD", Commune: "Lausanne"},
+		GeneratedAt:  time.Date(2026, 6, 10, 0, 0, 0, 0, time.UTC),
+		Sources:      sampleSources(),
+		Trace:        testTrace(t),
+	})
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	feed := b.Feeds[0]
+	if feed.Version != "2026.1-lausanne" {
+		t.Errorf("feed.Version = %q, want %q", feed.Version, "2026.1-lausanne")
+	}
+	if feed.Jurisdiction == nil {
+		t.Fatal("feed.Jurisdiction is nil; expected populated")
+	}
+	if feed.Jurisdiction.Commune != "Lausanne" || feed.Jurisdiction.Canton != "VD" || feed.Jurisdiction.Country != "CH" {
+		t.Errorf("feed.Jurisdiction = %+v, want {CH VD Lausanne}", *feed.Jurisdiction)
+	}
+}
+
+// SEAM-1: when no version is given the emitter derives a deterministic default
+// from bundle_id@generated_at (never empty), so the optional field is populated
+// reproducibly.
+func TestBuild_FeedVersionDefaultsDeterministically(t *testing.T) {
+	b := buildSample(t)
+	want := DefaultFeedVersion("nomos-test-bundle", time.Date(2026, 6, 10, 0, 0, 0, 0, time.UTC))
+	if got := b.Feeds[0].Version; got != want {
+		t.Errorf("default feed version = %q, want %q", got, want)
+	}
+}
+
+// SEAM-1 ADDITIVE PROOF: a bundle WITHOUT a supplied jurisdiction omits the field
+// (serializes to no `jurisdiction` key) and still validates. The new fields must
+// not regress the no-jurisdiction domain-corpus case.
+func TestBuild_NoJurisdictionStaysValidAndOmitsField(t *testing.T) {
+	b := buildSample(t) // no Jurisdiction in BuildInput
+	if b.Feeds[0].Jurisdiction != nil {
+		t.Fatalf("expected nil jurisdiction, got %+v", *b.Feeds[0].Jurisdiction)
+	}
+	if err := b.Validate(); err != nil {
+		t.Fatalf("no-jurisdiction bundle failed validation: %v", err)
+	}
+	data, err := b.Marshal()
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(data), "\"jurisdiction\"") {
+		t.Error("no-jurisdiction bundle serialized a jurisdiction key (not omitempty)")
+	}
+}
+
+// SEAM-1: an explicitly empty jurisdiction (all fields blank) is treated as
+// absent — the field is omitted, not serialized as an empty object.
+func TestBuild_EmptyJurisdictionIsOmitted(t *testing.T) {
+	b, err := Build(BuildInput{
+		BundleID:     "nomos-test-bundle",
+		Producer:     "nomos",
+		Domain:       "built-environment",
+		Jurisdiction: &Jurisdiction{}, // all blank
+		GeneratedAt:  time.Date(2026, 6, 10, 0, 0, 0, 0, time.UTC),
+		Sources:      sampleSources(),
+		Trace:        testTrace(t),
+	})
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if b.Feeds[0].Jurisdiction != nil {
+		t.Errorf("empty jurisdiction should be omitted, got %+v", *b.Feeds[0].Jurisdiction)
+	}
+}
+
 func TestParseRepoFromRemote(t *testing.T) {
 	cases := map[string]string{
 		"https://github.com/RBOKproject/NOMOS.git": "RBOKproject/NOMOS",
