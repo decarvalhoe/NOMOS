@@ -382,3 +382,29 @@ Chaque issue qui promeut une capacité **doit** flipper l'entrée correspondante
 `scripts/vrc_wiring_matrix_registry.json` dans la même PR (expected `sidecar|stub|absent|partial`
 → `real`) avec les nouvelles ancres. La matrice échoue si la réalité et le registre
 divergent — dans les deux sens. C'est le verrou anti-« déclaré fait ».
+
+## Liens issues (matérialisés)
+
+**Epic `RBOKproject/NOMOS`** : **#545** · Livraison VRC-00 : PR **#544** · Matérialisé le 2026-06-11.
+
+| ID | Issue | ID | Issue |
+|---|---|---|---|
+| VRC-00 | #546 | VRC-22 | #565 |
+| VRC-01 | #547 | VRC-23 | #566 |
+| VRC-02 | #548 | VRC-30 | #567 |
+| VRC-03 | #549 | VRC-31 | #568 |
+| VRC-04 | #550 | VRC-32 | #569 |
+| VRC-05 | #551 | VRC-33 | #570 |
+| VRC-06 | #552 | VRC-34 | #571 |
+| VRC-07 | #553 | VRC-35 | #572 |
+| VRC-08 | #554 | VRC-36 | #573 |
+| VRC-09 | #555 | VRC-37 | #574 |
+| VRC-10 | #556 | VRC-38 | #575 |
+| VRC-11 | #557 | VRC-40 | #576 |
+| VRC-12 | #558 | VRC-41 | #577 |
+| VRC-13 | #559 | VRC-42 | #578 |
+| VRC-14 | #560 | VRC-43 | #579 |
+| VRC-15 | #561 | VRC-44 | #580 |
+| VRC-16 | #562 | VRC-45 | #581 |
+| VRC-20 | #563 | VRC-46 | #582 |
+| VRC-21 | #564 | | |
