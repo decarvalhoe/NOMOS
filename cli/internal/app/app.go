@@ -25,6 +25,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"diagnose":  diagnoseCommand,
 		"corpus":    corpusCommand,
 		"connector": connectorCommand,
+		"atomize":   AtomizeCommand,
 		"bundle":    bundleCommand,
 		"strict":    StrictGateCommand,
 		"github":    githubCommand,
@@ -62,6 +63,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
 	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
 	fmt.Fprintln(stdout, "  connector  Read-only live fetch of an open source with hash + span coverage")
+	fmt.Fprintln(stdout, "  atomize    Atomize Markdown into atoms/chunks (facets, knowledge-lens scoping)")
 	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import shutil
 import unittest
@@ -15,6 +16,9 @@ CONNECTORS = PACK_ROOT / "ch-source-connectors.yaml"
 SIA_SIDECAR = PACK_ROOT / "sia-reference-sidecar.yaml"
 PGA_SEGMENTS = PACK_ROOT / "pga-paz-source-segments.valid.yaml"
 PGA_BODY_LEDGER = PACK_ROOT / "pga-paz-body-ledger.valid.yaml"
+
+# Any sha256:<64hex> literal anywhere in the connector manifest.
+SHA256_LITERAL = re.compile(r"sha256:[a-f0-9]{64}")
 
 
 def load_yaml(path: Path):
@@ -64,8 +68,105 @@ class CKMCHSourceConnectorTests(unittest.TestCase):
                 self.assertTrue(connector["machine_source"])
                 self.assertEqual(connector["retrieval"]["write_policy"], "read_only")
                 self.assertEqual(connector["dating"]["as_of_date_policy"], "required")
-                self.assertRegex(connector["hashing"]["content_hash"], r"^sha256:[a-f0-9]{64}$")
                 self.assertTrue(connector["retrieval"]["retrieved_at_utc"].endswith("Z"))
+                # CKM-H5 follow-up (#539): the hash form must agree with the
+                # fetch status. A fetched connector carries a real digest and a
+                # reference to its committed evidence; a declared placeholder
+                # carries the non-digest placeholder and no evidence_ref.
+                status = connector["status"]
+                content_hash = connector["hashing"]["content_hash"]
+                if status == "fetched":
+                    self.assertRegex(content_hash, r"^sha256:[a-f0-9]{64}$")
+                    self.assertTrue(
+                        connector.get("evidence_ref"),
+                        f"fetched connector {family} must reference its evidence",
+                    )
+                else:
+                    self.assertEqual(status, "declared_placeholder")
+                    self.assertEqual(content_hash, "placeholder:not-fetched")
+                    self.assertNotIn("evidence_ref", connector)
+
+    def test_connector_manifest_has_no_synthetic_sha256_placeholder(self) -> None:
+        """CKM-H5 follow-up (#539): no synthetic sha256 may survive.
+
+        Adversarial: PR #531 shipped a REAL live OFS connector with committed
+        evidence, but this manifest still carried synthetic
+        sha256:1111.../2222.../3333.../4444... placeholders alongside realistic
+        timestamps — a trap a validator could treat as real.
+
+        Every `sha256:<64hex>` literal in this file MUST be backed by real
+        evidence: it must belong to a `status: fetched` connector that names an
+        `evidence_ref`, and the digest must actually appear inside that evidence
+        file. Sources not fetched live must use the non-digest
+        `placeholder:not-fetched` form, which can never be mistaken for a digest.
+
+        This test FAILS on the old synthetic content (the 1111…/2222… digests
+        match no evidence) and PASSES once the manifest is de-synthesized.
+        """
+        raw_text = CONNECTORS.read_text(encoding="utf-8")
+        config = load_yaml(CONNECTORS)
+        connectors = config["connectors"]
+
+        # 1) Map every real sha256 to the connector that declares it.
+        by_hash: dict[str, dict] = {}
+        for connector in connectors:
+            content_hash = connector["hashing"]["content_hash"]
+            if content_hash == "placeholder:not-fetched":
+                continue
+            self.assertRegex(
+                content_hash,
+                r"^sha256:[a-f0-9]{64}$",
+                f"{connector['id']}: a non-placeholder hash must be a real sha256",
+            )
+            by_hash[content_hash] = connector
+
+        # 2) Every sha256 literal in the file's TEXT is one we accounted for.
+        #    (Catches a synthetic digest hidden in a comment or stray field.)
+        for literal in SHA256_LITERAL.findall(raw_text):
+            self.assertIn(
+                literal,
+                by_hash,
+                f"unexpected sha256 literal not tied to a fetched connector: {literal}",
+            )
+
+        # 3) Each real sha256 must be backed by its referenced evidence file.
+        for content_hash, connector in by_hash.items():
+            with self.subTest(connector=connector["id"]):
+                self.assertEqual(
+                    connector["status"],
+                    "fetched",
+                    "a real sha256 may only appear on a fetched connector",
+                )
+                evidence_ref = connector.get("evidence_ref")
+                self.assertTrue(
+                    evidence_ref,
+                    f"{connector['id']}: real sha256 requires an evidence_ref",
+                )
+                evidence_path = ROOT / evidence_ref
+                self.assertTrue(
+                    evidence_path.exists(),
+                    f"{connector['id']}: evidence file missing: {evidence_ref}",
+                )
+                evidence_text = evidence_path.read_text(encoding="utf-8")
+                self.assertIn(
+                    content_hash,
+                    evidence_text,
+                    f"{connector['id']}: manifest hash {content_hash} not found in "
+                    f"its evidence {evidence_ref} (synthetic or stale digest)",
+                )
+
+        # 4) Belt-and-braces: none of the original synthetic digests survive.
+        for synthetic in (
+            "sha256:" + "1" * 64,
+            "sha256:" + "2" * 64,
+            "sha256:" + "3" * 64,
+            "sha256:" + "4" * 64,
+        ):
+            self.assertNotIn(
+                synthetic,
+                raw_text,
+                f"synthetic placeholder digest still present: {synthetic}",
+            )
 
     def test_pga_paz_pdf_pipeline_has_spans_and_zero_uncovered_bytes(self) -> None:
         if shutil.which("cue") is not None:
