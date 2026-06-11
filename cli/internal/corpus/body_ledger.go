@@ -414,12 +414,24 @@ func buildMerkleProofs(leaves []string) (string, []MerkleProof) {
 		nextIndexes := make([][]int, 0, (len(indexes)+1)/2)
 		for i := 0; i < len(level); i += 2 {
 			left := level[i]
-			right := left
-			rightIndexes := indexes[i]
-			if i+1 < len(level) {
-				right = level[i+1]
-				rightIndexes = indexes[i+1]
+			if i+1 >= len(level) {
+				// Odd tail node: it is paired with itself to form the parent.
+				// Each leaf carried under it gets exactly one self hop (its own
+				// subtree hash, on the right). Running both the right and left
+				// hop loops here — as a single duplicated index set — would
+				// append two hops at this level and corrupt the path, and
+				// carrying the indexes up twice would repeat that at every
+				// higher level. That is why proofs only verified for power-of-2
+				// leaf counts before this fix.
+				for _, original := range indexes[i] {
+					proofs[original].Path = append(proofs[original].Path, MerkleProofHop{Position: "right", Hash: left})
+				}
+				nextLevel = append(nextLevel, merklePairHash(left, left))
+				nextIndexes = append(nextIndexes, append([]int{}, indexes[i]...))
+				continue
 			}
+			right := level[i+1]
+			rightIndexes := indexes[i+1]
 			for _, original := range indexes[i] {
 				proofs[original].Path = append(proofs[original].Path, MerkleProofHop{Position: "right", Hash: right})
 			}
