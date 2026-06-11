@@ -175,3 +175,73 @@ func TestLive_RDPPFOEREB(t *testing.T) {
 	}
 	t.Logf("live RDPPF fetch: %d bytes, %s, %d atoms, 0 uncovered", result.ByteCount, result.SHA256, ev.AtomCount)
 }
+
+// TestLive_RDPPFExtractByEGRID proves the per-parcel RDPPF extract — the
+// document Aedifica's domain actually runs on (Nutzungsplanung restrictions of
+// ONE parcel). No parcel is hardcoded: each run DISCOVERS its parcels through
+// the standard's own getegrid endpoint (LV95 coordinates → EGRID), across
+// several distinct locations, then fetches each full extract. So the proof
+// holds for arbitrary parcels, not a curated one (VRC-32 / #569).
+func TestLive_RDPPFExtractByEGRID(t *testing.T) {
+	if os.Getenv("NOMOS_LIVE_CH_FETCH") != "1" {
+		t.Skip("set NOMOS_LIVE_CH_FETCH=1 to run the live Swiss-source fetch")
+	}
+	const base = "https://maps.zh.ch/oereb/v2"
+	// Three unrelated locations (LV95): Zurich centre, Zurich-Oerlikon, and a
+	// third district — whatever parcel happens to sit there today.
+	coords := []string{"2683100,1248100", "2683600,1252000", "2697000,1262000"}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	parcels := 0
+	for _, en := range coords {
+		egridDoc, _, err := Fetch(ctx, base+"/getegrid/json?EN="+en, FetchOptions{})
+		if err != nil {
+			t.Fatalf("getegrid(%s): %v", en, err)
+		}
+		// Pull the first "egrid":"CH…" out of the discovery response — the
+		// standard's own answer, never an invented identifier.
+		marker := `"egrid":"`
+		idx := strings.Index(string(egridDoc), marker)
+		if idx < 0 {
+			t.Fatalf("getegrid(%s) returned no parcel: %s", en, string(egridDoc[:min(200, len(egridDoc))]))
+		}
+		rest := string(egridDoc[idx+len(marker):])
+		egrid := rest[:strings.Index(rest, `"`)]
+		if !strings.HasPrefix(egrid, "CH") {
+			t.Fatalf("discovered EGRID %q does not look like an EGRID", egrid)
+		}
+
+		content, result, err := Fetch(ctx, base+"/extract/json?EGRID="+egrid, FetchOptions{})
+		if err != nil {
+			t.Fatalf("extract(%s): %v", egrid, err)
+		}
+		if len(result.SHA256) != len("sha256:")+64 {
+			t.Fatalf("extract(%s) produced a non-real hash %q", egrid, result.SHA256)
+		}
+		payload := string(content)
+		if !strings.Contains(payload, "GetExtractByIdResponse") {
+			t.Fatalf("extract(%s) is not an OEREB extract response", egrid)
+		}
+		if !strings.Contains(payload, "ch.Nutzungsplanung") {
+			t.Fatalf("extract(%s) carries no Nutzungsplanung theme — wrong document?", egrid)
+		}
+		if !strings.Contains(payload, egrid) {
+			t.Fatalf("extract(%s) does not reference its own EGRID", egrid)
+		}
+		ledger := BuildLineLedger(content)
+		if !ledger.IsFullyCovered() {
+			t.Fatalf("extract(%s) left %d bytes uncovered", egrid, ledger.UncoveredBytes)
+		}
+		ev := BuildEvidence("ch-rdppf-oereb", content, result, ledger, 2)
+		if err := ev.Validate(); err != nil {
+			t.Fatalf("extract(%s) evidence invalid: %v", egrid, err)
+		}
+		parcels++
+		t.Logf("parcel %s: %d bytes, %s, %d atoms, 0 uncovered", egrid, result.ByteCount, result.SHA256, ev.AtomCount)
+	}
+	if parcels < 3 {
+		t.Fatalf("only %d parcels proven, want 3", parcels)
+	}
+}

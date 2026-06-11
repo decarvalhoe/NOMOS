@@ -1,0 +1,41 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-rdppf-oereb",
+  "source": {
+    "id": "ch-rdppf-oereb",
+    "jurisdiction": "CH",
+    "authority": "Cadastre RDPPF / ÖREB-Kataster (service cantonal, standard fédéral)",
+    "access": "open_data",
+    "license_note": "Official cadastre of public-law restrictions; redistributed as hash + span coverage only (no full-text copy).",
+    "description": "OEREB v2 webservice snapshot (capabilities: themes incl. Nutzungsplanung)."
+  },
+  "fetch": {
+    "url": "https://maps.zh.ch/oereb/v2/extract/json?EGRID=CH299970539115",
+    "fetched_at": "2026-06-11T08:42:15Z",
+    "status_code": 200,
+    "content_type": "application/json; charset=utf-8",
+    "byte_count": 123331,
+    "sha256": "sha256:19a9e05ae379667c89e37d6a00dcbfa5d519a5f032883ab6c532a43594b3aabd",
+    "etag": "W/\"19a9e05ae379667c89e37d6a00dcbfa5-gzip\""
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 123331,
+    "covered_bytes": 123331,
+    "uncovered_bytes": 0,
+    "segment_count": 1
+  },
+  "atom_count": 1,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 123331,
+      "content_hash": "sha256:19a9e05ae379667c89e37d6a00dcbfa5d519a5f032883ab6c532a43594b3aabd",
+      "preview": "{\"GetExtractByIdResponse\":{\"Extract\":{\"CreationDate\":\"2026-06-11T10:42:16\",\"Conc…"
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}

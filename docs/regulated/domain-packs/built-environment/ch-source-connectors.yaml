@@ -69,24 +69,29 @@ connectors:
     machine_source: true
     # Real live fetch (VRC-32 / #569): the OEREB v2 GetCapabilities document of
     # an official cantonal RDPPF webservice (Zurich), implementing the federal
-    # standard — it lists the restriction themes (incl. ch.Nutzungsplanung).
-    # Parcel extracts (/extract/{egrid}) come when a pilot parcel is chosen;
-    # the capabilities snapshot is the service's authority register.
+    # standard. The committed receipt is now the PER-PARCEL extract
+    # (GetExtractById — the Nutzungsplanung restrictions of one real parcel,
+    # EGRID discovered through the standard's own getegrid endpoint, not
+    # curated). A second parcel receipt plus the capabilities receipt live in
+    # docs/regulated/ch-connectors/; the live test discovers three arbitrary
+    # parcels per run. Extracts are generated on demand and carry a
+    # CreationDate, so the hash is a point-in-time receipt of a real fetch —
+    # never a pinned oracle.
     status: fetched
-    evidence_ref: docs/regulated/ch-connectors/ch-rdppf-oereb.evidence.json
+    evidence_ref: docs/regulated/ch-connectors/ch-rdppf-oereb-extract-CH107791929988.evidence.json
     retrieval:
       mode: read_only_api
       write_policy: read_only
-      endpoint_pattern: "https://{cantonal-oereb-endpoint}/oereb/v2/capabilities/{format}"
-      retrieved_at_utc: "2026-06-11T07:46:04Z"
+      endpoint_pattern: "https://{cantonal-oereb-endpoint}/oereb/v2/extract/{format}?EGRID={egrid}"
+      retrieved_at_utc: "2026-06-11T08:42:14Z"
     dating:
       as_of_date_policy: required
       date_fields: [extract_identifier, extract_date, legal_provision_date]
       timezone: Europe/Zurich
     hashing:
-      content_hash: sha256:b4003e109f9848b404551e10042dfdcd7293cfef76b02319a10b6d056a975a34
+      content_hash: sha256:0793b1d85657daf7c6a3d78f65f3f216b4b0615c6b6c02357fe7adc5fb2cdbb8
       hash_scope: raw_response
-      canonicalization: "Hash raw OEREB v2 capabilities JSON response bytes (maps.zh.ch, GetCapabilitiesResponse)."
+      canonicalization: "Hash raw OEREB v2 GetExtractById JSON response bytes (maps.zh.ch, EGRID CH107791929988)."
     outputs:
       source_manifest_type: api_export
       stores_full_text: false
