@@ -54,6 +54,14 @@ var KnownSources = map[string]SourceDescriptor{
 		LicenseNote:  "Official cadastre of public-law restrictions; redistributed as hash + span coverage only (no full-text copy).",
 		Description:  "OEREB v2 webservice snapshot (capabilities: themes incl. Nutzungsplanung).",
 	},
+	"ch-geoportail-cantonal": {
+		ID:           "ch-geoportail-cantonal",
+		Jurisdiction: "CH",
+		Authority:    "Géoportail cantonal (service WMS officiel du canton)",
+		Access:       "open_data",
+		LicenseNote:  "Cantonal open geodata service; redistributed as hash + span coverage only (no full-text copy).",
+		Description:  "WMS GetCapabilities of a cantonal geoportal (layer register incl. Zonenplan/Nutzungsplan).",
+	},
 }
 
 // AtomSample is a small, non-full-text sample of an atomized segment. The
