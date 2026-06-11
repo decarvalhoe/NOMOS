@@ -47,6 +47,29 @@ discipline_role:
     label_fr: "Rôle A"
 `)
 	write("docs/regulated/domain-packs/test-pack/sources.yaml", "domain_profile: test-pack\nconnectors: []\n")
+	write("docs/regulated/domain-packs/test-pack/facet-ontology.yaml", `schema_version: ckm-facet-ontology-v1
+facet_axes:
+  - id: activity
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: test.phase_a
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+  - id: discipline_role
+    root: http://purl.obolibrary.org/obo/BFO_0000023
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+    terms:
+      - id: test.role_a
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [activity, discipline_role]
+claim_boundary: test
+`)
 	write("docs/regulated/domain-packs/test-pack/presets/a.lens.yaml", `id: LENS-TEST-A
 include:
   all_of:
@@ -66,6 +89,8 @@ claim_boundary: >-
 vocabularies:
   file: docs/regulated/domain-packs/test-pack/vocab.yaml
   axes: [activity, discipline_role]
+ontology:
+  file: docs/regulated/domain-packs/test-pack/facet-ontology.yaml
 source_register:
   file: docs/regulated/domain-packs/test-pack/sources.yaml
   contract: "#BuiltEnvironmentSourceConnectors"
@@ -239,6 +264,75 @@ func TestPackValidate_BrokenPresetWithoutPredicatesFailsClosed(t *testing.T) {
 	}
 	if !strings.Contains(stderr, "FAIL [lens_presets]") {
 		t.Fatalf("expected the lens_presets rung: %s", stderr)
+	}
+}
+
+func TestPackValidate_UnregisteredAxisFailsClosed(t *testing.T) {
+	// VRC-45 (D4): the ontology drops the discipline_role axis while the
+	// pack still declares it — « axe non aligné → pack rejeté ».
+	root, manifest := scaffoldPack(t)
+	onto := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack", "facet-ontology.yaml")
+	raw, err := os.ReadFile(onto)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cut := strings.Split(string(raw), "  - id: discipline_role")[0] + "orthogonality:\n  owl_construct: owl:disjointUnionOf\n  disjoint_axes: [activity]\nclaim_boundary: test\n"
+	if err := os.WriteFile(onto, []byte(cut), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("axe non enregistré: the gate passed")
+	}
+	if !strings.Contains(stderr, "FAIL [ontology]") || !strings.Contains(stderr, "discipline_role") {
+		t.Fatalf("expected the ontology rung to name the unregistered axis: %s", stderr)
+	}
+}
+
+func TestPackValidate_UnmappedTermFailsClosed(t *testing.T) {
+	// VRC-45 (D4): the vocabulary grows a term the ontology never maps.
+	root, manifest := scaffoldPack(t)
+	vocab := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack", "vocab.yaml")
+	raw, err := os.ReadFile(vocab)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Insert the new ACTIVITY term right before the discipline_role block.
+	if err := os.WriteFile(vocab, []byte(strings.Replace(string(raw),
+		"discipline_role:",
+		"  - id: test.phase_b\n    label_fr: \"Phase B (jamais alignée)\"\ndiscipline_role:", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("terme non mappé: the gate passed")
+	}
+	if !strings.Contains(stderr, "FAIL [ontology]") || !strings.Contains(stderr, "test.phase_b") {
+		t.Fatalf("expected the ontology rung to name the unmapped term: %s", stderr)
+	}
+}
+
+func TestPackValidate_DisjointAxisOverlapFailsClosed(t *testing.T) {
+	// VRC-45 (D4): the same term registered on BOTH disjoint axes violates
+	// owl:disjointUnionOf — the gate renders the sidecar's verdict itself.
+	root, manifest := scaffoldPack(t)
+	onto := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack", "facet-ontology.yaml")
+	raw, err := os.ReadFile(onto)
+	if err != nil {
+		t.Fatal(err)
+	}
+	overlapped := strings.Replace(string(raw),
+		"      - id: test.role_a",
+		"      - id: test.phase_a\n        maps_to:\n          bfo: http://purl.obolibrary.org/obo/BFO_0000023\n          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole\n      - id: test.role_a", 1)
+	if err := os.WriteFile(onto, []byte(overlapped), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("chevauchement d'axes disjoints: the gate passed")
+	}
+	if !strings.Contains(stderr, "FAIL [ontology]") || !strings.Contains(stderr, "disjointUnionOf") {
+		t.Fatalf("expected the ontology rung to name the disjointness breach: %s", stderr)
 	}
 }
 

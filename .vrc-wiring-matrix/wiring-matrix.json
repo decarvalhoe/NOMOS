@@ -572,22 +572,43 @@
     },
     {
       "id": "facet_ontology_alignment",
-      "title": "BFO/IOF facet-ontology alignment (CKM-12 #507) — CUE spec + Python sidecar only",
+      "title": "BFO/IOF facet-ontology alignment rendered by the domain-pack gate (CKM-12 #507 → VRC-45 #581): unregistered axis / unmapped term / disjointness breach → pack rejected; the Python sidecar stays as the example-level non-regression check",
       "pillar": "P3",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-45",
-      "expected": "sidecar",
-      "computed": "sidecar",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
+        "engine": [
+          {
+            "path": "cli/internal/app/pack_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/pack_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
           {
             "path": "scripts/ckm-non-regression.sh",
             "ok": true,
@@ -955,9 +976,9 @@
   "summary": {
     "capabilities": 21,
     "computed": {
-      "real": 14,
+      "real": 15,
       "partial": 1,
-      "sidecar": 5,
+      "sidecar": 4,
       "stub": 0,
       "absent": 1
     },

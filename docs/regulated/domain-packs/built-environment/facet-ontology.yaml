@@ -1,0 +1,95 @@
+# VRC-45 (#581, D4) — the built-environment pack's ontology alignment:
+# BFO (ISO 21838) → IOF Core → pack terms, for the OPEN axes this pack owns.
+# `nomos pack validate` renders the verdict on this document (axis not
+# registered, term not mapped, disjoint-axis overlap → pack rejected); the
+# document itself stays 100 % declarative pack data.
+schema_version: ckm-facet-ontology-v1
+anchors:
+  bfo:
+    standard: BFO
+    iri: http://purl.obolibrary.org/obo/BFO_0000001
+    version: ISO 21838-2
+  iof_core:
+    standard: IOF Core
+    iri: https://spec.industrialontologies.org/ontology/core/Core/Process
+  domain_pack:
+    standard: domain-pack
+    iri: https://nomos.dev/domain-packs/built-environment
+facet_axes:
+  - id: activity
+    label: Activité (phases SIA + hors-phase)
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: aec.conception
+        label: Conception architecturale (SIA 31/32)
+        iri: https://nomos.dev/domain-packs/built-environment/activity/conception
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: aec.permis
+        label: Autorisation de construire / mise à l'enquête (SIA 33)
+        iri: https://nomos.dev/domain-packs/built-environment/activity/permis
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: aec.appel_offres
+        label: Appel d'offres / adjudication (SIA 41)
+        iri: https://nomos.dev/domain-packs/built-environment/activity/appel-offres
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: aec.direction_travaux
+        label: Direction des travaux / chantier (SIA 52)
+        iri: https://nomos.dev/domain-packs/built-environment/activity/direction-travaux
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: aec.exploitation
+        label: Mise en service / exploitation (SIA 53/61)
+        iri: https://nomos.dev/domain-packs/built-environment/activity/exploitation
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+  - id: discipline_role
+    label: Rôle de discipline (mandataires et exécutants)
+    root: http://purl.obolibrary.org/obo/BFO_0000023
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+    terms:
+      - id: aec.architecte
+        label: Architecte (mandataire principal)
+        iri: https://nomos.dev/domain-packs/built-environment/role/architecte
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: aec.ingenieur_civil
+        label: Ingénieur civil
+        iri: https://nomos.dev/domain-packs/built-environment/role/ingenieur-civil
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: aec.geometre
+        label: Géomètre officiel
+        iri: https://nomos.dev/domain-packs/built-environment/role/geometre
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: aec.specialiste_energie
+        label: Spécialiste énergie (SIA 380/1)
+        iri: https://nomos.dev/domain-packs/built-environment/role/specialiste-energie
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: aec.entreprise
+        label: Entreprise d'exécution
+        iri: https://nomos.dev/domain-packs/built-environment/role/entreprise
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [activity, discipline_role]
+  validation: nomos pack validate (rung ontology) + scripts/ckm_facet_ontology_validate.py
+claim_boundary: >-
+  L'alignement ontologique soutient l'interopérabilité des facettes du pack ;
+  il ne certifie aucune vérité métier ni aucune conformité réglementaire.
