@@ -1,0 +1,18 @@
+# W23-4 (#571) — preset lens « permis » : le scope du dossier d'autorisation
+# (SIA 33, mise à l'enquête). L'enquête est PUBLIQUE : le confidentiel reste
+# hors scope par construction.
+id: LENS-AEC-PERMIS
+description: >-
+  Autorisation de construire / mise à l'enquête : les atomes d'activité
+  aec.permis ET publics uniquement — le confidentiel ne sort jamais par cette
+  lens, quels que soient les autres axes.
+include:
+  all_of:
+    - activity:
+        - aec.permis
+      confidentiality: public
+exclude:
+  any_of:
+    - applicability: not_applicable
+    - applicability: blocked
+    - confidentiality: confidential
