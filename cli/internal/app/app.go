@@ -18,11 +18,11 @@ type commandFunc func(args []string, stdout io.Writer, stderr io.Writer) int
 
 func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 	commands := map[string]commandFunc{
-		"help":     helpCommand,
-		"version":  versionCommand,
-		"init":     initCommand,
-		"validate": validate.Command,
-		"diagnose": diagnoseCommand,
+		"help":      helpCommand,
+		"version":   versionCommand,
+		"init":      initCommand,
+		"validate":  validate.Command,
+		"diagnose":  diagnoseCommand,
 		"corpus":    corpusCommand,
 		"connector": connectorCommand,
 		"bundle":    bundleCommand,
