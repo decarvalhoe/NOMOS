@@ -520,22 +520,53 @@
     },
     {
       "id": "canon_promotion",
-      "title": "Canon promotion workflow (CKM-03 #512) — CUE spec + Python sidecar only",
+      "title": "Canon-promotion validator in the Go engine (VRC-11 #557) — a user_promoted atom enters the silo only under the certified rules; confidential source/atom never leaks to the shared catalog; certified trust tier refused; missing/revoked certificate refused. The CUE spec + Python sidecar (CKM-03) stay as the contract + evidence emitter.",
       "pillar": "P5",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-11",
-      "expected": "sidecar",
-      "computed": "sidecar",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
+        "engine": [
+          {
+            "path": "cli/internal/canon/canon.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/canon_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/canon/canon_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/canon_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
           {
             "path": "scripts/ckm-non-regression.sh",
             "ok": true,
@@ -1165,6 +1196,7 @@
         "atomize",
         "attest",
         "bundle",
+        "canon",
         "check",
         "connector",
         "corpus",
@@ -1188,9 +1220,9 @@
   "summary": {
     "capabilities": 25,
     "computed": {
-      "real": 19,
+      "real": 20,
       "partial": 0,
-      "sidecar": 5,
+      "sidecar": 4,
       "stub": 0,
       "absent": 1
     },
