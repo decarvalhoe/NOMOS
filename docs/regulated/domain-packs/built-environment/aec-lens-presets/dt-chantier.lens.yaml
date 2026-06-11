@@ -1,0 +1,14 @@
+# W23-4 (#571) — preset lens « DT-chantier » : le scope d'une direction des
+# travaux (SIA 52). Consommable par `nomos atomize chunks --lens <ce fichier>`.
+id: LENS-AEC-DT-CHANTIER
+description: >-
+  Direction des travaux / chantier : les atomes d'activité
+  aec.direction_travaux, hors éléments non applicables ou bloqués.
+include:
+  all_of:
+    - activity:
+        - aec.direction_travaux
+exclude:
+  any_of:
+    - applicability: not_applicable
+    - applicability: blocked
