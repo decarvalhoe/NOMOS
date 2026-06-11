@@ -13,7 +13,6 @@ import (
 const (
 	InTotoStatementType        = "https://in-toto.io/Statement/v1"
 	SLSAPredicateType          = "https://slsa.dev/provenance/v1"
-	CosignPayloadType          = "application/vnd.dev.cosign.simplesigning.v1+json"
 	NomosPredicateType         = "https://nomos.dev/attestation/v1"
 	ClaimBoundaryPredicateType = "https://nomos.dev/claim-boundary/v1"
 	SupplyChainPredicateType   = "https://nomos.dev/ckm/supply-chain/v1"
@@ -416,55 +415,13 @@ func VerifyProvenance(stmt InTotoStatement) error {
 	return nil
 }
 
-// CosignEnvelope is a simplified cosign signing envelope for Nomos attestations.
-type CosignEnvelope struct {
-	PayloadType string      `json:"payloadType"`
-	Payload     string      `json:"payload"`
-	Signatures  []CosignSig `json:"signatures"`
-}
-
-// CosignSig holds a single signature entry.
-type CosignSig struct {
-	KeyID string `json:"keyid"`
-	Sig   string `json:"sig"`
-}
-
-// WrapCosignEnvelope wraps a JSON-serializable payload in a cosign-compatible
-// DSSE envelope. The signature field is left empty for an external signer to fill.
-func WrapCosignEnvelope(payload any, keyID string) (CosignEnvelope, error) {
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return CosignEnvelope{}, fmt.Errorf("marshal payload: %w", err)
-	}
-
-	return CosignEnvelope{
-		PayloadType: CosignPayloadType,
-		Payload:     string(payloadBytes),
-		Signatures: []CosignSig{
-			{KeyID: keyID, Sig: ""},
-		},
-	}, nil
-}
-
-// VerifyCosignEnvelope checks envelope structure integrity (not cryptographic
-// signature verification, which requires the actual key).
-func VerifyCosignEnvelope(env CosignEnvelope) error {
-	if env.PayloadType == "" {
-		return fmt.Errorf("envelope has empty payload type")
-	}
-	if env.Payload == "" {
-		return fmt.Errorf("envelope has empty payload")
-	}
-	if len(env.Signatures) == 0 {
-		return fmt.Errorf("envelope has no signatures")
-	}
-	for i, sig := range env.Signatures {
-		if sig.KeyID == "" {
-			return fmt.Errorf("signature[%d] has empty key ID", i)
-		}
-	}
-	return nil
-}
+// CKM-H1-FU (#537): the legacy cosign-envelope helpers (CosignEnvelope,
+// CosignSig, WrapCosignEnvelope, VerifyCosignEnvelope) were removed. They emitted
+// an envelope with a hard-coded empty signature (Sig:"") and "verified" only that
+// fields were non-empty — a path that *looked* signed but proved nothing. Real
+// signing now lives in signing.go (ECDSA P-256 DSSE: Signer.SignStatement /
+// VerifyEnvelope), which produces a genuine, tamper-evident signature and rejects
+// a tampered or unsigned envelope. AttestCommand routes through that real path.
 
 // DigestSHA256 computes a hex-encoded SHA-256 digest of the given data.
 func DigestSHA256(data []byte) string {

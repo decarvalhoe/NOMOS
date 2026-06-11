@@ -50,12 +50,13 @@ func TestGenerateReleaseArtifacts(t *testing.T) {
 		t.Fatalf("cyclonedx failed: %d", code)
 	}
 
-	// 4. Attestation (subject = the report)
+	// 4. Attestation (subject = the report). CKM-H1-FU: this now emits a REAL
+	// signed DSSE envelope; the verifying public key is written to
+	// nomos-attestation.json.pub.pem alongside it.
 	code = AttestCommand([]string{
 		"--project-id", "nomos",
 		"--verdict", "pass",
 		"--subject", filepath.Join(outDir, "nomos-report.json"),
-		"--key-id", "nomos-dev",
 		"--output", filepath.Join(outDir, "nomos-attestation.json"),
 	}, &devNull, os.Stderr)
 	if code != 0 {

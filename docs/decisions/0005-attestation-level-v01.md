@@ -8,7 +8,25 @@ Owner: Nomos core team
 
 Nomos produit des attestations qui certifient le resultat d'une admission ou d'un check. Le schema `nomos.project.yaml` definit trois niveaux d'attestation : `none`, `basic`, `signed`. La question est de savoir quel niveau est supporte et recommande en v0.1.
 
-Le package `cli/internal/attestation` implemente la generation d'enveloppes in-toto, la provenance SLSA v1, et le wrapping cosign DSSE. La verification structurelle est en place mais la verification cryptographique (signature/verification avec cle reelle) n'est pas encore implementee.
+Le package `cli/internal/attestation` implemente la generation d'enveloppes in-toto, la provenance SLSA v1, et la signature DSSE.
+
+> **Mise a jour (CKM-H1 / CKM-H1-FU, #529 / #537).** La verification cryptographique
+> EST desormais implementee. `cli/internal/attestation/signing.go` realise une
+> signature ECDSA P-256 reelle sur l'encodage DSSE v1 PAE (`pae`,
+> `Signer.SignStatement`, `VerifyEnvelope`, entierement dans la stdlib Go, sans
+> binaire cosign ni reseau). Alterer un seul octet du payload signe — par exemple
+> un digest d'artefact enregistre dans le statement — fait echouer la verification
+> (preuve adversariale : `TestVerify_FailsWhenArtifactDigestTampered`). L'ancien
+> chemin factice (`WrapCosignEnvelope`, qui codait en dur `sig: ""`, et
+> `VerifyCosignEnvelope`, qui ne validait que la presence des champs) a ete
+> SUPPRIME : il ne produisait pas de signature et n'en verifiait aucune. Une
+> enveloppe avec `sig: ""` ou alteree est maintenant rejetee
+> (`TestVerifyEnvelope_RejectsEmptySignature`). Le mode keyless Sigstore
+> (Fulcio/Rekor) reste un suivi documente ; le chemin offline ci-dessus est son
+> equivalent disponible aujourd'hui. Un garde de frontiere de revendication
+> (`scripts/claim_boundary_guard.py`, cable dans la CI et
+> `scripts/ckm-non-regression.sh`) echoue si la documentation revendique
+> « signed »/« Sigstore »/« certified » au sens d'une capacite sans preuve.
 
 ## Options considerees
 
@@ -36,8 +54,15 @@ En v0.1, le niveau par defaut est `basic`. Le mode `regulated` genere des envelo
 ## Consequences
 
 - Le mode `minimal` genere des attestations `basic` (in-toto statement + digest, pas de signature).
-- Le mode `regulated` genere des enveloppes cosign avec `sig: ""` a remplir par `cosign sign` ou equivalent.
-- Le CLI valide la structure de l'enveloppe (`VerifyCosignEnvelope`) mais pas la signature cryptographique.
-- La verification cryptographique est reportee a la v0.2 quand le control-plane pourra stocker les cles publiques.
-- Les schemas CUE (`attestations/nomos-attestation.cue`) definissent deja les formats in-toto, SLSA et cosign pour assurer la compatibilite future.
-- La CI peut integrer `cosign sign` comme etape post-admission pour les projets `regulated`.
+- Le niveau `signed` est desormais REEL : `nomos attest sign` et `AttestCommand`
+  produisent une enveloppe DSSE signee ECDSA P-256, verifiable via `nomos attest
+  verify` / `VerifyEnvelope`. La signature n'est plus deleguee a un outil externe
+  pour ce chemin, et le CLI ne stocke pas de cle privee persistante (cle ephemere
+  par defaut, ou `--key`).
+- Le CLI verifie la signature cryptographique (pas seulement la structure) :
+  une enveloppe `sig: ""` ou alteree est rejetee.
+- Les schemas CUE (`attestations/nomos-attestation.cue`) definissent les formats
+  in-toto, SLSA et cosign ; le type `#CosignEnvelope` reste pour la compatibilite
+  de schema, mais les helpers Go factices correspondants ont ete supprimes.
+- Suivi v0.2+ : mode keyless Sigstore (Fulcio/Rekor) et stockage des cles
+  publiques par le control-plane pour la verification distribuee.

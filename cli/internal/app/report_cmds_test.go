@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/RBOKproject/Nomos/cli/internal/attestation"
 )
 
 // --- report ---
@@ -164,12 +166,17 @@ func TestAttestCommand(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("expected 0, got %d; stderr=%q", code, stderr.String())
 	}
-	var result map[string]any
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
-		t.Fatalf("expected valid JSON: %v", err)
+	// CKM-H1-FU: the envelope is now a REAL signed DSSE envelope, not a fake
+	// cosign wrapper with Sig:"". Assert the signature is non-empty.
+	var env attestation.DSSEEnvelope
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("expected valid DSSE envelope JSON: %v", err)
 	}
-	if result["payloadType"] == nil {
-		t.Fatal("expected payloadType in cosign envelope")
+	if env.PayloadType == "" {
+		t.Fatal("expected payloadType in DSSE envelope")
+	}
+	if len(env.Signatures) == 0 || env.Signatures[0].Sig == "" {
+		t.Fatalf("expected a real (non-empty) signature, got %+v", env.Signatures)
 	}
 }
 
@@ -195,8 +202,22 @@ func TestAttestCommandToFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read output: %v", err)
 	}
-	if !strings.Contains(string(data), "payloadType") {
-		t.Fatalf("expected attestation content")
+	// The emitted envelope must verify against the public key written alongside
+	// it — proving AttestCommand produced a genuine signature, not a placeholder.
+	var env attestation.DSSEEnvelope
+	if err := json.Unmarshal(data, &env); err != nil {
+		t.Fatalf("parse envelope: %v", err)
+	}
+	pubData, err := os.ReadFile(out + ".pub.pem")
+	if err != nil {
+		t.Fatalf("read public key written by attest: %v", err)
+	}
+	pub, err := attestation.ParsePublicKeyPEM(pubData)
+	if err != nil {
+		t.Fatalf("parse public key: %v", err)
+	}
+	if err := attestation.VerifyEnvelope(env, pub); err != nil {
+		t.Fatalf("attest output did not verify against its own public key: %v", err)
 	}
 }
 

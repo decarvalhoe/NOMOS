@@ -137,14 +137,24 @@ func ExportCycloneDXCommand(args []string, stdout io.Writer, stderr io.Writer) i
 	return 0
 }
 
-// AttestCommand implements "nomos attest".
+// AttestCommand implements "nomos attest" as a one-shot REAL signing path: it
+// builds an in-toto statement and emits a genuinely signed DSSE envelope (ECDSA
+// P-256 over the DSSE PAE, via internal/attestation/signing.go). The legacy fake
+// path (WrapCosignEnvelope, which hard-coded Sig:"") was removed in CKM-H1-FU
+// (#537): every envelope this command produces carries a real signature and a
+// public key with which it can be verified.
+//
+// By default an ephemeral key is generated and its public key is written next to
+// the envelope (or to --pub-out) so the signature is verifiable; pass --key to
+// sign with a stable private key instead.
 func AttestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("attest", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	projectID := flags.String("project-id", "", "project identifier (required)")
 	verdict := flags.String("verdict", "", "attestation verdict (required)")
 	subjectPath := flags.String("subject", "", "path to artifact to attest")
-	keyID := flags.String("key-id", "nomos-dev", "signing key identifier")
+	keyPath := flags.String("key", "", "ECDSA private key PEM to sign with (default: ephemeral key)")
+	pubOut := flags.String("pub-out", "", "write the public key needed to verify (default: <output>.pub.pem)")
 	outputPath := flags.String("output", "", "write attestation to file (default: stdout)")
 	if err := flags.Parse(args); err != nil {
 		return 2
@@ -180,10 +190,34 @@ func AttestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 
-	envelope, err := attestation.WrapCosignEnvelope(stmt, *keyID)
+	signer, err := loadOrGenerateSigner(*keyPath)
 	if err != nil {
-		fmt.Fprintf(stderr, "attest: wrap envelope: %v\n", err)
+		fmt.Fprintf(stderr, "attest: %v\n", err)
 		return 1
+	}
+
+	envelope, err := signer.SignStatement(stmt)
+	if err != nil {
+		fmt.Fprintf(stderr, "attest: sign statement: %v\n", err)
+		return 1
+	}
+
+	// Write the public key so the real signature is verifiable. With an
+	// ephemeral key this is mandatory; default to <output>.pub.pem.
+	pubPath := *pubOut
+	if pubPath == "" && *outputPath != "" {
+		pubPath = *outputPath + ".pub.pem"
+	}
+	if pubPath != "" {
+		pub, err := signer.PublicKeyPEM()
+		if err != nil {
+			fmt.Fprintf(stderr, "attest: encode public key: %v\n", err)
+			return 1
+		}
+		if err := os.WriteFile(pubPath, pub, 0o644); err != nil {
+			fmt.Fprintf(stderr, "attest: write public key: %v\n", err)
+			return 1
+		}
 	}
 
 	w := stdout
@@ -202,6 +236,19 @@ func AttestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// loadOrGenerateSigner returns a signer from the given private-key PEM path, or a
+// fresh ephemeral signer when the path is empty.
+func loadOrGenerateSigner(keyPath string) (*attestation.Signer, error) {
+	if keyPath == "" {
+		return attestation.GenerateSigner()
+	}
+	data, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("read key: %w", err)
+	}
+	return attestation.SignerFromPEM(data)
 }
 
 func generateReport(root string, projectID string) (report.NomosReport, error) {
