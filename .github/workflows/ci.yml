@@ -93,6 +93,26 @@ jobs:
             echo "::error::unsupported domain compliance claim passed"
             exit 1
           fi
+      - name: Domain pack contract (VRC-20)
+        run: |
+          cue vet specs/domain-pack.cue \
+            docs/regulated/domain-packs/built-environment/pack.yaml \
+            -d '#DomainPack'
+          cue vet specs/domain-pack.cue \
+            docs/regulated/domain-packs/built-environment/aec-vocabulary.yaml \
+            -d '#PackVocabulary'
+          if cue vet specs/domain-pack.cue \
+            specs/examples/domain-pack.code-artifact.invalid.yaml \
+            -d '#DomainPack'; then
+            echo "::error::a pack shipping code passed the contract"
+            exit 1
+          fi
+          if cue vet specs/domain-pack.cue \
+            specs/examples/domain-pack.mechanics-field.invalid.yaml \
+            -d '#DomainPack'; then
+            echo "::error::an out-of-contract pack field passed the contract"
+            exit 1
+          fi
 
   yaml-lint:
     name: YAML lint

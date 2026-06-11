@@ -1,0 +1,60 @@
+# VRC-20 (D1, #563) — the built-environment pack manifest: the pack IS this
+# declaration. Vocabularies + source register + lens presets + golden corpus +
+# claim boundary + scorecard — nothing else, and never code (the #DomainPack
+# contract rejects any non-declarative path by construction).
+schema_version: nomos-domain-pack-v1
+pack_id: built-environment
+domain_profile: built-environment
+profile_ref: specs/examples/nomos-domain-profile.built-environment.valid.yaml
+claim_boundary: >-
+  Ce pack fournit des VALEURS métier AEC suisses : vocabulaires d'axes,
+  registre de sources officielles machine, presets de lentilles et corpus de
+  preuve license-safe. Il n'autorise aucun claim de conformité réglementaire,
+  de validation légale ni de certification — les claims autorisés et bloqués
+  sont exclusivement ceux du profil référencé (DOR-001). Les normes SIA
+  restent hash-only (jamais de texte intégral).
+vocabularies:
+  file: docs/regulated/domain-packs/built-environment/aec-vocabulary.yaml
+  axes: [activity, discipline_role]
+source_register:
+  file: docs/regulated/domain-packs/built-environment/ch-source-connectors.yaml
+  contract: "#BuiltEnvironmentSourceConnectors"
+lens_presets:
+  - id: LENS-AEC-ARCHI-CONCEPTION
+    file: docs/regulated/domain-packs/built-environment/aec-lens-presets/archi-conception.lens.yaml
+  - id: LENS-AEC-DT-CHANTIER
+    file: docs/regulated/domain-packs/built-environment/aec-lens-presets/dt-chantier.lens.yaml
+  - id: LENS-AEC-PERMIS
+    file: docs/regulated/domain-packs/built-environment/aec-lens-presets/permis.lens.yaml
+golden_corpus:
+  root: cli/internal/corpus/testdata/aec-golden-corpus/vd-lausanne
+  documents:
+    - conception.md
+    - dt-chantier.md
+    - permis.md
+scorecard:
+  - area: "Droit fédéral CH (LAT/Fedlex ELI) — identité juridique machine"
+    status: applicable
+    note: >-
+      Connecteur fedlex_eli fetched avec reçu commis ; les bundles portent
+      l'identité ELI de bout en bout (VRC-31).
+  - area: "VD / Lausanne — règlements communaux (PGA/PAZ, PDF né-numérique)"
+    status: applicable
+    note: >-
+      Chaîne prouvée : PDF → atomisation (claim ladder rung 1) → bundle →
+      import Aedifica → réponse citée (W23-1).
+  - area: "Autres cantons — géoportails cantonaux"
+    status: partial
+    note: >-
+      Cinquième famille machine (geoportail_cantonal) fetched (BS WMS) ;
+      la couverture canton par canton reste à étendre (W23-2).
+  - area: "Normes SIA en texte intégral"
+    status: blocked
+    note: >-
+      Licence payante : référence hash-only via sia-reference-sidecar.yaml,
+      le texte intégral n'entre jamais au dépôt (doctrine claim-boundary).
+  - area: "Pages scannées / OCR"
+    status: out_of_scope
+    note: >-
+      L'adapter PDF est rung 1 (texte né-numérique) ; les pages scannées
+      sont des unsupported records assumés, jamais du texte inventé (VRC-30).
