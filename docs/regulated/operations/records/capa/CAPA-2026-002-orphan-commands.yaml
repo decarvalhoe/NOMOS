@@ -1,9 +1,9 @@
 record_id: CAPA-2026-002
 record_type: deviation_capa
-status: pending_effectiveness_check
+status: closed
 severity: major
 opened: 2026-06-11
-closed: null
+closed: 2026-06-11
 issue: "VRC-06 (#552); deviation found by the wiring matrix first run (VRC-00 #546); corrected by VRC-09 (#555)"
 owner: "quality_owner — decarvalhoe (dev@realisons.com)"
 claim_boundary: "Deviation/CAPA record only; no compliance certification claim."
@@ -34,8 +34,11 @@ preventive_actions:
     evidence: ".github/ISSUE_TEMPLATE/capability-claim.yml (VRC-03 #549)"
 
 effectiveness_verification:
-  verified: false
-  plan: >
-    Close when the VRC PR (#544 chain) is merged to main and the next CI run
-    confirms the matrix green with the allowlist empty (no known_unwired
-    entries) — i.e. the check holds on main, not only on the branch.
+  verified: true
+  date: 2026-06-11
+  evidence: >
+    PR #544 squash-merged to main as f4a2fcc756ccfef53a4020e156580b368befc325
+    (approved review, GitHub operating model). Main-branch CI run 27327749231
+    green: wiring matrix OK with the known_unwired allowlist EMPTY (any stale
+    entry or new orphan command turns it red), reachability tests green. The
+    preventive check therefore holds on main, not only on the branch.
