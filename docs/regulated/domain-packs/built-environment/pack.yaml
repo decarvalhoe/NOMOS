@@ -32,6 +32,7 @@ golden_corpus:
     - conception.md
     - dt-chantier.md
     - permis.md
+    - journal-interne.md
 scorecard:
   - area: "Droit fédéral CH (LAT/Fedlex ELI) — identité juridique machine"
     status: applicable
