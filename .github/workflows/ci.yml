@@ -24,6 +24,10 @@ jobs:
           cache-dependency-path: cli/go.sum
       - run: go vet ./...
       - run: go test -race ./...
+      # VRC-21 (#564): the domain-pack gate runs on the REAL pack in CI — a
+      # mutilated pack (or a drifted artifact) turns this job red.
+      - name: Domain pack gate (VRC-21)
+        run: go run . pack validate --manifest ../docs/regulated/domain-packs/built-environment/pack.yaml --repo-root ..
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating
