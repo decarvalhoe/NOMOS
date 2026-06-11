@@ -35,6 +35,10 @@ type RAGChunk struct {
 	Domain       string            `json:"domain,omitempty"`
 	Depth        int               `json:"depth"`
 	Metadata     map[string]string `json:"metadata,omitempty"`
+
+	// Facets carries the CKM-01 classification forward from the source atom when
+	// present. Additive: nil for atoms without facets (zero regression).
+	Facets *Facets `json:"facets,omitempty"`
 }
 
 
@@ -150,6 +154,7 @@ func projectOne(atom Atom, config ProjectionConfig) (RAGChunk, error) {
 		NodeType:     string(atom.Type),
 		Domain:       domain,
 		Depth:        atom.Depth,
+		Facets:       atom.Facets,
 	}, nil
 }
 

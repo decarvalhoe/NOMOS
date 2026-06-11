@@ -68,6 +68,11 @@ type Atom struct {
 	Depth        int         `json:"depth"`
 	ReviewState  ReviewState `json:"review_state"`
 	Domain       string      `json:"domain,omitempty"`
+
+	// Facets is the CKM-01 multidimensional classification of this atom. It is
+	// additive and opt-in: nil unless atomization is asked to emit facets, so
+	// existing atom output stays byte-identical (doctrine §2.1, zero regression).
+	Facets *Facets `json:"facets,omitempty"`
 }
 
 // AtomSet is the output of atomization for a single document.
@@ -85,6 +90,11 @@ type AtomizeOptions struct {
 	SourceFile   string
 	Domain       string
 	DefaultState ReviewState
+
+	// EmitFacets, when true, makes atomization derive and attach CKM-01 facets
+	// to each atom (DeriveFacets). It defaults to false so existing callers and
+	// golden outputs are unaffected.
+	EmitFacets bool
 }
 
 // Atomize converts a block AST into a set of atoms.
@@ -156,6 +166,11 @@ func Atomize(ast AST, opts AtomizeOptions) AtomSet {
 			Depth:       blockDepth(blk),
 			ReviewState: defaultState,
 			Domain:      opts.Domain,
+		}
+
+		if opts.EmitFacets {
+			f := DeriveFacets(atom)
+			atom.Facets = &f
 		}
 
 		blockToAtom[blk.ID] = atomID
