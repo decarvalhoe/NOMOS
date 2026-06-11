@@ -135,7 +135,7 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 	// VRC-31 (#568) — markup adapters: md stays the untouched default; xml/html
 	// produce atoms with DOM-path + byte-offset locators and ELI identity
 	// preserved in the canonical refs.
-	format := flags.String("format", "md", "source format: md | xml | html")
+	format := flags.String("format", "md", "source format: md | xml | html | pdf")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -168,8 +168,17 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 		set, err = atomization.AtomizeXML(source, opts)
 	case "html":
 		set, err = atomization.AtomizeHTML(source, opts)
+	case "pdf":
+		// W23-1 (#590): pages out of the born-digital-text claim are surfaced
+		// on stderr — visible, never silently dropped. (The bundle path is
+		// stricter and refuses such sources outright.)
+		var unsupported []int
+		set, unsupported, err = atomization.AtomizePDF(source, opts)
+		for _, page := range unsupported {
+			fmt.Fprintf(stderr, "atomize units: page %d is out of the born-digital-text claim (scanned/image-only)\n", page)
+		}
 	default:
-		fmt.Fprintf(stderr, "atomize units: unknown --format %q (md | xml | html)\n", *format)
+		fmt.Fprintf(stderr, "atomize units: unknown --format %q (md | xml | html | pdf)\n", *format)
 		return 2
 	}
 	if err != nil {

@@ -43,17 +43,19 @@ func (PDFAdapter) Name() string { return "pdf" }
 func (PDFAdapter) Extensions() []string { return []string{".pdf"} }
 
 // pdfLine is one reconstructed text line of one page.
-type pdfLine struct {
-	page int
-	y    float64
-	text string
+// ExtractedPDFLine is one reconstructed text line of one page — exported so
+// the atomization engine (W23-1 #590) rides the SAME extraction core as the
+// fidelity adapter (one claim ladder, one behavior).
+type ExtractedPDFLine struct {
+	Page int
+	Y    float64
+	Text string
 }
 
-// extractPDF walks every page and returns the reconstructed text lines plus
-// one unsupported record per page WITHOUT extractable born-digital text. The
-// parser library can panic on malformed input, so the whole walk is fenced
-// and converted into a fail-closed error.
-func extractPDF(source []byte) (lines []pdfLine, unsupported []int, err error) {
+// ExtractPDFLines walks every page and returns the reconstructed text lines
+// plus one unsupported page number per page WITHOUT extractable born-digital
+// text. Fail-closed on malformed input (parser panics are fenced).
+func ExtractPDFLines(source []byte) (lines []ExtractedPDFLine, unsupported []int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			lines, unsupported = nil, nil
@@ -104,7 +106,7 @@ func extractPDF(source []byte) (lines []pdfLine, unsupported []int, err error) {
 				continue
 			}
 			pageHadText = true
-			lines = append(lines, pdfLine{page: pageNum, y: y, text: text})
+			lines = append(lines, ExtractedPDFLine{Page: pageNum, Y: y, Text: text})
 		}
 		if !pageHadText {
 			unsupported = append(unsupported, pageNum)
@@ -116,7 +118,7 @@ func extractPDF(source []byte) (lines []pdfLine, unsupported []int, err error) {
 // Parse extracts born-digital text lines as spans. Every page yields either
 // text_line spans or an explicit unsupported record — zero silent loss.
 func (p PDFAdapter) Parse(source []byte, filename string) (ParseResult, error) {
-	lines, unsupported, err := extractPDF(source)
+	lines, unsupported, err := ExtractPDFLines(source)
 	if err != nil {
 		return ParseResult{}, err
 	}
@@ -128,7 +130,7 @@ func (p PDFAdapter) Parse(source []byte, filename string) (ParseResult, error) {
 		// hash of the line text): mutating ONE byte of carried text drifts the
 		// parse output itself — the C1 drift bar, proven in the tests.
 		result.Spans = append(result.Spans, SpanInfo{
-			ID:        fmt.Sprintf("pdf:p%d:l%d:y%.1f:h%s", ln.page, lineNo, ln.y, shortTextHash(ln.text)),
+			ID:        fmt.Sprintf("pdf:p%d:l%d:y%.1f:h%s", ln.Page, lineNo, ln.Y, shortTextHash(ln.Text)),
 			NodeType:  "text_line",
 			StartLine: lineNo,
 			EndLine:   lineNo,
@@ -152,7 +154,7 @@ func (p PDFAdapter) Parse(source []byte, filename string) (ParseResult, error) {
 // Validate checks the document parses as a PDF and reports, as findings, any
 // page outside the born-digital-text claim.
 func (p PDFAdapter) Validate(source []byte, filename string) ValidationResult {
-	lines, unsupported, err := extractPDF(source)
+	lines, unsupported, err := ExtractPDFLines(source)
 	if err != nil {
 		return ValidationResult{Valid: false, Findings: []string{err.Error()}}
 	}
