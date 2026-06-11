@@ -265,9 +265,11 @@ func TestJSONValidateInvalid(t *testing.T) {
 // --- Placeholder adapter ---
 
 func TestPlaceholderParseErrors(t *testing.T) {
-	r := DefaultRegistry()
-	a, _ := r.Lookup("docx")
-	_, err := a.Parse(nil, "file.docx")
+	// VRC-30/VRC-41 promoted pdf and docx to real adapters, so no placeholder
+	// is registered by default; the PlaceholderAdapter TYPE still refuses
+	// loudly when used for a not-yet-implemented format.
+	a := PlaceholderAdapter{AdapterName: "rtf", Exts: []string{".rtf"}}
+	_, err := a.Parse(nil, "file.rtf")
 	if err == nil {
 		t.Fatal("placeholder should error")
 	}
@@ -277,9 +279,8 @@ func TestPlaceholderParseErrors(t *testing.T) {
 }
 
 func TestPlaceholderValidate(t *testing.T) {
-	r := DefaultRegistry()
-	a, _ := r.Lookup("pdf")
-	v := a.Validate(nil, "file.pdf")
+	a := PlaceholderAdapter{AdapterName: "rtf", Exts: []string{".rtf"}}
+	v := a.Validate(nil, "file.rtf")
 	if v.Valid {
 		t.Fatal("placeholder should be invalid")
 	}

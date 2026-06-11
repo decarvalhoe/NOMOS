@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -248,5 +249,84 @@ func TestDocxNodeIDs(t *testing.T) {
 			t.Fatalf("duplicate node ID: %s", n.ID)
 		}
 		ids[n.ID] = true
+	}
+}
+
+// --- VRC-41 (#577): the production DocxAdapter ---
+
+func docxWithTitle(title string) []byte {
+	return buildTestDocx([]wxParagraph{
+		{Properties: wxParaProps{Style: wxStyle{Val: "Heading1"}}, Runs: []wxRun{{Text: []wxText{{Content: title}}}}},
+		{Runs: []wxRun{{Text: []wxText{{Content: "Corps du paragraphe."}}}}},
+	}, nil)
+}
+
+func TestDocxAdapter_ExtractsBodyTextWithContentAddressedSpans(t *testing.T) {
+	res, err := DocxAdapter{}.Parse(simpleDocx(), "test.docx")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if res.Format != "docx" || res.NodeCount == 0 {
+		t.Fatalf("unexpected parse result: %+v", res)
+	}
+	sawHeading := false
+	for _, s := range res.Spans {
+		if !strings.HasPrefix(s.ID, "docx:") {
+			t.Fatalf("span id is not content-addressed: %s", s.ID)
+		}
+		if s.NodeType == "heading" {
+			sawHeading = true
+		}
+	}
+	if !sawHeading {
+		t.Fatal("expected at least one heading span")
+	}
+}
+
+func TestDocxAdapter_ByteChangeDriftsTheParse(t *testing.T) {
+	// One changed character in the body must drift the content-addressed span
+	// id for that node — the parse reflects the bytes, never a stale id.
+	a := DocxAdapter{}
+	r1, err := a.Parse(docxWithTitle("Titre Original"), "a.docx")
+	if err != nil {
+		t.Fatalf("parse 1: %v", err)
+	}
+	r2, err := a.Parse(docxWithTitle("Titre Modifie"), "b.docx")
+	if err != nil {
+		t.Fatalf("parse 2: %v", err)
+	}
+	if r1.Spans[0].ID == r2.Spans[0].ID {
+		t.Fatalf("changed heading text did not drift the span id: %s", r1.Spans[0].ID)
+	}
+	// The unchanged body paragraph keeps its id (content-addressed, not positional).
+	if r1.Spans[1].ID != r2.Spans[1].ID {
+		t.Fatalf("unchanged paragraph drifted: %s vs %s", r1.Spans[1].ID, r2.Spans[1].ID)
+	}
+}
+
+func TestDocxAdapter_InvalidZipFailsClosed(t *testing.T) {
+	if _, err := (DocxAdapter{}).Parse([]byte("not a zip at all"), "bad.docx"); err == nil {
+		t.Fatal("a corrupt archive must fail closed, not parse to nothing")
+	}
+	if v := (DocxAdapter{}).Validate([]byte("not a zip"), "bad.docx"); v.Valid {
+		t.Fatal("Validate must reject a corrupt archive")
+	}
+}
+
+func TestDefaultRegistry_DocxAdapterIsReal(t *testing.T) {
+	r := DefaultRegistry()
+	a, ok := r.Lookup("docx")
+	if !ok {
+		t.Fatal("docx adapter missing from the default registry")
+	}
+	if _, isPlaceholder := a.(PlaceholderAdapter); isPlaceholder {
+		t.Fatal("docx is still a placeholder — VRC-41 should have promoted it")
+	}
+	if a.Kit().ClaimLevel != "ooxml-body-text" {
+		t.Fatalf("docx kit claim level is %q, want ooxml-body-text", a.Kit().ClaimLevel)
+	}
+	byExt, ok := r.ForFile("rapport.docx")
+	if !ok || byExt.Name() != "docx" {
+		t.Fatal(".docx does not resolve to the docx adapter")
 	}
 }
