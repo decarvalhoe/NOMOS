@@ -53,11 +53,30 @@ type Bundle struct {
 	Attestation   attestation.InTotoStatement `json:"attestation"`
 }
 
-// Feed is a #BundleFeed: a named set of faceted nodes.
+// Feed is a #BundleFeed: a named set of faceted nodes. Version and Jurisdiction
+// are optional (omitempty) — a feed that does not version its payload or carries
+// no legal scope serializes without them, keeping the bundle additive.
 type Feed struct {
-	FeedID string `json:"feed_id"`
-	Format string `json:"format"`
-	Nodes  []Node `json:"nodes"`
+	FeedID       string        `json:"feed_id"`
+	Format       string        `json:"format"`
+	Version      string        `json:"version,omitempty"`
+	Jurisdiction *Jurisdiction `json:"jurisdiction,omitempty"`
+	Nodes        []Node        `json:"nodes"`
+}
+
+// Jurisdiction is a #BundleJurisdiction: the optional legal scope a feed's nodes
+// apply to. NOMOS has no native jurisdiction concept, so this is populated only
+// when the caller supplies it (--country/--canton/--commune on the CLI). Every
+// field is optional so a partially-known scope (canton only) is expressible.
+type Jurisdiction struct {
+	Country string `json:"country,omitempty"`
+	Canton  string `json:"canton,omitempty"`
+	Commune string `json:"commune,omitempty"`
+}
+
+// IsZero reports whether no jurisdiction field is set.
+func (j Jurisdiction) IsZero() bool {
+	return j.Country == "" && j.Canton == "" && j.Commune == ""
 }
 
 // Node is a #BundleNode: one traceable knowledge atom with real provenance.
@@ -108,9 +127,23 @@ type BuildInput struct {
 	ClaimBoundary string
 	Domain        string
 	FeedID        string
-	GeneratedAt   time.Time
-	Sources       []SourceFile
-	Trace         TraceManifest
+	// FeedVersion pins the emitted feed's version. Empty ⇒ a deterministic
+	// version is derived from BundleID@GeneratedAt (DefaultFeedVersion).
+	FeedVersion string
+	// Jurisdiction, when non-nil and non-zero, populates feeds[].jurisdiction.
+	// Nil ⇒ the feed carries no jurisdiction (the no-scope domain-corpus case).
+	Jurisdiction *Jurisdiction
+	GeneratedAt  time.Time
+	Sources      []SourceFile
+	Trace        TraceManifest
+}
+
+// DefaultFeedVersion derives a deterministic feed version from the bundle id and
+// generation timestamp. Two emissions of the same bundle_id at the same
+// generated_at yield the same version, so a re-run over identical input is
+// byte-identical. Shape: "<bundle_id>@<RFC3339-UTC>".
+func DefaultFeedVersion(bundleID string, generatedAt time.Time) string {
+	return bundleID + "@" + generatedAt.UTC().Format(time.RFC3339)
 }
 
 // Build runs the real atomization engine over the source files and assembles a
@@ -210,7 +243,22 @@ func Build(in BuildInput) (Bundle, error) {
 		return Bundle{}, fmt.Errorf("no content-bearing atoms produced from %d source file(s)", len(sources))
 	}
 
-	feeds := []Feed{{FeedID: feedID, Format: FeedFormat, Nodes: nodes}}
+	feedVersion := in.FeedVersion
+	if feedVersion == "" {
+		feedVersion = DefaultFeedVersion(in.BundleID, in.GeneratedAt)
+	}
+	var jurisdiction *Jurisdiction
+	if in.Jurisdiction != nil && !in.Jurisdiction.IsZero() {
+		j := *in.Jurisdiction
+		jurisdiction = &j
+	}
+	feeds := []Feed{{
+		FeedID:       feedID,
+		Format:       FeedFormat,
+		Version:      feedVersion,
+		Jurisdiction: jurisdiction,
+		Nodes:        nodes,
+	}}
 
 	att, err := buildAttestation(in, feeds)
 	if err != nil {

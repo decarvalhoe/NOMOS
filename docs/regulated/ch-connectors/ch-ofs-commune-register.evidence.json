@@ -1,0 +1,56 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-ofs-commune-register",
+  "source": {
+    "id": "ch-ofs-commune-register",
+    "jurisdiction": "CH",
+    "authority": "Office fédéral de la statistique (OFS/BFS)",
+    "access": "open_data",
+    "license_note": "OFS open government data; redistributed as hash + span coverage only (no full-text copy).",
+    "description": "Historicised register of Swiss communes (CSV)."
+  },
+  "fetch": {
+    "url": "https://www.agvchapp.bfs.admin.ch/api/communes/snapshot?date=01-01-2026",
+    "fetched_at": "2026-06-10T22:13:00Z",
+    "status_code": 200,
+    "content_type": "text/plain; charset=utf-8",
+    "byte_count": 135173,
+    "sha256": "sha256:e0748c06c754dbde20f04425a7f58c2a718e77982ea10fb8f969ac9d21a83b7d"
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 135173,
+    "covered_bytes": 135173,
+    "uncovered_bytes": 0,
+    "segment_count": 2281
+  },
+  "atom_count": 2281,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 115,
+      "content_hash": "sha256:cba67a48ebcf801f6fb016ec9310e2596e5a87edfe8fca7cdee02685a467776c",
+      "preview": "HistoricalCode,BfsCode,ValidFrom,ValidTo,Level,Parent,Name,ShortName,Inscription…"
+    },
+    {
+      "atom_id": "CH-ATOM-0001",
+      "line": 2,
+      "start_byte": 115,
+      "end_byte": 149,
+      "content_hash": "sha256:0c4924b7d575c12ee091f4b86bc7cfe60503453641532c0e83f6ddc7a1529ad7",
+      "preview": "1,1,12.09.1848,,1,,Zürich,ZH,,,,"
+    },
+    {
+      "atom_id": "CH-ATOM-0002",
+      "line": 3,
+      "start_byte": 149,
+      "end_byte": 209,
+      "content_hash": "sha256:34463fc8c00fed6bdbe3f33c6586ce93500cb64da0af9ff1dd616a7b895fdc8c",
+      "preview": "10053,101,12.09.1848,,2,1,Bezirk Affoltern,Affoltern,100,,,"
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}
