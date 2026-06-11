@@ -286,63 +286,6 @@ func TestVerifyProvenance_MissingBuildType(t *testing.T) {
 	}
 }
 
-// --- Cosign Envelope ---
-
-func TestWrapCosignEnvelope(t *testing.T) {
-	payload := map[string]string{"verdict": "admitted"}
-	env, err := WrapCosignEnvelope(payload, "test-key-001")
-	if err != nil {
-		t.Fatalf("WrapCosignEnvelope failed: %v", err)
-	}
-	if env.PayloadType != CosignPayloadType {
-		t.Fatalf("expected payload type %s, got %s", CosignPayloadType, env.PayloadType)
-	}
-	if len(env.Signatures) != 1 {
-		t.Fatalf("expected 1 signature slot, got %d", len(env.Signatures))
-	}
-	if env.Signatures[0].KeyID != "test-key-001" {
-		t.Fatalf("expected keyid test-key-001, got %s", env.Signatures[0].KeyID)
-	}
-	if env.Signatures[0].Sig != "" {
-		t.Fatal("expected empty sig for unsigned envelope")
-	}
-}
-
-func TestVerifyCosignEnvelope_Valid(t *testing.T) {
-	env, _ := WrapCosignEnvelope(map[string]string{"a": "b"}, "key-1")
-	if err := VerifyCosignEnvelope(env); err != nil {
-		t.Fatalf("VerifyCosignEnvelope failed: %v", err)
-	}
-}
-
-func TestVerifyCosignEnvelope_EmptyPayloadType(t *testing.T) {
-	env := CosignEnvelope{Payload: "x", Signatures: []CosignSig{{KeyID: "k"}}}
-	if err := VerifyCosignEnvelope(env); err == nil {
-		t.Fatal("expected error for empty payload type")
-	}
-}
-
-func TestVerifyCosignEnvelope_EmptyPayload(t *testing.T) {
-	env := CosignEnvelope{PayloadType: "x", Signatures: []CosignSig{{KeyID: "k"}}}
-	if err := VerifyCosignEnvelope(env); err == nil {
-		t.Fatal("expected error for empty payload")
-	}
-}
-
-func TestVerifyCosignEnvelope_NoSignatures(t *testing.T) {
-	env := CosignEnvelope{PayloadType: "x", Payload: "y"}
-	if err := VerifyCosignEnvelope(env); err == nil {
-		t.Fatal("expected error for no signatures")
-	}
-}
-
-func TestVerifyCosignEnvelope_EmptyKeyID(t *testing.T) {
-	env := CosignEnvelope{PayloadType: "x", Payload: "y", Signatures: []CosignSig{{KeyID: ""}}}
-	if err := VerifyCosignEnvelope(env); err == nil {
-		t.Fatal("expected error for empty key ID")
-	}
-}
-
 // --- Helpers ---
 
 func TestDigestSHA256(t *testing.T) {
@@ -381,9 +324,11 @@ func TestWriteJSON(t *testing.T) {
 	}
 }
 
-// --- Integration: full pipeline ---
+// --- Integration: full pipeline (real ECDSA P-256 DSSE signing) ---
 
-func TestFullPipeline_StatementToCosign(t *testing.T) {
+// CKM-H1-FU (#537): the legacy WrapCosignEnvelope/VerifyCosignEnvelope path was
+// removed. The full pipeline now signs the statement for real and verifies it.
+func TestFullPipeline_StatementToSignedEnvelope(t *testing.T) {
 	att := NomosAttestation{
 		ProjectID:   "integration-test",
 		Verdict:     "admitted",
@@ -400,17 +345,27 @@ func TestFullPipeline_StatementToCosign(t *testing.T) {
 		t.Fatalf("GenerateStatement: %v", err)
 	}
 
-	env, err := WrapCosignEnvelope(stmt, "nomos-signing-key")
+	signer, err := GenerateSigner()
 	if err != nil {
-		t.Fatalf("WrapCosignEnvelope: %v", err)
+		t.Fatalf("GenerateSigner: %v", err)
 	}
-	if err := VerifyCosignEnvelope(env); err != nil {
-		t.Fatalf("VerifyCosignEnvelope: %v", err)
+	env, err := signer.SignStatement(stmt)
+	if err != nil {
+		t.Fatalf("SignStatement: %v", err)
+	}
+	if env.Signatures[0].Sig == "" {
+		t.Fatal("envelope carries an empty signature — nothing was signed")
+	}
+
+	pub := &signer.priv.PublicKey
+	payload, err := VerifyEnvelopePayload(env, pub)
+	if err != nil {
+		t.Fatalf("verification of a freshly signed envelope failed: %v", err)
 	}
 
 	var roundTripped InTotoStatement
-	if err := json.Unmarshal([]byte(env.Payload), &roundTripped); err != nil {
-		t.Fatalf("failed to round-trip statement from envelope: %v", err)
+	if err := json.Unmarshal(payload, &roundTripped); err != nil {
+		t.Fatalf("failed to round-trip statement from verified payload: %v", err)
 	}
 	if roundTripped.Type != InTotoStatementType {
 		t.Fatalf("round-trip: wrong type %s", roundTripped.Type)
@@ -420,7 +375,7 @@ func TestFullPipeline_StatementToCosign(t *testing.T) {
 	}
 }
 
-func TestFullPipeline_ProvenanceToCosign(t *testing.T) {
+func TestFullPipeline_ProvenanceToSignedEnvelope(t *testing.T) {
 	prov := testProvenance()
 	subjects := testSubjects()
 
@@ -432,12 +387,46 @@ func TestFullPipeline_ProvenanceToCosign(t *testing.T) {
 		t.Fatalf("VerifyProvenance: %v", err)
 	}
 
-	env, err := WrapCosignEnvelope(stmt, "slsa-key")
+	signer, _ := GenerateSigner()
+	env, err := signer.SignStatement(stmt)
 	if err != nil {
-		t.Fatalf("WrapCosignEnvelope: %v", err)
+		t.Fatalf("SignStatement: %v", err)
 	}
-	if err := VerifyCosignEnvelope(env); err != nil {
-		t.Fatalf("VerifyCosignEnvelope: %v", err)
+	if err := VerifyEnvelope(env, &signer.priv.PublicKey); err != nil {
+		t.Fatalf("verification of a freshly signed provenance envelope failed: %v", err)
+	}
+}
+
+// Adversarial proof (doctrine §2.3): an envelope with an EMPTY signature (the
+// exact Sig:"" the deleted WrapCosignEnvelope produced) must be REJECTED. The old
+// VerifyCosignEnvelope only checked field-presence and would have accepted this.
+func TestVerifyEnvelope_RejectsEmptySignature(t *testing.T) {
+	signer, _ := GenerateSigner()
+	env, err := signer.SignStatement(testStatement(t))
+	if err != nil {
+		t.Fatalf("SignStatement: %v", err)
+	}
+	pub := &signer.priv.PublicKey
+
+	// Sanity: the real signature verifies.
+	if err := VerifyEnvelope(env, pub); err != nil {
+		t.Fatalf("pre-tamper verification failed: %v", err)
+	}
+
+	// Now blank the signature, exactly like the legacy fake path did.
+	env.Signatures[0].Sig = ""
+	if err := VerifyEnvelope(env, pub); err == nil {
+		t.Fatal("verification PASSED on an empty (Sig:\"\") signature — the fake path is back")
+	}
+
+	// And an envelope whose only signature is empty must also be rejected.
+	emptyOnly := DSSEEnvelope{
+		PayloadType: env.PayloadType,
+		Payload:     env.Payload,
+		Signatures:  []DSSESignature{{KeyID: signer.KeyID(), Sig: ""}},
+	}
+	if err := VerifyEnvelope(emptyOnly, pub); err == nil {
+		t.Fatal("verification PASSED on an envelope whose only signature is empty")
 	}
 }
 

@@ -129,4 +129,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install --quiet pyyaml
+      - name: Attestation claim-boundary guard
+        run: python scripts/claim_boundary_guard.py --root .
       - run: python -m unittest discover -s tests -v

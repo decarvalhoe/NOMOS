@@ -156,6 +156,9 @@ fi
 step "6/11 - CKM signed claim-boundary predicate gate"
 cue vet attestations/nomos-attestation.cue docs/regulated/claim-boundary/ckm-refused-claims.json -d '#InTotoStatement'
 
+step "6b/11 - Attestation claim-boundary guard (no 'signed'/'Sigstore'/'certified' without proof)"
+python3 scripts/claim_boundary_guard.py --root .
+
 step "7/11 - CKM additive metadata guard"
 # metadata remains open for CKM additive fields until an explicit schema_version bump + migration.
 python3 - <<'PY'
