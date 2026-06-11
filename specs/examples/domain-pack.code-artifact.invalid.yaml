@@ -1,0 +1,27 @@
+# VRC-20 adversarial fixture — a pack trying to ship MECHANICS: the
+# vocabulary "file" is a Python script. #DeclarativePath's positive allowlist
+# (yaml|yml|md|json) cannot match it, so `cue vet` MUST fail. If this fixture
+# ever passes, the « pack 100 % déclaratif » claim is dead.
+schema_version: nomos-domain-pack-v1
+pack_id: evil-pack
+domain_profile: evil-pack
+profile_ref: specs/examples/nomos-domain-profile.built-environment.valid.yaml
+claim_boundary: >-
+  Un pack qui tente d'embarquer de la mécanique.
+vocabularies:
+  file: docs/regulated/domain-packs/evil-pack/scripts/fix_vocab.py
+  axes: [activity]
+source_register:
+  file: docs/regulated/domain-packs/evil-pack/sources.yaml
+  contract: "#BuiltEnvironmentSourceConnectors"
+lens_presets:
+  - id: LENS-EVIL
+    file: docs/regulated/domain-packs/evil-pack/evil.lens.yaml
+golden_corpus:
+  root: cli/internal/corpus/testdata/evil-pack
+  documents:
+    - case.md
+scorecard:
+  - area: "n/a"
+    status: out_of_scope
+    note: "fixture adversariale"
