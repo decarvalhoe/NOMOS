@@ -1,0 +1,66 @@
+# VRC-35 (#572, B1) — the reference retrieval harness of the built-environment
+# pack: 100 % declarative data the consumer kit (scripts/nomos_reference_retrieval.py)
+# replays against a REAL emitted bundle of the golden corpus.
+#
+# document_facets is the consumer-level enrichment: the engine derives the
+# closed axes (nature, trust_tier, provenance) but the open WHERE axes
+# (activity, confidentiality, applicability) are pack DATA the consumer
+# attaches per source document before the lens runs — the lens then filters
+# AT THE BASE LEVEL, before any scoring (doc 40 §5).
+#
+# thresholds are VERSIONED here: the measured anti-distractor effect must
+# stay at or above these numbers, or the gate goes red.
+record_type: pack_retrieval_harness
+schema_version: "0.1.0"
+domain_profile: built-environment
+document_facets:
+  conception.md:
+    activity: [aec.conception]
+    confidentiality: public
+    applicability: applicable
+  dt-chantier.md:
+    activity: [aec.direction_travaux]
+    confidentiality: public
+    applicability: applicable
+  permis.md:
+    activity: [aec.permis]
+    confidentiality: public
+    applicability: applicable
+  journal-interne.md:
+    activity: [aec.permis]
+    confidentiality: confidential
+    applicability: applicable
+queries:
+  # Distractor pair 1 — the question is a CONCEPTION question, deliberately
+  # phrased with enquête-publique vocabulary so the permis document hijacks
+  # the raw lexical ranking. The conception lens must restore the right hit.
+  - id: q-gabarit-distrait-par-enquete
+    text: "pièces du dossier d'enquête publique pendant trente jours : quelle hauteur de gabarit au faîte ?"
+    preset: LENS-AEC-ARCHI-CONCEPTION
+    expected: conception.md
+  # Distractor pair 2 — a DT question phrased with dossier vocabulary.
+  - id: q-seance-distraite-par-dossier
+    text: "plan de situation et formulaire énergie du dossier d'exemple : où sont consignées les décisions de la séance ?"
+    preset: LENS-AEC-DT-CHANTIER
+    expected: dt-chantier.md
+  # Confidential exclusion — the internal journal is the BEST raw lexical
+  # match by construction; through the public-enquête lens it must never
+  # appear at ANY rank (never_retrieve), and the public permis document wins.
+  - id: q-confidentiel-jamais-public
+    text: "appréciation confidentielle du compte rendu interne sur les pièces du dossier d'enquête"
+    preset: LENS-AEC-PERMIS
+    expected: permis.md
+    never_retrieve: journal-interne.md
+  # Straight hits — the lens must not DEGRADE retrieval on honest queries.
+  - id: q-recul-limite-nord
+    text: "recul fictif sur la limite nord de la parcelle"
+    preset: LENS-AEC-ARCHI-CONCEPTION
+    expected: conception.md
+  - id: q-publicite-trente-jours
+    text: "publicité de la mise à l'enquête : durée en jours fictifs"
+    preset: LENS-AEC-PERMIS
+    expected: permis.md
+thresholds:
+  min_accuracy_with_lens: 1.0
+  max_accuracy_without_lens: 0.6
+  min_margin: 0.4

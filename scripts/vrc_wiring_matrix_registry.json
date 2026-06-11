@@ -295,6 +295,24 @@
       ]
     },
     {
+      "id": "reference_retrieval_kit",
+      "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
+      "pillar": "B1",
+      "claim_level": "measured on golden corpus (consumer kit, not core)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/nomos_reference_retrieval.py", "contains": ["def lens_includes(", "accuracy_with_lens", "never_retrieve"]},
+        {"path": "docs/regulated/domain-packs/built-environment/retrieval-harness.yaml", "contains": ["thresholds", "never_retrieve"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli/internal", "regex": "rank_documents|ReferenceRetrieval", "suffixes": [".go"]}
+      ]
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
