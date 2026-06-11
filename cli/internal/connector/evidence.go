@@ -38,6 +38,22 @@ var KnownSources = map[string]SourceDescriptor{
 		LicenseNote:  "Fedlex open federal law; redistributed as hash + span coverage only (no full-text copy).",
 		Description:  "Swiss federal legislation addressed by ELI.",
 	},
+	"ch-swisstopo-stac": {
+		ID:           "ch-swisstopo-stac",
+		Jurisdiction: "CH",
+		Authority:    "Office fédéral de topographie (swisstopo)",
+		Access:       "open_data",
+		LicenseNote:  "swisstopo open geodata (data.geo.admin.ch); redistributed as hash + span coverage only (no full-text copy).",
+		Description:  "STAC collection metadata for federal geodata (e.g. swissBUILDINGS3D).",
+	},
+	"ch-rdppf-oereb": {
+		ID:           "ch-rdppf-oereb",
+		Jurisdiction: "CH",
+		Authority:    "Cadastre RDPPF / ÖREB-Kataster (service cantonal, standard fédéral)",
+		Access:       "open_data",
+		LicenseNote:  "Official cadastre of public-law restrictions; redistributed as hash + span coverage only (no full-text copy).",
+		Description:  "OEREB v2 webservice snapshot (capabilities: themes incl. Nutzungsplanung).",
+	},
 }
 
 // AtomSample is a small, non-full-text sample of an atomized segment. The

@@ -1,0 +1,41 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-rdppf-oereb",
+  "source": {
+    "id": "ch-rdppf-oereb",
+    "jurisdiction": "CH",
+    "authority": "Cadastre RDPPF / ÖREB-Kataster (service cantonal, standard fédéral)",
+    "access": "open_data",
+    "license_note": "Official cadastre of public-law restrictions; redistributed as hash + span coverage only (no full-text copy).",
+    "description": "OEREB v2 webservice snapshot (capabilities: themes incl. Nutzungsplanung)."
+  },
+  "fetch": {
+    "url": "https://maps.zh.ch/oereb/v2/capabilities/json",
+    "fetched_at": "2026-06-11T07:46:04Z",
+    "status_code": 200,
+    "content_type": "application/json; charset=utf-8",
+    "byte_count": 3829,
+    "sha256": "sha256:b4003e109f9848b404551e10042dfdcd7293cfef76b02319a10b6d056a975a34",
+    "etag": "W/\"b4003e109f9848b404551e10042dfdcd-gzip\""
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 3829,
+    "covered_bytes": 3829,
+    "uncovered_bytes": 0,
+    "segment_count": 1
+  },
+  "atom_count": 1,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 3829,
+      "content_hash": "sha256:b4003e109f9848b404551e10042dfdcd7293cfef76b02319a10b6d056a975a34",
+      "preview": "{\"GetCapabilitiesResponse\":{\"topic\":[{\"code\":\"ch.Planungszonen\",\"Text\":[{\"Langua…"
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}

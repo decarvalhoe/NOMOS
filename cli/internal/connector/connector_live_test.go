@@ -107,3 +107,71 @@ func TestLive_FedlexELI(t *testing.T) {
 	}
 	t.Logf("live Fedlex fetch: %d bytes, %s, %d atoms, 0 uncovered", result.ByteCount, result.SHA256, ev.AtomCount)
 }
+
+// TestLive_SwisstopoSTAC fetches the STAC collection document of a federal
+// built-environment geodataset (swissBUILDINGS3D 3.0) on data.geo.admin.ch
+// (VRC-32 / #569). Plain JSON GET — no negotiation needed. Asserts the payload
+// is a real STAC collection, not an error page.
+func TestLive_SwisstopoSTAC(t *testing.T) {
+	if os.Getenv("NOMOS_LIVE_CH_FETCH") != "1" {
+		t.Skip("set NOMOS_LIVE_CH_FETCH=1 to run the live Swiss-source fetch")
+	}
+	const url = "https://data.geo.admin.ch/api/stac/v0.9/collections/ch.swisstopo.swissbuildings3d_3_0"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	content, result, err := Fetch(ctx, url, FetchOptions{})
+	if err != nil {
+		t.Fatalf("live fetch failed: %v", err)
+	}
+	if len(result.SHA256) != len("sha256:")+64 {
+		t.Fatalf("live fetch produced a non-real hash %q", result.SHA256)
+	}
+	if !strings.Contains(string(content), "stac_version") || !strings.Contains(string(content), "ch.swisstopo.swissbuildings3d_3_0") {
+		t.Fatal("payload does not look like the STAC collection document")
+	}
+	ledger := BuildLineLedger(content)
+	if !ledger.IsFullyCovered() {
+		t.Fatalf("live content left %d bytes uncovered", ledger.UncoveredBytes)
+	}
+	ev := BuildEvidence("ch-swisstopo-stac", content, result, ledger, 3)
+	if err := ev.Validate(); err != nil {
+		t.Fatalf("live evidence invalid: %v", err)
+	}
+	t.Logf("live swisstopo fetch: %d bytes, %s, %d atoms, 0 uncovered", result.ByteCount, result.SHA256, ev.AtomCount)
+}
+
+// TestLive_RDPPFOEREB fetches the official OEREB v2 capabilities document of a
+// cantonal RDPPF webservice (Zurich — the federal standard's GetCapabilities,
+// listing the restriction themes incl. Nutzungsplanung) (VRC-32 / #569).
+// Asserts the payload is the capabilities response, not an HTML error page.
+func TestLive_RDPPFOEREB(t *testing.T) {
+	if os.Getenv("NOMOS_LIVE_CH_FETCH") != "1" {
+		t.Skip("set NOMOS_LIVE_CH_FETCH=1 to run the live Swiss-source fetch")
+	}
+	const url = "https://maps.zh.ch/oereb/v2/capabilities/json"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	content, result, err := Fetch(ctx, url, FetchOptions{})
+	if err != nil {
+		t.Fatalf("live fetch failed: %v", err)
+	}
+	if len(result.SHA256) != len("sha256:")+64 {
+		t.Fatalf("live fetch produced a non-real hash %q", result.SHA256)
+	}
+	if !strings.Contains(string(content), "GetCapabilitiesResponse") {
+		t.Fatal("payload does not look like an OEREB capabilities response")
+	}
+	ledger := BuildLineLedger(content)
+	if !ledger.IsFullyCovered() {
+		t.Fatalf("live content left %d bytes uncovered", ledger.UncoveredBytes)
+	}
+	ev := BuildEvidence("ch-rdppf-oereb", content, result, ledger, 3)
+	if err := ev.Validate(); err != nil {
+		t.Fatalf("live evidence invalid: %v", err)
+	}
+	t.Logf("live RDPPF fetch: %d bytes, %s, %d atoms, 0 uncovered", result.ByteCount, result.SHA256, ev.AtomCount)
+}
