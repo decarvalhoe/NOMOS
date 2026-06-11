@@ -77,16 +77,16 @@ type LengthBuckets struct {
 
 // DuplicateNormalizedReport summarises units sharing a normalized-text hash.
 type DuplicateNormalizedReport struct {
-	GroupCount          int                         `json:"group_count"`
-	DuplicatedUnitCount int                         `json:"duplicated_unit_count"`
-	TopGroups           []DuplicateNormalizedGroup  `json:"top_groups"`
+	GroupCount          int                        `json:"group_count"`
+	DuplicatedUnitCount int                        `json:"duplicated_unit_count"`
+	TopGroups           []DuplicateNormalizedGroup `json:"top_groups"`
 }
 
 // DuplicateNormalizedGroup describes one cluster of identical normalized text.
 type DuplicateNormalizedGroup struct {
-	NormalizedHash string                `json:"normalized_hash"`
-	Occurrences    int                   `json:"occurrences"`
-	SampleText     string                `json:"sample_text"`
+	NormalizedHash string                 `json:"normalized_hash"`
+	Occurrences    int                    `json:"occurrences"`
+	SampleText     string                 `json:"sample_text"`
 	Examples       []DuplicateUnitExample `json:"examples"`
 }
 
@@ -143,7 +143,7 @@ type ZeroUnitSource struct {
 
 // TopOffendersReport lists the worst offenders for analyst review.
 type TopOffendersReport struct {
-	VeryShortUnits []ShortUnitExample      `json:"very_short_units"`
+	VeryShortUnits  []ShortUnitExample      `json:"very_short_units"`
 	DuplicatedUnits []DuplicatedUnitExample `json:"duplicated_units"`
 }
 
@@ -390,11 +390,11 @@ func computeDuplicates(units []corpus.FeedUnit) DuplicateNormalizedReport {
 	}
 
 	type groupSummary struct {
-		hash       string
-		indices    []int
-		count      int
-		firstPath  string
-		firstUnit  string
+		hash      string
+		indices   []int
+		count     int
+		firstPath string
+		firstUnit string
 	}
 	var dupGroups []groupSummary
 	dupUnitTotal := 0

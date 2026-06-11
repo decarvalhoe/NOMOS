@@ -46,24 +46,24 @@ type ValidationSummary struct {
 
 // ValidationInput holds the artifacts to validate.
 type ValidationInput struct {
-	Feed         *RuntimeFeed
-	NodeCount    int
+	Feed          *RuntimeFeed
+	NodeCount     int
 	HasGovernance bool
-	HasRAGMeta   bool
-	HasIndex     bool
-	HasEngine    bool
-	LayerCount   int
-	ContentHash  string
+	HasRAGMeta    bool
+	HasIndex      bool
+	HasEngine     bool
+	LayerCount    int
+	ContentHash   string
 }
 
 // ValidationOptions configures the validation gate.
 type ValidationOptions struct {
-	GateID         string
-	MinNodes       int
-	RequireRAG     bool
-	RequireEngine  bool
-	RequireIndex   bool
-	Now            time.Time
+	GateID        string
+	MinNodes      int
+	RequireRAG    bool
+	RequireEngine bool
+	RequireIndex  bool
+	Now           time.Time
 }
 
 // DefaultValidationOptions returns sensible defaults.

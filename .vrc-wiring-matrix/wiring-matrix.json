@@ -219,16 +219,14 @@
     },
     {
       "id": "body_ledger_merkle_verification",
-      "title": "Merkle inclusion-proof verification (engine only — no production verifier)",
+      "title": "Merkle inclusion-proof verification wired as a production surface (`corpus body-ledger --verify`, VRC-07 #553) — leaves recomputed from ledger rows",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-07",
-      "expected": "partial",
-      "computed": "partial",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "no production caller declared (the #540 class)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
         "engine": [
@@ -236,12 +234,28 @@
             "path": "cli/internal/corpus/body_ledger.go",
             "ok": true,
             "missing": []
+          },
+          {
+            "path": "cli/internal/corpus/body_ledger_verify.go",
+            "ok": true,
+            "missing": []
           }
         ],
-        "production_callers": [],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/corpus_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "adversarial_tests": [
           {
-            "path": "cli/internal/corpus/body_ledger_test.go",
+            "path": "cli/internal/corpus/body_ledger_verify_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/corpus_attest_ledger_test.go",
             "ok": true,
             "missing": []
           }
@@ -253,16 +267,14 @@
     },
     {
       "id": "claim_coverage_attestation",
-      "title": "claim_coverage computed in the corpus attestation generator (FSQ-05 #368) — CLI wiring missing (FSQ-08-followup)",
+      "title": "claim_coverage wired into `corpus attest --corpus-body-ledger` (FSQ-05 #368, FSQ-08-followup closed by VRC-07 #553) — ledger Merkle-verified before coverage is computed",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-07",
-      "expected": "partial",
-      "computed": "partial",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "no production caller declared (the #540 class)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
         "engine": [
@@ -272,10 +284,21 @@
             "missing": []
           }
         ],
-        "production_callers": [],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/corpus_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "adversarial_tests": [
           {
             "path": "cli/internal/corpus/body_ledger_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/corpus_attest_ledger_test.go",
             "ok": true,
             "missing": []
           }
@@ -287,16 +310,14 @@
     },
     {
       "id": "supply_chain_attestation",
-      "title": "Supply-chain in-toto predicate (CKM-05 #500) — defined and tested, zero production callers",
+      "title": "Supply-chain in-toto predicate wired as `attest supply-chain` (CKM-05 #500, VRC-08 #554) — digests computed from real pipeline artifacts",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-08",
-      "expected": "partial",
-      "computed": "partial",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "no production caller declared (the #540 class)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
         "engine": [
@@ -306,10 +327,26 @@
             "missing": []
           }
         ],
-        "production_callers": [],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/attest_supply_chain.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/attest_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "adversarial_tests": [
           {
             "path": "cli/internal/attestation/attestation_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/attest_supply_chain_test.go",
             "ok": true,
             "missing": []
           }
@@ -689,6 +726,107 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "manifest_check_family",
+      "title": "Granular manifest checks (sources/contracts/matrix/exceptions/strict) wired as `nomos check` (VRC-09 #555 — was the #543 class)",
+      "pillar": "P1",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/app/checks.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/wiring_reachability_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/checks_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "report_and_bom_export",
+      "title": "Project report + SPDX/CycloneDX BOM exports wired as CLI surfaces (VRC-09 #555; groundwork for VRC-23 #566)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/export/spdx.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/export/cyclonedx.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/report/generate.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/report_cmds.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/export/export_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/wiring_reachability_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -699,43 +837,36 @@
         "atomize",
         "attest",
         "bundle",
+        "check",
         "connector",
         "corpus",
         "diagnose",
         "evidence",
+        "export",
         "github",
         "help",
         "init",
+        "product-check",
+        "report",
         "strict",
         "validate",
         "version"
       ],
       "failures": [],
-      "known_unwired": [
-        "checks.go: SourcesCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `nomos sources check`; not in the command map",
-        "checks.go: ContractsCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
-        "checks.go: MatrixCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
-        "checks.go: StrictCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: legacy `nomos strict` implementation shadowed by the registered StrictGateCommand",
-        "checks.go: ExceptionsCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: check-family command never registered",
-        "product_check.go: ProductCheckCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `product-check`; not in the command map",
-        "report_cmds.go: ReportCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: doc-comment claims `nomos report`; not in the command map",
-        "report_cmds.go: ExportSPDXCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: SPDX BOM exporter exists but is unreachable — feeds VRC-23",
-        "report_cmds.go: ExportCycloneDXCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: CycloneDX BOM exporter exists but is unreachable — feeds VRC-23",
-        "report_cmds.go: AttestCommand is implemented but neither registered in the app.go command map nor called from production code (the #543 'atomize' class) — known, tracked by VRC-09: exported one-shot signing path (re-routed to the real signer by #542, cited by decision 0005) shadowed by the registered attestCommand"
-      ]
+      "known_unwired": []
     }
   ],
   "summary": {
-    "capabilities": 17,
+    "capabilities": 19,
     "computed": {
-      "real": 7,
-      "partial": 4,
+      "real": 12,
+      "partial": 1,
       "sidecar": 4,
       "stub": 1,
       "absent": 1
     },
     "mismatches": 0,
     "generic_check_failures": 0,
-    "known_unwired": 10
+    "known_unwired": 0
   }
 }

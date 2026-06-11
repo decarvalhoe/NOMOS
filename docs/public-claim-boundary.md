@@ -73,13 +73,14 @@ NOMOS does **not** yet prove, at platform scope:
 - complete source-to-feed coverage across arbitrary corpora;
 - absence of all semantic warnings across arbitrary corpora;
 - support for every PDF, DOCX, scanned document, image, legal code, regulation, rule book, or customer-specific format;
-- that attestation `claim_coverage` is fully wired to the body ledger;
 - customer-specific regulated validation, intended-use approval, supplier qualification, or certification;
 - trademark clearance for the NOMOS name or related wordmarks;
 - a freedom-to-operate opinion for implementation or public claims;
 - third-party license clearance for dependencies that require OSS or counsel review.
 
-The remaining proof chain is release-scoped: repeated CI evidence on private corpora, attestation `claim_coverage` wiring, broader document-format adapters, and customer validation packs.
+The remaining proof chain is release-scoped: repeated CI evidence on private corpora, broader document-format adapters, and customer validation packs.
+
+Attestation `claim_coverage` is wired (VRC-07 #553): `nomos corpus attest --corpus-body-ledger` verifies the ledger's Merkle inclusion proofs (recomputing every leaf from the ledger rows) and computes `claim_coverage` from the verified ledger; `nomos corpus body-ledger --verify` exposes the same verification standalone. A tampered ledger fails the attestation (adversarial tests in tree). This is a tree capability claim; recorded POC dossiers keep their original run-scoped statements.
 
 ## Claim Levels
 

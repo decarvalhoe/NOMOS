@@ -76,18 +76,18 @@ type ImpactSummary struct {
 // MatrixUnit is a minimal representation of a canonical matrix unit
 // for impact analysis purposes.
 type MatrixUnit struct {
-	UnitID      string     `yaml:"unit_id" json:"unit_id"`
-	Name        string     `yaml:"name" json:"name"`
-	Criticality string     `yaml:"criticality" json:"criticality"`
-	SourceRefs  []SourceRef `yaml:"source_refs" json:"source_refs"`
+	UnitID      string       `yaml:"unit_id" json:"unit_id"`
+	Name        string       `yaml:"name" json:"name"`
+	Criticality string       `yaml:"criticality" json:"criticality"`
+	SourceRefs  []SourceRef  `yaml:"source_refs" json:"source_refs"`
 	Contract    *ContractRef `yaml:"canonical_contract" json:"canonical_contract,omitempty"`
-	SchemaRefs  []string   `yaml:"schema_refs" json:"schema_refs,omitempty"`
-	DBRefs      []DBRef    `yaml:"db_refs" json:"db_refs,omitempty"`
-	VectorRefs  []VectorRef `yaml:"vector_refs" json:"vector_refs,omitempty"`
-	CoreRefs    []CoreRef  `yaml:"core_refs" json:"core_refs,omitempty"`
-	APIRefs     []APIRef   `yaml:"api_refs" json:"api_refs,omitempty"`
-	UIRefs      []UIRef    `yaml:"ui_refs" json:"ui_refs,omitempty"`
-	TestRefs    []string   `yaml:"test_refs" json:"test_refs,omitempty"`
+	SchemaRefs  []string     `yaml:"schema_refs" json:"schema_refs,omitempty"`
+	DBRefs      []DBRef      `yaml:"db_refs" json:"db_refs,omitempty"`
+	VectorRefs  []VectorRef  `yaml:"vector_refs" json:"vector_refs,omitempty"`
+	CoreRefs    []CoreRef    `yaml:"core_refs" json:"core_refs,omitempty"`
+	APIRefs     []APIRef     `yaml:"api_refs" json:"api_refs,omitempty"`
+	UIRefs      []UIRef      `yaml:"ui_refs" json:"ui_refs,omitempty"`
+	TestRefs    []string     `yaml:"test_refs" json:"test_refs,omitempty"`
 }
 
 type SourceRef struct {

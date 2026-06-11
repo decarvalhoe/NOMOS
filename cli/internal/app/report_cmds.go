@@ -63,6 +63,36 @@ func ReportCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	return 0
 }
 
+// exportCommand is `nomos export`: BOM exports of the project report. The two
+// exporters below (and their internal/export engine) were implemented and
+// tested but unreachable until the wiring matrix caught them (VRC-09 #555);
+// wiring them is the groundwork of the evidence-BOM lane (VRC-23 #566).
+func exportCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	if len(args) == 0 {
+		exportUsage(stdout)
+		return 0
+	}
+	switch args[0] {
+	case "spdx":
+		return ExportSPDXCommand(args[1:], stdout, stderr)
+	case "cyclonedx":
+		return ExportCycloneDXCommand(args[1:], stdout, stderr)
+	case "help", "-h", "--help":
+		exportUsage(stdout)
+		return 0
+	default:
+		fmt.Fprintf(stderr, "unknown export subcommand %q\n\n", args[0])
+		exportUsage(stderr)
+		return 2
+	}
+}
+
+func exportUsage(w io.Writer) {
+	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, "  nomos export spdx [--root <dir>] [--project-id <id>] [--output <file>]")
+	fmt.Fprintln(w, "  nomos export cyclonedx [--root <dir>] [--project-id <id>] [--output <file>]")
+}
+
 // ExportSPDXCommand implements "nomos export spdx".
 func ExportSPDXCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("export spdx", flag.ContinueOnError)
@@ -137,7 +167,7 @@ func ExportCycloneDXCommand(args []string, stdout io.Writer, stderr io.Writer) i
 	return 0
 }
 
-// AttestCommand implements "nomos attest" as a one-shot REAL signing path: it
+// AttestCommand implements "nomos attest create" as a one-shot REAL signing path: it
 // builds an in-toto statement and emits a genuinely signed DSSE envelope (ECDSA
 // P-256 over the DSSE PAE, via internal/attestation/signing.go). The legacy fake
 // path (WrapCosignEnvelope, which hard-coded Sig:"") was removed in CKM-H1-FU

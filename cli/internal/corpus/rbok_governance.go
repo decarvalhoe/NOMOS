@@ -286,12 +286,12 @@ type parcoursCheckFile struct {
 }
 
 type parcoursCheckData struct {
-	ID      string             `yaml:"id"`
-	Name    string             `yaml:"name"`
-	Version string             `yaml:"version"`
-	Owner   string             `yaml:"owner"`
-	Status  string             `yaml:"status"`
-	Domain  string             `yaml:"domain"`
+	ID      string               `yaml:"id"`
+	Name    string               `yaml:"name"`
+	Version string               `yaml:"version"`
+	Owner   string               `yaml:"owner"`
+	Status  string               `yaml:"status"`
+	Domain  string               `yaml:"domain"`
 	Etapes  []parcoursCheckEtape `yaml:"etapes"`
 }
 

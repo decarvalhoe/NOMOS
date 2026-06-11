@@ -91,47 +91,58 @@
     },
     {
       "id": "body_ledger_merkle_verification",
-      "title": "Merkle inclusion-proof verification (engine only — no production verifier)",
+      "title": "Merkle inclusion-proof verification wired as a production surface (`corpus body-ledger --verify`, VRC-07 #553) — leaves recomputed from ledger rows",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-07",
-      "expected": "partial",
+      "promotion_issue": "",
+      "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["func VerifyMerkleProof("]}
+        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["func VerifyMerkleProof("]},
+        {"path": "cli/internal/corpus/body_ledger_verify.go", "contains": ["func VerifyCorpusBodyLedgerProofs("]}
       ],
-      "production_callers": [],
+      "production_callers": [
+        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpus.VerifyCorpusBodyLedgerProofs("]}
+      ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["VerifyMerkleProof("]}
+        {"path": "cli/internal/corpus/body_ledger_verify_test.go", "contains": ["TestVerifyCorpusBodyLedgerProofs_FailsWhenProofHopTampered", "TestVerifyCorpusBodyLedgerProofs_FailsWhenSourceRowTampered"]},
+        {"path": "cli/internal/app/corpus_attest_ledger_test.go", "contains": ["TestCorpusBodyLedgerVerifyCLI"]}
       ]
     },
     {
       "id": "claim_coverage_attestation",
-      "title": "claim_coverage computed in the corpus attestation generator (FSQ-05 #368) — CLI wiring missing (FSQ-08-followup)",
+      "title": "claim_coverage wired into `corpus attest --corpus-body-ledger` (FSQ-05 #368, FSQ-08-followup closed by VRC-07 #553) — ledger Merkle-verified before coverage is computed",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-07",
-      "expected": "partial",
+      "promotion_issue": "",
+      "expected": "real",
       "engine": [
         {"path": "cli/internal/corpus/attestation.go", "contains": ["func computeClaimCoverage(", "ClaimCoverage"]}
       ],
-      "production_callers": [],
+      "production_callers": [
+        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpus-body-ledger", "bodyLedger = &ledger"]}
+      ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestFSQ05AttestationClaimCoverage"]}
+        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestFSQ05AttestationClaimCoverage"]},
+        {"path": "cli/internal/app/corpus_attest_ledger_test.go", "contains": ["TestCorpusAttestFailsOnTamperedLedger", "TestCorpusAttestEmitsCalculatedClaimCoverage"]}
       ]
     },
     {
       "id": "supply_chain_attestation",
-      "title": "Supply-chain in-toto predicate (CKM-05 #500) — defined and tested, zero production callers",
+      "title": "Supply-chain in-toto predicate wired as `attest supply-chain` (CKM-05 #500, VRC-08 #554) — digests computed from real pipeline artifacts",
       "pillar": "P7",
       "claim_level": "artifact-generated",
-      "promotion_issue": "VRC-08",
-      "expected": "partial",
+      "promotion_issue": "",
+      "expected": "real",
       "engine": [
         {"path": "cli/internal/attestation/attestation.go", "contains": ["SupplyChainPredicate", "VerifySupplyChainStatement"]}
       ],
-      "production_callers": [],
+      "production_callers": [
+        {"path": "cli/internal/app/attest_supply_chain.go", "contains": ["attestation.GenerateSupplyChainStatement(", "attestation.VerifySupplyChainStatement("]},
+        {"path": "cli/internal/app/attest_cmd.go", "contains": ["attestSupplyChainCommand"]}
+      ],
       "adversarial_tests": [
-        {"path": "cli/internal/attestation/attestation_test.go", "contains": ["TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry"]}
+        {"path": "cli/internal/attestation/attestation_test.go", "contains": ["TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry"]},
+        {"path": "cli/internal/app/attest_supply_chain_test.go", "contains": ["TestAttestSupplyChainVerifyPassesThenFailsOnTamperedArtifact"]}
       ]
     },
     {
@@ -302,22 +313,45 @@
       "adversarial_tests": [
         {"path": "cli/internal/app/strict_gate_test.go", "contains": ["func Test"]}
       ]
-    }
-  ],
-  "generic_allowlist": {
-    "command_registration": {
-      "known_unwired": [
-        {"name": "SourcesCheckCommand", "issue": "VRC-09", "note": "doc-comment claims `nomos sources check`; not in the command map"},
-        {"name": "ContractsCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
-        {"name": "MatrixCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
-        {"name": "ExceptionsCheckCommand", "issue": "VRC-09", "note": "check-family command never registered"},
-        {"name": "StrictCommand", "issue": "VRC-09", "note": "legacy `nomos strict` implementation shadowed by the registered StrictGateCommand"},
-        {"name": "ProductCheckCommand", "issue": "VRC-09", "note": "doc-comment claims `product-check`; not in the command map"},
-        {"name": "ReportCommand", "issue": "VRC-09", "note": "doc-comment claims `nomos report`; not in the command map"},
-        {"name": "ExportSPDXCommand", "issue": "VRC-09", "note": "SPDX BOM exporter exists but is unreachable — feeds VRC-23"},
-        {"name": "ExportCycloneDXCommand", "issue": "VRC-09", "note": "CycloneDX BOM exporter exists but is unreachable — feeds VRC-23"},
-        {"name": "AttestCommand", "issue": "VRC-09", "note": "exported one-shot signing path (re-routed to the real signer by #542, cited by decision 0005) shadowed by the registered attestCommand"}
+    },
+    {
+      "id": "manifest_check_family",
+      "title": "Granular manifest checks (sources/contracts/matrix/exceptions/strict) wired as `nomos check` (VRC-09 #555 — was the #543 class)",
+      "pillar": "P1",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/app/checks.go", "contains": ["func checkCommand("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/app.go", "contains": ["\"check\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/app/wiring_reachability_test.go", "contains": ["TestRunCheckSubcommandsAreReachable"]},
+        {"path": "cli/internal/app/checks_test.go", "contains": ["func Test"]}
+      ]
+    },
+    {
+      "id": "report_and_bom_export",
+      "title": "Project report + SPDX/CycloneDX BOM exports wired as CLI surfaces (VRC-09 #555; groundwork for VRC-23 #566)",
+      "pillar": "P7",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/export/spdx.go", "contains": ["GenerateSPDX"]},
+        {"path": "cli/internal/export/cyclonedx.go", "contains": ["GenerateCycloneDX"]},
+        {"path": "cli/internal/report/generate.go", "contains": ["func Generate("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/report_cmds.go", "contains": ["export.GenerateSPDX(", "export.GenerateCycloneDX(", "report.Generate("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"report\":", "\"export\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/export/export_test.go", "contains": ["func Test"]},
+        {"path": "cli/internal/app/wiring_reachability_test.go", "contains": ["TestRunExportSubcommandsAreReachable", "TestRunAttestCreateIsReachable"]}
       ]
     }
-  }
+  ]
 }

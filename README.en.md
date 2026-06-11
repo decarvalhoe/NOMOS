@@ -36,7 +36,7 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 | Current proof | Alpha POC on a real private corpus processed read-only. |
 | Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation. |
 | Known limit | The alpha proves a bounded source-to-feed POC; it does not yet claim universal fidelity or customer regulatory validation. |
-| Next hardening | Repeated CI evidence, attestation `claim_coverage`, additional document formats, customer validation packs. |
+| Next hardening | Repeated CI evidence, additional document formats, customer validation packs. |
 | Claim boundary | Not a certified eQMS, not a validated GxP system, not a regulatory certification. |
 
 ## Why Nomos Exists
@@ -183,7 +183,7 @@ Current structured source-to-feed POC:
 | Strict gate | `pass`, exit code 0 |
 | Source mutation check | no source mutation detected |
 
-This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, attestation `claim_coverage` is not wired yet, and the proof is bounded to the recorded corpus, commit, and build. The next hardening work targets CI repeatability, additional document formats, customer validation, and broader universal-fidelity evidence.
+This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, and the proof is bounded to the recorded corpus, commit, and build (attestation `claim_coverage` is now wired — `corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs and computes coverage; the recorded POC run keeps its historical WARN). The next hardening work targets CI repeatability, additional document formats, customer validation, and broader universal-fidelity evidence.
 
 ## Regulated-Ready Posture
 
@@ -312,7 +312,7 @@ Nomos does not make an LLM authoritative. In the intended architecture, determin
 
 Nomos does not remove the need for validation. In regulated environments, customers still need intended-use definition, risk assessment, validation planning, test evidence, change control, supplier assessment, security review, and approval records.
 
-Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The feed-quality roadmap explicitly addresses unsupported document formats, residual semantic warnings, attestation `claim_coverage`, customer validation packs, and CI repeatability on private corpora.
+Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The feed-quality roadmap explicitly addresses unsupported document formats, residual semantic warnings, customer validation packs, and CI repeatability on private corpora.
 
 ## Release Roadmap
 
