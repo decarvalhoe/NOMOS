@@ -388,6 +388,19 @@ func atomizeSource(src SourceFile, domain string) (atomization.AtomSet, error) {
 		return atomization.AtomizeXML(src.Content, opts)
 	case strings.HasSuffix(ext, ".html") || strings.HasSuffix(ext, ".htm"):
 		return atomization.AtomizeHTML(src.Content, opts)
+	case strings.HasSuffix(ext, ".pdf"):
+		// W23-1 (#590): a bundle never silently drops content it was asked to
+		// carry — a PDF with pages outside the born-digital-text claim is
+		// REFUSED, naming the pages (re-scope the corpus or fix the source).
+		set, unsupported, err := atomization.AtomizePDF(src.Content, opts)
+		if err != nil {
+			return atomization.AtomSet{}, err
+		}
+		if len(unsupported) > 0 {
+			return atomization.AtomSet{}, fmt.Errorf(
+				"pdf pages %v are out of the born-digital-text claim (scanned/image-only; OCR is never claimed) — a bundle cannot carry a source it cannot fully account for", unsupported)
+		}
+		return set, nil
 	default:
 		ast := atomization.ParseMarkdown(string(src.Content))
 		return atomization.Atomize(ast, opts), nil
