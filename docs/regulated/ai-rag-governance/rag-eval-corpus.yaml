@@ -1,0 +1,63 @@
+# VRC-13 (#559, B2) — the regulated RAG evaluation corpus. Golden answers the
+# CI harness (nomos answer eval) replays every build: each is source-backed and
+# grounded in its cited span text, so the cite-or-abstain gate cites them all
+# and the aggregate metrics stay above the versioned floor. A citation-recall
+# regression on any answer turns the harness red. License-safe synthetic text.
+answers:
+  - answer_id: EVAL-GABARIT
+    prompt_id: Q-GABARIT
+    answer: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: VD-CONCEPTION
+        source_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        span: L13-L14
+        chunk_id: chunk-gabarit
+        text: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
+    retrieved_chunks:
+      - chunk_id: chunk-gabarit
+        text: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
+
+  - answer_id: EVAL-RECUL
+    prompt_id: Q-RECUL
+    answer: "L'implantation respecte un recul de six metres sur la limite nord de la parcelle."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: VD-CONCEPTION
+        source_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        span: L8-L9
+        chunk_id: chunk-recul
+        text: "L'implantation respecte un recul de six metres sur la limite nord de la parcelle d'etude."
+    retrieved_chunks:
+      - chunk_id: chunk-recul
+        text: "L'implantation respecte un recul de six metres sur la limite nord de la parcelle d'etude."
+
+  - answer_id: EVAL-ENQUETE
+    prompt_id: Q-ENQUETE
+    answer: "La mise a l'enquete publique dure trente jours."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: VD-PERMIS
+        source_hash: "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+        span: L12-L13
+        chunk_id: chunk-enquete
+        text: "La mise a l'enquete publique dure trente jours pour le dossier d'autorisation."
+    retrieved_chunks:
+      - chunk_id: chunk-enquete
+        text: "La mise a l'enquete publique dure trente jours pour le dossier d'autorisation."
+
+  - answer_id: EVAL-REFUS
+    prompt_id: Q-INCONNU
+    answer: ""
+    citation_status: none
+    refusal_status: unsupported
+    policy_outcome: acceptable_refusal
+    confidence: 0.0
+    source_spans: []
+    retrieved_chunks: []

@@ -1,0 +1,7 @@
+# VRC-13 (#559, B2) — the VERSIONED thresholds the RAG eval corpus must hold.
+# A regression below any floor (or any per-answer gate finding) turns the CI
+# harness red. Bump deliberately, never to paper over a regression.
+min_mean_citation_recall: 0.95
+min_mean_citation_precision: 0.95
+min_mean_faithfulness: 0.95
+max_failed_answers: 0

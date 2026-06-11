@@ -24,6 +24,7 @@
 | `adapter_capability_kits` | C5 | real | real | ✅ | — | — |
 | `pdf_adapter` | ingestion | real | real | ✅ | — | — |
 | `domain_pack_gate` | D2 | real | real | ✅ | — | — |
+| `rag_eval_harness` | B2 | real | real | ✅ | — | — |
 | `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
@@ -40,7 +41,7 @@
 
 ## Summary
 
-- capabilities: 25 (real=21, partial=0, sidecar=3, stub=0, absent=1)
+- capabilities: 26 (real=22, partial=0, sidecar=3, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

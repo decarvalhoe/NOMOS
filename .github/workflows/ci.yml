@@ -28,6 +28,11 @@ jobs:
       # mutilated pack (or a drifted artifact) turns this job red.
       - name: Domain pack gate (VRC-21)
         run: go run . pack validate --manifest ../docs/regulated/domain-packs/built-environment/pack.yaml --repo-root ..
+      # VRC-13 (#559): the regulated RAG eval harness runs the cite-or-abstain
+      # gate over the golden corpus against versioned thresholds — a citation-
+      # recall (or faithfulness) regression turns this job red (fail-closed).
+      - name: RAG eval harness (VRC-13)
+        run: go run . answer eval --corpus ../docs/regulated/ai-rag-governance/rag-eval-corpus.yaml --thresholds ../docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating
