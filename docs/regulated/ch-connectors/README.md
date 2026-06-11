@@ -44,6 +44,15 @@ the **federal spatial-planning act (LAT, RS 700)** — the built-environment
 anchor law: real URL, negotiated representation, real sha256, 0 uncovered
 bytes.
 
+## Other committed receipts
+
+- `ch-swisstopo-stac.evidence.json` — STAC collection document of
+  **swissBUILDINGS3D 3.0** (federal 3D building model) on data.geo.admin.ch.
+- `ch-rdppf-oereb.evidence.json` — **OEREB v2 GetCapabilities** of an official
+  cantonal RDPPF webservice (Zurich; federal standard, restriction themes
+  incl. `ch.Nutzungsplanung`). Parcel extracts (`/extract/{egrid}`) follow
+  once a pilot parcel is chosen.
+
 ## Scope discipline — open data only
 
 The connector targets **open** government sources:

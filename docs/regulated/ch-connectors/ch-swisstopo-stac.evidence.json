@@ -1,0 +1,41 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-swisstopo-stac",
+  "source": {
+    "id": "ch-swisstopo-stac",
+    "jurisdiction": "CH",
+    "authority": "Office fédéral de topographie (swisstopo)",
+    "access": "open_data",
+    "license_note": "swisstopo open geodata (data.geo.admin.ch); redistributed as hash + span coverage only (no full-text copy).",
+    "description": "STAC collection metadata for federal geodata (e.g. swissBUILDINGS3D)."
+  },
+  "fetch": {
+    "url": "https://data.geo.admin.ch/api/stac/v0.9/collections/ch.swisstopo.swissbuildings3d_3_0",
+    "fetched_at": "2026-06-11T07:46:02Z",
+    "status_code": 200,
+    "content_type": "application/json",
+    "byte_count": 1474,
+    "sha256": "sha256:cecb1f8922514738f3a5850fe43d78f0e756dd8dd721faf7d32bb87f64db03a4",
+    "etag": "\"48522062-8cd4-4a96-b8ac-fc4fc8bc54a5\""
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 1474,
+    "covered_bytes": 1474,
+    "uncovered_bytes": 0,
+    "segment_count": 1
+  },
+  "atom_count": 1,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 1474,
+      "content_hash": "sha256:cecb1f8922514738f3a5850fe43d78f0e756dd8dd721faf7d32bb87f64db03a4",
+      "preview": "{\"stac_version\":\"0.9.0\",\"id\":\"ch.swisstopo.swissbuildings3d_3_0\",\"title\":\"swissB…"
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}

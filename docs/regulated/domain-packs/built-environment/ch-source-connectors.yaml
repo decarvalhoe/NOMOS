@@ -40,21 +40,25 @@ connectors:
     source_family: swisstopo_stac
     authority_level: confederation
     machine_source: true
-    # Not yet fetched live. Declared placeholder (CKM-H5 follow-up #539).
-    status: declared_placeholder
+    # Real live fetch (VRC-32 / #569): the STAC collection document of
+    # swissBUILDINGS3D 3.0 (the federal 3D building model — built-environment
+    # geodata) on data.geo.admin.ch. content_hash is the sha256 of the bytes
+    # that actually came back; evidence_ref is the committed receipt.
+    status: fetched
+    evidence_ref: docs/regulated/ch-connectors/ch-swisstopo-stac.evidence.json
     retrieval:
       mode: read_only_api
       write_policy: read_only
       endpoint_pattern: "https://data.geo.admin.ch/api/stac/v0.9/collections/{collection_id}"
-      retrieved_at_utc: "2026-06-09T09:00:00Z"
+      retrieved_at_utc: "2026-06-11T07:46:02Z"
     dating:
       as_of_date_policy: required
       date_fields: [datetime, updated, collection_version]
       timezone: UTC
     hashing:
-      content_hash: placeholder:not-fetched
-      hash_scope: metadata_and_assets
-      canonicalization: "Hash STAC collection metadata plus asset href and checksum fields."
+      content_hash: sha256:cecb1f8922514738f3a5850fe43d78f0e756dd8dd721faf7d32bb87f64db03a4
+      hash_scope: raw_response
+      canonicalization: "Hash raw STAC collection JSON response bytes (collection ch.swisstopo.swissbuildings3d_3_0)."
     outputs:
       source_manifest_type: api_export
       stores_full_text: false
@@ -63,21 +67,26 @@ connectors:
     source_family: rdppf_oereb
     authority_level: mixed
     machine_source: true
-    # Not yet fetched live. Declared placeholder (CKM-H5 follow-up #539).
-    status: declared_placeholder
+    # Real live fetch (VRC-32 / #569): the OEREB v2 GetCapabilities document of
+    # an official cantonal RDPPF webservice (Zurich), implementing the federal
+    # standard — it lists the restriction themes (incl. ch.Nutzungsplanung).
+    # Parcel extracts (/extract/{egrid}) come when a pilot parcel is chosen;
+    # the capabilities snapshot is the service's authority register.
+    status: fetched
+    evidence_ref: docs/regulated/ch-connectors/ch-rdppf-oereb.evidence.json
     retrieval:
       mode: read_only_api
       write_policy: read_only
-      endpoint_pattern: "https://{cantonal-oereb-endpoint}/extract/reduced/{egrid}"
-      retrieved_at_utc: "2026-06-09T09:00:00Z"
+      endpoint_pattern: "https://{cantonal-oereb-endpoint}/oereb/v2/capabilities/{format}"
+      retrieved_at_utc: "2026-06-11T07:46:04Z"
     dating:
       as_of_date_policy: required
       date_fields: [extract_identifier, extract_date, legal_provision_date]
       timezone: Europe/Zurich
     hashing:
-      content_hash: placeholder:not-fetched
-      hash_scope: canonical_snapshot
-      canonicalization: "Hash reduced extract metadata, topic ids, legal provision refs, and geometry refs."
+      content_hash: sha256:b4003e109f9848b404551e10042dfdcd7293cfef76b02319a10b6d056a975a34
+      hash_scope: raw_response
+      canonicalization: "Hash raw OEREB v2 capabilities JSON response bytes (maps.zh.ch, GetCapabilitiesResponse)."
     outputs:
       source_manifest_type: api_export
       stores_full_text: false
