@@ -50,8 +50,17 @@ bytes.
   **swissBUILDINGS3D 3.0** (federal 3D building model) on data.geo.admin.ch.
 - `ch-rdppf-oereb.evidence.json` — **OEREB v2 GetCapabilities** of an official
   cantonal RDPPF webservice (Zurich; federal standard, restriction themes
-  incl. `ch.Nutzungsplanung`). Parcel extracts (`/extract/{egrid}`) follow
-  once a pilot parcel is chosen.
+  incl. `ch.Nutzungsplanung`).
+- `ch-rdppf-oereb-extract-CH107791929988.evidence.json` and
+  `ch-rdppf-oereb-extract-CH299970539115.evidence.json` — **per-parcel RDPPF
+  extracts** (`GetExtractById`): the public-law restrictions of two real,
+  arbitrary parcels (Zurich centre AA8043 and Oerlikon OE6501). No parcel is
+  curated: the EGRIDs come from the standard's own `getegrid` endpoint
+  (coordinates → parcel), and the live test
+  (`TestLive_RDPPFExtractByEGRID`) re-discovers three arbitrary parcels on
+  every run. Extracts are generated on demand (`CreationDate` changes), so
+  each receipt is a point-in-time proof of a real fetch — never a pinned
+  oracle.
 
 ## Scope discipline — open data only
 
