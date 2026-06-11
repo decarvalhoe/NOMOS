@@ -791,6 +791,45 @@
       }
     },
     {
+      "id": "consumer_conformance_kit",
+      "title": "Consumer conformance kit — the reference importer every conformant consumer replays: strict schema_version, structural+facet nucleus, attestation digest recomputed (Go-byte-exact canonicalization), hash form/consistency (VRC-36 #573, E-1)",
+      "pillar": "E-1",
+      "claim_level": "artifact-verified (consumer side)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/nomos_consumer_kit.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/ckm_bundle_validate.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
@@ -1013,11 +1052,11 @@
     }
   ],
   "summary": {
-    "capabilities": 22,
+    "capabilities": 23,
     "computed": {
       "real": 15,
       "partial": 1,
-      "sidecar": 5,
+      "sidecar": 6,
       "stub": 0,
       "absent": 1
     },
