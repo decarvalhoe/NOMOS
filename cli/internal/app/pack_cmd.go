@@ -51,6 +51,9 @@ type packManifest struct {
 		File string   `yaml:"file"`
 		Axes []string `yaml:"axes"`
 	} `yaml:"vocabularies"`
+	Ontology struct {
+		File string `yaml:"file"`
+	} `yaml:"ontology"`
 	SourceRegister struct {
 		File     string `yaml:"file"`
 		Contract string `yaml:"contract"`
@@ -82,6 +85,29 @@ type packVocabularyFile struct {
 type packVocabTerm struct {
 	ID      string `yaml:"id"`
 	LabelFR string `yaml:"label_fr"`
+}
+
+// packOntologyFile mirrors the ckm-facet-ontology-v1 document (VRC-45, D4):
+// the BFO→IOF→pack anchoring the gate renders its verdict on.
+type packOntologyFile struct {
+	SchemaVersion string `yaml:"schema_version"`
+	FacetAxes     []struct {
+		ID       string `yaml:"id"`
+		Root     string `yaml:"root"`
+		IOFClass string `yaml:"iof_class"`
+		Terms    []struct {
+			ID     string `yaml:"id"`
+			MapsTo struct {
+				BFO     string `yaml:"bfo"`
+				IOFCore string `yaml:"iof_core"`
+			} `yaml:"maps_to"`
+		} `yaml:"terms"`
+	} `yaml:"facet_axes"`
+	Orthogonality struct {
+		OWLConstruct string   `yaml:"owl_construct"`
+		DisjointAxes []string `yaml:"disjoint_axes"`
+	} `yaml:"orthogonality"`
+	ClaimBoundary string `yaml:"claim_boundary"`
 }
 
 var (
@@ -145,16 +171,17 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	// Rung 2 — declarative: every declared path matches the positive
 	// allowlist (the Go mirror of #DeclarativePath — code cannot be named).
 	declared := map[string]string{
-		"profile_ref":         m.ProfileRef,
-		"vocabularies.file":   m.Vocabularies.File,
+		"profile_ref":          m.ProfileRef,
+		"vocabularies.file":    m.Vocabularies.File,
 		"source_register.file": m.SourceRegister.File,
+		"ontology.file":        m.Ontology.File,
 	}
 	for field, p := range declared {
 		if !packDeclarativeRe.MatchString(p) || strings.Contains(p, "..") {
 			return packFail(stderr, "declarative", "%s %q is not a declarative artifact path (yaml|yml|md|json)", field, p)
 		}
 	}
-	for _, ref := range []string{m.Vocabularies.File, m.SourceRegister.File} {
+	for _, ref := range []string{m.Vocabularies.File, m.SourceRegister.File, m.Ontology.File} {
 		if !packLocalRe.MatchString(ref) {
 			return packFail(stderr, "declarative", "%q must live under docs/regulated/domain-packs/", ref)
 		}
@@ -253,6 +280,60 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 		totalTerms += len(terms)
 	}
 
+	// Rung 5b — ontology (VRC-45, D4): the gate renders the verdict on the
+	// pack's BFO→IOF→pack alignment. Three failure modes, each rejected:
+	// an open axis the pack declares but the ontology never registers, a
+	// vocabulary term with no (bfo, iof_core) mapping, and a term appearing
+	// on two owl:disjointUnionOf axes.
+	ontoRaw, err := os.ReadFile(abs(m.Ontology.File))
+	if err != nil {
+		return packFail(stderr, "ontology", "read %s: %v", m.Ontology.File, err)
+	}
+	var onto packOntologyFile
+	if err := yaml.Unmarshal(ontoRaw, &onto); err != nil {
+		return packFail(stderr, "ontology", "parse %s: %v", m.Ontology.File, err)
+	}
+	if onto.SchemaVersion != "ckm-facet-ontology-v1" {
+		return packFail(stderr, "ontology", "schema_version %q is not ckm-facet-ontology-v1", onto.SchemaVersion)
+	}
+	if onto.Orthogonality.OWLConstruct != "owl:disjointUnionOf" {
+		return packFail(stderr, "ontology", "orthogonality.owl_construct must be owl:disjointUnionOf, got %q", onto.Orthogonality.OWLConstruct)
+	}
+	ontoAxes := map[string]map[string]bool{}
+	for _, axis := range onto.FacetAxes {
+		if strings.TrimSpace(axis.Root) == "" || strings.TrimSpace(axis.IOFClass) == "" {
+			return packFail(stderr, "ontology", "axis %q has no BFO root or IOF class — not aligned", axis.ID)
+		}
+		terms := map[string]bool{}
+		for _, term := range axis.Terms {
+			if strings.TrimSpace(term.MapsTo.BFO) == "" || strings.TrimSpace(term.MapsTo.IOFCore) == "" {
+				return packFail(stderr, "ontology", "term %q on axis %q lacks a (bfo, iof_core) mapping", term.ID, axis.ID)
+			}
+			terms[term.ID] = true
+		}
+		ontoAxes[axis.ID] = terms
+	}
+	for _, axis := range m.Vocabularies.Axes {
+		registered, ok := ontoAxes[axis]
+		if !ok {
+			return packFail(stderr, "ontology", "pack axis %q is not registered in %s — axe non aligné", axis, m.Ontology.File)
+		}
+		for id := range vocabTerms[axis] {
+			if !registered[id] {
+				return packFail(stderr, "ontology", "vocabulary term %q (axis %q) has no ontology mapping — terme non aligné", id, axis)
+			}
+		}
+	}
+	seenOnDisjoint := map[string]string{}
+	for _, axis := range onto.Orthogonality.DisjointAxes {
+		for id := range ontoAxes[axis] {
+			if other, dup := seenOnDisjoint[id]; dup {
+				return packFail(stderr, "ontology", "term %q sits on disjoint axes %q and %q — owl:disjointUnionOf violated", id, other, axis)
+			}
+			seenOnDisjoint[id] = axis
+		}
+	}
+
 	// Rung 6 — source register: the authority register names this pack.
 	var register struct {
 		DomainProfile string `yaml:"domain_profile"`
@@ -345,7 +426,7 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	}
 
 	fmt.Fprintf(stdout,
-		"pack validate: OK — %s: %d axe(s)/%d terme(s), %d preset(s) résolus, corpus doré %d doc(s) → %d node(s), scorecard %d ligne(s)\n",
+		"pack validate: OK — %s: %d axe(s)/%d terme(s) alignés BFO→IOF, %d preset(s) résolus, corpus doré %d doc(s) → %d node(s), scorecard %d ligne(s)\n",
 		m.PackID, len(m.Vocabularies.Axes), totalTerms, len(m.LensPresets),
 		len(m.GoldenCorpus.Documents), totalNodes, len(m.Scorecard))
 	return 0

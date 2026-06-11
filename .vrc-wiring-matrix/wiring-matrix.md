@@ -20,7 +20,7 @@
 | `cite_or_abstain_gate` | P2 | sidecar | sidecar | ✅ | VRC-10 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `canon_promotion` | P5 | sidecar | sidecar | ✅ | VRC-11 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `point_in_time_resolver` | P6 | sidecar | sidecar | ✅ | VRC-12 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `facet_ontology_alignment` | P3 | sidecar | sidecar | ✅ | VRC-45 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `facet_ontology_alignment` | P3 | real | real | ✅ | — | — |
 | `pdf_adapter` | ingestion | real | real | ✅ | — | — |
 | `domain_pack_gate` | D2 | real | real | ✅ | — | — |
 | `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
@@ -36,7 +36,7 @@
 
 ## Summary
 
-- capabilities: 21 (real=14, partial=1, sidecar=5, stub=0, absent=1)
+- capabilities: 21 (real=15, partial=1, sidecar=4, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

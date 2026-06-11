@@ -78,6 +78,7 @@ class DomainPackContractTests(unittest.TestCase):
             manifest["profile_ref"],
             manifest["vocabularies"]["file"],
             manifest["source_register"]["file"],
+            manifest["ontology"]["file"],
         ]
         paths += [preset["file"] for preset in manifest["lens_presets"]]
         for rel in paths:

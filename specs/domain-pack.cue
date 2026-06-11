@@ -47,6 +47,14 @@ package nomos
 		axes: [#OpenTermAxis, ...#OpenTermAxis]
 	}
 
+	// 1b. Ontology alignment (VRC-45, D4) — the BFO→IOF→pack anchoring of
+	// the pack's open axes. Declarative data; `nomos pack validate` renders
+	// the verdict (unregistered axis / unmapped term / disjointness breach
+	// → pack rejected).
+	ontology: {
+		file: #PackLocalPath
+	}
+
 	// 2. Authority register of machine sources (the connectors manifest,
 	// vetted by its own contract — referenced here, never duplicated).
 	source_register: {

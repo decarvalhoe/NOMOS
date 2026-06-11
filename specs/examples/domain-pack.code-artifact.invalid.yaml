@@ -11,6 +11,8 @@ claim_boundary: >-
 vocabularies:
   file: docs/regulated/domain-packs/evil-pack/scripts/fix_vocab.py
   axes: [activity]
+ontology:
+  file: docs/regulated/domain-packs/evil-pack/facet-ontology.yaml
 source_register:
   file: docs/regulated/domain-packs/evil-pack/sources.yaml
   contract: "#BuiltEnvironmentSourceConnectors"

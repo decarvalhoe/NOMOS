@@ -13,6 +13,8 @@ entrypoint: cli/cmd/pack/main.go
 vocabularies:
   file: docs/regulated/domain-packs/evil-pack-2/vocab.yaml
   axes: [activity]
+ontology:
+  file: docs/regulated/domain-packs/evil-pack-2/facet-ontology.yaml
 source_register:
   file: docs/regulated/domain-packs/evil-pack-2/sources.yaml
   contract: "#BuiltEnvironmentSourceConnectors"
