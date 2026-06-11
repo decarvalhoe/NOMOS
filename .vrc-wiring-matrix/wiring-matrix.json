@@ -611,28 +611,40 @@
     },
     {
       "id": "pdf_adapter",
-      "title": "PDF structure-aware adapter — honest placeholder",
+      "title": "PDF born-digital text adapter — claim ladder rung 1 (text), unsupported records for out-of-claim pages, OCR never claimed (VRC-30 #567)",
       "pillar": "ingestion",
-      "claim_level": "not claimable",
-      "promotion_issue": "VRC-30",
-      "expected": "stub",
-      "computed": "stub",
+      "claim_level": "born-digital text",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
       "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
-        "ci_gates": [],
-        "sidecar": [],
-        "stub_markers": [
+        "engine": [
+          {
+            "path": "cli/internal/fidelity/pdf_adapter.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
           {
             "path": "cli/internal/fidelity/adapter_registry.go",
             "ok": true,
             "missing": []
           }
-        ]
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/fidelity/pdf_adapter_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
       }
     },
     {
@@ -859,10 +871,10 @@
   "summary": {
     "capabilities": 19,
     "computed": {
-      "real": 12,
+      "real": 13,
       "partial": 1,
       "sidecar": 4,
-      "stub": 1,
+      "stub": 0,
       "absent": 1
     },
     "mismatches": 0,

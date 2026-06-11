@@ -351,6 +351,8 @@ func DefaultRegistry() *Registry {
 	r.Register(YAMLAdapter{})
 	r.Register(JSONAdapter{})
 	r.Register(PlaceholderAdapter{AdapterName: "docx", Exts: []string{".docx"}})
-	r.Register(PlaceholderAdapter{AdapterName: "pdf", Exts: []string{".pdf"}})
+	// VRC-30 (#567): the pdf placeholder is gone — born-digital PDF text is a
+	// real adapter (claim ladder + unsupported records, see pdf_adapter.go).
+	r.Register(PDFAdapter{})
 	return r
 }
