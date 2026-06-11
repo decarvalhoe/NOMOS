@@ -26,13 +26,12 @@
       }
     ],
     "verifier": "nomos",
-    "signatureMode": "dsse-cosign",
+    "signatureMode": "none",
     "signature": {
-      "keyId": "nomos-fixture-key",
-      "signature": "MEUCIQDfixture-signature-claim-boundary",
-      "signedAt": "2026-06-09T00:00:00Z",
-      "logUri": "rekor://fixture/ckm-refused-claims"
+      "keyId": "",
+      "signature": "",
+      "signedAt": ""
     },
-    "claimBoundary": "Refusal predicate only; no live LLM correctness, legal, regulatory, clinical, or business correctness claim."
+    "claimBoundary": "Refusal predicate only; no live LLM correctness, legal, regulatory, clinical, or business correctness claim. This statement is unsigned (signatureMode none, tamper-evident by subject hash only); a real ECDSA P-256 DSSE signature can be produced and verified with `nomos attest sign --statement <this file>` / `nomos attest verify`."
   }
 }

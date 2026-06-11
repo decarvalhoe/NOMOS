@@ -24,9 +24,11 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"validate": validate.Command,
 		"diagnose": diagnoseCommand,
 		"corpus":   corpusCommand,
+		"bundle":   bundleCommand,
 		"strict":   StrictGateCommand,
 		"github":   githubCommand,
 		"evidence": evidenceCommand,
+		"attest":   attestCommand,
 	}
 
 	if len(args) == 0 {
@@ -58,9 +60,11 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  validate   Validate Nomos manifests and schemas")
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
 	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
+	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
 	fmt.Fprintln(stdout, "  evidence   Hash, prepare/sign, and verify evidence bundles")
+	fmt.Fprintln(stdout, "  attest     Sign and verify attestation predicates (ECDSA P-256 DSSE)")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
 	return 0

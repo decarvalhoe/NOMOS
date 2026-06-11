@@ -14,24 +14,44 @@ Nomos can generate in-toto style corpus attestation records. These records help 
 - generation timestamp;
 - relevant metadata.
 
-## Intended Expansion
+## Cryptographic Signing (ECDSA P-256 DSSE)
 
-Future attestation work may include:
+NOMOS signs attestation predicates with a **real** cryptographic signature —
+ECDSA P-256 over the DSSE v1 Pre-Authentication Encoding — implemented in the Go
+standard library (no external cosign binary, no network):
 
-- SLSA-aligned provenance;
-- CKM supply-chain predicates for source -> canon -> embedding stages;
-- artifact signing via Sigstore/Rekor keyless workflows;
-- cosign integration and verification;
-- release-bundle signatures;
-- customer evidence export.
+```
+nomos attest keygen --out priv.pem --pub-out pub.pem
+nomos attest sign   --statement statement.json --key priv.pem --out envelope.json
+nomos attest verify --envelope envelope.json --pub pub.pem
+```
+
+Verification fails if any byte of the signed payload changes after signing
+(including an artifact digest recorded in the statement) — this is genuine
+tamper-evidence, not a field-presence check. Until a predicate is signed this
+way it is **unsigned and tamper-evident by hash only**; NOMOS does not describe a
+hash-only artifact as "signed".
+
+### Intended Expansion
+
+- **Keyless** Sigstore/Fulcio + Rekor transparency-log workflows (needs an OIDC
+  round-trip; the key-based DSSE path above is the offline equivalent today);
+- SLSA-aligned provenance build integration;
+- release-bundle signatures and customer evidence export.
 
 ## Signed Claim Boundary
 
 Nomos also records negative attestations for claims it cannot prove. A
 claim-boundary predicate lists each refused claim, the reason, the evidence that
 would be required, and signing metadata. This inverts the normal provenance
-model: the signed artifact is not "Y is true", but "Nomos cannot produce the
+model: the artifact does not assert "Y is true", but "Nomos cannot produce the
 required trace for Y, therefore Nomos refuses to assert Y."
+
+The predicate's embedded `signature` field records `signatureMode` (`none`,
+`dsse-cosign`, or `sigstore-keyless`); when it is `none` the statement is
+unsigned and must not be described as signed. A real signature is produced by
+wrapping the statement in a DSSE envelope with `nomos attest sign` (see above) —
+not by populating the embedded field with a placeholder string.
 
 ## CKM Supply-Chain Predicate
 
