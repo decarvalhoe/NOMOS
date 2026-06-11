@@ -14,8 +14,8 @@ First executed cycle (VRC-05/VRC-06, 2026-06-11):
 | [2026-06-11-management-review-record.yaml](2026-06-11-management-review-record.yaml) | Management review (session-based, inputs/decisions/actions) | recorded |
 | [2026-06-11-internal-audit-record.yaml](2026-06-11-internal-audit-record.yaml) | Internal self-audit (NOT independent — waiver applies) | recorded |
 | [capa/CAPA-2026-001-empty-signature-path.yaml](capa/CAPA-2026-001-empty-signature-path.yaml) | Deviation/CAPA (retro-documented, disclosed) | closed |
-| [capa/CAPA-2026-002-orphan-commands.yaml](capa/CAPA-2026-002-orphan-commands.yaml) | Deviation/CAPA | pending_effectiveness_check |
-| [capa/CAPA-2026-003-unwired-attestation-capabilities.yaml](capa/CAPA-2026-003-unwired-attestation-capabilities.yaml) | Deviation/CAPA | pending_effectiveness_check |
+| [capa/CAPA-2026-002-orphan-commands.yaml](capa/CAPA-2026-002-orphan-commands.yaml) | Deviation/CAPA | closed (effectiveness verified on main, 2026-06-11) |
+| [capa/CAPA-2026-003-unwired-attestation-capabilities.yaml](capa/CAPA-2026-003-unwired-attestation-capabilities.yaml) | Deviation/CAPA | closed (effectiveness verified on main, 2026-06-11) |
 
 Claim boundary: these are operational records of a young QMS executing its
 first cycle. They do not, by themselves, establish certification, Part 11

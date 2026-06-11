@@ -63,7 +63,7 @@ This supports a regulated-readiness claim, not a regulated certification claim.
 | Gap | Status |
 |---|---|
 | Named QMS owners and active CODEOWNERS | Owners assigned with COI note + independent-review waiver (record `NOMOS-REC-ROLE-2026-001`, 2026-06-11); CODEOWNERS present |
-| First executed QMS cycle (management review, internal audit, CAPA log) | Recorded 2026-06-11: `NOMOS-REC-MR-2026-001`, `NOMOS-REC-AUD-2026-001` (self-audit, not independent), CAPA-2026-001 closed + 002/003 pending effectiveness |
+| First executed QMS cycle (management review, internal audit, CAPA log) | Recorded 2026-06-11: `NOMOS-REC-MR-2026-001`, `NOMOS-REC-AUD-2026-001` (self-audit, not independent), CAPA-2026-001/002/003 closed with effectiveness verified on main |
 | Approved training records | Open |
 | Live GitHub branch/ruleset/environment/security evidence exports | Open |
 | Licensed reference license review and clause mapping | Open |
