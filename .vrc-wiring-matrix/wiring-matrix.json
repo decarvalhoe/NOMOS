@@ -455,22 +455,53 @@
     },
     {
       "id": "cite_or_abstain_gate",
-      "title": "Cite-or-abstain gate with faithfulness recomputed from spans (CKM-08/H6 #502, #530, #542) — Python sidecar only",
+      "title": "Cite-or-abstain gate in the Go engine (VRC-10 #556) — faithfulness RECOMPUTED from retrieved spans, cite/abstain verdict, trust tier exposed; fail-closed on a forged citation (moved span / altered hash) or missing grounding; a declared score may only lower. The Python sidecar (CKM-08/H6) stays as the evidence-pack emitter.",
       "pillar": "P2",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-10",
-      "expected": "sidecar",
-      "computed": "sidecar",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
+        "engine": [
+          {
+            "path": "cli/internal/answer/answer.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/answer_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/answer/answer_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/answer_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
           {
             "path": "scripts/ckm-non-regression.sh",
             "ok": true,
@@ -480,11 +511,6 @@
         "sidecar": [
           {
             "path": "scripts/regulated_rag_answer_evidence.py",
-            "ok": true,
-            "missing": []
-          },
-          {
-            "path": "tests/test_ckm_faithfulness_recompute.py",
             "ok": true,
             "missing": []
           }
@@ -1135,6 +1161,7 @@
       "name": "command_registration",
       "status": "pass",
       "registered_commands": [
+        "answer",
         "atomize",
         "attest",
         "bundle",
@@ -1161,9 +1188,9 @@
   "summary": {
     "capabilities": 25,
     "computed": {
-      "real": 18,
+      "real": 19,
       "partial": 0,
-      "sidecar": 6,
+      "sidecar": 5,
       "stub": 0,
       "absent": 1
     },
