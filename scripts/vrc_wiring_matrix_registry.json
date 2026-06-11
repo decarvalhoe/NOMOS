@@ -320,6 +320,21 @@
       ]
     },
     {
+      "id": "pack_core_coupling_guard",
+      "title": "Core/pack coupling metric + CI guard — « changements core requis par nouveau pack », cible 0, ADR as the only escape hatch (VRC-38 #575, D6)",
+      "pillar": "D6",
+      "claim_level": "measured (manifest mode) + enforced on pack-labeled PRs (diff mode)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/pack_core_coupling_check.py", "contains": ["PACK_ALLOWED_PREFIXES", "adr_justifications", "core_changes_required"]},
+        {"path": "docs/regulated/domain-packs/built-environment/reproducibility-metric.yaml", "contains": ["core_changes_required", "target: 0"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["pack-coupling", "pack_core_coupling_check.py"]}
+      ]
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
