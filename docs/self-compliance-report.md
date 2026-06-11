@@ -37,6 +37,10 @@ Nomos is not yet a validated regulated system. The repository contains the struc
 - Source mutation verification passed on the read-only corpus clone.
 - GitHub CI for the strict fidelity gate merge was green.
 
+## Wiring Matrix (Generated)
+
+Capability wiring status — engine code, production caller, adversarial test, CI gate — is computed, never declared, by `scripts/vrc_wiring_matrix.py` against `scripts/vrc_wiring_matrix_registry.json`, and published at [.vrc-wiring-matrix/wiring-matrix.md](../.vrc-wiring-matrix/wiring-matrix.md). CI fails when computed statuses and the registry diverge in either direction, and when any `*Command` function is implemented but neither registered nor called (the #543 class). Hand-editing the generated matrix is forbidden. Known-unwired commands are tracked in the registry allowlist with their promotion issue (VRC-09), not hidden.
+
 ## Regulated-Readiness Evidence Summary
 
 Installed evidence structure:
@@ -58,7 +62,8 @@ This supports a regulated-readiness claim, not a regulated certification claim.
 
 | Gap | Status |
 |---|---|
-| Named QMS owners and active CODEOWNERS | Open |
+| Named QMS owners and active CODEOWNERS | Owners assigned with COI note + independent-review waiver (record `NOMOS-REC-ROLE-2026-001`, 2026-06-11); CODEOWNERS present |
+| First executed QMS cycle (management review, internal audit, CAPA log) | Recorded 2026-06-11: `NOMOS-REC-MR-2026-001`, `NOMOS-REC-AUD-2026-001` (self-audit, not independent), CAPA-2026-001 closed + 002/003 pending effectiveness |
 | Approved training records | Open |
 | Live GitHub branch/ruleset/environment/security evidence exports | Open |
 | Licensed reference license review and clause mapping | Open |

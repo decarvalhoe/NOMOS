@@ -18,19 +18,23 @@ type commandFunc func(args []string, stdout io.Writer, stderr io.Writer) int
 
 func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 	commands := map[string]commandFunc{
-		"help":      helpCommand,
-		"version":   versionCommand,
-		"init":      initCommand,
-		"validate":  validate.Command,
-		"diagnose":  diagnoseCommand,
-		"corpus":    corpusCommand,
-		"connector": connectorCommand,
-		"atomize":   AtomizeCommand,
-		"bundle":    bundleCommand,
-		"strict":    StrictGateCommand,
-		"github":    githubCommand,
-		"evidence":  evidenceCommand,
-		"attest":    attestCommand,
+		"help":          helpCommand,
+		"version":       versionCommand,
+		"init":          initCommand,
+		"validate":      validate.Command,
+		"diagnose":      diagnoseCommand,
+		"corpus":        corpusCommand,
+		"connector":     connectorCommand,
+		"atomize":       AtomizeCommand,
+		"bundle":        bundleCommand,
+		"strict":        StrictGateCommand,
+		"check":         checkCommand,
+		"report":        ReportCommand,
+		"export":        exportCommand,
+		"product-check": ProductCheckCommand,
+		"github":        githubCommand,
+		"evidence":      evidenceCommand,
+		"attest":        attestCommand,
 	}
 
 	if len(args) == 0 {
@@ -66,6 +70,10 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  atomize    Atomize Markdown into atoms/chunks (facets, knowledge-lens scoping)")
 	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
+	fmt.Fprintln(stdout, "  check      Granular manifest checks (sources, contracts, matrix, exceptions, strict)")
+	fmt.Fprintln(stdout, "  report     Generate the project detection report (JSON)")
+	fmt.Fprintln(stdout, "  export     Export the project report as an SPDX or CycloneDX BOM")
+	fmt.Fprintln(stdout, "  product-check  Validate nomos.project.yaml against product rules")
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
 	fmt.Fprintln(stdout, "  evidence   Hash, prepare/sign, and verify evidence bundles")
 	fmt.Fprintln(stdout, "  attest     Sign and verify attestation predicates (ECDSA P-256 DSSE)")

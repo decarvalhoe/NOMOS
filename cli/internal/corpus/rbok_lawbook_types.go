@@ -75,10 +75,10 @@ func (t LawbookNodeType) IsValid() bool {
 type LawbookNodeStatus string
 
 const (
-	StatusActive   LawbookNodeStatus = "active"
-	StatusAmended  LawbookNodeStatus = "amended"
-	StatusRepealed LawbookNodeStatus = "repealed"
-	StatusPending  LawbookNodeStatus = "pending"
+	StatusActive    LawbookNodeStatus = "active"
+	StatusAmended   LawbookNodeStatus = "amended"
+	StatusRepealed  LawbookNodeStatus = "repealed"
+	StatusPending   LawbookNodeStatus = "pending"
 	StatusNodeDraft LawbookNodeStatus = "draft"
 )
 
@@ -204,10 +204,10 @@ type LawbookFeed struct {
 }
 
 var (
-	nodeIDPattern    = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._-]*$`)
-	feedIDPattern    = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
-	ordinalPattern   = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*$`)
-	hashPattern      = regexp.MustCompile(`^(sha256|sha384|sha512):[A-Fa-f0-9]+$`)
+	nodeIDPattern  = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._-]*$`)
+	feedIDPattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
+	ordinalPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*$`)
+	hashPattern    = regexp.MustCompile(`^(sha256|sha384|sha512):[A-Fa-f0-9]+$`)
 )
 
 // ValidateNode checks a LawbookNode for schema conformance.

@@ -19,8 +19,6 @@ const (
 	StatusUnchanged FileStatus = "unchanged"
 )
 
-
-
 // DiffEntry describes one file's transition between two snapshots.
 type DiffEntry struct {
 	Path    string     `json:"path"`
@@ -190,4 +188,3 @@ func shouldSkip(base string) bool {
 	}
 	return false
 }
-

@@ -113,6 +113,36 @@ class ClaimBoundaryGuardTests(unittest.TestCase):
                 f"false positive on: {line}",
             )
 
+    def test_forged_maturity_claim_turns_guard_red(self) -> None:
+        # VRC-01 (#547) adversarial proof: the doc-40 class of overclaim —
+        # asserting multi-environment / customer-production integration without
+        # recorded evidence — must turn the guard red.
+        for forged in (
+            "NOMOS est éprouvé et intégré dans plusieurs environnements.",
+            "NOMOS is proven and deployed across multiple projects.",
+            "Le moteur est en production chez plusieurs clients.",
+        ):
+            bogus = f"\n## Maturité\n\n{forged}\n"
+            with tempfile.TemporaryDirectory() as tmp:
+                root = _make_tree(Path(tmp), with_signing=True)
+                docs = root / "docs" / "maturity.md"
+                docs.write_text("# Maturité\n" + bogus, encoding="utf-8")
+                violations = guard.scan(root)
+                self.assertTrue(violations, f"forged maturity claim must be flagged: {forged}")
+                self.assertEqual(guard.main(["--root", str(root)]), 1)
+
+    def test_quoted_or_negated_maturity_language_is_not_flagged(self) -> None:
+        # Claim-boundary work that QUOTES or NEGATES the overclaim is clean.
+        for line in (
+            "doc 40 affirmait « éprouvé et intégré dans plusieurs environnements », non soutenu par un record.",
+            "Il n'y a pas d'intégration multi-environnements prouvée par un record.",
+            "La phrase forgée « NOMOS est en production chez N clients » doit rendre le guard rouge.",
+        ):
+            self.assertIsNone(
+                guard.classify_line(line, signing_present=True),
+                f"false positive on: {line}",
+            )
+
     def test_real_repository_tree_is_clean(self) -> None:
         # The committed tree must pass the guard as shipped.
         self.assertEqual(guard.scan(ROOT), [], "shipped tree has an unbacked claim")

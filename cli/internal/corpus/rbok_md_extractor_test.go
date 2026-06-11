@@ -308,7 +308,6 @@ func TestExtractMarkdown_DisplayRef(t *testing.T) {
 	}
 }
 
-
 func TestExtractMarkdown_Empty(t *testing.T) {
 	result := ExtractMarkdown("", "test")
 	if len(result.Nodes) != 0 {
@@ -356,7 +355,6 @@ func TestExtractMarkdown_NoMetadataTable(t *testing.T) {
 		t.Fatalf("expected nil metadata, got %v", doc.Metadata)
 	}
 }
-
 
 func TestSlugify(t *testing.T) {
 	cases := []struct {

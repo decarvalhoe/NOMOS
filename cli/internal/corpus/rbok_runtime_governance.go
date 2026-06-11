@@ -46,10 +46,10 @@ type RuntimeGovernanceResult struct {
 
 // LayerEvalResult summarizes one layer's governance state.
 type LayerEvalResult struct {
-	LayerID  string `json:"layer_id"`
-	Verdict  string `json:"verdict"`
-	Complete bool   `json:"metadata_complete"`
-	NodeCount int   `json:"node_count"`
+	LayerID   string `json:"layer_id"`
+	Verdict   string `json:"verdict"`
+	Complete  bool   `json:"metadata_complete"`
+	NodeCount int    `json:"node_count"`
 }
 
 // EvaluateRuntimeGovernance assesses a multi-layer corpus for metadata
@@ -137,12 +137,12 @@ func evaluateLayerMetadata(layer RuntimeLayer, idx *int) ([]Finding, bool) {
 			*idx++
 			complete = false
 			findings = append(findings, Finding{
-				ID:         fmt.Sprintf("RTG-%03d", *idx),
-				Severity:   severityFor(check.block),
-				Blocking:   check.block,
-				SourcePath: layer.ID,
-				Field:      check.field,
-				Message:    fmt.Sprintf("layer %q missing governance field: %s", layer.ID, check.field),
+				ID:          fmt.Sprintf("RTG-%03d", *idx),
+				Severity:    severityFor(check.block),
+				Blocking:    check.block,
+				SourcePath:  layer.ID,
+				Field:       check.field,
+				Message:     fmt.Sprintf("layer %q missing governance field: %s", layer.ID, check.field),
 				Remediation: fmt.Sprintf("Add %s to layer %s metadata.", check.field, layer.ID),
 			})
 		}
@@ -160,12 +160,12 @@ func evaluateLayerNodes(layer RuntimeLayer, idx *int) []Finding {
 		if seen[node.ID] {
 			*idx++
 			findings = append(findings, Finding{
-				ID:         fmt.Sprintf("RTG-%03d", *idx),
-				Severity:   "high",
-				Blocking:   true,
-				SourcePath: layer.ID,
-				Field:      "node.id",
-				Message:    fmt.Sprintf("duplicate node ID %q in layer %q", node.ID, layer.ID),
+				ID:          fmt.Sprintf("RTG-%03d", *idx),
+				Severity:    "high",
+				Blocking:    true,
+				SourcePath:  layer.ID,
+				Field:       "node.id",
+				Message:     fmt.Sprintf("duplicate node ID %q in layer %q", node.ID, layer.ID),
 				Remediation: "Ensure all node IDs are unique within a layer.",
 			})
 		}
@@ -175,12 +175,12 @@ func evaluateLayerNodes(layer RuntimeLayer, idx *int) []Finding {
 		if node.SourceHash == "" {
 			*idx++
 			findings = append(findings, Finding{
-				ID:         fmt.Sprintf("RTG-%03d", *idx),
-				Severity:   "high",
-				Blocking:   true,
-				SourcePath: layer.ID,
-				Field:      "node.source_hash",
-				Message:    fmt.Sprintf("node %q in layer %q has no source_hash", node.ID, layer.ID),
+				ID:          fmt.Sprintf("RTG-%03d", *idx),
+				Severity:    "high",
+				Blocking:    true,
+				SourcePath:  layer.ID,
+				Field:       "node.source_hash",
+				Message:     fmt.Sprintf("node %q in layer %q has no source_hash", node.ID, layer.ID),
 				Remediation: "Compute and record SHA-256 hash of source content.",
 			})
 		}
@@ -189,12 +189,12 @@ func evaluateLayerNodes(layer RuntimeLayer, idx *int) []Finding {
 		if node.CanonicalRef == "" {
 			*idx++
 			findings = append(findings, Finding{
-				ID:         fmt.Sprintf("RTG-%03d", *idx),
-				Severity:   "medium",
-				Blocking:   false,
-				SourcePath: layer.ID,
-				Field:      "node.canonical_ref",
-				Message:    fmt.Sprintf("node %q in layer %q has no canonical_ref", node.ID, layer.ID),
+				ID:          fmt.Sprintf("RTG-%03d", *idx),
+				Severity:    "medium",
+				Blocking:    false,
+				SourcePath:  layer.ID,
+				Field:       "node.canonical_ref",
+				Message:     fmt.Sprintf("node %q in layer %q has no canonical_ref", node.ID, layer.ID),
 				Remediation: "Assign a stable canonical reference for traceability.",
 			})
 		}

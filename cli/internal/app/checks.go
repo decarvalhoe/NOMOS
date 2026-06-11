@@ -13,7 +13,46 @@ import (
 	"github.com/RBOKproject/Nomos/cli/internal/strict"
 )
 
-// SourcesCheckCommand implements "nomos sources check".
+// checkCommand is `nomos check`: granular manifest checks. The five check
+// functions below predate the strict gate; they were implemented and tested but
+// never registered in the command map (the #543 class) until the wiring matrix
+// caught them (VRC-09 #555).
+func checkCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	if len(args) == 0 {
+		checkUsage(stdout)
+		return 0
+	}
+	switch args[0] {
+	case "sources":
+		return SourcesCheckCommand(args[1:], stdout, stderr)
+	case "contracts":
+		return ContractsCheckCommand(args[1:], stdout, stderr)
+	case "matrix":
+		return MatrixCheckCommand(args[1:], stdout, stderr)
+	case "exceptions":
+		return ExceptionsCheckCommand(args[1:], stdout, stderr)
+	case "strict":
+		return StrictCommand(args[1:], stdout, stderr)
+	case "help", "-h", "--help":
+		checkUsage(stdout)
+		return 0
+	default:
+		fmt.Fprintf(stderr, "unknown check subcommand %q\n\n", args[0])
+		checkUsage(stderr)
+		return 2
+	}
+}
+
+func checkUsage(w io.Writer) {
+	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, "  nomos check sources [--format text|json] [--base-dir <dir>] <source-manifest.yaml>")
+	fmt.Fprintln(w, "  nomos check contracts [--format text|json] [--base-dir <dir>] <canonical-matrix.yaml>")
+	fmt.Fprintln(w, "  nomos check matrix [--format text|json] <canonical-matrix.yaml>")
+	fmt.Fprintln(w, "  nomos check exceptions [--format text|json] <exceptions.yaml>")
+	fmt.Fprintln(w, "  nomos check strict [--format text|json] --project <p> --sources <s> --matrix <m>")
+}
+
+// SourcesCheckCommand implements "nomos check sources".
 func SourcesCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("sources check", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -41,7 +80,7 @@ func SourcesCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	return 1
 }
 
-// ContractsCheckCommand implements "nomos contracts check".
+// ContractsCheckCommand implements "nomos check contracts".
 func ContractsCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("contracts check", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -69,8 +108,7 @@ func ContractsCheckCommand(args []string, stdout io.Writer, stderr io.Writer) in
 	return 1
 }
 
-
-// MatrixCheckCommand implements "nomos matrix check".
+// MatrixCheckCommand implements "nomos check matrix".
 func MatrixCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("matrix check", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -98,7 +136,8 @@ func MatrixCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	return 1
 }
 
-// StrictCommand implements "nomos strict".
+// StrictCommand implements "nomos check strict" (manifest-level strict checks;
+// the registered top-level "strict" command is the release gate, StrictGateCommand).
 func StrictCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("strict", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -132,7 +171,7 @@ func StrictCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	return 1
 }
 
-// ExceptionsCheckCommand implements "nomos exceptions check".
+// ExceptionsCheckCommand implements "nomos check exceptions".
 func ExceptionsCheckCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("exceptions check", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -194,7 +233,6 @@ func writeContractsResult(result contracts.CheckResult, format string, w io.Writ
 		}
 	}
 }
-
 
 func writeMatrixResult(result checks.MatrixCheckResult, format string, w io.Writer) {
 	if format == "json" {

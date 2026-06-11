@@ -89,12 +89,8 @@ step "3/11 - Go tests"
 go vet ./...
 go test ./...
 
-for mod in "$ROOT_DIR"/control-plane/*/go.mod; do
-  [ -f "$mod" ] || continue
-  dir="$(dirname "$mod")"
-  echo "control-plane/$(basename "$dir")"
-  (cd "$dir" && go vet ./... && go test ./...)
-done
+# control-plane loop removed by ADR-0006 (VRC-04 #550): archived exploratory
+# code with zero production callers is no longer CI-gated.
 
 step "4/11 - Python workflow tests"
 cd "$ROOT_DIR"
@@ -185,6 +181,9 @@ cue vet attestations/nomos-attestation.cue docs/regulated/claim-boundary/ckm-ref
 
 step "6b/11 - Attestation claim-boundary guard (no 'signed'/'Sigstore'/'certified' without proof)"
 python3 scripts/claim_boundary_guard.py --root .
+
+step "6c/11 - VRC wiring matrix (capability statuses computed from the tree, registry lockstep)"
+python3 scripts/vrc_wiring_matrix.py --root .
 
 step "7/11 - CKM additive metadata guard"
 # metadata remains open for CKM additive fields until an explicit schema_version bump + migration.

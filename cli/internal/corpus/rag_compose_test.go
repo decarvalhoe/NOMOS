@@ -154,8 +154,8 @@ func fsq07BaseConfig() RAGBuildInput {
 	}
 }
 
-// 1. Single-atom chunk: paragraph FeedUnit produces a single_atom chunk
-//    with heading-prefixed ChunkText.
+//  1. Single-atom chunk: paragraph FeedUnit produces a single_atom chunk
+//     with heading-prefixed ChunkText.
 func TestComposeRAGChunks_SingleAtom(t *testing.T) {
 	seg := fsq07ParagraphSegment()
 	u := fsq07ParagraphUnit(seg)
@@ -198,9 +198,9 @@ func TestComposeRAGChunks_SingleAtom(t *testing.T) {
 	}
 }
 
-// 2. Table-row chunk: FSQ-03 table_row unit produces a table_row strategy
-//    chunk whose ChunkText is `H/H · Col=Val; Col=Val; ...` and whose
-//    SourceSegmentIDs lists [rowID, ...cellIDs] in stable order.
+//  2. Table-row chunk: FSQ-03 table_row unit produces a table_row strategy
+//     chunk whose ChunkText is `H/H · Col=Val; Col=Val; ...` and whose
+//     SourceSegmentIDs lists [rowID, ...cellIDs] in stable order.
 func TestComposeRAGChunks_TableRow(t *testing.T) {
 	row, cells := fsq07TableRowSegments()
 	u := fsq07TableRowUnit(row, cells)
@@ -245,8 +245,8 @@ func TestComposeRAGChunks_TableRow(t *testing.T) {
 	}
 }
 
-// 3. YAML scalar chunk: FSQ-04 unit produces a yaml_scalar strategy chunk
-//    whose ChunkText embeds the YAML key path.
+//  3. YAML scalar chunk: FSQ-04 unit produces a yaml_scalar strategy chunk
+//     whose ChunkText embeds the YAML key path.
 func TestComposeRAGChunks_YAMLScalar(t *testing.T) {
 	u := fsq07YAMLUnit()
 
@@ -277,8 +277,8 @@ func TestComposeRAGChunks_YAMLScalar(t *testing.T) {
 	}
 }
 
-// 4. Below-token-min: a single-cell row with no real content fails the
-//    composer's post-composition threshold check.
+//  4. Below-token-min: a single-cell row with no real content fails the
+//     composer's post-composition threshold check.
 func TestComposeRAGChunks_BelowTokenMin(t *testing.T) {
 	row, _ := fsq07TableRowSegments()
 	row.RowCanonicalText = "Offre=X"
@@ -299,8 +299,8 @@ func TestComposeRAGChunks_BelowTokenMin(t *testing.T) {
 	assertComposeRejection(t, err, RAGChunkBelowTokenMin)
 }
 
-// 5. Stop-label rejection: a paragraph whose body is exactly "Champ"
-//    (case-insensitive denylist hit) is rejected.
+//  5. Stop-label rejection: a paragraph whose body is exactly "Champ"
+//     (case-insensitive denylist hit) is rejected.
 func TestComposeRAGChunks_StopLabel(t *testing.T) {
 	seg := fsq07ParagraphSegment()
 	u := fsq07ParagraphUnit(seg)
@@ -319,11 +319,11 @@ func TestComposeRAGChunks_StopLabel(t *testing.T) {
 	assertComposeRejection(t, err, RAGChunkStopLabel)
 }
 
-// 6. Heading-group strategy is INTENTIONALLY not implemented in FSQ-07.
-//    Documented as a stretch goal; FSQ-06 already flags below-threshold
-//    paragraphs via the semantic gate so the runtime does not depend on
-//    this composer branch. Test pinpoints the documented choice so the
-//    next ticket can flip the behaviour deliberately.
+//  6. Heading-group strategy is INTENTIONALLY not implemented in FSQ-07.
+//     Documented as a stretch goal; FSQ-06 already flags below-threshold
+//     paragraphs via the semantic gate so the runtime does not depend on
+//     this composer branch. Test pinpoints the documented choice so the
+//     next ticket can flip the behaviour deliberately.
 func TestComposeRAGChunks_HeadingGroupSkipped(t *testing.T) {
 	const want = "heading_group"
 	if want == string(ChunkStrategyHeadingGroup) {
@@ -349,9 +349,9 @@ func TestComposeRAGChunks_HeadingGroupSkipped(t *testing.T) {
 	}
 }
 
-// 7. Determinism: composing the same input twice yields a byte-identical
-//    chunk list (modulo the IngestedAt timestamp, which is the only
-//    non-deterministic field).
+//  7. Determinism: composing the same input twice yields a byte-identical
+//     chunk list (modulo the IngestedAt timestamp, which is the only
+//     non-deterministic field).
 func TestComposeRAGChunks_Deterministic(t *testing.T) {
 	seg1 := fsq07ParagraphSegment()
 	row, cells := fsq07TableRowSegments()
@@ -394,9 +394,9 @@ func TestComposeRAGChunks_Deterministic(t *testing.T) {
 	}
 }
 
-// 8. RBOK architecture spot-check: composing the offers table row produces
-//    a chunk that fuses the offer name, price, duration, and content; no
-//    chunk in the output is a bare "Champ" / "Valeur" / "980 CHF" / "3 mois".
+//  8. RBOK architecture spot-check: composing the offers table row produces
+//     a chunk that fuses the offer name, price, duration, and content; no
+//     chunk in the output is a bare "Champ" / "Valeur" / "980 CHF" / "3 mois".
 func TestComposeRAGChunks_RBOKArchitectureSpotCheck(t *testing.T) {
 	row, cells := fsq07TableRowSegments()
 	u := fsq07TableRowUnit(row, cells)
@@ -431,9 +431,9 @@ func TestComposeRAGChunks_RBOKArchitectureSpotCheck(t *testing.T) {
 	}
 }
 
-// 9. Retrieval-style: substring search for a unique token returns a chunk
-//    whose ContextSourceRole matches the FSQ-02 admission default
-//    ("canonical" in our test fixtures).
+//  9. Retrieval-style: substring search for a unique token returns a chunk
+//     whose ContextSourceRole matches the FSQ-02 admission default
+//     ("canonical" in our test fixtures).
 func TestComposeRAGChunks_RetrievalSubstring(t *testing.T) {
 	seg := fsq07ParagraphSegment()
 	row, cells := fsq07TableRowSegments()
@@ -467,7 +467,7 @@ func TestComposeRAGChunks_RetrievalSubstring(t *testing.T) {
 	}
 }
 
-// 10. Matrix-derived units (no SourceSegmentID) are silently skipped, not
+//  10. Matrix-derived units (no SourceSegmentID) are silently skipped, not
 //     errored. They keep going through Enrich/EnrichBatch in the legacy path.
 func TestComposeRAGChunks_SkipsMatrixDerived(t *testing.T) {
 	seg := fsq07ParagraphSegment()
@@ -498,7 +498,7 @@ func TestComposeRAGChunks_SkipsMatrixDerived(t *testing.T) {
 	}
 }
 
-// 11. SFI-06 BuildRAGMetadata rejection rules are unchanged: the existing
+//  11. SFI-06 BuildRAGMetadata rejection rules are unchanged: the existing
 //     RAG_CHUNK_NO_SEGMENT path keeps rejecting matrix-derived units when
 //     fed through the legacy entry point. ComposeRAGChunks is additive.
 func TestComposeRAGChunks_DoesNotAffectBuildRAGMetadata(t *testing.T) {

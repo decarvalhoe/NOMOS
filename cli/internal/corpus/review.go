@@ -43,11 +43,11 @@ type Transition struct {
 
 // UnitReview tracks the review lifecycle of a single extracted unit.
 type UnitReview struct {
-	UnitID     string       `json:"unit_id"`
-	State      ReviewState  `json:"state"`
-	CreatedAt  time.Time    `json:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at"`
-	Reviewer   string       `json:"reviewer,omitempty"`
+	UnitID      string       `json:"unit_id"`
+	State       ReviewState  `json:"state"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	Reviewer    string       `json:"reviewer,omitempty"`
 	Transitions []Transition `json:"transitions,omitempty"`
 }
 

@@ -100,6 +100,22 @@ _CERTIFIED_CLAIM = re.compile(
     re.IGNORECASE,
 )
 
+# VRC-01 (#547): maturity/integration overclaims. The audited case is doc 40
+# asserting "éprouvé et intégré dans plusieurs environnements" while the
+# recorded evidence is POC-scoped (one private corpus, recorded runs — see
+# public-claim-boundary.md). Asserting multi-environment / customer-production
+# maturity requires integration records; without them the claim must be
+# downgraded, quoted, or negated.
+_MATURITY_CLAIM = re.compile(
+    r"\b(éprouvé\w*|eprouv\w*|intégré\w*|integr(?:e|é)s?\b|proven|deployed|"
+    r"en\s+production|in\s+production)\b"
+    r"[^.|]{0,80}?"
+    r"\b(multi[- ]environ\w*|plusieurs\s+(?:environnements|projets|clients)|"
+    r"several\s+environments|multiple\s+(?:projects|customers|environments)|"
+    r"chez\s+\S+\s+clients?)\b",
+    re.IGNORECASE,
+)
+
 # Headings whose section is forward-looking; claims under them are deferred, not
 # present-tense. Matched against the nearest preceding markdown heading.
 _DEFERRED_HEADING = re.compile(
@@ -116,14 +132,18 @@ _SAFE_CONTEXT = re.compile(
     r"un[- ]signed|no\s+signature|placeholder|fake|bogus|downgrad\w*|"
     r"intended|intend\w*|plan\w*|planned|future|follow[- ]up|roadmap|expansion|"
     r"aspiration\w*|plus tard|will\s+\w+|would\s+\w+|todo|tbd|"
-    r"hash[- ]only|field[- ]presence)\b",
+    r"hash[- ]only|field[- ]presence|"
+    # French negations / claim-boundary downgrades (VRC-01 #547)
+    r"pas|aucune?|jamais|borné\w*|non\s+soutenu\w*|poc[- ]scoped|forgée?)\b",
     re.IGNORECASE,
 )
 
 # A line where the only occurrences of the trigger word are inside quotes or
 # inline code is schema/vocabulary, not prose. We strip those spans before
-# re-checking; if nothing claim-like remains, the line is clean.
-_QUOTED_SPAN = re.compile(r"`[^`]*`|\"[^\"]*\"|'[^']*'")
+# re-checking; if nothing claim-like remains, the line is clean. French
+# guillemets are stripped too (VRC-01 #547): quoting an overclaim in order to
+# refute or track it is claim-boundary work, not a claim.
+_QUOTED_SPAN = re.compile(r"`[^`]*`|\"[^\"]*\"|'[^']*'|«[^»]*»")
 
 
 def signing_capability_present(root: Path) -> bool:
@@ -210,6 +230,15 @@ def classify_line(line: str, signing_present: bool, section_deferred: bool = Fal
         return (
             "claims NOMOS attestations are signed/certified but the signing capability "
             f"marker {SIGNING_MARKER.as_posix()} is absent"
+        )
+
+    # Maturity overclaims (VRC-01 #547): multi-environment / customer-production
+    # integration claims require recorded integration evidence; today the
+    # recorded evidence is POC-scoped, so an affirmative claim is unbacked.
+    if _MATURITY_CLAIM.search(bare) and not section_deferred and not is_table_row:
+        return (
+            "asserts multi-environment/production integration maturity without recorded "
+            "integration evidence (public-claim-boundary: recorded evidence is POC-scoped)"
         )
     return None
 

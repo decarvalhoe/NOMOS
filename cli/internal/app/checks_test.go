@@ -108,10 +108,6 @@ func TestContractsCheckNoArgs(t *testing.T) {
 
 // --- product-check ---
 
-
-
-
-
 // --- matrix check ---
 
 func TestMatrixCheckValid(t *testing.T) {

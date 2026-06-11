@@ -76,6 +76,7 @@ func corpusHelp(stdout io.Writer) int {
 	fmt.Fprintln(stdout, "  nomos corpus diff --old <snapshot.json> --new <snapshot.json>")
 	fmt.Fprintln(stdout, "  nomos corpus feed --root <corpus> --snapshot <snapshot.json> --manifest <source-manifest.yaml> [--matrix <canonical-matrix.yaml>] [--lockfile <corpus.lock.json>]")
 	fmt.Fprintln(stdout, "  nomos corpus body-ledger --root <corpus> --manifest <source-manifest.yaml> --out <body-ledger.json>")
+	fmt.Fprintln(stdout, "  nomos corpus body-ledger --verify <body-ledger.json>")
 	fmt.Fprintln(stdout, "  nomos corpus attest --snapshot <snapshot.json> --corpus-id <id> --project-id <id>")
 	fmt.Fprintln(stdout, "  nomos corpus feed --profile rbok-lawbook --root <corpus> [--outputs index,governance] [--format json|text]")
 	fmt.Fprintln(stdout, "  nomos corpus diagnose --profile rbok-lawbook --root <corpus> [--format json|text]")
@@ -427,8 +428,25 @@ func corpusBodyLedgerCommand(args []string, stdout io.Writer, stderr io.Writer) 
 	manifestPath := flags.String("manifest", "", "source manifest YAML path")
 	out := flags.String("out", "", "body ledger output path outside the source corpus root")
 	flags.StringVar(out, "output", "", "body ledger output path outside the source corpus root")
+	verifyPath := flags.String("verify", "", "verify the Merkle inclusion proofs of an existing body ledger JSON and exit")
 	if err := flags.Parse(args); err != nil {
 		return 2
+	}
+	if *verifyPath != "" {
+		// VRC-07 (#553): verification mode — recompute every leaf from the
+		// ledger rows and walk each inclusion proof to the recorded root.
+		ledger, err := readCorpusBodyLedger(*verifyPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus body-ledger: %v\n", err)
+			return 1
+		}
+		if err := corpus.VerifyCorpusBodyLedgerProofs(ledger); err != nil {
+			fmt.Fprintf(stderr, "corpus body-ledger: verification FAILED: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "body ledger merkle verification: ok (%d leaves, root %s)\n",
+			ledger.Merkle.LeafCount, ledger.Merkle.Root)
+		return 0
 	}
 	if *root == "" || *manifestPath == "" {
 		fmt.Fprintln(stderr, "corpus body-ledger: --root and --manifest are required")
@@ -561,6 +579,10 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	profile := flags.String("profile", "", "diagnose profile to bind into the attestation")
 	root := flags.String("root", "", "corpus root for profile diagnosis")
 	out := flags.String("out", "", "attestation output path")
+	bodyLedgerPath := flags.String("corpus-body-ledger", "",
+		"body ledger JSON whose Merkle proofs are verified, then claim_coverage is computed from it (FSQ-05 / VRC-07 #553)")
+	feedPath := flags.String("feed", "",
+		"feed JSON used to count extracted units for claim_coverage (calculated, never declared)")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -602,6 +624,32 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 			*scope = "full_profile"
 		}
 	}
+	// VRC-07 (#553): a supplied body ledger is verified (Merkle inclusion
+	// proofs recomputed from its rows) BEFORE its coverage feeds the
+	// claim_coverage scoping — a tampered ledger must fail the attestation,
+	// not decorate it.
+	var bodyLedger *corpus.CorpusBodyLedger
+	if *bodyLedgerPath != "" {
+		ledger, err := readCorpusBodyLedger(*bodyLedgerPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+			return 1
+		}
+		if err := corpus.VerifyCorpusBodyLedgerProofs(ledger); err != nil {
+			fmt.Fprintf(stderr, "corpus attest: body ledger verification FAILED: %v\n", err)
+			return 1
+		}
+		bodyLedger = &ledger
+	}
+	unitsExtracted := 0
+	if *feedPath != "" {
+		count, err := countFeedUnits(*feedPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus attest: %v\n", err)
+			return 1
+		}
+		unitsExtracted = count
+	}
 	statement, err := corpus.GenerateCorpusAttestation(corpus.CorpusAttestationOptions{
 		CorpusID:       *corpusID,
 		ProjectID:      *projectID,
@@ -612,6 +660,8 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 		FilesScanned:   snapshot.TotalFiles,
 		ScannedFiles:   files,
 		Diagnosis:      diagnosis,
+		UnitsExtracted: unitsExtracted,
+		BodyLedger:     bodyLedger,
 		Now:            time.Now().UTC(),
 		Metadata: map[string]any{
 			"commit":     snapshot.Commit,
@@ -648,6 +698,36 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	}
 	fmt.Fprintf(stdout, "generated corpus attestation into %s\n", filepath.Clean(*out))
 	return 0
+}
+
+// readCorpusBodyLedger loads a body ledger JSON from disk (VRC-07 #553).
+func readCorpusBodyLedger(path string) (corpus.CorpusBodyLedger, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return corpus.CorpusBodyLedger{}, fmt.Errorf("read body ledger: %w", err)
+	}
+	var ledger corpus.CorpusBodyLedger
+	if err := json.Unmarshal(data, &ledger); err != nil {
+		return corpus.CorpusBodyLedger{}, fmt.Errorf("decode body ledger: %w", err)
+	}
+	return ledger, nil
+}
+
+// countFeedUnits counts the units in a feed JSON document so that
+// claim_coverage.covers_curated_feed is CALCULATED from the artifact, never
+// declared by the caller (doctrine §2.3).
+func countFeedUnits(path string) (int, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0, fmt.Errorf("read feed: %w", err)
+	}
+	var probe struct {
+		Units []json.RawMessage `json:"units"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return 0, fmt.Errorf("decode feed: %w", err)
+	}
+	return len(probe.Units), nil
 }
 
 func readOnlyBefore(root string) (guard.Snapshot, bool, error) {

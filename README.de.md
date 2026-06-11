@@ -36,7 +36,7 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
 | Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation. |
 | Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. |
-| Naechste Haertung | Wiederholte CI-Evidenz, Attestation `claim_coverage`, zusaetzliche Dokumentformate, Kunden-Validation-Packs. |
+| Naechste Haertung | Wiederholte CI-Evidenz, zusaetzliche Dokumentformate, Kunden-Validation-Packs. |
 | Claim Boundary | Kein zertifiziertes eQMS, kein validiertes GxP-System, keine regulatorische Zertifizierung. |
 
 ## Warum Nomos Existiert
@@ -183,7 +183,7 @@ Aktueller strukturierter Source-to-Feed POC:
 | Strict Gate | `pass`, exit code 0 |
 | Source Mutation Check | keine Source-Mutation erkannt |
 
-Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, Attestation `claim_coverage` ist noch nicht verdrahtet, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt. Die naechste Haertung zielt auf CI-Wiederholbarkeit, zusaetzliche Dokumentformate, Kundenvalidierung und breitere Universal-Fidelity-Evidenz.
+Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt (Attestation `claim_coverage` ist jetzt verdrahtet — `corpus attest --corpus-body-ledger` verifiziert die Merkle-Beweise des Ledgers und berechnet die Coverage; der aufgezeichnete POC-Run behaelt sein historisches WARN). Die naechste Haertung zielt auf CI-Wiederholbarkeit, zusaetzliche Dokumentformate, Kundenvalidierung und breitere Universal-Fidelity-Evidenz.
 
 ## Regulated-Ready Posture
 
@@ -286,7 +286,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Domaenenbeispiele fuer die canonical-first Methode. |
 | `adapters/` | Adapter-Vertraege und Referenzprofile fuer Node/TypeScript, Python und JVM: Specs und Fixtures, ohne ausfuehrbare Implementierung in diesem Stadium. |
 | `ci/` | Wiederverwendbare CI-Integrationsdokumentation. |
-| `control-plane/` | Optionale grundlegende Go-Packages (Dashboard, Registry, Storage): Skelett, nicht an die CLI angebunden und noch kein operativer Service (Roadmap v0.2+). |
+| `control-plane/` | Archivierte explorative Go-Packages (Dashboard, Registry, Storage): null Production-Caller, eingefroren per ADR-0006, Wiederaufnahme am v0.9.x-Portfolio-Meilenstein. |
 | `policies/` | Platzhalterverzeichnis fuer ein kuenftiges Policy-Framework; in diesem Stadium nicht operativ. |
 | `scripts/` | E2E-, Evidence-, regulierte Dokumentations- und Automationshelfer. |
 | `reports/` | Generierte lokale Evidence-Artefakte. |
@@ -312,7 +312,7 @@ Nomos macht ein LLM nicht autoritaer. In der Zielarchitektur bleiben determinist
 
 Nomos ersetzt keine Validierung. In regulierten Umgebungen brauchen Kunden weiterhin Intended-Use-Definition, Risk Assessment, Validation Planning, Testevidenz, Change Control, Supplier Assessment, Security Review und Approval Records.
 
-Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit nicht unterstuetzte Dokumentformate, verbleibende semantische Warnings, Attestation `claim_coverage`, Kunden-Validation-Packs und CI-Wiederholbarkeit auf privaten Corpora.
+Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit nicht unterstuetzte Dokumentformate, verbleibende semantische Warnings, Kunden-Validation-Packs und CI-Wiederholbarkeit auf privaten Corpora.
 
 ## Release Roadmap
 

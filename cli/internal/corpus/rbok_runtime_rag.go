@@ -29,26 +29,26 @@ type ProvenanceLink struct {
 // RuntimeRAGChunk is the enriched RAG metadata for a single chunk,
 // adding authority and provenance to the base RAGChunk.
 type RuntimeRAGChunk struct {
-	ChunkID          string           `json:"chunk_id"`
-	NodeID           string           `json:"node_id"`
-	DocumentID       string           `json:"document_id"`
-	CanonicalRef     string           `json:"canonical_ref"`
-	DisplayRef       string           `json:"display_ref"`
-	NodeType         string           `json:"node_type"`
-	Domain           string           `json:"domain"`
-	Text             string           `json:"text"`
-	AuthorityLevel   AuthorityLevel   `json:"authority_level"`
-	Confidence       string           `json:"confidence"`
-	ProvenanceChain  []ProvenanceLink `json:"provenance_chain"`
-	ParentChain      []string         `json:"parent_chain"`
-	SourcePath       string           `json:"source_path"`
-	SourceHash       string           `json:"source_hash"`
-	Priority         string           `json:"priority"`
-	Status           string           `json:"status"`
-	Depth            int              `json:"depth"`
-	TokenCount       int              `json:"token_count"`
-	CharCount        int              `json:"char_count"`
-	GeneratedAt      string           `json:"generated_at"`
+	ChunkID         string           `json:"chunk_id"`
+	NodeID          string           `json:"node_id"`
+	DocumentID      string           `json:"document_id"`
+	CanonicalRef    string           `json:"canonical_ref"`
+	DisplayRef      string           `json:"display_ref"`
+	NodeType        string           `json:"node_type"`
+	Domain          string           `json:"domain"`
+	Text            string           `json:"text"`
+	AuthorityLevel  AuthorityLevel   `json:"authority_level"`
+	Confidence      string           `json:"confidence"`
+	ProvenanceChain []ProvenanceLink `json:"provenance_chain"`
+	ParentChain     []string         `json:"parent_chain"`
+	SourcePath      string           `json:"source_path"`
+	SourceHash      string           `json:"source_hash"`
+	Priority        string           `json:"priority"`
+	Status          string           `json:"status"`
+	Depth           int              `json:"depth"`
+	TokenCount      int              `json:"token_count"`
+	CharCount       int              `json:"char_count"`
+	GeneratedAt     string           `json:"generated_at"`
 }
 
 // RuntimeRAGResult holds the full RAG generation output.

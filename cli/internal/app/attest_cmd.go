@@ -25,6 +25,10 @@ func attestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return attestKeygen(args[1:], stdout, stderr)
 	case "sign":
 		return attestSign(args[1:], stdout, stderr)
+	case "create":
+		return AttestCommand(args[1:], stdout, stderr)
+	case "supply-chain":
+		return attestSupplyChainCommand(args[1:], stdout, stderr)
 	case "verify":
 		return attestVerify(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -42,6 +46,9 @@ func attestUsage(w io.Writer) {
 	fmt.Fprintln(w, "  nomos attest keygen --out <priv.pem> --pub-out <pub.pem>")
 	fmt.Fprintln(w, "  nomos attest sign --project-id <id> --verdict <v> [--subject <artifact>] --key <priv.pem> --out <envelope.json>")
 	fmt.Fprintln(w, "  nomos attest sign --statement <statement.json> --key <priv.pem> --out <envelope.json>")
+	fmt.Fprintln(w, "  nomos attest create --project-id <id> --verdict <v> [--subject <artifact>] [--key <priv.pem>] [--output <envelope.json>]")
+	fmt.Fprintln(w, "  nomos attest supply-chain --project-id <id> --corpus-id <id> --snapshot <f> --manifest <f> --feed <f> [--rag <f>] [--sign] [--out <f>]")
+	fmt.Fprintln(w, "  nomos attest supply-chain --verify <statement.json> [--artifact <name>=<path>]...")
 	fmt.Fprintln(w, "  nomos attest verify --envelope <envelope.json> --pub <pub.pem>")
 }
 

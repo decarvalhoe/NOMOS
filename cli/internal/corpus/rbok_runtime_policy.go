@@ -9,25 +9,25 @@ import (
 type LayerID string
 
 const (
-	PolicyDoctrine  LayerID = "doctrine"     // 01_rbok: authoritative source of truth
-	PolicyRuntime   LayerID = "runtime"       // 02_parcours: runtime business paths
-	PolicyWorkbooks LayerID = "workbooks"     // 03_workbooks: generated/derived artifacts
-	PolicyMeta      LayerID = "meta"          // 00_meta: index and governance metadata
-	PolicySchemas   LayerID = "schemas"        // 98_schemas: structural schemas
-	LayerReference  LayerID = "reference"     // 99_*: original reference PDFs
-	LayerUnknown    LayerID = "unknown"        // unclassified
+	PolicyDoctrine  LayerID = "doctrine"  // 01_rbok: authoritative source of truth
+	PolicyRuntime   LayerID = "runtime"   // 02_parcours: runtime business paths
+	PolicyWorkbooks LayerID = "workbooks" // 03_workbooks: generated/derived artifacts
+	PolicyMeta      LayerID = "meta"      // 00_meta: index and governance metadata
+	PolicySchemas   LayerID = "schemas"   // 98_schemas: structural schemas
+	LayerReference  LayerID = "reference" // 99_*: original reference PDFs
+	LayerUnknown    LayerID = "unknown"   // unclassified
 )
 
 // RuntimeLayerClassification is the policy result for a realisons-business file.
 type RuntimeLayerClassification struct {
-	Path        string       `json:"path"`
-	Layer       LayerID `json:"layer"`
-	Priority    string       `json:"priority"`
-	Status      string       `json:"status"`
-	Role        SourceRole   `json:"role"`
-	AllowedUses []string     `json:"allowed_uses"`
-	Mutable     bool         `json:"mutable"`
-	Reason      string       `json:"reason"`
+	Path        string     `json:"path"`
+	Layer       LayerID    `json:"layer"`
+	Priority    string     `json:"priority"`
+	Status      string     `json:"status"`
+	Role        SourceRole `json:"role"`
+	AllowedUses []string   `json:"allowed_uses"`
+	Mutable     bool       `json:"mutable"`
+	Reason      string     `json:"reason"`
 }
 
 // layerDef holds the classification template for a layer.

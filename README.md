@@ -43,7 +43,7 @@ and auditable product evidence before software or AI consumes them.
 | Preuve actuelle | POC alpha sur un vrai corpus privé, traité en lecture seule. |
 | Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation. |
 | Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. |
-| Prochain durcissement | Evidence CI répétée, `claim_coverage` dans l'attestation, formats documentaires additionnels, validation packs clients. |
+| Prochain durcissement | Evidence CI répétée, formats documentaires additionnels, validation packs clients. |
 | Claim boundary | Pas un eQMS certifié, pas un système GxP validé, pas une certification réglementaire. |
 
 ## Documentation Et Integration
@@ -201,7 +201,7 @@ POC source-to-feed structuré actuel :
 | Strict gate | `pass`, exit code 0 |
 | Contrôle mutation source | aucune mutation détectée |
 
-Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, `claim_coverage` n'est pas encore câblé dans l'attestation, et cette preuve reste bornée au corpus, commit et build enregistrés. Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle.
+Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, et cette preuve reste bornée au corpus, commit et build enregistrés (`claim_coverage` est désormais câblé dans l'attestation — `corpus attest --corpus-body-ledger` vérifie les preuves Merkle du ledger puis calcule la couverture ; le run POC enregistré garde son WARN historique). Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle.
 
 ## Posture Regulated-Ready
 
@@ -304,7 +304,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Exemples de domaines appliquant la méthode canonical-first. |
 | `adapters/` | Contrats adapter et profils de référence Node/TypeScript, Python et JVM : specs et fixtures, sans implémentation exécutable à ce stade. |
 | `ci/` | Documentation d'intégration CI réutilisable. |
-| `control-plane/` | Packages Go fondateurs optionnels (dashboard, registry, storage) : squelette non câblé à la CLI, pas encore un service opérationnel (roadmap v0.2+). |
+| `control-plane/` | Packages Go exploratoires archivés (dashboard, registry, storage) : zéro caller de production, gel acté par ADR-0006, réexamen au jalon portfolio v0.9.x. |
 | `policies/` | Répertoire placeholder pour un futur cadre de policies ; non opérationnel à ce stade. |
 | `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation. |
 | `reports/` | Artefacts locaux générés. |
@@ -330,7 +330,7 @@ Nomos ne rend pas un LLM autoritaire. Dans l'architecture visée, les contrats d
 
 Nomos ne supprime pas le besoin de validation. En environnement régulé, les clients doivent toujours définir intended use, risk assessment, validation plan, preuves de test, change control, supplier assessment, security review et approval records.
 
-Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, le câblage `claim_coverage` dans l'attestation, les validation packs clients et la répétabilité CI sur corpus privés.
+Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, les validation packs clients et la répétabilité CI sur corpus privés.
 
 ## Roadmap Release
 

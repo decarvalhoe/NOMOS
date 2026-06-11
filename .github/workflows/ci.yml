@@ -25,23 +25,10 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
 
-  go-test-control-plane:
-    name: Go vet & test (control-plane)
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        module: [dashboard, registry, storage]
-    defaults:
-      run:
-        working-directory: control-plane/${{ matrix.module }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: control-plane/${{ matrix.module }}/go.mod
-          cache-dependency-path: control-plane/${{ matrix.module }}/go.sum
-      - run: go vet ./...
-      - run: go test -race ./...
+  # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
+  # packages are archived exploratory code with zero production callers; gating
+  # them in CI signalled a product status they do not have. Revival condition:
+  # a capability-claim issue with a declared production caller (v0.9.x lane).
 
   corpus-cross-platform:
     name: Corpus tests (${{ matrix.os }})
@@ -131,4 +118,8 @@ jobs:
       - run: pip install --quiet pyyaml
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
+      - name: VRC wiring matrix guard (computed statuses match registry, committed matrix has no drift)
+        run: |
+          python scripts/vrc_wiring_matrix.py --root .
+          git diff --exit-code .vrc-wiring-matrix
       - run: python -m unittest discover -s tests -v

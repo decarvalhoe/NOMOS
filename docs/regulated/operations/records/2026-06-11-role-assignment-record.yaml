@@ -1,0 +1,47 @@
+record_id: NOMOS-REC-ROLE-2026-001
+record_type: role_assignment
+date: 2026-06-11
+issue: "VRC-05 (#551)"
+approval_method: "git commit + pull-request review trail (GitHub operating model)"
+claim_boundary: "Role assignment record only; no compliance certification claim."
+
+assignments:
+  - role: quality_owner
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: product_owner
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: validation_owner
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: security_owner
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: data_integrity_owner
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: release_manager
+    assignee: "decarvalhoe (dev@realisons.com)"
+    effective_date: 2026-06-11
+  - role: independent_reviewer
+    assignee: vacant
+    disposition: waived_at_alpha
+    waiver: >
+      Solo-operator stage: no independent reviewer is available. Independent
+      review of release evidence is waived for v0.x alpha releases. The waiver
+      is re-evaluated at every management review and must be lifted before any
+      assurance claim above NQ-2 alpha.
+
+conflict_of_interest_note: >
+  All assigned roles are held by a single operator. The cumulation is recorded
+  rather than hidden. Compensating controls: adversarial CI gates (wiring
+  matrix VRC-00, claim-boundary guard, strict fidelity gate, CKM-00
+  non-regression harness), branch protection with required pull-request
+  review, the public claim boundary, and the standing rule that no assurance
+  claim above NQ-2 alpha may be made while this cumulation persists.
+
+references:
+  - docs/regulated/quality-system/quality-manual.md
+  - docs/45-vision-reality-closure-plan.md
+  - docs/46-vrc-epic-issue-list.md

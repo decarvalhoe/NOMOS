@@ -107,7 +107,7 @@ func AssembleRuntimeFeed(layers []LayerInput, feeds map[string]LawbookFeed, opts
 
 	var provenances []LayerProvenance
 	var allNodes []RuntimeFeedNode
-	refToLayers := map[string][]string{}     // canonical_ref → layer IDs
+	refToLayers := map[string][]string{}      // canonical_ref → layer IDs
 	refToNode := map[string]RuntimeFeedNode{} // canonical_ref → winning node
 	refToPriority := map[string]int{}         // canonical_ref → winning priority
 

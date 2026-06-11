@@ -17,6 +17,12 @@ on:
       - 'scripts/rbok-lawbook-e2e.sh'
       - 'tests/test_corpus_fidelity_proof.py'
       - '.github/workflows/rbok-lawbook-e2e.yml'
+  # VRC-14 (#560): repeated CI evidence on the private corpus. Scheduled runs
+  # fire on the default branch only; each green run is one entry of the
+  # "repeated CI evidence" proof chain named by the public claim boundary
+  # (target: >= 8 consecutive green runs, artifacts retained as evidence).
+  schedule:
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -143,4 +149,6 @@ jobs:
         with:
           name: rbok-lawbook-artifacts-${{ steps.fingerprint.outputs.commit }}
           path: /tmp/rbok-output/
-          retention-days: 30
+          # VRC-14 (#560): scheduled evidence runs are retained at the GitHub
+          # maximum so the repeated-evidence chain stays inspectable.
+          retention-days: 90

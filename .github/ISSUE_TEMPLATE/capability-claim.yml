@@ -1,0 +1,83 @@
+name: Capability Claim
+description: Propose a new capability or promote an existing one (VRC-03 acceptance bar — doctrine docs/43 §4, plan docs/45 §8 G4).
+title: "[CAPABILITY]: "
+labels: ["area:engine"]
+body:
+  - type: textarea
+    id: vision_anchor
+    attributes:
+      label: Ancre vision
+      description: ADR / doc section this capability serves (e.g. docs/45 §2 A1, doctrine §2.3).
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: Écart
+      description: The audited gap this closes (E1-E7 of docs/45 §1, or a new one).
+    validations:
+      required: true
+  - type: textarea
+    id: production_caller
+    attributes:
+      label: Caller de production attendu
+      description: >
+        REQUIRED — the exact production call path that will exercise this
+        capability (CLI command + registration in the app.go command map, gate,
+        or pipeline step). "Tests only" is not a caller: an engine without a
+        declared production caller lands as PARTIAL in the wiring matrix
+        (the #543 'atomize' class). Name the file(s) the wiring-matrix anchors
+        will point to.
+      placeholder: |
+        Command: nomos <command> <subcommand> --flag
+        Registered in: cli/internal/app/app.go ("<name>": <func>)
+        Callers: cli/internal/app/<file>.go
+    validations:
+      required: true
+  - type: textarea
+    id: adversarial_proof
+    attributes:
+      label: Preuve exigée (adversariale)
+      description: >
+        Doctrine §2.3 — a passing test proves nothing; a test that fails
+        without the fix proves. Crypto/integrity: tamper-fail. Pipeline result:
+        calculated, never declared. Connector: real fetch + real hash.
+      placeholder: |
+        - tamper X (1 byte) -> verify/gate red
+        - remove the fix -> test fails
+    validations:
+      required: true
+  - type: textarea
+    id: springboard
+    attributes:
+      label: Tremplin (capitalisation)
+      description: >
+        What is adopted instead of reinvented (docs/42 §0 regimes — open
+        standards: adopt; permissive OSS: integrate; AGPL: isolate behind a
+        process/API boundary; commercial: concept only; paid references: hash +
+        crosswalk, never full text).
+    validations:
+      required: false
+  - type: textarea
+    id: claim_unlocked
+    attributes:
+      label: Claim débloqué
+      description: >
+        What may be publicly claimed once this lands, at which claim level
+        (docs/public-claim-boundary.md), and which claim-boundary line it
+        lifts. If nothing changes in public claims, say so.
+    validations:
+      required: true
+  - type: textarea
+    id: registry_flip
+    attributes:
+      label: Registre wiring-matrix
+      description: >
+        The scripts/vrc_wiring_matrix_registry.json entry this PR must flip or
+        add (expected status + anchors) — in the SAME PR. The matrix fails when
+        registry and reality diverge in either direction.
+      value: |
+        Entry: <capability_id>
+        Expected: <sidecar|stub|absent|partial> -> <real>
+    validations:
+      required: true
