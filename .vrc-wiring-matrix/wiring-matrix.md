@@ -21,7 +21,7 @@
 | `canon_promotion` | P5 | sidecar | sidecar | ✅ | VRC-11 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `point_in_time_resolver` | P6 | sidecar | sidecar | ✅ | VRC-12 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `facet_ontology_alignment` | P3 | sidecar | sidecar | ✅ | VRC-45 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `pdf_adapter` | ingestion | stub | stub | ✅ | VRC-30 | — |
+| `pdf_adapter` | ingestion | real | real | ✅ | — | — |
 | `docx_adapter` | ingestion | partial | partial | ✅ | VRC-41 | no production caller declared (the #540 class) |
 | `sigstore_keyless` | P7 | absent | absent | ✅ | VRC-40 | — |
 | `strict_fidelity_gate` | P1 | real | real | ✅ | — | — |
@@ -34,7 +34,7 @@
 
 ## Summary
 
-- capabilities: 19 (real=12, partial=1, sidecar=4, stub=1, absent=1)
+- capabilities: 19 (real=13, partial=1, sidecar=4, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

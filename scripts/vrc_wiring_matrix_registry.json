@@ -259,16 +259,19 @@
     },
     {
       "id": "pdf_adapter",
-      "title": "PDF structure-aware adapter — honest placeholder",
+      "title": "PDF born-digital text adapter — claim ladder rung 1 (text), unsupported records for out-of-claim pages, OCR never claimed (VRC-30 #567)",
       "pillar": "ingestion",
-      "claim_level": "not claimable",
-      "promotion_issue": "VRC-30",
-      "expected": "stub",
-      "stub_markers": [
-        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["PlaceholderAdapter is a stub for formats not yet implemented"]}
+      "claim_level": "born-digital text",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/fidelity/pdf_adapter.go", "contains": ["type PDFAdapter struct", "unsupported", "out of claim", "ledongthuc/pdf"]}
       ],
-      "must_be_absent": [
-        {"dir": "cli/internal", "regex": "(?i)pdfium|poppler|ParsePDF", "suffixes": [".go"]}
+      "production_callers": [
+        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["r.Register(PDFAdapter{})"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/fidelity/pdf_adapter_test.go", "contains": ["TestPDFAdapter_ByteMutationDriftsTheParse", "TestPDFAdapter_ScannedPageBecomesUnsupportedRecord", "TestDefaultRegistry_PDFAdapterIsReal"]}
       ]
     },
     {
