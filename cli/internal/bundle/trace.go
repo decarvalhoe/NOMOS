@@ -55,10 +55,10 @@ type TraceArtifacts struct {
 }
 
 type TracePolicy struct {
-	PublishMode          string `json:"publish_mode"`
-	RiskClass            string `json:"risk_class"`
-	GeneratedPathGuard   string `json:"generated_path_guard"`
-	SourceReadOnlyGuard  string `json:"source_read_only_guard"`
+	PublishMode         string `json:"publish_mode"`
+	RiskClass           string `json:"risk_class"`
+	GeneratedPathGuard  string `json:"generated_path_guard"`
+	SourceReadOnlyGuard string `json:"source_read_only_guard"`
 }
 
 // TraceGitContext is the real provenance the command resolves from `git`.

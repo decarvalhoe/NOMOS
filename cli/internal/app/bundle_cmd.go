@@ -26,6 +26,10 @@ func bundleCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	producer := flags.String("producer", "nomos", "bundle producer identifier")
 	domain := flags.String("domain", "", "domain tag recorded on emitted atoms")
 	feedID := flags.String("feed-id", "", "feed identifier (default: <bundle-id>-feed)")
+	feedVersion := flags.String("feed-version", "", "feed content version (default: deterministic <bundle-id>@<generated_at>)")
+	country := flags.String("country", "", "feed jurisdiction country (omitted when empty)")
+	canton := flags.String("canton", "", "feed jurisdiction canton (omitted when empty)")
+	commune := flags.String("commune", "", "feed jurisdiction commune (omitted when empty)")
 	out := flags.String("out", "", "bundle output path outside the source root (default: stdout)")
 	repo := flags.String("repo", "", "override trace corpus repo (owner/name); default: git origin")
 	branch := flags.String("branch", "", "override trace corpus branch; default: git HEAD ref")
@@ -77,14 +81,21 @@ func bundleCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 
+	var jurisdiction *bundle.Jurisdiction
+	if j := (bundle.Jurisdiction{Country: *country, Canton: *canton, Commune: *commune}); !j.IsZero() {
+		jurisdiction = &j
+	}
+
 	b, err := bundle.Build(bundle.BuildInput{
-		BundleID:    *bundleID,
-		Producer:    *producer,
-		Domain:      *domain,
-		FeedID:      *feedID,
-		GeneratedAt: now,
-		Sources:     sources,
-		Trace:       trace,
+		BundleID:     *bundleID,
+		Producer:     *producer,
+		Domain:       *domain,
+		FeedID:       *feedID,
+		FeedVersion:  *feedVersion,
+		Jurisdiction: jurisdiction,
+		GeneratedAt:  now,
+		Sources:      sources,
+		Trace:        trace,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "bundle: %v\n", err)

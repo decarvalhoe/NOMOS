@@ -133,6 +133,33 @@ if python3 scripts/ckm_facet_ontology_validate.py --ontology specs/examples/face
 fi
 cue vet specs/atomization-spine.cue specs/facets.cue specs/nomos-trace-manifest.cue attestations/nomos-attestation.cue specs/canonical-knowledge-bundle.cue specs/examples/canonical-knowledge-bundle.valid.json -d '#CanonicalKnowledgeBundle'
 python3 scripts/ckm_bundle_validate.py --bundle specs/examples/canonical-knowledge-bundle.valid.json
+
+# SEAM-2 (#535): the facet-vocab gate must REJECT an out-of-vocabulary value.
+if python3 - <<'PY'
+import json, subprocess, sys, tempfile
+b = json.load(open("specs/examples/canonical-knowledge-bundle.emitted.json"))
+b["feeds"][0]["nodes"][0]["facets"]["trust_tier"] = "trust-me-bro"
+fp = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+json.dump(b, fp); fp.close()
+sys.exit(subprocess.run([sys.executable, "scripts/ckm_bundle_validate.py", "--bundle", fp.name]).returncode)
+PY
+then
+  echo "FAIL: out-of-vocabulary facet value passed the bundle validator" >&2
+  exit 1
+fi
+
+# SEAM-3 (#536): the real emitter must produce a contract+vocab-valid bundle, and
+# the committed canonical fixture must validate. Corpus is copied OUTSIDE any git
+# checkout (the emitter refuses push-capable source roots).
+seam_corpus="$(mktemp -d)/golden"
+cp -r cli/internal/corpus/testdata/portable-golden-corpus "$seam_corpus"
+seam_bundle="$(mktemp -d)/seam-emitted.json"
+"$CLI_BIN" bundle --root "$seam_corpus" --bundle-id nomos-canonical-golden \
+  --domain built-environment --country CH --canton VD --commune Lausanne \
+  --repo RBOKproject/Nomos --commit "$(git rev-parse HEAD)" --branch ci --out "$seam_bundle"
+cue vet specs/atomization-spine.cue specs/facets.cue specs/nomos-trace-manifest.cue attestations/nomos-attestation.cue specs/canonical-knowledge-bundle.cue "$seam_bundle" -d '#CanonicalKnowledgeBundle'
+python3 scripts/ckm_bundle_validate.py --bundle "$seam_bundle"
+python3 scripts/ckm_bundle_validate.py --bundle specs/examples/canonical-knowledge-bundle.emitted.json
 domain_profiles=(
   specs/examples/nomos-domain-profile.gxp.valid.yaml
   specs/examples/nomos-domain-profile.ai.valid.yaml
@@ -155,6 +182,9 @@ fi
 
 step "6/11 - CKM signed claim-boundary predicate gate"
 cue vet attestations/nomos-attestation.cue docs/regulated/claim-boundary/ckm-refused-claims.json -d '#InTotoStatement'
+
+step "6b/11 - Attestation claim-boundary guard (no 'signed'/'Sigstore'/'certified' without proof)"
+python3 scripts/claim_boundary_guard.py --root .
 
 step "7/11 - CKM additive metadata guard"
 # metadata remains open for CKM additive fields until an explicit schema_version bump + migration.

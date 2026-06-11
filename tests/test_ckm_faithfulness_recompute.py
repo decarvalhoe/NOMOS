@@ -126,17 +126,41 @@ class FaithfulnessRecomputeTests(unittest.TestCase):
         self.assertGreaterEqual(g["score"], 0.95)
         self.assertLess(u["score"], 0.5)
 
-    def test_no_span_text_falls_back_to_structural_not_declared(self) -> None:
-        # When spans carry no text, the gate uses structural citation coverage,
-        # still never the self-declared score.
+    def test_no_span_text_on_grounding_required_answer_scores_zero_and_blocks(self) -> None:
+        # CKM-H6-FU (#538): the no-span-text bypass is closed. An answer that
+        # requires grounding (acceptable, non-refusal, has text) but whose spans
+        # carry NO text can no longer fall back to a ~1.0 structural score; it is
+        # unverifiable, scores 0, and is blocked.
         answer = make_answer("Anything at all.", declared=0.99, span_text=GOVERNANCE_SPAN)
         for collection in ("retrieved_chunks", "source_spans"):
             for item in answer[collection]:
                 item.pop("text", None)
         metrics = gate.answer_metrics(answer)
         self.assertFalse(metrics["groundedness"]["recomputed_from_spans"])
-        self.assertEqual(metrics["groundedness"]["method"], "structural_citation_coverage")
+        self.assertEqual(metrics["groundedness"]["method"], "no_span_text")
+        self.assertEqual(metrics["groundedness"]["score"], 0.0)
         self.assertFalse(metrics["groundedness"]["self_declared_trusted"])
+        self.assertEqual(metrics["deepeval"]["faithfulness"], 0.0)
+        findings = gate.validate_answer(answer, 0)
+        codes = {f["code"] for f in findings}
+        self.assertIn("DEEPEVAL_FAITHFULNESS_BELOW_GATE", codes, findings)
+
+    def test_no_span_text_declared_score_cannot_raise_above_zero(self) -> None:
+        # The "declared score may only lower, never raise" property holds even in
+        # the no-text case: a 0.99 declaration cannot lift the 0 floor.
+        answer = make_answer("Some factual assertion about revenue.", declared=0.99, span_text=GOVERNANCE_SPAN)
+        for collection in ("retrieved_chunks", "source_spans"):
+            for item in answer[collection]:
+                item.pop("text", None)
+        self.assertEqual(gate.faithfulness_score(answer, gate.citation_metrics(answer)), 0.0)
+
+    def test_groundedness_limitation_is_documented_in_detail(self) -> None:
+        # The lexical-proxy negation-blindness limitation and the NLI upgrade must
+        # be surfaced in the gate output.
+        answer = make_answer("Governed answers must cite the retained source spans.", declared=0.96, span_text=GOVERNANCE_SPAN)
+        detail = gate.groundedness_detail(answer, gate.citation_metrics(answer))
+        self.assertIn("negation-blind", detail["limitation"].lower())
+        self.assertIn("nli", detail["upgrade"].lower())
 
 
 if __name__ == "__main__":
