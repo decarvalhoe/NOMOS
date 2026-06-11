@@ -47,9 +47,10 @@ class CKMCHSourceConnectorTests(unittest.TestCase):
         config = load_yaml(CONNECTORS)
         self.assertEqual(config["domain_profile"], "built-environment")
         connectors = {item["source_family"]: item for item in config["connectors"]}
+        # W23-2 (#591): geoportail_cantonal joined as the fifth machine family.
         self.assertEqual(
             set(connectors),
-            {"fedlex_eli", "swisstopo_stac", "rdppf_oereb", "ofs"},
+            {"fedlex_eli", "swisstopo_stac", "rdppf_oereb", "ofs", "geoportail_cantonal"},
         )
 
         profile = load_yaml(PROFILE)

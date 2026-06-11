@@ -1,0 +1,56 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-geoportail-cantonal",
+  "source": {
+    "id": "ch-geoportail-cantonal",
+    "jurisdiction": "CH",
+    "authority": "Géoportail cantonal (service WMS officiel du canton)",
+    "access": "open_data",
+    "license_note": "Cantonal open geodata service; redistributed as hash + span coverage only (no full-text copy).",
+    "description": "WMS GetCapabilities of a cantonal geoportal (layer register incl. Zonenplan/Nutzungsplan)."
+  },
+  "fetch": {
+    "url": "https://wms.geo.bs.ch/?SERVICE=WMS\u0026REQUEST=GetCapabilities",
+    "fetched_at": "2026-06-11T10:15:51Z",
+    "status_code": 200,
+    "content_type": "text/xml; charset=utf-8",
+    "byte_count": 2176958,
+    "sha256": "sha256:3e34a42decb7f641c0634ecbb61a5223dc1114b777e3a80b4335f6012c36c365"
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 2176958,
+    "covered_bytes": 2176958,
+    "uncovered_bytes": 0,
+    "segment_count": 40711
+  },
+  "atom_count": 40657,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 39,
+      "content_hash": "sha256:438dfb090d7b19182669908a891186368d4af5b019a9e7168e4c08c92827b54d",
+      "preview": "\u003c?xml version=\"1.0\" encoding=\"utf-8\"?\u003e"
+    },
+    {
+      "atom_id": "CH-ATOM-0001",
+      "line": 2,
+      "start_byte": 39,
+      "end_byte": 521,
+      "content_hash": "sha256:5215717a0198cf64225db6cace4847f9ae9ee27f4327c5b1d342e9240e4365a3",
+      "preview": "\u003cWMS_Capabilities xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=…"
+    },
+    {
+      "atom_id": "CH-ATOM-0002",
+      "line": 3,
+      "start_byte": 521,
+      "end_byte": 532,
+      "content_hash": "sha256:e1dfd745cae2ce4d174b36b6e827e0b3cb33f4d4ab74ddfb6d3f4aa2061863b8",
+      "preview": "\u003cService\u003e"
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}

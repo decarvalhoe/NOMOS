@@ -18,7 +18,9 @@ package nomos
 	schema_version: "ckm-built-environment-connectors-v1"
 	domain_profile: "built-environment"
 	claim_boundary: string & !=""
-	connectors: [#CHMachineConnector, #CHMachineConnector, #CHMachineConnector, #CHMachineConnector]
+	// W23-2 (#591): the four historical families stay mandatory; the list is
+	// open-ended upward (geoportail_cantonal joined as the fifth).
+	connectors: [#CHMachineConnector, #CHMachineConnector, #CHMachineConnector, #CHMachineConnector, ...#CHMachineConnector]
 	sia_sidecar_ref: string & !=""
 }
 
@@ -27,7 +29,7 @@ package nomos
 // fetch status and the hash form cannot disagree.
 #CHMachineConnector: {
 	id:              =~"^[a-z0-9][a-z0-9-]*$"
-	source_family:   "fedlex_eli" | "swisstopo_stac" | "rdppf_oereb" | "ofs"
+	source_family:   "fedlex_eli" | "swisstopo_stac" | "rdppf_oereb" | "ofs" | "geoportail_cantonal"
 	authority_level: "confederation" | "canton" | "commune" | "mixed"
 	machine_source:  true
 

@@ -245,3 +245,41 @@ func TestLive_RDPPFExtractByEGRID(t *testing.T) {
 		t.Fatalf("only %d parcels proven, want 3", parcels)
 	}
 }
+
+// TestLive_GeoportailCantonal fetches the WMS GetCapabilities of an official
+// cantonal geoportal (Basel-Stadt — its full layer register, incl. the
+// Zonenplan/Nutzungsplan layers) (W23-2 / #591). Asserts the payload is the
+// genuine capabilities catalogue carrying zoning layers, not an error page.
+func TestLive_GeoportailCantonal(t *testing.T) {
+	if os.Getenv("NOMOS_LIVE_CH_FETCH") != "1" {
+		t.Skip("set NOMOS_LIVE_CH_FETCH=1 to run the live Swiss-source fetch")
+	}
+	const url = "https://wms.geo.bs.ch/?SERVICE=WMS&REQUEST=GetCapabilities"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	content, result, err := Fetch(ctx, url, FetchOptions{})
+	if err != nil {
+		t.Fatalf("live fetch failed: %v", err)
+	}
+	if len(result.SHA256) != len("sha256:")+64 {
+		t.Fatalf("live fetch produced a non-real hash %q", result.SHA256)
+	}
+	payload := string(content)
+	if !strings.Contains(payload, "WMS_Capabilities") {
+		t.Fatal("payload is not a WMS capabilities document")
+	}
+	if !strings.Contains(payload, "Zonenplan") && !strings.Contains(payload, "Nutzungsplan") {
+		t.Fatal("capabilities carry no zoning layer — wrong service for the built-environment register")
+	}
+	ledger := BuildLineLedger(content)
+	if !ledger.IsFullyCovered() {
+		t.Fatalf("live content left %d bytes uncovered", ledger.UncoveredBytes)
+	}
+	ev := BuildEvidence("ch-geoportail-cantonal", content, result, ledger, 3)
+	if err := ev.Validate(); err != nil {
+		t.Fatalf("live evidence invalid: %v", err)
+	}
+	t.Logf("live geoportail fetch: %d bytes, %s, %d atoms, 0 uncovered", result.ByteCount, result.SHA256, ev.AtomCount)
+}

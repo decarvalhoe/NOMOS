@@ -123,3 +123,32 @@ connectors:
       source_manifest_type: database_export
       stores_full_text: false
       evidence_role: statistical_reference
+  - id: geoportail-cantonal
+    source_family: geoportail_cantonal
+    authority_level: canton
+    machine_source: true
+    # Real live fetch (W23-2 / #591): the WMS GetCapabilities of an official
+    # cantonal geoportal (Basel-Stadt) — the canton's full layer register,
+    # including the Zonenplan / Nutzungsplan layers (the « cantonal geoportal
+    # layer reference » every commune-seed scaffold asks for). The catalogue
+    # is generated per request, so the hash is a point-in-time receipt of a
+    # real fetch — never a pinned oracle.
+    status: fetched
+    evidence_ref: docs/regulated/ch-connectors/ch-geoportail-cantonal.evidence.json
+    retrieval:
+      mode: read_only_http
+      write_policy: read_only
+      endpoint_pattern: "https://{cantonal-wms-endpoint}/?SERVICE=WMS&REQUEST=GetCapabilities"
+      retrieved_at_utc: "2026-06-11T10:15:51Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [updateSequence, layer_metadata_date]
+      timezone: Europe/Zurich
+    hashing:
+      content_hash: sha256:3e34a42decb7f641c0634ecbb61a5223dc1114b777e3a80b4335f6012c36c365
+      hash_scope: raw_response
+      canonicalization: "Hash raw WMS 1.3.0 GetCapabilities XML response bytes (wms.geo.bs.ch, 2851 layers incl. Zonenplan)."
+    outputs:
+      source_manifest_type: api_export
+      stores_full_text: false
+      evidence_role: geodata_snapshot

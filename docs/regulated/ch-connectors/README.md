@@ -61,6 +61,19 @@ bytes.
   every run. Extracts are generated on demand (`CreationDate` changes), so
   each receipt is a point-in-time proof of a real fetch — never a pinned
   oracle.
+- `ch-geoportail-cantonal.evidence.json` — **WMS GetCapabilities** of an
+  official cantonal geoportal (Basel-Stadt): the canton's full layer register
+  (2 851 layers incl. `Zonenplan Stadt Basel` / `Kantonaler Nutzungsplan`) —
+  the « cantonal geoportal layer reference » every commune-seed scaffold
+  lists (W23-2 / #591). Catalogue generated per request → point-in-time
+  receipt.
+
+## Offline fixtures
+
+`connector_offline_fixtures_test.go` carries one realistic payload snippet per
+known source family (heads only, never full documents): descriptor resolution,
+payload markers, and the evidence pipeline are proven with **zero network** —
+the live tests stay the reality check.
 
 ## Scope discipline — open data only
 
