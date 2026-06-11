@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/RBOKproject/Nomos/cli/internal/atomization"
+	"gopkg.in/yaml.v3"
 )
 
 // AtomizeCommand is the entry point for `nomos atomize <subcommand>`.
@@ -263,12 +264,29 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	docRef := flags.String("doc-ref", "", "document reference slug")
 	domain := flags.String("domain", "", "domain name")
+	facets := flags.Bool("facets", false, "emit CKM-01 facets on each chunk")
+	lensPath := flags.String("lens", "", "CKM-02 knowledge-lens spec (YAML/JSON); filters chunks by facets, recording excluded units")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if flags.NArg() != 1 {
-		fmt.Fprintln(stderr, "usage: nomos atomize chunks [--doc-ref REF] [--domain DOM] <file.md>")
+		fmt.Fprintln(stderr, "usage: nomos atomize chunks [--doc-ref REF] [--domain DOM] [--facets] [--lens FILE] <file.md>")
 		return 2
+	}
+
+	// A lens decides retrieval scope by facets, so facets must be derived for the
+	// lens to act on. --lens therefore implies faceting (--facets alone just
+	// surfaces them on the wire without filtering).
+	emitFacets := *facets || *lensPath != ""
+
+	var lens *atomization.KnowledgeLens
+	if *lensPath != "" {
+		loaded, err := loadKnowledgeLens(*lensPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "lens: %v\n", err)
+			return 2
+		}
+		lens = loaded
 	}
 
 	source, err := os.ReadFile(flags.Arg(0))
@@ -282,18 +300,27 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 		DocumentRef: *docRef,
 		SourceFile:  flags.Arg(0),
 		Domain:      *domain,
+		EmitFacets:  emitFacets,
 	})
 
 	type Chunk struct {
-		ChunkID      string   `json:"chunk_id"`
-		AtomID       string   `json:"atom_id"`
-		CanonicalRef string   `json:"canonical_ref"`
-		Text         string   `json:"text"`
-		ContentHash  string   `json:"content_hash"`
-		Domain       string   `json:"domain"`
-		Type         string   `json:"type"`
-		Depth        int      `json:"depth"`
-		ParentChain  []string `json:"parent_chain"`
+		ChunkID      string              `json:"chunk_id"`
+		AtomID       string              `json:"atom_id"`
+		CanonicalRef string              `json:"canonical_ref"`
+		Text         string              `json:"text"`
+		ContentHash  string              `json:"content_hash"`
+		Domain       string              `json:"domain"`
+		Type         string              `json:"type"`
+		Depth        int                 `json:"depth"`
+		ParentChain  []string            `json:"parent_chain"`
+		Facets       *atomization.Facets `json:"facets,omitempty"`
+	}
+
+	type ExcludedChunk struct {
+		ChunkID      string `json:"chunk_id"`
+		AtomID       string `json:"atom_id"`
+		CanonicalRef string `json:"canonical_ref"`
+		Reason       string `json:"reason"`
 	}
 
 	atomMap := map[string]*atomization.Atom{}
@@ -302,13 +329,35 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 	}
 
 	chunks := make([]Chunk, 0, len(set.Atoms))
+	excluded := make([]ExcludedChunk, 0)
 	for _, a := range set.Atoms {
 		if strings.TrimSpace(a.Text) == "" {
 			continue
 		}
+		chunkID := "chunk:" + a.ID
+
+		// CKM-02 lens scoping: a lens drops candidates whose facets fall outside
+		// the retrieval scope, recording each drop with the lens's own reason.
+		if lens != nil {
+			var f atomization.Facets
+			if a.Facets != nil {
+				f = *a.Facets
+			}
+			decision := atomization.ApplyLens(f, *lens)
+			if !decision.Included {
+				excluded = append(excluded, ExcludedChunk{
+					ChunkID:      chunkID,
+					AtomID:       a.ID,
+					CanonicalRef: a.CanonicalRef,
+					Reason:       decision.Reason,
+				})
+				continue
+			}
+		}
+
 		chain := resolveAtomParentChain(a.ID, atomMap)
 		chunks = append(chunks, Chunk{
-			ChunkID:      "chunk:" + a.ID,
+			ChunkID:      chunkID,
 			AtomID:       a.ID,
 			CanonicalRef: a.CanonicalRef,
 			Text:         a.Text,
@@ -317,9 +366,62 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 			Type:         string(a.Type),
 			Depth:        a.Depth,
 			ParentChain:  chain,
+			Facets:       a.Facets,
 		})
 	}
-	return writeAtomJSON(stdout, stderr, chunks)
+
+	// Without a lens, preserve the exact prior shape (a bare chunk array) so the
+	// default path stays byte-for-byte unchanged (zero regression).
+	if lens == nil {
+		return writeAtomJSON(stdout, stderr, chunks)
+	}
+
+	type ScopedChunks struct {
+		LensID   string          `json:"lens_id"`
+		Mode     string          `json:"mode"`
+		Chunks   []Chunk         `json:"chunks"`
+		Excluded []ExcludedChunk `json:"excluded"`
+	}
+	return writeAtomJSON(stdout, stderr, ScopedChunks{
+		LensID:   lens.ID,
+		Mode:     "lens",
+		Chunks:   chunks,
+		Excluded: excluded,
+	})
+}
+
+// loadKnowledgeLens reads a single CKM-02 #KnowledgeLens document and validates
+// that it names at least one predicate. A lens with neither include nor exclude
+// would silently keep everything, which is almost certainly an operator mistake.
+//
+// The canonical lens shape (specs/knowledge-lens.cue) is authored in YAML, while
+// the engine type (atomization.KnowledgeLens) is keyed by its JSON tags. We bridge
+// the two by decoding YAML to a generic value and re-encoding it as JSON, so the
+// file may be either YAML or JSON and the engine type stays free of YAML tags.
+func loadKnowledgeLens(path string) (*atomization.KnowledgeLens, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", path, err)
+	}
+	var generic any
+	if err := yaml.Unmarshal(raw, &generic); err != nil {
+		return nil, fmt.Errorf("parse %s: %w", path, err)
+	}
+	bridged, err := json.Marshal(generic)
+	if err != nil {
+		return nil, fmt.Errorf("normalize %s: %w", path, err)
+	}
+	var lens atomization.KnowledgeLens
+	if err := json.Unmarshal(bridged, &lens); err != nil {
+		return nil, fmt.Errorf("decode %s: %w", path, err)
+	}
+	if lens.ID == "" {
+		return nil, fmt.Errorf("%s: lens is missing an id", path)
+	}
+	if lens.Include == nil && lens.Exclude == nil {
+		return nil, fmt.Errorf("%s: lens %q has no include/exclude predicate", path, lens.ID)
+	}
+	return &lens, nil
 }
 
 // --- validate: check atom set completeness ---
@@ -349,13 +451,13 @@ func atomizeValidate(args []string, stdout io.Writer, stderr io.Writer) int {
 	})
 
 	type ValidationResult struct {
-		AtomCount    int      `json:"atom_count"`
-		IsLossless   bool     `json:"is_lossless"`
-		LossRatio    float64  `json:"loss_ratio"`
-		UniqueIDs    bool     `json:"unique_ids"`
-		OrphanAtoms  []string `json:"orphan_atoms,omitempty"`
-		Errors       []string `json:"errors,omitempty"`
-		Valid        bool     `json:"valid"`
+		AtomCount   int      `json:"atom_count"`
+		IsLossless  bool     `json:"is_lossless"`
+		LossRatio   float64  `json:"loss_ratio"`
+		UniqueIDs   bool     `json:"unique_ids"`
+		OrphanAtoms []string `json:"orphan_atoms,omitempty"`
+		Errors      []string `json:"errors,omitempty"`
+		Valid       bool     `json:"valid"`
 	}
 
 	result := ValidationResult{
@@ -442,11 +544,11 @@ func atomizeCertify(args []string, stdout io.Writer, stderr io.Writer) int {
 	})
 
 	type CertifyResult struct {
-		AtomCount int    `json:"atom_count"`
-		Reviewer  string `json:"reviewer"`
-		State     string `json:"state"`
-		SourceHash string `json:"source_hash"`
-		Atoms     []atomization.Atom `json:"atoms"`
+		AtomCount  int                `json:"atom_count"`
+		Reviewer   string             `json:"reviewer"`
+		State      string             `json:"state"`
+		SourceHash string             `json:"source_hash"`
+		Atoms      []atomization.Atom `json:"atoms"`
 	}
 
 	result := CertifyResult{
