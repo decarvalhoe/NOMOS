@@ -934,16 +934,14 @@
     },
     {
       "id": "docx_adapter",
-      "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
+      "title": "DOCX born-digital OOXML body-text adapter — claim ladder rung 1 (paragraphs/headings/lists/tables), content-addressed spans drift on a 1-char change, tracked-changes/comments/embedded objects unsupported (VRC-41 #577)",
       "pillar": "ingestion",
-      "claim_level": "not claimable",
-      "promotion_issue": "VRC-41",
-      "expected": "partial",
-      "computed": "partial",
+      "claim_level": "ooxml-body-text",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "no production caller declared (the #540 class)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
         "engine": [
@@ -953,7 +951,13 @@
             "missing": []
           }
         ],
-        "production_callers": [],
+        "production_callers": [
+          {
+            "path": "cli/internal/fidelity/adapter_registry.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "adversarial_tests": [
           {
             "path": "cli/internal/fidelity/docx_adapter_test.go",
@@ -1157,8 +1161,8 @@
   "summary": {
     "capabilities": 25,
     "computed": {
-      "real": 17,
-      "partial": 1,
+      "real": 18,
+      "partial": 0,
       "sidecar": 6,
       "stub": 0,
       "absent": 1

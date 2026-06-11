@@ -2,14 +2,104 @@ package fidelity
 
 import (
 	"archive/zip"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"strings"
 )
 
-// DocxStatus indicates the feasibility status of this adapter.
+// DocxStatus indicates the feasibility status of the raw extractor. The
+// production adapter (DocxAdapter) wraps it with a claim boundary — born-digital
+// OOXML body text only.
 const DocxStatus = "feasibility"
+
+// DocxAdapter is the production .docx adapter (VRC-41 #577). Claim ladder rung
+// 1: born-digital OOXML body text — paragraphs, headings, list items and table
+// cells from word/document.xml. Tracked changes, comments, headers/footers,
+// embedded objects and math are NOT claimed (they live in other OOXML parts and
+// are surfaced, never silently flattened). Span IDs are content-addressed so a
+// single changed character drifts the parse — the same drift-evidence discipline
+// as the PDF adapter (VRC-30).
+type DocxAdapter struct{}
+
+// Name returns the adapter identifier.
+func (DocxAdapter) Name() string { return "docx" }
+
+// Extensions returns the extensions this adapter claims.
+func (DocxAdapter) Extensions() []string { return []string{".docx"} }
+
+// Kit returns the mandatory capability kit (VRC-33, C5).
+func (DocxAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Born-digital OOXML body text only (claim ladder rung 1): paragraphs, headings, list items and table cells extracted from word/document.xml with content-addressed span ids. Tracked changes, comments, headers/footers, embedded objects and math are NOT claimed.",
+		ClaimLevel:       "ooxml-body-text",
+		UnsupportedKinds: []string{"tracked_changes", "comments_and_annotations", "headers_footers", "embedded_objects", "math_equations", "styling_fidelity"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/docx_adapter_test.go#TestDocxAdapter_ExtractsBodyTextWithContentAddressedSpans",
+			"test://cli/internal/fidelity/docx_adapter_test.go#TestDocxAdapter_ByteChangeDriftsTheParse",
+			"test://cli/internal/fidelity/docx_adapter_test.go#TestDocxAdapter_InvalidZipFailsClosed",
+		},
+	}
+}
+
+// docxSpanID is content-addressed: a changed character changes the text hash and
+// therefore the span id, so a mutated document never re-uses a prior span id.
+func docxSpanID(node DocxNode) string {
+	sum := sha256.Sum256([]byte(node.Text))
+	return fmt.Sprintf("docx:p%d:%s:h%s", node.ParaIdx, node.Type, hex.EncodeToString(sum[:])[:12])
+}
+
+// Parse extracts the body text of a .docx into structural spans. Every emitted
+// node is a real born-digital text node; a document the extractor cannot open
+// (corrupt zip / missing document.xml) fails closed.
+func (DocxAdapter) Parse(source []byte, filename string) (ParseResult, error) {
+	extraction, err := ExtractDocxFromBytes(source, filename)
+	if err != nil {
+		return ParseResult{}, fmt.Errorf("docx: %w", err)
+	}
+	spans := make([]SpanInfo, 0, len(extraction.Nodes))
+	for _, node := range extraction.Nodes {
+		spans = append(spans, SpanInfo{
+			ID:       docxSpanID(node),
+			NodeType: node.Type,
+			// OOXML carries no source line/byte offsets for decoded text, so
+			// positions are not claimable: ParaIdx is the logical locator,
+			// byte fields stay 0 (the same honesty as the PDF adapter).
+			StartLine: node.ParaIdx + 1,
+			EndLine:   node.ParaIdx + 1,
+		})
+	}
+	return ParseResult{
+		Format:    "docx",
+		NodeCount: len(spans),
+		Spans:     spans,
+		Errors:    extraction.Errors,
+	}, nil
+}
+
+// Validate checks the source is a readable OOXML package with a main document
+// part. A non-docx or corrupt archive is reported invalid, never best-effort.
+func (DocxAdapter) Validate(source []byte, filename string) ValidationResult {
+	extraction, err := ExtractDocxFromBytes(source, filename)
+	if err != nil {
+		return ValidationResult{Valid: false, Findings: []string{err.Error()}}
+	}
+	if extraction.NodeCount == 0 {
+		return ValidationResult{Valid: false, Findings: []string{"docx: no body text extracted"}}
+	}
+	return ValidationResult{Valid: true}
+}
+
+// Spans extracts source spans without returning the full ParseResult.
+func (a DocxAdapter) Spans(source []byte, filename string) ([]SpanInfo, error) {
+	result, err := a.Parse(source, filename)
+	if err != nil {
+		return nil, err
+	}
+	return result.Spans, nil
+}
 
 // DocxNode is a structural element extracted from a DOCX file.
 type DocxNode struct {

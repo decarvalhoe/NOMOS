@@ -394,17 +394,19 @@
     },
     {
       "id": "docx_adapter",
-      "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
+      "title": "DOCX born-digital OOXML body-text adapter — claim ladder rung 1 (paragraphs/headings/lists/tables), content-addressed spans drift on a 1-char change, tracked-changes/comments/embedded objects unsupported (VRC-41 #577)",
       "pillar": "ingestion",
-      "claim_level": "not claimable",
-      "promotion_issue": "VRC-41",
-      "expected": "partial",
+      "claim_level": "ooxml-body-text",
+      "promotion_issue": "",
+      "expected": "real",
       "engine": [
-        {"path": "cli/internal/fidelity/docx_adapter.go", "contains": ["func ExtractDocx(", "feasibility"]}
+        {"path": "cli/internal/fidelity/docx_adapter.go", "contains": ["type DocxAdapter struct", "func (DocxAdapter) Kit()", "docxSpanID"]}
       ],
-      "production_callers": [],
+      "production_callers": [
+        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["r.Register(DocxAdapter{})"]}
+      ],
       "adversarial_tests": [
-        {"path": "cli/internal/fidelity/docx_adapter_test.go", "contains": ["TestExtractDocxInvalidZip"]}
+        {"path": "cli/internal/fidelity/docx_adapter_test.go", "contains": ["TestDocxAdapter_ByteChangeDriftsTheParse", "TestDocxAdapter_InvalidZipFailsClosed", "TestDefaultRegistry_DocxAdapterIsReal"]}
       ]
     },
     {

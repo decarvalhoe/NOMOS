@@ -107,26 +107,33 @@ func TestDefaultRegistryKitsAreCompleteAndResolve(t *testing.T) {
 }
 
 func TestDefaultRegistryRefusalTaxonomiesAreHonest(t *testing.T) {
-	// Belt-and-braces on the C5 spirit: even the structural-span adapters
-	// declare refusals — « nothing parses everything » is enforced, and the
-	// placeholder's level is explicit so nothing upstream mistakes it for a
-	// real parser.
+	// Belt-and-braces on the C5 spirit: every adapter declares refusals —
+	// « nothing parses everything ». pdf and docx are real (VRC-30/41), each
+	// at claim ladder rung 1 with an explicit unsupported taxonomy; the
+	// PlaceholderAdapter TYPE keeps its declared-placeholder level for the
+	// formats not yet implemented.
+	if (PlaceholderAdapter{AdapterName: "rtf", Exts: []string{".rtf"}}).Kit().ClaimLevel != "declared-placeholder" {
+		t.Fatal("the placeholder type must declare its level explicitly")
+	}
 	r := DefaultRegistry()
-	docx, ok := r.Lookup("docx")
-	if !ok {
-		t.Fatal("docx placeholder missing from the registry")
-	}
-	if docx.Kit().ClaimLevel != "declared-placeholder" {
-		t.Fatalf("docx must stay a declared placeholder, got %q", docx.Kit().ClaimLevel)
-	}
 	pdf, _ := r.Lookup("pdf")
-	found := false
-	for _, kind := range pdf.Kit().UnsupportedKinds {
-		if kind == "scanned_image_only_pages" {
-			found = true
-		}
-	}
-	if !found {
+	if !hasUnsupported(pdf, "scanned_image_only_pages") {
 		t.Fatal("the pdf kit must refuse scanned/image-only pages explicitly (rung 1 honesty)")
 	}
+	docx, ok := r.Lookup("docx")
+	if !ok || docx.Kit().ClaimLevel != "ooxml-body-text" {
+		t.Fatalf("docx must be the real ooxml-body-text adapter (VRC-41)")
+	}
+	if !hasUnsupported(docx, "tracked_changes") {
+		t.Fatal("the docx kit must refuse tracked changes explicitly (rung 1 honesty)")
+	}
+}
+
+func hasUnsupported(a Adapter, kind string) bool {
+	for _, k := range a.Kit().UnsupportedKinds {
+		if k == kind {
+			return true
+		}
+	}
+	return false
 }

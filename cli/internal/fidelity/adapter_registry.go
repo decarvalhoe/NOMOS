@@ -456,7 +456,9 @@ func DefaultRegistry() *Registry {
 	r.Register(MarkdownAdapter{})
 	r.Register(YAMLAdapter{})
 	r.Register(JSONAdapter{})
-	r.Register(PlaceholderAdapter{AdapterName: "docx", Exts: []string{".docx"}})
+	// VRC-41 (#577): the docx placeholder is gone — born-digital OOXML body
+	// text is a real adapter (claim ladder rung 1, see docx_adapter.go).
+	r.Register(DocxAdapter{})
 	// VRC-30 (#567): the pdf placeholder is gone — born-digital PDF text is a
 	// real adapter (claim ladder + unsupported records, see pdf_adapter.go).
 	r.Register(PDFAdapter{})
