@@ -17,7 +17,7 @@
 | `supply_chain_attestation` | P7 | real | real | ✅ | — | — |
 | `swiss_live_connector` | P6 | real | real | ✅ | — | — |
 | `canonical_knowledge_bundle` | P6-gen | real | real | ✅ | — | — |
-| `cite_or_abstain_gate` | P2 | sidecar | sidecar | ✅ | VRC-10 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `cite_or_abstain_gate` | P2 | real | real | ✅ | — | — |
 | `canon_promotion` | P5 | sidecar | sidecar | ✅ | VRC-11 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `point_in_time_resolver` | P6 | sidecar | sidecar | ✅ | VRC-12 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `facet_ontology_alignment` | P3 | real | real | ✅ | — | — |
@@ -40,7 +40,7 @@
 
 ## Summary
 
-- capabilities: 25 (real=18, partial=0, sidecar=6, stub=0, absent=1)
+- capabilities: 25 (real=19, partial=0, sidecar=5, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

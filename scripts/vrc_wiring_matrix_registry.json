@@ -187,20 +187,28 @@
     },
     {
       "id": "cite_or_abstain_gate",
-      "title": "Cite-or-abstain gate with faithfulness recomputed from spans (CKM-08/H6 #502, #530, #542) — Python sidecar only",
+      "title": "Cite-or-abstain gate in the Go engine (VRC-10 #556) — faithfulness RECOMPUTED from retrieved spans, cite/abstain verdict, trust tier exposed; fail-closed on a forged citation (moved span / altered hash) or missing grounding; a declared score may only lower. The Python sidecar (CKM-08/H6) stays as the evidence-pack emitter.",
       "pillar": "P2",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-10",
-      "expected": "sidecar",
-      "sidecar": [
-        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["faithfulness"]},
-        {"path": "tests/test_ckm_faithfulness_recompute.py", "contains": []}
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/answer/answer.go", "contains": ["func Evaluate(", "func Gate(", "recomputeGroundedness", "func trustTier("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Gate("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/answer/answer_test.go", "contains": ["TestGate_ForgedCitationHashIsBlocked", "TestGate_NoSpanForcesAbstention", "TestGate_NoSpanTextBypassIsClosed", "TestGate_DeclaredScoreCanOnlyLower"]},
+        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerGate_AbstainsAndFailsOnUngrounded"]}
       ],
       "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]},
         {"path": "scripts/ckm-non-regression.sh", "contains": ["regulated_rag_answer_evidence.py"]}
       ],
-      "must_be_absent": [
-        {"dir": "cli/internal", "regex": "(?i)faithfulness|cite[_-]?or[_-]?abstain", "suffixes": [".go"]}
+      "sidecar": [
+        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["faithfulness"]}
       ]
     },
     {
