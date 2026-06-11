@@ -590,22 +590,53 @@
     },
     {
       "id": "point_in_time_resolver",
-      "title": "Point-in-time atom resolver (CKM-11 #506) — CUE spec + Python sidecar only",
+      "title": "Point-in-time atom resolver in the Go engine (VRC-12 #558) — selects the recorded expression in force on a project date (latest effective_from among the in-force candidates) and REFUSES (not_in_force) a stale/future/gap date. The CUE spec + Python sidecar (CKM-11) stay as the contract + evidence emitter.",
       "pillar": "P6",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-12",
-      "expected": "sidecar",
-      "computed": "sidecar",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
+        "engine": [
+          {
+            "path": "cli/internal/pointintime/pointintime.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/pointintime_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/pointintime/pointintime_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/pointintime_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
           {
             "path": "scripts/ckm-non-regression.sh",
             "ok": true,
@@ -1207,6 +1238,7 @@
         "help",
         "init",
         "pack",
+        "pointintime",
         "product-check",
         "report",
         "strict",
@@ -1220,9 +1252,9 @@
   "summary": {
     "capabilities": 25,
     "computed": {
-      "real": 20,
+      "real": 21,
       "partial": 0,
-      "sidecar": 4,
+      "sidecar": 3,
       "stub": 0,
       "absent": 1
     },

@@ -30,6 +30,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"pack":          packCommand,
 		"answer":        answerCommand,
 		"canon":         canonCommand,
+		"pointintime":   pointInTimeCommand,
 		"strict":        StrictGateCommand,
 		"check":         checkCommand,
 		"report":        ReportCommand,
@@ -75,6 +76,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  pack       Validate a domain pack against its declarative contract (golden corpus included)")
 	fmt.Fprintln(stdout, "  answer     Cite-or-abstain gate: recompute faithfulness from spans, cite or abstain")
 	fmt.Fprintln(stdout, "  canon      Validate a canon-promotion bundle (user-promoted into the silo, never certified)")
+	fmt.Fprintln(stdout, "  pointintime  Resolve the atom expression in force at a project date (or refuse)")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
 	fmt.Fprintln(stdout, "  check      Granular manifest checks (sources, contracts, matrix, exceptions, strict)")
 	fmt.Fprintln(stdout, "  report     Generate the project detection report (JSON)")

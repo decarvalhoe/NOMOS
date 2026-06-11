@@ -240,20 +240,29 @@
     },
     {
       "id": "point_in_time_resolver",
-      "title": "Point-in-time atom resolver (CKM-11 #506) — CUE spec + Python sidecar only",
+      "title": "Point-in-time atom resolver in the Go engine (VRC-12 #558) — selects the recorded expression in force on a project date (latest effective_from among the in-force candidates) and REFUSES (not_in_force) a stale/future/gap date. The CUE spec + Python sidecar (CKM-11) stay as the contract + evidence emitter.",
       "pillar": "P6",
-      "claim_level": "not claimable as engine capability",
-      "promotion_issue": "VRC-12",
-      "expected": "sidecar",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/pointintime/pointintime.go", "contains": ["func ResolvePointInTime(", "not_in_force", "stale or future expression"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/pointintime_cmd.go", "contains": ["pointintime.ResolvePointInTime("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"pointintime\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/pointintime/pointintime_test.go", "contains": ["TestPIT_FutureDateIsNotInForce", "TestPIT_StaleDateBetweenVersionsIsNotInForce", "TestPIT_LatestEffectiveFromWinsOnOverlap"]},
+        {"path": "cli/internal/app/pointintime_cmd_test.go", "contains": ["TestPIT_CLI_RefusesCoverageGap"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]},
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_point_in_time_resolve.py"]}
+      ],
       "sidecar": [
         {"path": "scripts/ckm_point_in_time_resolve.py", "contains": []},
         {"path": "specs/point-in-time.cue", "contains": []}
-      ],
-      "ci_gates": [
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_point_in_time_resolve.py"]}
-      ],
-      "must_be_absent": [
-        {"dir": "cli/internal", "regex": "ResolvePointInTime|PointInTimeResolver|PointInTimeResolve", "suffixes": [".go"]}
       ]
     },
     {
