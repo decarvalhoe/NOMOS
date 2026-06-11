@@ -1,0 +1,2414 @@
+{
+  "schema_version": "ckm-bundle-v1",
+  "bundle_id": "nomos-canonical-golden",
+  "generated_at": "2026-06-11T03:01:12Z",
+  "producer": "nomos",
+  "claim_boundary": "Canonical bundle handoff only; no downstream import success or regulatory correctness claim.",
+  "feeds": [
+    {
+      "feed_id": "nomos-canonical-golden-feed",
+      "format": "nomos.canonical-knowledge-feed.v1",
+      "version": "nomos-canonical-golden@2026-06-11T03:01:12Z",
+      "jurisdiction": {
+        "country": "CH",
+        "canton": "VD",
+        "commune": "Lausanne"
+      },
+      "nodes": [
+        {
+          "node_id": "A-D02BB606ACCD01E1",
+          "text": "Portable Golden Corpus Fixtures",
+          "source_path": "README.md",
+          "source_hash": "sha256:2fe422adfcd3e0e07393665ffd8587b7868e6fc8cf2d5c00719e4a402c578e0a",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-3E0126D3F83A9E04",
+          "text": "These fixtures are synthetic source documents authored for NOMOS regression tests.\nThey are license-safe and intentionally avoid legal, regulatory, certification, or\nvalidation claims. The `Portable` Go test emits the feed, TOC, no-lexicon status,\nbody ledger, fidelity report, and strict gate output for every domain.",
+          "source_path": "README.md",
+          "source_hash": "sha256:2fe422adfcd3e0e07393665ffd8587b7868e6fc8cf2d5c00719e4a402c578e0a",
+          "span": {
+            "start_line": 3,
+            "end_line": 6
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-580D4DB72EA26833",
+          "text": "AI Governance Fixture",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-F97D77BEEEF7698A",
+          "text": "This synthetic fixture describes oversight for an AI-assisted extraction feature\nwithout claiming model certification, risk-framework compliance, or regulatory\napproval.",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 3,
+            "end_line": 5
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-156307E0E60A1038",
+          "text": "Evaluation Record",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 7,
+            "end_line": 7
+          },
+          "parent_chain": [
+            "A-580D4DB72EA26833"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-C07D9D8049489E0F",
+          "text": "The record stores prompt version, model identifier, source citation policy,\nrefusal behavior, and reviewer decision as auditable fields.",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 9,
+            "end_line": 10
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-9507AD62A686D55C",
+          "text": "Drift Review",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 12,
+            "end_line": 12
+          },
+          "parent_chain": [
+            "A-580D4DB72EA26833"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-FEC687320222CADC",
+          "text": "The workflow schedules periodic comparison between approved outputs and new\nmodel outputs before changing production behavior.",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 14,
+            "end_line": 15
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-8453BDF40D375A47",
+          "text": "Non-Claim Boundary",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 17,
+            "end_line": 17
+          },
+          "parent_chain": [
+            "A-580D4DB72EA26833"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-CA8EAEC9BCC4CAA1",
+          "text": "This fixture does not claim AI governance compliance, safety assurance, or legal\nadequacy. It only exercises portable corpus artifact generation with license-safe\ntext.",
+          "source_path": "ai-governance/source.md",
+          "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+          "span": {
+            "start_line": 19,
+            "end_line": 21
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-C497E12239F01E8B",
+          "text": "Cyber Supplier Fixture",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-DCF2D37006E8A523",
+          "text": "This synthetic fixture describes supplier security review without quoting any\nstandard, audit report, or restricted security questionnaire.",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-7CA2077693ED3059",
+          "text": "Supplier Intake",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-C497E12239F01E8B"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-2A468F2D2F0D41A6",
+          "text": "The record captures service boundary, data category, security contact, and\nreview status before technical evidence is evaluated.",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-7264A5E5B754A774",
+          "text": "Control Evidence",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-C497E12239F01E8B"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-8521DD23906FAE4D",
+          "text": "The workflow links submitted evidence, reviewer note, residual risk, and renewal\ndate without asserting that a control is externally certified.",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-D6E499E91F689566",
+          "text": "Non-Claim Boundary",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-C497E12239F01E8B"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-A9559991B5EF47AF",
+          "text": "This fixture does not claim cyber compliance, supplier assurance certification,\nor security adequacy. It only exercises portable corpus artifact generation with\nlicense-safe text.",
+          "source_path": "cyber-supplier/source.md",
+          "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-CF5BA5985CEA075D",
+          "text": "Finance RegTech Fixture",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-94BAF8B4AC1BA014",
+          "text": "This synthetic fixture describes a control narrative for financial reporting\nchange review without quoting regulation or claiming regulatory compliance.",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-A4B250331178D658",
+          "text": "Control Objective",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-CF5BA5985CEA075D"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-395C294049550C83",
+          "text": "The record links data source, transformation rule, reconciliation evidence, and\napproval status for a reporting workflow.",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-9A9C001B642C161B",
+          "text": "Exception Handling",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-CF5BA5985CEA075D"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-048FD3B96149A9EA",
+          "text": "The workflow records exception reason, impacted report, owner decision, and\nfollow-up evidence before any status is closed.",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-0C23721F0A063E6B",
+          "text": "Non-Claim Boundary",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-CF5BA5985CEA075D"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-359FC45196574435",
+          "text": "This fixture does not claim financial regulatory compliance, audit acceptance,\nor legal sufficiency. It only exercises portable corpus artifact generation with\nlicense-safe text.",
+          "source_path": "finance-regtech/source.md",
+          "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-AC1FD422A83B7803",
+          "text": "GxP CSV Fixture",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-072759CE161F56D0",
+          "text": "This synthetic fixture describes a controlled software change without quoting any\nexternal standard, regulation, or licensed guidance. The scenario is limited to\ntraceability evidence for a validation planning workflow.",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 3,
+            "end_line": 5
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-BBF85786B3FC0D20",
+          "text": "Intake Boundary",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 7,
+            "end_line": 7
+          },
+          "parent_chain": [
+            "A-AC1FD422A83B7803"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-01ABA23EC8863DFD",
+          "text": "The intake record identifies intended use, affected workflow, source owner, and\nreview status before any downstream evidence artifact is generated.",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 9,
+            "end_line": 10
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-1B61B240495FDB1C",
+          "text": "Evidence Flow",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 12,
+            "end_line": 12
+          },
+          "parent_chain": [
+            "A-AC1FD422A83B7803"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-68B5D98F76267D0F",
+          "text": "The workflow keeps requirements, test steps, deviations, and approval notes as\nseparate evidence objects so that a reviewer can inspect each link.",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 14,
+            "end_line": 15
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-4600EA6B33BC9BB0",
+          "text": "Non-Claim Boundary",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 17,
+            "end_line": 17
+          },
+          "parent_chain": [
+            "A-AC1FD422A83B7803"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-52D430C2B4C87E78",
+          "text": "This fixture does not claim GxP compliance, validation approval, Part 11\ncompliance, or certification. It only exercises portable corpus artifact\ngeneration with license-safe text.",
+          "source_path": "gxp/source.md",
+          "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+          "span": {
+            "start_line": 19,
+            "end_line": 21
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-96A28EC147B4CF26",
+          "text": "High Assurance Engineering Fixture",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-D060B5FD034EBD34",
+          "text": "This synthetic fixture describes high-assurance engineering evidence without\nclaiming formal methods proof, safety certification, or regulatory approval.",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-1BC0A5DA24954A9D",
+          "text": "Design Constraint",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-96A28EC147B4CF26"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-E9D983AAE680CB65",
+          "text": "The record captures invariant statement, design rationale, implementation owner,\nand review status as separate traceable statements.",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-275A9D1B080DAB97",
+          "text": "Verification Evidence",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-96A28EC147B4CF26"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-2A7B27EC35451FE2",
+          "text": "The workflow links static analysis, test evidence, change review, and exception\nhandling so each result can be inspected independently.",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-C61FBD9BB2202260",
+          "text": "Non-Claim Boundary",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-96A28EC147B4CF26"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-4712CA9DACB45114",
+          "text": "This fixture does not claim safety certification, complete proof, or regulated\nvalidation. It only exercises portable corpus artifact generation with\nlicense-safe text.",
+          "source_path": "high-assurance/source.md",
+          "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-99D009920599FECC",
+          "text": "Legal eDiscovery Fixture",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-71BED49922A8ED10",
+          "text": "This synthetic fixture describes a document-hold workflow without giving legal\nadvice or claiming discovery adequacy.",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-5A07A1E99B617995",
+          "text": "Hold Intake",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-99D009920599FECC"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-6CA2C657E7F5B48D",
+          "text": "The record captures matter reference, custodian group, preservation scope, and\nreview status as source-backed statements.",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-AC9CE3411E0D0070",
+          "text": "Production Review",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-99D009920599FECC"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-563993FDA0CD57B0",
+          "text": "The workflow separates collection, deduplication, privilege review, and export\ndecision so each step can be traced to a responsible reviewer.",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-9A5F3A41BEE4378D",
+          "text": "Non-Claim Boundary",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-99D009920599FECC"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-F0EFD94E03035260",
+          "text": "This fixture does not claim legal sufficiency, privilege correctness, or court\nacceptance. It only exercises portable corpus artifact generation with\nlicense-safe text.",
+          "source_path": "legal-ediscovery/source.md",
+          "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-72666A27959AF083",
+          "text": "Medical SaMD Fixture",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-4FBB4E5CF6245B61",
+          "text": "This synthetic fixture describes a software risk-control narrative for a medical\nsoftware context without asserting device clearance, clinical performance, or\nregulatory conformity.",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 3,
+            "end_line": 5
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-CA3149EB4E9CE9F9",
+          "text": "Intended Use Record",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 7,
+            "end_line": 7
+          },
+          "parent_chain": [
+            "A-72666A27959AF083"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-B5574922647F381B",
+          "text": "The record captures user group, operating context, known limitation, and review\nowner as separate source-backed statements.",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 9,
+            "end_line": 10
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-D9B99FD46EF69552",
+          "text": "Change Impact",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 12,
+            "end_line": 12
+          },
+          "parent_chain": [
+            "A-72666A27959AF083"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-7CB113039AEA2A21",
+          "text": "The workflow links a changed requirement to risk analysis, verification evidence,\nand release notes while preserving human review status.",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 14,
+            "end_line": 15
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-2E926E633E969856",
+          "text": "Non-Claim Boundary",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 17,
+            "end_line": 17
+          },
+          "parent_chain": [
+            "A-72666A27959AF083"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-702926065CDC9EEB",
+          "text": "This fixture does not claim medical-device compliance, safety effectiveness,\nclinical validation, or market authorization. It only exercises portable corpus\nartifact generation with license-safe text.",
+          "source_path": "medical-samd/source.md",
+          "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+          "span": {
+            "start_line": 19,
+            "end_line": 21
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-FE52932A69A488EB",
+          "text": "Provenance Fixture",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-5746BE6F2C1C9B59",
+          "text": "This synthetic fixture describes artifact provenance for a release evidence\nbundle without claiming signature validity or external attestation acceptance.",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-3B8904E362C21151",
+          "text": "Evidence Chain",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-FE52932A69A488EB"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-DDC856478F286137",
+          "text": "The record links source path, content hash, generator version, operator identity,\nand timestamp as separate facts.",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-FC22E29C0AF03DAE",
+          "text": "Verification Step",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-FE52932A69A488EB"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-0F7C9DF25AA0066F",
+          "text": "The workflow compares expected hash, observed hash, artifact path, and reviewer\ndecision before marking evidence as accepted.",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-2D7C8AD96C3DAC55",
+          "text": "Non-Claim Boundary",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-FE52932A69A488EB"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-CFA7D5B2104CC203",
+          "text": "This fixture does not claim signed release assurance, legal attestation, or\nregulated validation. It only exercises portable corpus artifact generation with\nlicense-safe text.",
+          "source_path": "provenance/source.md",
+          "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-997A30ED290DB315",
+          "text": "Six Sigma CAPA Fixture",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-A3032094C7B4365B",
+          "text": "This synthetic fixture describes an improvement workflow using neutral process\nterms without claiming quality-system compliance or certified methodology use.",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 3,
+            "end_line": 4
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-3E90BBAA5216AD39",
+          "text": "Problem Statement",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          },
+          "parent_chain": [
+            "A-997A30ED290DB315"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-7369A3D7E7742201",
+          "text": "The record captures observed defect, affected process, containment action, and\nowner review before root-cause analysis starts.",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 8,
+            "end_line": 9
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-0B79ACAE9B203518",
+          "text": "Effectiveness Check",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          },
+          "parent_chain": [
+            "A-997A30ED290DB315"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-A575C2E9E0986DCE",
+          "text": "The workflow links corrective action to metric trend, sample window, reviewer\ndecision, and residual risk note.",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 13,
+            "end_line": 14
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-5D2082381EA68CE0",
+          "text": "Non-Claim Boundary",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          },
+          "parent_chain": [
+            "A-997A30ED290DB315"
+          ],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        },
+        {
+          "node_id": "A-B6E327C86287FCE1",
+          "text": "This fixture does not claim CAPA effectiveness, quality-system compliance, or\nSix Sigma certification. It only exercises portable corpus artifact generation\nwith license-safe text.",
+          "source_path": "six-sigma-capa/source.md",
+          "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          },
+          "parent_chain": [],
+          "facets": {
+            "nature": "rule",
+            "scope_level": "atom",
+            "trust_tier": "unverified",
+            "provenance": "source_backed"
+          }
+        }
+      ]
+    }
+  ],
+  "rag_metadata": [
+    {
+      "node_id": "A-D02BB606ACCD01E1",
+      "chunk_id": "chunk:A-D02BB606ACCD01E1",
+      "source_path": "README.md",
+      "source_hash": "sha256:2fe422adfcd3e0e07393665ffd8587b7868e6fc8cf2d5c00719e4a402c578e0a",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-3E0126D3F83A9E04",
+      "chunk_id": "chunk:A-3E0126D3F83A9E04",
+      "source_path": "README.md",
+      "source_hash": "sha256:2fe422adfcd3e0e07393665ffd8587b7868e6fc8cf2d5c00719e4a402c578e0a",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-580D4DB72EA26833",
+      "chunk_id": "chunk:A-580D4DB72EA26833",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-F97D77BEEEF7698A",
+      "chunk_id": "chunk:A-F97D77BEEEF7698A",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-156307E0E60A1038",
+      "chunk_id": "chunk:A-156307E0E60A1038",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [
+        "A-580D4DB72EA26833"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-C07D9D8049489E0F",
+      "chunk_id": "chunk:A-C07D9D8049489E0F",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-9507AD62A686D55C",
+      "chunk_id": "chunk:A-9507AD62A686D55C",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [
+        "A-580D4DB72EA26833"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-FEC687320222CADC",
+      "chunk_id": "chunk:A-FEC687320222CADC",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-8453BDF40D375A47",
+      "chunk_id": "chunk:A-8453BDF40D375A47",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [
+        "A-580D4DB72EA26833"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-CA8EAEC9BCC4CAA1",
+      "chunk_id": "chunk:A-CA8EAEC9BCC4CAA1",
+      "source_path": "ai-governance/source.md",
+      "source_hash": "sha256:c8f18fcde1730317aa074215822ecbc09228c2c072cd19181cf245c4e4a5e63b",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-C497E12239F01E8B",
+      "chunk_id": "chunk:A-C497E12239F01E8B",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-DCF2D37006E8A523",
+      "chunk_id": "chunk:A-DCF2D37006E8A523",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-7CA2077693ED3059",
+      "chunk_id": "chunk:A-7CA2077693ED3059",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [
+        "A-C497E12239F01E8B"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-2A468F2D2F0D41A6",
+      "chunk_id": "chunk:A-2A468F2D2F0D41A6",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-7264A5E5B754A774",
+      "chunk_id": "chunk:A-7264A5E5B754A774",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [
+        "A-C497E12239F01E8B"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-8521DD23906FAE4D",
+      "chunk_id": "chunk:A-8521DD23906FAE4D",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-D6E499E91F689566",
+      "chunk_id": "chunk:A-D6E499E91F689566",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [
+        "A-C497E12239F01E8B"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-A9559991B5EF47AF",
+      "chunk_id": "chunk:A-A9559991B5EF47AF",
+      "source_path": "cyber-supplier/source.md",
+      "source_hash": "sha256:20410fa48c30cfec92d3c184202fb42ebf766ce1416f2b6bba8244b4a377afc0",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-CF5BA5985CEA075D",
+      "chunk_id": "chunk:A-CF5BA5985CEA075D",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-94BAF8B4AC1BA014",
+      "chunk_id": "chunk:A-94BAF8B4AC1BA014",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-A4B250331178D658",
+      "chunk_id": "chunk:A-A4B250331178D658",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [
+        "A-CF5BA5985CEA075D"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-395C294049550C83",
+      "chunk_id": "chunk:A-395C294049550C83",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-9A9C001B642C161B",
+      "chunk_id": "chunk:A-9A9C001B642C161B",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [
+        "A-CF5BA5985CEA075D"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-048FD3B96149A9EA",
+      "chunk_id": "chunk:A-048FD3B96149A9EA",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-0C23721F0A063E6B",
+      "chunk_id": "chunk:A-0C23721F0A063E6B",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [
+        "A-CF5BA5985CEA075D"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-359FC45196574435",
+      "chunk_id": "chunk:A-359FC45196574435",
+      "source_path": "finance-regtech/source.md",
+      "source_hash": "sha256:500a2681f2ce37f1e770d9b6247d998060508c3df7135c49da7095b850d7ed76",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-AC1FD422A83B7803",
+      "chunk_id": "chunk:A-AC1FD422A83B7803",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-072759CE161F56D0",
+      "chunk_id": "chunk:A-072759CE161F56D0",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-BBF85786B3FC0D20",
+      "chunk_id": "chunk:A-BBF85786B3FC0D20",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [
+        "A-AC1FD422A83B7803"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-01ABA23EC8863DFD",
+      "chunk_id": "chunk:A-01ABA23EC8863DFD",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-1B61B240495FDB1C",
+      "chunk_id": "chunk:A-1B61B240495FDB1C",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [
+        "A-AC1FD422A83B7803"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-68B5D98F76267D0F",
+      "chunk_id": "chunk:A-68B5D98F76267D0F",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-4600EA6B33BC9BB0",
+      "chunk_id": "chunk:A-4600EA6B33BC9BB0",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [
+        "A-AC1FD422A83B7803"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-52D430C2B4C87E78",
+      "chunk_id": "chunk:A-52D430C2B4C87E78",
+      "source_path": "gxp/source.md",
+      "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-96A28EC147B4CF26",
+      "chunk_id": "chunk:A-96A28EC147B4CF26",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-D060B5FD034EBD34",
+      "chunk_id": "chunk:A-D060B5FD034EBD34",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-1BC0A5DA24954A9D",
+      "chunk_id": "chunk:A-1BC0A5DA24954A9D",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [
+        "A-96A28EC147B4CF26"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-E9D983AAE680CB65",
+      "chunk_id": "chunk:A-E9D983AAE680CB65",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-275A9D1B080DAB97",
+      "chunk_id": "chunk:A-275A9D1B080DAB97",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [
+        "A-96A28EC147B4CF26"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-2A7B27EC35451FE2",
+      "chunk_id": "chunk:A-2A7B27EC35451FE2",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-C61FBD9BB2202260",
+      "chunk_id": "chunk:A-C61FBD9BB2202260",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [
+        "A-96A28EC147B4CF26"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-4712CA9DACB45114",
+      "chunk_id": "chunk:A-4712CA9DACB45114",
+      "source_path": "high-assurance/source.md",
+      "source_hash": "sha256:28aa70f25cbeef6bcb06af7b59f036c1da3120d4e0807515401c04ab83e4be22",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-99D009920599FECC",
+      "chunk_id": "chunk:A-99D009920599FECC",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-71BED49922A8ED10",
+      "chunk_id": "chunk:A-71BED49922A8ED10",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-5A07A1E99B617995",
+      "chunk_id": "chunk:A-5A07A1E99B617995",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [
+        "A-99D009920599FECC"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-6CA2C657E7F5B48D",
+      "chunk_id": "chunk:A-6CA2C657E7F5B48D",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-AC9CE3411E0D0070",
+      "chunk_id": "chunk:A-AC9CE3411E0D0070",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [
+        "A-99D009920599FECC"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-563993FDA0CD57B0",
+      "chunk_id": "chunk:A-563993FDA0CD57B0",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-9A5F3A41BEE4378D",
+      "chunk_id": "chunk:A-9A5F3A41BEE4378D",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [
+        "A-99D009920599FECC"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-F0EFD94E03035260",
+      "chunk_id": "chunk:A-F0EFD94E03035260",
+      "source_path": "legal-ediscovery/source.md",
+      "source_hash": "sha256:fa1e6948d07558ab3491bfe3a602de4aec4909971540b564c72fa2ff422a68bf",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-72666A27959AF083",
+      "chunk_id": "chunk:A-72666A27959AF083",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-4FBB4E5CF6245B61",
+      "chunk_id": "chunk:A-4FBB4E5CF6245B61",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-CA3149EB4E9CE9F9",
+      "chunk_id": "chunk:A-CA3149EB4E9CE9F9",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [
+        "A-72666A27959AF083"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-B5574922647F381B",
+      "chunk_id": "chunk:A-B5574922647F381B",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-D9B99FD46EF69552",
+      "chunk_id": "chunk:A-D9B99FD46EF69552",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [
+        "A-72666A27959AF083"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-7CB113039AEA2A21",
+      "chunk_id": "chunk:A-7CB113039AEA2A21",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-2E926E633E969856",
+      "chunk_id": "chunk:A-2E926E633E969856",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [
+        "A-72666A27959AF083"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-702926065CDC9EEB",
+      "chunk_id": "chunk:A-702926065CDC9EEB",
+      "source_path": "medical-samd/source.md",
+      "source_hash": "sha256:4e4f14105cd9087828eef9b28e1ef6c5c9c778b026c050313290b9a633f539ed",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-FE52932A69A488EB",
+      "chunk_id": "chunk:A-FE52932A69A488EB",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-5746BE6F2C1C9B59",
+      "chunk_id": "chunk:A-5746BE6F2C1C9B59",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-3B8904E362C21151",
+      "chunk_id": "chunk:A-3B8904E362C21151",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [
+        "A-FE52932A69A488EB"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-DDC856478F286137",
+      "chunk_id": "chunk:A-DDC856478F286137",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-FC22E29C0AF03DAE",
+      "chunk_id": "chunk:A-FC22E29C0AF03DAE",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [
+        "A-FE52932A69A488EB"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-0F7C9DF25AA0066F",
+      "chunk_id": "chunk:A-0F7C9DF25AA0066F",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-2D7C8AD96C3DAC55",
+      "chunk_id": "chunk:A-2D7C8AD96C3DAC55",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [
+        "A-FE52932A69A488EB"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-CFA7D5B2104CC203",
+      "chunk_id": "chunk:A-CFA7D5B2104CC203",
+      "source_path": "provenance/source.md",
+      "source_hash": "sha256:b734137029c6c29218b3d5b948e0c12c440708822d292ecd9851b34da7f5df81",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-997A30ED290DB315",
+      "chunk_id": "chunk:A-997A30ED290DB315",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-A3032094C7B4365B",
+      "chunk_id": "chunk:A-A3032094C7B4365B",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-3E90BBAA5216AD39",
+      "chunk_id": "chunk:A-3E90BBAA5216AD39",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [
+        "A-997A30ED290DB315"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-7369A3D7E7742201",
+      "chunk_id": "chunk:A-7369A3D7E7742201",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-0B79ACAE9B203518",
+      "chunk_id": "chunk:A-0B79ACAE9B203518",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [
+        "A-997A30ED290DB315"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-A575C2E9E0986DCE",
+      "chunk_id": "chunk:A-A575C2E9E0986DCE",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-5D2082381EA68CE0",
+      "chunk_id": "chunk:A-5D2082381EA68CE0",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [
+        "A-997A30ED290DB315"
+      ],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    },
+    {
+      "node_id": "A-B6E327C86287FCE1",
+      "chunk_id": "chunk:A-B6E327C86287FCE1",
+      "source_path": "six-sigma-capa/source.md",
+      "source_hash": "sha256:12c03d28bf37595d0996447790e04c3e3bcc012420b8dcb62380799c5256eef2",
+      "parent_chain": [],
+      "facets": {
+        "nature": "rule",
+        "scope_level": "atom",
+        "trust_tier": "unverified",
+        "provenance": "source_backed"
+      }
+    }
+  ],
+  "trace_manifest": {
+    "schema_version": "0.1.0",
+    "run": {
+      "event": "workflow_dispatch",
+      "workflow_run_id": "local-198a5db",
+      "generated_at": "2026-06-11T03:01:12Z"
+    },
+    "corpus": {
+      "repo": "RBOKproject/Nomos",
+      "base_ref": "seam/contract-vocab-fixture",
+      "base_sha": "198a5dbe2a8f8db0e42aa60dfa569f5b54ee8e68",
+      "head_ref": "seam/contract-vocab-fixture",
+      "head_sha": "198a5dbe2a8f8db0e42aa60dfa569f5b54ee8e68"
+    },
+    "scope": {
+      "id": "ckm-bundle",
+      "paths": [
+        "**/*.md"
+      ]
+    },
+    "diff": {
+      "changed_paths": [],
+      "impacted": false
+    },
+    "output": {
+      "repo": "output",
+      "path": "bundles/nomos-canonical-golden"
+    },
+    "artifacts": {
+      "feed": "nomos-canonical-golden.json",
+      "rag_metadata": "nomos-canonical-golden.json",
+      "attestation": "nomos-canonical-golden.json"
+    },
+    "policy": {
+      "publish_mode": "artifact_only",
+      "risk_class": "regulated",
+      "generated_path_guard": "pass",
+      "source_read_only_guard": "pass"
+    }
+  },
+  "attestation": {
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+      {
+        "name": "nomos-canonical-golden/feeds",
+        "digest": {
+          "sha256": "39551f939cb73fcaad7d002018df9183297bcdbb74edbde13b1242dfafc47e40"
+        }
+      }
+    ],
+    "predicateType": "https://nomos.dev/attestation/v1",
+    "predicate": {
+      "projectId": "nomos-ckm",
+      "verdict": "admitted",
+      "confidence": "medium",
+      "timestamp": "2026-06-11T03:01:12.0983994Z",
+      "evidence": [
+        "74 feed node(s) over 10 source file(s)"
+      ],
+      "attesterId": "nomos",
+      "attestLevel": "basic"
+    }
+  }
+}
