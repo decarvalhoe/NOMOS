@@ -25,11 +25,13 @@ answers:
         source_id: DOC-AI-GOV-001
         source_hash: "6f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081"
         span: "lines:1-8"
+        text: "A governed AI/RAG answer must cite the retained source spans or abstain."
     source_spans:
       - source_id: DOC-AI-GOV-001
         source_hash: "6f4d2f5d8b8c0d9a7e1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081"
         span: "lines:1-8"
         chunk_id: CHUNK-AI-001
+        text: "A governed AI/RAG answer must cite the retained source spans or abstain."
     citation_status: source_backed
     refusal_status: not_refused
     confidence: 0.91

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -38,6 +39,21 @@ ALCE_GATE = 0.95
 DEEPEVAL_FAITHFULNESS_GATE = 0.95
 TRUST_SCORE_CERTIFIED_GATE = 0.95
 TRUST_SCORE_INDICATIVE_GATE = 0.80
+
+# CKM-H6: the gate recomputes groundedness from the retrieved span text instead
+# of trusting the producer's self-declared faithfulness_score. The recomputation
+# is a deterministic lexical-entailment proxy (no model, no network): an answer
+# sentence is "supported" when at least GROUNDEDNESS_SENTENCE_THRESHOLD of its
+# content tokens appear in the union of retrieved/cited span text. A neural NLI
+# backend is a pluggable upgrade; the contract is that a self-declared score may
+# only LOWER the gated value, never raise it.
+GROUNDEDNESS_SENTENCE_THRESHOLD = 0.6
+GROUNDEDNESS_METHOD = "lexical_entailment_v1"
+_GROUNDEDNESS_STOPWORDS = {
+    "the", "a", "an", "and", "or", "of", "to", "in", "is", "are", "be", "for",
+    "that", "this", "it", "as", "by", "on", "with", "must", "not", "no", "from",
+    "its", "was", "were", "has", "have", "had", "but", "any", "all", "may",
+}
 
 
 def utc_now() -> str:
@@ -147,13 +163,96 @@ def citation_metrics(answer: dict[str, Any]) -> dict[str, float]:
     }
 
 
+def _content_tokens(text: str) -> list[str]:
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    return [t for t in tokens if len(t) >= 3 and t not in _GROUNDEDNESS_STOPWORDS]
+
+
+def _sentences(text: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[.!?]+", text) if part.strip()]
+
+
+def _support_corpus(answer: dict[str, Any]) -> list[str]:
+    """Collect the retrieved/cited span text the answer must be grounded in."""
+    texts: list[str] = []
+    for collection in ("source_spans", "retrieved_chunks"):
+        for item in as_list(answer.get(collection)):
+            if not isinstance(item, dict):
+                continue
+            for field in ("text", "chunk_text", "content"):
+                value = item.get(field)
+                if isinstance(value, str) and value.strip():
+                    texts.append(value)
+                    break
+    return texts
+
+
+def recompute_groundedness(answer: dict[str, Any]) -> dict[str, Any] | None:
+    """Recompute groundedness from the retrieved span text vs the answer text.
+
+    Returns None when there is no span text to recompute from (the gate then
+    falls back to structural citation coverage — it still never trusts the
+    self-declared score). This is the H6 fix: the gate derives the score from the
+    evidence, not from a number the producer asserted about itself.
+    """
+    support = _support_corpus(answer)
+    answer_text = answer.get("answer")
+    if not support or not isinstance(answer_text, str) or not answer_text.strip():
+        return None
+    support_tokens: set[str] = set()
+    for text in support:
+        support_tokens.update(_content_tokens(text))
+    sentences = _sentences(answer_text)
+    if not sentences:
+        return None
+    supported = 0
+    for sentence in sentences:
+        tokens = _content_tokens(sentence)
+        if not tokens:
+            supported += 1
+            continue
+        covered = sum(1 for token in tokens if token in support_tokens) / len(tokens)
+        if covered >= GROUNDEDNESS_SENTENCE_THRESHOLD:
+            supported += 1
+    return {
+        "method": GROUNDEDNESS_METHOD,
+        "score": round(supported / len(sentences), 4),
+        "supported_sentences": supported,
+        "total_sentences": len(sentences),
+    }
+
+
 def faithfulness_score(answer: dict[str, Any], alce: dict[str, float]) -> float:
-    score = answer.get("faithfulness_score")
-    if isinstance(score, (int, float)) and 0 <= score <= 1:
-        return round(float(score), 4)
     if has_explicit_refusal(answer):
         return 1.0
-    return round(min(alce["citation_recall"], alce["citation_precision"]), 4)
+    recomputed = recompute_groundedness(answer)
+    if recomputed is not None:
+        base = recomputed["score"]
+    else:
+        # No span text to recompute from: fall back to structural citation
+        # coverage. The self-declared score is never trusted to RAISE this.
+        base = min(alce["citation_recall"], alce["citation_precision"])
+    declared = answer.get("faithfulness_score")
+    if isinstance(declared, (int, float)) and 0 <= declared <= 1:
+        # A producer may declare itself LESS faithful, never more.
+        base = min(base, float(declared))
+    return round(base, 4)
+
+
+def groundedness_detail(answer: dict[str, Any], alce: dict[str, float]) -> dict[str, Any]:
+    recomputed = recompute_groundedness(answer)
+    declared = answer.get("faithfulness_score")
+    detail: dict[str, Any] = {
+        "recomputed_from_spans": recomputed is not None,
+        "self_declared": declared if isinstance(declared, (int, float)) else None,
+        "self_declared_trusted": False,
+    }
+    if recomputed is not None:
+        detail.update(recomputed)
+    else:
+        detail["method"] = "structural_citation_coverage"
+        detail["score"] = round(min(alce["citation_recall"], alce["citation_precision"]), 4)
+    return detail
 
 
 def answer_metrics(answer: dict[str, Any]) -> dict[str, Any]:
@@ -176,6 +275,7 @@ def answer_metrics(answer: dict[str, Any]) -> dict[str, Any]:
         "deepeval": {
             "faithfulness": faithfulness,
         },
+        "groundedness": groundedness_detail(answer, alce),
         "trust_score": trust_score,
     }
 
