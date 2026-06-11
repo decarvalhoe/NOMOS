@@ -1,0 +1,15 @@
+# W23-4 (#571) — preset lens « archi-conception » : le scope de retrieval d'un
+# architecte en phase de conception (SIA 31/32). Format = un KnowledgeLens par
+# fichier, directement consommable par `nomos atomize chunks --lens <ce fichier>`.
+id: LENS-AEC-ARCHI-CONCEPTION
+description: >-
+  Conception architecturale (avant-projet / projet de l'ouvrage) : les atomes
+  d'activité aec.conception, hors éléments déclarés non applicables ou bloqués.
+include:
+  all_of:
+    - activity:
+        - aec.conception
+exclude:
+  any_of:
+    - applicability: not_applicable
+    - applicability: blocked

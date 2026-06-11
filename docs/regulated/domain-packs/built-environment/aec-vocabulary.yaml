@@ -1,0 +1,36 @@
+# W23-4 (#571) — the thin AEC vocabulary of the built-environment pack: the
+# activity and discipline_role TERMS the pack's lenses and corpora reference
+# (facets.cue keeps these axes as open term references — packs own the terms).
+# SIA-derived structure is referenced HASH-ONLY through the existing sidecar
+# (sia-reference-sidecar.yaml); no paid-norm text lives here.
+record_type: aec_pack_vocabulary
+schema_version: "0.1.0"
+domain_profile: built-environment
+activity:
+  - id: aec.conception
+    label_fr: "Conception architecturale (SIA 31/32)"
+  - id: aec.permis
+    label_fr: "Autorisation de construire / mise à l'enquête (SIA 33)"
+  - id: aec.appel_offres
+    label_fr: "Appel d'offres / adjudication (SIA 41)"
+  - id: aec.direction_travaux
+    label_fr: "Direction des travaux / chantier (SIA 52)"
+  - id: aec.exploitation
+    label_fr: "Mise en service / exploitation (SIA 53/61)"
+discipline_role:
+  - id: aec.architecte
+    label_fr: "Architecte (mandataire principal)"
+  - id: aec.ingenieur_civil
+    label_fr: "Ingénieur civil"
+  - id: aec.geometre
+    label_fr: "Géomètre officiel"
+  - id: aec.specialiste_energie
+    label_fr: "Spécialiste énergie (SIA 380/1)"
+  - id: aec.entreprise
+    label_fr: "Entreprise d'exécution"
+references:
+  sia_sidecar_ref: docs/regulated/domain-packs/built-environment/sia-reference-sidecar.yaml
+  note: >-
+    Les références SIA restent hash-only (jamais de texte intégral) ; les
+    identifiants juridiques fédéraux/cantonaux passent par les connecteurs
+    (ch-source-connectors.yaml) et l'identité ELI des bundles.

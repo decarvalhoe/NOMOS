@@ -1,0 +1,73 @@
+name: Bundle release
+
+# W23-3 (#592, consumer decarvalhoe/aedifica#323) — the artifact replaces the
+# vendoring: emit the canonical bundle with the REAL CLI, validate it against
+# the contract, publish it as rolling-release assets (bundle + facets-vocab +
+# SHA256SUMS), then deliver it to the Aedifica demo. The publisher pushes —
+# no cross-repo PAT exists anywhere.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["bundle-v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bundle-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+
+      - name: Emit canonical bundle (real CLI, out-of-repo corpus copy)
+        run: |
+          cp -r cli/internal/corpus/testdata/portable-golden-corpus /tmp/corpus
+          cd cli
+          go run . bundle \
+            --root /tmp/corpus \
+            --bundle-id nomos-canonical \
+            --producer nomos \
+            --feed-version "nomos-canonical-${GITHUB_SHA::12}" \
+            --repo "${{ github.repository }}" \
+            --branch "${{ github.ref_name }}" \
+            --commit "${{ github.sha }}" \
+            --workflow-run-id "${{ github.run_id }}" \
+            --event "${{ github.event_name }}" \
+            --out /tmp/canonical-knowledge-bundle.json
+
+      - name: Validate against the contract
+        run: python scripts/ckm_bundle_validate.py --bundle /tmp/canonical-knowledge-bundle.json
+
+      - name: Assemble assets and checksums
+        run: |
+          cp specs/generated/facets-vocab.json /tmp/facets-vocab.json
+          cd /tmp
+          sha256sum canonical-knowledge-bundle.json facets-vocab.json > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view canonical-bundle-latest >/dev/null 2>&1 || \
+            gh release create canonical-bundle-latest \
+              --title "Canonical bundle (rolling)" \
+              --notes "Rolling release of the emitted canonical knowledge bundle (ckm-bundle-v1) plus the facets vocabulary artifact. Each run overwrites the assets; the trace_manifest inside the bundle names the exact emitting commit, and SHA256SUMS carries the digests."
+          gh release upload canonical-bundle-latest \
+            /tmp/canonical-knowledge-bundle.json /tmp/facets-vocab.json /tmp/SHA256SUMS --clobber
+
+      - name: Deliver to the Aedifica demo (tolerant on immutable re-delivery)
+        env:
+          DEMO_OPS_TOKEN: ${{ secrets.DEMO_OPS_TOKEN }}
+          DEMO_OPS_PROJECT: ${{ secrets.DEMO_OPS_PROJECT }}
+        run: python scripts/seam_deliver_demo.py /tmp/canonical-knowledge-bundle.json
