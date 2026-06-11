@@ -27,6 +27,7 @@
 | `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `evidence_pack_bom` | A5 | real | real | ✅ | — | — |
 | `docx_adapter` | ingestion | partial | partial | ✅ | VRC-41 | no production caller declared (the #540 class) |
 | `sigstore_keyless` | P7 | absent | absent | ✅ | VRC-40 | — |
 | `strict_fidelity_gate` | P1 | real | real | ✅ | — | — |
@@ -39,7 +40,7 @@
 
 ## Summary
 
-- capabilities: 24 (real=16, partial=1, sidecar=6, stub=0, absent=1)
+- capabilities: 25 (real=17, partial=1, sidecar=6, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
