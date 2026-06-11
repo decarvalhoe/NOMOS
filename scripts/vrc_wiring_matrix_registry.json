@@ -335,6 +335,21 @@
       ]
     },
     {
+      "id": "consumer_conformance_kit",
+      "title": "Consumer conformance kit — the reference importer every conformant consumer replays: strict schema_version, structural+facet nucleus, attestation digest recomputed (Go-byte-exact canonicalization), hash form/consistency (VRC-36 #573, E-1)",
+      "pillar": "E-1",
+      "claim_level": "artifact-verified (consumer side)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/nomos_consumer_kit.py", "contains": ["go_canonical_json", "KIT_ATTESTATION_DIGEST_MISMATCH", "KIT_SCHEMA_VERSION"]},
+        {"path": "scripts/ckm_bundle_validate.py", "contains": ["validate_bundle"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+      ]
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
