@@ -123,7 +123,7 @@ func atomizeStructure(args []string, stdout io.Writer, stderr io.Writer) int {
 	return writeAtomJSON(stdout, stderr, tree)
 }
 
-// --- units: Markdown → atoms ---
+// --- units: Markdown/XML/HTML → atoms ---
 
 func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("atomize units", flag.ContinueOnError)
@@ -132,11 +132,15 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 	domain := flags.String("domain", "", "domain name")
 	state := flags.String("state", "draft", "default review state")
 	facets := flags.Bool("facets", false, "emit CKM-01 facets on each atom")
+	// VRC-31 (#568) — markup adapters: md stays the untouched default; xml/html
+	// produce atoms with DOM-path + byte-offset locators and ELI identity
+	// preserved in the canonical refs.
+	format := flags.String("format", "md", "source format: md | xml | html")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if flags.NArg() != 1 {
-		fmt.Fprintln(stderr, "usage: nomos atomize units [--doc-ref REF] [--domain DOM] [--facets] <file.md>")
+		fmt.Fprintln(stderr, "usage: nomos atomize units [--doc-ref REF] [--domain DOM] [--facets] [--format md|xml|html] <file>")
 		return 2
 	}
 
@@ -147,14 +151,31 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 
-	ast := atomization.ParseMarkdown(string(source))
-	set := atomization.Atomize(ast, atomization.AtomizeOptions{
+	opts := atomization.AtomizeOptions{
 		DocumentRef:  *docRef,
 		SourceFile:   filePath,
 		Domain:       *domain,
 		DefaultState: atomization.ReviewState(*state),
 		EmitFacets:   *facets,
-	})
+	}
+
+	var set atomization.AtomSet
+	switch *format {
+	case "md":
+		ast := atomization.ParseMarkdown(string(source))
+		set = atomization.Atomize(ast, opts)
+	case "xml":
+		set, err = atomization.AtomizeXML(source, opts)
+	case "html":
+		set, err = atomization.AtomizeHTML(source, opts)
+	default:
+		fmt.Fprintf(stderr, "atomize units: unknown --format %q (md | xml | html)\n", *format)
+		return 2
+	}
+	if err != nil {
+		fmt.Fprintf(stderr, "atomize units: %v\n", err)
+		return 1
+	}
 
 	return writeAtomJSON(stdout, stderr, set)
 }

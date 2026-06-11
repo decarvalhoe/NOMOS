@@ -47,6 +47,14 @@ type SourceSpan struct {
 	EndLine   int    `json:"end_line"`
 	StartCol  int    `json:"start_col"`
 	EndCol    int    `json:"end_col"`
+
+	// VRC-31 (#568) — markup locators, additive and omitted for Markdown atoms
+	// so existing outputs stay byte-identical (doctrine §2.1): the DOM path of
+	// the carrying element and the half-open byte range [start_byte, end_byte)
+	// of the raw token in the ORIGINAL source bytes.
+	DomPath   string `json:"dom_path,omitempty"`
+	StartByte int    `json:"start_byte,omitempty"`
+	EndByte   int    `json:"end_byte,omitempty"`
 }
 
 // String returns file:line:col format.
