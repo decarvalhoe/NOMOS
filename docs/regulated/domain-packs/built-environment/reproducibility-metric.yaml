@@ -1,0 +1,22 @@
+# VRC-38 (#575, doc 45 §5 D6) — the reproducibility metric, published BY the
+# pack: « changements core requis par nouveau pack », cible 0.
+#
+# Method (honest): computed by scripts/pack_core_coupling_check.py --manifest
+# against this pack's own manifest — every artifact the pack declares must
+# live in a pack-allowed tree. built-environment is the PIVOT pack: the core
+# mechanics it motivated (facets, lenses, adapters, the pack gate itself) are
+# NOMOS core standards per doc 40 §13, owned by core, reusable by any pack —
+# none of them is pack-specific code, and the pack tree itself carries zero
+# mechanics (enforced by the VRC-20 no-mechanics walk and the VRC-21 gate).
+# From pack N+1 (EU AI Act, D3) the CI guard enforces the same target on
+# pull-request diffs: a pack-labeled PR touching core is blocking without an
+# ADR justification.
+record_type: pack_reproducibility_metric
+schema_version: "0.1.0"
+domain_profile: built-environment
+metric: core_changes_required
+value: 0
+target: 0
+computed_by: scripts/pack_core_coupling_check.py --manifest docs/regulated/domain-packs/built-environment/pack.yaml
+enforced_by: .github/workflows/ci.yml (pack-coupling job, PRs labeled `pack`)
+escape_hatch: une PR de pack touchant le core doit toucher un ADR (docs/adr/*.md) qui justifie — jamais le silence

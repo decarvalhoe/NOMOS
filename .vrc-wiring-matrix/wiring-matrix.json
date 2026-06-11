@@ -752,6 +752,45 @@
       }
     },
     {
+      "id": "pack_core_coupling_guard",
+      "title": "Core/pack coupling metric + CI guard — « changements core requis par nouveau pack », cible 0, ADR as the only escape hatch (VRC-38 #575, D6)",
+      "pillar": "D6",
+      "claim_level": "measured (manifest mode) + enforced on pack-labeled PRs (diff mode)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/pack_core_coupling_check.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/reproducibility-metric.yaml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
@@ -974,11 +1013,11 @@
     }
   ],
   "summary": {
-    "capabilities": 21,
+    "capabilities": 22,
     "computed": {
       "real": 15,
       "partial": 1,
-      "sidecar": 4,
+      "sidecar": 5,
       "stub": 0,
       "absent": 1
     },
