@@ -18,17 +18,18 @@ type commandFunc func(args []string, stdout io.Writer, stderr io.Writer) int
 
 func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 	commands := map[string]commandFunc{
-		"help":     helpCommand,
-		"version":  versionCommand,
-		"init":     initCommand,
-		"validate": validate.Command,
-		"diagnose": diagnoseCommand,
-		"corpus":   corpusCommand,
-		"bundle":   bundleCommand,
-		"strict":   StrictGateCommand,
-		"github":   githubCommand,
-		"evidence": evidenceCommand,
-		"attest":   attestCommand,
+		"help":      helpCommand,
+		"version":   versionCommand,
+		"init":      initCommand,
+		"validate":  validate.Command,
+		"diagnose":  diagnoseCommand,
+		"corpus":    corpusCommand,
+		"connector": connectorCommand,
+		"bundle":    bundleCommand,
+		"strict":    StrictGateCommand,
+		"github":    githubCommand,
+		"evidence":  evidenceCommand,
+		"attest":    attestCommand,
 	}
 
 	if len(args) == 0 {
@@ -60,6 +61,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  validate   Validate Nomos manifests and schemas")
 	fmt.Fprintln(stdout, "  diagnose   Inspect a repository and emit an admission pre-report")
 	fmt.Fprintln(stdout, "  corpus     Scan, manifest, validate, diff, feed, and attest source corpora")
+	fmt.Fprintln(stdout, "  connector  Read-only live fetch of an open source with hash + span coverage")
 	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
