@@ -44,6 +44,11 @@ type FetchResult struct {
 	SHA256       string `json:"sha256"`
 	ETag         string `json:"etag,omitempty"`
 	LastModified string `json:"last_modified,omitempty"`
+	// Accept records the content negotiation REQUESTED, when any. ELI endpoints
+	// (Fedlex) serve an Angular shell on a plain GET and the machine
+	// representation (RDF/XML) only under negotiation — provenance must say
+	// which representation was asked for, or the hash is not reproducible.
+	Accept string `json:"accept,omitempty"`
 }
 
 // FetchOptions configures a fetch.
@@ -52,6 +57,9 @@ type FetchOptions struct {
 	UserAgent string
 	MaxBytes  int64
 	Now       time.Time
+	// Accept, when non-empty, is sent as the Accept header (ELI content
+	// negotiation). Empty keeps the historical behavior byte-identical.
+	Accept string
 }
 
 // Fetch performs a read-only HTTP GET and returns the raw bytes plus real
@@ -79,6 +87,9 @@ func Fetch(ctx context.Context, url string, opts FetchOptions) ([]byte, FetchRes
 		return nil, FetchResult{}, fmt.Errorf("connector: build request: %w", err)
 	}
 	req.Header.Set("User-Agent", ua)
+	if strings.TrimSpace(opts.Accept) != "" {
+		req.Header.Set("Accept", opts.Accept)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -112,6 +123,7 @@ func Fetch(ctx context.Context, url string, opts FetchOptions) ([]byte, FetchRes
 		SHA256:       "sha256:" + hex.EncodeToString(sum[:]),
 		ETag:         resp.Header.Get("ETag"),
 		LastModified: resp.Header.Get("Last-Modified"),
+		Accept:       strings.TrimSpace(opts.Accept),
 	}, nil
 }
 

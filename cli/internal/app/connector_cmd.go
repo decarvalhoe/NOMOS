@@ -40,7 +40,7 @@ func connectorCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 
 func connectorUsage(w io.Writer) {
 	fmt.Fprintln(w, "Usage:")
-	fmt.Fprintln(w, "  nomos connector fetch --url <https url> [--connector-id <id>] [--out <evidence.json>] [--sample N] [--max-bytes N] [--timeout 30s]")
+	fmt.Fprintln(w, "  nomos connector fetch --url <https url> [--connector-id <id>] [--accept <media type>] [--out <evidence.json>] [--sample N] [--max-bytes N] [--timeout 30s]")
 	fmt.Fprintln(w, "  nomos connector sources")
 }
 
@@ -63,6 +63,7 @@ func connectorFetch(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	url := flags.String("url", "", "https URL of an open source to fetch (required)")
 	connectorID := flags.String("connector-id", "ch-ofs-commune-register", "known source id (see `nomos connector sources`)")
+	accept := flags.String("accept", "", "Accept header for ELI content negotiation (e.g. application/rdf+xml); empty = none")
 	out := flags.String("out", "", "evidence output path (default: stdout)")
 	sample := flags.Int("sample", 5, "number of atom previews to record in the evidence")
 	maxBytes := flags.Int64("max-bytes", connector.DefaultMaxBytes, "maximum bytes to fetch")
@@ -82,6 +83,7 @@ func connectorFetch(args []string, stdout io.Writer, stderr io.Writer) int {
 		Client:   &http.Client{Timeout: *timeout},
 		MaxBytes: *maxBytes,
 		Now:      time.Now().UTC(),
+		Accept:   *accept,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "connector fetch: %v\n", err)

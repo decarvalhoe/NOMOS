@@ -23,6 +23,27 @@ nomos connector fetch \
   --out docs/regulated/ch-connectors/ch-ofs-commune-register.evidence.json
 ```
 
+## ELI content negotiation (Fedlex)
+
+Fedlex serves an **Angular app shell** on a plain GET — hashing that would be
+evidence of the app, not of the source. The machine representation (RDF/XML of
+the ELI work entry) is obtained via **content negotiation**, and the Accept
+that produced the hashed bytes is **recorded in the evidence** (`fetch.accept`)
+so the digest is reproducible (VRC-32 / #569):
+
+```bash
+nomos connector fetch \
+  --url "https://fedlex.data.admin.ch/eli/cc/1979/1573_1573_1573" \
+  --connector-id ch-fedlex-eli \
+  --accept application/rdf+xml \
+  --out docs/regulated/ch-connectors/ch-fedlex-eli.evidence.json
+```
+
+The committed receipt (`ch-fedlex-eli.evidence.json`) covers the ELI entry of
+the **federal spatial-planning act (LAT, RS 700)** — the built-environment
+anchor law: real URL, negotiated representation, real sha256, 0 uncovered
+bytes.
+
 ## Scope discipline — open data only
 
 The connector targets **open** government sources:
