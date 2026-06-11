@@ -181,15 +181,15 @@ func Build(in BuildInput) (Bundle, error) {
 	for _, src := range sources {
 		sourceHash := "sha256:" + hexDigest(src.Content)
 
-		ast := atomization.ParseMarkdown(string(src.Content))
-		// DocumentRef = the source path keeps atom IDs unique across files.
-		set := atomization.Atomize(ast, atomization.AtomizeOptions{
-			DocumentRef:  src.RelPath,
-			SourceFile:   src.RelPath,
-			Domain:       in.Domain,
-			DefaultState: atomization.ReviewDraft,
-			EmitFacets:   true,
-		})
+		// VRC-31 follow-through (#568): the atomizer is selected by extension.
+		// Markdown stays the untouched default; XML/HTML sources (collected via
+		// the existing --ext flag) ride the markup adapters, and a malformed
+		// markup source FAILS the whole build — a bundle never silently drops a
+		// source it was asked to carry.
+		set, err := atomizeSource(src, in.Domain)
+		if err != nil {
+			return Bundle{}, fmt.Errorf("source %s: %w", src.RelPath, err)
+		}
 
 		atomByID := map[string]atomization.Atom{}
 		for _, a := range set.Atoms {
@@ -213,6 +213,14 @@ func Build(in BuildInput) (Bundle, error) {
 				facets = *a.Facets
 			}
 			parentChain := parentChainIDs(a, atomByID)
+			if a.SourceSpan.DomPath != "" {
+				// Markup atoms (VRC-31): the canonical locator — the ELI
+				// identity of the nearest carrying ancestor + the DOM path —
+				// IS the node's ancestry. Carrying it in parent_chain keeps
+				// the identity inside the emitted bundle without any contract
+				// change (parent_chain is [...string] free-form).
+				parentChain = []string{a.CanonicalRef}
+			}
 
 			nodes = append(nodes, Node{
 				NodeID:     nodeID,
@@ -362,6 +370,28 @@ func countNodes(feeds []Feed) int {
 		n += len(f.Nodes)
 	}
 	return n
+}
+
+// atomizeSource dispatches the atomization engine by source extension.
+// DocumentRef = the source path keeps atom IDs unique across files.
+func atomizeSource(src SourceFile, domain string) (atomization.AtomSet, error) {
+	opts := atomization.AtomizeOptions{
+		DocumentRef:  src.RelPath,
+		SourceFile:   src.RelPath,
+		Domain:       domain,
+		DefaultState: atomization.ReviewDraft,
+		EmitFacets:   true,
+	}
+	ext := strings.ToLower(src.RelPath)
+	switch {
+	case strings.HasSuffix(ext, ".xml") || strings.HasSuffix(ext, ".rdf"):
+		return atomization.AtomizeXML(src.Content, opts)
+	case strings.HasSuffix(ext, ".html") || strings.HasSuffix(ext, ".htm"):
+		return atomization.AtomizeHTML(src.Content, opts)
+	default:
+		ast := atomization.ParseMarkdown(string(src.Content))
+		return atomization.Atomize(ast, opts), nil
+	}
 }
 
 func parentChainIDs(a atomization.Atom, byID map[string]atomization.Atom) []string {
