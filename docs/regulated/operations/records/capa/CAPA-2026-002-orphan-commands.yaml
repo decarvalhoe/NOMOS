@@ -1,0 +1,41 @@
+record_id: CAPA-2026-002
+record_type: deviation_capa
+status: pending_effectiveness_check
+severity: major
+opened: 2026-06-11
+closed: null
+issue: "VRC-06 (#552); deviation found by the wiring matrix first run (VRC-00 #546); corrected by VRC-09 (#555)"
+owner: "quality_owner — decarvalhoe (dev@realisons.com)"
+claim_boundary: "Deviation/CAPA record only; no compliance certification claim."
+
+deviation:
+  summary: >
+    Ten *Command functions in cli/internal/app were implemented and tested but
+    never registered in the command map nor called from production code; their
+    doc-comments claimed CLI surfaces that did not exist (nomos report, nomos
+    sources check, nomos export spdx/cyclonedx, ...). Same defect class as the
+    #543 'atomize' incident, at 10x.
+  detected_by: "scripts/vrc_wiring_matrix.py generic command-registration check, first run"
+  detected_date: 2026-06-11
+
+root_cause: >
+  Burst-mode implementation created command functions without wiring them into
+  Run(); doc comments asserted surfaces nobody could reach; no mechanical check
+  tied definition to registration until the wiring matrix.
+
+corrective_actions:
+  - action: "Register all ten as real surfaces: nomos check sources|contracts|matrix|exceptions|strict, nomos report, nomos export spdx|cyclonedx, nomos product-check, nomos attest create"
+    evidence: "cli/internal/app/app.go command map + help text; reachability pinned by wiring_reachability_test.go (VRC-09 #555)"
+
+preventive_actions:
+  - action: "Generic command-registration check fails CI on any *Command defined but neither registered nor called (doc-comment decoys defeated)"
+    evidence: "scripts/vrc_wiring_matrix.py + tests/test_vrc_wiring_matrix.py"
+  - action: "Capability-claim issue template requires the expected production caller up front"
+    evidence: ".github/ISSUE_TEMPLATE/capability-claim.yml (VRC-03 #549)"
+
+effectiveness_verification:
+  verified: false
+  plan: >
+    Close when the VRC PR (#544 chain) is merged to main and the next CI run
+    confirms the matrix green with the allowlist empty (no known_unwired
+    entries) — i.e. the check holds on main, not only on the branch.

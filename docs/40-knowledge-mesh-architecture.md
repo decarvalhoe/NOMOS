@@ -1,7 +1,10 @@
 <!-- Porté depuis l'analyse stratégique Aedifica — origine du pivot CKM (epic #481).
 Mapping de ce dossier : 39 = plan maître · 40 = architecture méta (faceting/lens/promotion)
 · 41 = positionnement état de l'art · 42 = capitalisation & amélioration.
-Les références internes "nomos-*.md" pointent vers ces mêmes docs (noms Aedifica d'origine). -->
+Les références internes "nomos-*.md" pointent vers ces mêmes docs (noms Aedifica d'origine).
+Réconcilié claim-boundary (VRC-01 #547) : les claims de maturité de ce document sont
+alignés sur l'evidence enregistrée (public-claim-boundary.md) — l'analyse stratégique
+d'origine affirmait une intégration multi-environnements non soutenue par un record. -->
 
 # NOMOS — du moteur réglementaire au *Canonical Knowledge Mesh* métier
 
@@ -38,10 +41,13 @@ au-dessus de built-environment :
    élever une source (du manuel de référence favori au plan de détail qu'il a mesuré,
    confidentiel ou non) au rang **canonique**. *Bring your own authority*, gouverné.
 
-Et un recadrage factuel : **NOMOS n'est « alpha » que sur le papier** (doc + release
-management en retard). En réalité il est éprouvé et intégré dans plusieurs
-environnements. Le design ci-dessous vise donc la **performance, la pertinence et la
-scalabilité futures**, pas la simple compatibilité avec l'existant.
+Et un recadrage factuel, borné par le claim boundary : la maturité réelle du moteur
+dépasse ce que l'étiquette `v0.1.0-ALPHA` suggère (le retard est surtout côté doc et
+release management), **mais l'evidence enregistrée reste POC-scoped** — un corpus privé
+(RBOK), des runs enregistrés, une intégration RBOK testée en CI ; pas d'intégration
+multi-environnements prouvée par un record. Le design ci-dessous vise la
+**performance, la pertinence et la scalabilité futures**, pas la simple compatibilité
+avec l'existant.
 
 ---
 
@@ -258,10 +264,11 @@ Tout le reste — faceting, lens, promotion, trust tiers, contrat RAG, gates —
 
 ## 8. NOMOS aujourd'hui — réel, pas alpha ; substrat vs manque
 
-**Recadrage maturité :** NOMOS est éprouvé et intégré (multi-environnements,
-plusieurs projets). Son étiquette `v0.1.0-ALPHA` reflète un **retard de doc/release
-management**, pas l'état réel du moteur. On conçoit donc pour la **prod, la perf et la
-scalabilité**, pas pour un POC.
+**Recadrage maturité (borné claim-boundary) :** le moteur NOMOS est exercé sur un vrai
+corpus privé (POC RBOK enregistré) et son intégration RBOK est testée en CI ;
+l'étiquette `v0.1.0-ALPHA` reflète surtout un **retard de doc/release management**.
+L'evidence reste POC-scoped (cf. `public-claim-boundary.md`) — on conçoit néanmoins
+pour la **prod, la perf et la scalabilité**, pas pour un POC jetable.
 
 | Brique méta | Substrat NOMOS existant | Manque à combler (core) |
 |---|---|---|

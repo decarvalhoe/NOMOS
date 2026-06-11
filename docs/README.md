@@ -44,6 +44,8 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | [40 - Knowledge mesh architecture](40-knowledge-mesh-architecture.md) | Meta architecture: faceting, lens, canon promotion, thin domain packs. `design` |
 | [41 - State-of-the-art positioning](41-state-of-the-art-positioning.md) | Honest novelty verdict per pillar, competitive map, dated windows. `market analysis` |
 | [42 - Capitalization and improvement plan](42-capitalization-and-improvement-plan.md) | Adopt/integrate/isolate sourcing plan: catch up, fill gaps, amplify strengths. `plan` |
+| [43 - Canonical knowledge bundle contract](43-canonical-knowledge-bundle-contract.md) | CKB bundle handoff contract (consumer seam). *(Note: shares the `43-` prefix with the development doctrine above.)* |
+| [44 - CKM facet ontology architecture](44-ckm-facet-ontology-architecture.md) | BFO→IOF→pack facet-ontology architecture note. *(Note: shares the `44-` prefix with the trust-tier policy below.)* |
 | [44 - Facet trust-tier policy](44-facet-trust-tier-policy.md) | Trust-tier derivation policy: `certified` never auto-derived. |
 | [45 - Vision-reality closure plan](45-vision-reality-closure-plan.md) | Master execution plan closing every audited gap between vision/ADR and reality, with adversarial proof per item. `plan` |
 | [46 - VRC epic issue list](46-vrc-epic-issue-list.md) | Atomic issue decomposition of plan 45 (VRC-00..46), CKM-style, with the 5 mandatory governance lines per issue. `issue list` |

@@ -286,7 +286,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Domain examples for applying the canonical-first method. |
 | `adapters/` | Adapter contracts and reference profiles for Node/TypeScript, Python, and JVM: specs and fixtures, with no executable implementation at this stage. |
 | `ci/` | Reusable CI integration documentation. |
-| `control-plane/` | Optional foundational Go packages (dashboard, registry, storage): skeleton, not wired into the CLI and not yet an operational service (roadmap v0.2+). |
+| `control-plane/` | Archived exploratory Go packages (dashboard, registry, storage): zero production callers, frozen by ADR-0006, revisited at the v0.9.x portfolio milestone. |
 | `policies/` | Placeholder directory for a future policy framework; not operational at this stage. |
 | `scripts/` | E2E, evidence, regulated documentation, and automation helpers. |
 | `reports/` | Generated local evidence artifacts. |

@@ -89,12 +89,8 @@ step "3/11 - Go tests"
 go vet ./...
 go test ./...
 
-for mod in "$ROOT_DIR"/control-plane/*/go.mod; do
-  [ -f "$mod" ] || continue
-  dir="$(dirname "$mod")"
-  echo "control-plane/$(basename "$dir")"
-  (cd "$dir" && go vet ./... && go test ./...)
-done
+# control-plane loop removed by ADR-0006 (VRC-04 #550): archived exploratory
+# code with zero production callers is no longer CI-gated.
 
 step "4/11 - Python workflow tests"
 cd "$ROOT_DIR"

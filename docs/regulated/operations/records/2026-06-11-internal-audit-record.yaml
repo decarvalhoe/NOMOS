@@ -1,0 +1,59 @@
+record_id: NOMOS-REC-AUD-2026-001
+record_type: internal_audit
+audit_type: self_audit
+date: 2026-06-11
+issue: "VRC-06 (#552)"
+auditor: "Assisted tree-anchor audit (Claude Code session), operator decarvalhoe (dev@realisons.com)"
+independence: >
+  NOT an independent audit: performed by the operating team with assisted
+  tooling. Independent review remains waived at alpha (see
+  NOMOS-REC-ROLE-2026-001); the internal-audit SOP statement that no
+  independent audit evidence exists yet remains true.
+method: >
+  Documentation-to-tree conformance audit: every strategic claim (ADR
+  canonical-first, CKM pivot docs 39-42, doctrine 43) checked against tree
+  anchors (engine code, production callers, adversarial tests, CI gates),
+  then institutionalized as the generated wiring matrix
+  (scripts/vrc_wiring_matrix.py) so the audit re-runs on every PR.
+scope:
+  - cli engine capabilities vs documented claims
+  - command-map wiring (the #543 class)
+  - regulated documentation execution status
+  - public claim boundary consistency across strategy docs
+claim_boundary: "Self-audit record only; no compliance certification claim."
+
+findings:
+  - id: AUD-2026-001-F1
+    severity: major
+    finding: "10 *Command functions implemented and tested but neither registered nor called; doc-comments claim nonexistent CLI surfaces (nomos report, nomos sources check, ...)."
+    disposition: "CAPA-2026-002; corrected by VRC-09 (#555)"
+  - id: AUD-2026-001-F2
+    severity: major
+    finding: "claim_coverage implemented engine-side (FSQ-05) but never callable from the CLI; Merkle inclusion-proof verification had no production verifier; supply-chain predicate (CKM-05) had zero production callers."
+    disposition: "CAPA-2026-003; corrected by VRC-07 (#553) and VRC-08 (#554)"
+  - id: AUD-2026-001-F3
+    severity: major
+    finding: "Four CKM mechanics live in Python sidecars only (cite-or-abstain faithfulness, canon promotion, point-in-time, facet ontology) — PARTIAL by doctrine §2.3."
+    disposition: "Tracked: VRC-10 (#556), VRC-11 (#557), VRC-12 (#558), VRC-45 (#581); registry expected=sidecar with must_be_absent promotion probes"
+  - id: AUD-2026-001-F4
+    severity: major
+    finding: "Regulated QMS fully written, executed at zero: 0/20 record types, all owners not_assigned before this cycle."
+    disposition: "VRC-05/06 records (this cycle); training records remain open (VRC-16 #562)"
+  - id: AUD-2026-001-F5
+    severity: minor
+    finding: "Strategy doc 40 asserted multi-environment integration maturity unsupported by recorded evidence."
+    disposition: "Reconciled + guard pattern added with adversarial test (VRC-01 #547)"
+  - id: AUD-2026-001-F6
+    severity: minor
+    finding: "Control-plane: CI-gated dead code (zero production callers) signalling unearned product status."
+    disposition: "Archived by ADR-0006 (VRC-04 #550)"
+
+conclusion: >
+  The engine core is substantially real; the dominant defect class is
+  "implemented but never wired", now mechanically caught at PR time by the
+  wiring matrix. QMS execution started with this cycle; training records and
+  release-SOP execution remain open.
+references:
+  - docs/45-vision-reality-closure-plan.md
+  - .vrc-wiring-matrix/wiring-matrix.md
+  - docs/46-vrc-epic-issue-list.md

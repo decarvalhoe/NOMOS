@@ -1,0 +1,59 @@
+record_id: CAPA-2026-001
+record_type: deviation_capa
+status: closed
+severity: major
+opened: 2026-06-11
+closed: 2026-06-11
+retro_documented: true
+retro_note: >
+  Retro-documented CAPA (VRC-06 #552): the deviation occurred and was corrected
+  during the hardening epic (#518, audits #537/#519) BEFORE this QMS cycle
+  existed. This record formalizes, after the fact and with its real dates, what
+  the issue/PR trail already evidences. Retro-documentation is disclosed, not
+  disguised.
+issue: "VRC-06 (#552); deviation surfaced by audit #537; corrected by PR #529 and PR #542"
+owner: "quality_owner — decarvalhoe (dev@realisons.com)"
+claim_boundary: "Deviation/CAPA record only; no compliance certification claim."
+
+deviation:
+  summary: >
+    The attestation path emitted envelopes with a hard-coded empty signature
+    (WrapCosignEnvelope, Sig:"") and a "verification" that only checked field
+    presence — a path that LOOKED signed but proved nothing. Documentation
+    language implied signing capability.
+  detected_by: "adversarial audit pass (#537), epic durcissement #518"
+  detected_date: 2026-06-10
+  trigger_class: "unapproved claim / integrity control gap (deviation-capa-sop trigger list)"
+
+root_cause: >
+  Capability was declared done without adversarial proof: no tamper-fail test,
+  no guard tying the word "signed" to a real capability marker, and no check
+  that the mechanism had a production caller. Burst-mode implementation
+  produced plausible-but-fake scaffolding that survived review.
+
+containment: >
+  Fake path quarantined by audit finding; claims inventoried against
+  public-claim-boundary.md.
+
+corrective_actions:
+  - action: "Real ECDSA P-256 DSSE signing (GenerateSigner/Sign/VerifyEnvelope) with tamper-fail tests"
+    evidence: "cli/internal/attestation/signing.go + signing_test.go (TestVerify_FailsWhenArtifactDigestTampered); PR #529"
+  - action: "Purge of the legacy fake path (WrapCosignEnvelope/VerifyCosignEnvelope deleted); AttestCommand re-routed to the real signer"
+    evidence: "PR #542; cli/internal/attestation/attestation.go removal note"
+  - action: "CI claim-boundary guard: 'signed'/'Sigstore'/'certified' prose fails without the capability marker"
+    evidence: "scripts/claim_boundary_guard.py wired into ci.yml and ckm-non-regression.sh step 6b; PR #542"
+
+preventive_actions:
+  - action: "Doctrine §2.3 acceptance sieve (crypto -> tamper-fail; results calculated, never declared)"
+    evidence: "docs/43-development-doctrine.md"
+  - action: "Generated wiring matrix: capability statuses computed from tree anchors; unwired/fake states impossible to hide"
+    evidence: "scripts/vrc_wiring_matrix.py (VRC-00 #546, PR #544)"
+
+effectiveness_verification:
+  verified: true
+  date: 2026-06-11
+  evidence: >
+    Adversarial tests green on the shipped tree: forged "Sigstore-signed" line
+    turns the guard red (tests/test_claim_boundary_guard.py); 1-byte digest
+    tamper turns signature verification red (signing_test.go); the guard and
+    matrix run on every PR (ci.yml python-tests).

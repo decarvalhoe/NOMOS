@@ -1,10 +1,10 @@
 # Quality Manual
 
 document_id: NOMOS-QMS-QM-001
-version: 0.1.0
+version: 0.1.1
 status: draft
 effective_status: not_effective
-owner: not_assigned
+owner: "decarvalhoe (dev@realisons.com) — record NOMOS-REC-ROLE-2026-001"
 approver: not_assigned
 public_claim_boundary: "Quality-system baseline draft only; no compliance certification claim."
 
@@ -55,19 +55,23 @@ reference register
 
 | Role | Responsibility | Current status |
 |---|---|---|
-| Quality owner | Owns QMS procedures, approvals and management review. | not_assigned |
-| Product owner | Owns intended use, public claim boundary and prioritization. | not_assigned |
-| Validation owner | Owns validation plan, protocols, deviations and summary report. | not_assigned |
-| Security owner | Owns secure SDLC, vulnerabilities, access, audit and supply-chain controls. | not_assigned |
-| Data integrity owner | Owns ALCOA+, records, retention and audit-trail review. | not_assigned |
-| Independent reviewer | Reviews critical controls and release evidence. | not_assigned |
+| Quality owner | Owns QMS procedures, approvals and management review. | assigned — record NOMOS-REC-ROLE-2026-001 (2026-06-11) |
+| Product owner | Owns intended use, public claim boundary and prioritization. | assigned — record NOMOS-REC-ROLE-2026-001 (2026-06-11) |
+| Validation owner | Owns validation plan, protocols, deviations and summary report. | assigned — record NOMOS-REC-ROLE-2026-001 (2026-06-11) |
+| Security owner | Owns secure SDLC, vulnerabilities, access, audit and supply-chain controls. | assigned — record NOMOS-REC-ROLE-2026-001 (2026-06-11) |
+| Data integrity owner | Owns ALCOA+, records, retention and audit-trail review. | assigned — record NOMOS-REC-ROLE-2026-001 (2026-06-11) |
+| Independent reviewer | Reviews critical controls and release evidence. | waived at alpha — recorded waiver in NOMOS-REC-ROLE-2026-001; re-evaluated at every management review |
+
+All non-vacant roles are held by a single operator; the conflict-of-interest
+note and compensating controls are recorded in
+[`../operations/records/2026-06-11-role-assignment-record.yaml`](../operations/records/2026-06-11-role-assignment-record.yaml).
 
 ## Required Evidence Before Effectiveness
 
 - approved document-control procedure;
-- training matrix and training records;
+- training matrix and training records — **open** (VRC-16 #562);
 - control matrix populated with evidence links;
 - validation master plan approved;
-- release bundle generated from CI;
-- management review record;
-- independent review or documented waiver.
+- release bundle generated from CI — **open** (VRC-15 #561);
+- management review record — **recorded** (`NOMOS-REC-MR-2026-001`, 2026-06-11);
+- independent review or documented waiver — **waiver recorded** (`NOMOS-REC-ROLE-2026-001`).

@@ -1,0 +1,61 @@
+record_id: NOMOS-REC-MR-2026-001
+record_type: management_review
+date: 2026-06-11
+issue: "VRC-06 (#552)"
+chair: "decarvalhoe (dev@realisons.com) — quality owner / product owner (see NOMOS-REC-ROLE-2026-001)"
+recorder: "Claude Code assisted working session (contemporaneous record)"
+method: >
+  Session-based review: the management review was conducted as an assisted
+  working session on 2026-06-11, on the basis of the recorded vision/reality
+  audit and the generated wiring matrix. Inputs and decisions below reference
+  committed artifacts, not narrative memory.
+claim_boundary: "Management review record only; no compliance certification claim."
+
+inputs:
+  - topic: vision_vs_reality_audit
+    evidence: "docs/45-vision-reality-closure-plan.md §1 (gaps E1-E7), session audit 2026-06-11"
+  - topic: capability_wiring_status
+    evidence: ".vrc-wiring-matrix/wiring-matrix.md (generated; first run found 10 orphan commands, sidecar mechanics, unwired claim_coverage and supply-chain predicate)"
+  - topic: deviations
+    evidence: "CAPA-2026-001 (empty-signature path, retro-documented), CAPA-2026-002 (orphan commands), CAPA-2026-003 (unwired attestation capabilities)"
+  - topic: validation_status
+    evidence: "docs/regulated/lifecycle/validation-master-plan.md deliverable statuses (largely requires_evidence); RBOK POC dossier (AQ-3 bounded)"
+  - topic: public_claim_boundary_review
+    evidence: "docs/public-claim-boundary.md (claim_coverage line lifted by VRC-07 with adversarial tests; maturity-claim guard extended by VRC-01)"
+  - topic: qms_execution_status
+    evidence: "0/20 record types executed before this cycle; owners not_assigned before NOMOS-REC-ROLE-2026-001"
+
+decisions:
+  - id: MR-2026-001-D1
+    decision: "Adopt the vision-reality closure plan (docs/45) and the VRC epic (#545, issues #546-#582) as the execution baseline."
+  - id: MR-2026-001-D2
+    decision: "Assign QMS roles to the single operator with a recorded conflict-of-interest note; waive independent review at alpha (NOMOS-REC-ROLE-2026-001); no assurance claim above NQ-2 alpha while the cumulation persists."
+  - id: MR-2026-001-D3
+    decision: "Archive the control-plane exploratory code and remove its dedicated CI gating (ADR-0006); revival requires a capability-claim issue with a declared production caller."
+  - id: MR-2026-001-D4
+    decision: "Open CAPA-2026-001/002/003; close 001 on existing effectiveness evidence; hold 002/003 at pending_effectiveness_check until the VRC PR is merged and CI re-confirms."
+  - id: MR-2026-001-D5
+    decision: "Maintain the alpha claim boundary unchanged except for evidence-backed lifts (claim_coverage); the EU AI Act pack (VRC-22) requires the QMS cycle to be live before any pilot offer."
+
+actions:
+  - id: MR-2026-001-A1
+    action: "Execute release v0.2.0-ALPHA through the release SOP (first executed release record)."
+    owner: release_manager
+    due: 2026-07-31
+    tracking: "VRC-15 (#561)"
+  - id: MR-2026-001-A2
+    action: "Fill training/competence records for the named operator or record an explicit waiver."
+    owner: quality_owner
+    due: 2026-07-31
+    tracking: "VRC-16 (#562)"
+  - id: MR-2026-001-A3
+    action: "Enable scheduled CI evidence runs on the private corpus and archive the packs."
+    owner: release_manager
+    due: 2026-07-15
+    tracking: "VRC-14 (#560)"
+
+next_review_due: 2026-12-11
+references:
+  - docs/45-vision-reality-closure-plan.md
+  - docs/46-vrc-epic-issue-list.md
+  - docs/decisions/0006-control-plane-archive.md

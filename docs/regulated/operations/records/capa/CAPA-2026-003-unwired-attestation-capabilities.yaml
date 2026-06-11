@@ -1,0 +1,45 @@
+record_id: CAPA-2026-003
+record_type: deviation_capa
+status: pending_effectiveness_check
+severity: major
+opened: 2026-06-11
+closed: null
+issue: "VRC-06 (#552); deviations found by the audit + wiring matrix; corrected by VRC-07 (#553) and VRC-08 (#554)"
+owner: "quality_owner — decarvalhoe (dev@realisons.com)"
+claim_boundary: "Deviation/CAPA record only; no compliance certification claim."
+
+deviation:
+  summary: >
+    Three attestation/integrity capabilities existed engine-side but had no
+    production caller: (1) claim_coverage (FSQ-05 computeClaimCoverage) was
+    never reachable from `corpus attest` — the README and claim boundary named
+    this gap; (2) Merkle inclusion-proof verification (VerifyMerkleProof) ran
+    only in tests; (3) the CKM-05 supply-chain predicate had zero production
+    callers. Public docs correctly disclosed (1) but nothing mechanically
+    prevented the gap from persisting.
+  detected_by: "vision/reality audit 2026-06-11 + wiring matrix partial statuses"
+  detected_date: 2026-06-11
+
+root_cause: >
+  Engine-first implementation without a declared production caller in the
+  issue acceptance bar; post-hoc audits caught what PR review did not.
+
+corrective_actions:
+  - action: "`nomos corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs (leaves recomputed from rows) BEFORE computing claim_coverage; `--feed` counts units from the artifact"
+    evidence: "cli/internal/app/corpus_cmd.go + corpus_attest_ledger_test.go (tampered ledger fails the attestation)"
+  - action: "`nomos corpus body-ledger --verify` exposes standalone Merkle verification"
+    evidence: "cli/internal/corpus/body_ledger_verify.go + body_ledger_verify_test.go (source row / segment / hop / root / leaf-count tampering all red)"
+  - action: "`nomos attest supply-chain` emits and verifies the CKM-05 predicate from real pipeline artifacts (sha256 computed from bytes)"
+    evidence: "cli/internal/app/attest_supply_chain.go + attest_supply_chain_test.go (1-byte artifact tamper red)"
+
+preventive_actions:
+  - action: "Wiring-matrix registry lockstep: partial entries carry promotion issues; computed status drift in either direction fails CI"
+    evidence: "scripts/vrc_wiring_matrix_registry.json (claim_coverage_attestation, body_ledger_merkle_verification, supply_chain_attestation flipped partial->real with anchors)"
+
+effectiveness_verification:
+  verified: false
+  plan: >
+    Close when the VRC PR chain is merged and a main-branch CI run confirms
+    the three capabilities real in the matrix with their adversarial tests
+    green; the lifted claim-boundary line (claim_coverage) must survive the
+    claim-boundary guard on main.

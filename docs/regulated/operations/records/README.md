@@ -1,0 +1,23 @@
+# Operational QMS Records
+
+Executed QMS records (as opposed to procedures and templates, which live in
+`docs/regulated/quality-system` and `templates/regulated`). Every record here
+is dated, attributable, and approved through the GitHub operating model
+(commit + pull-request review trail). Records are append-only: corrections are
+new records referencing the old one, never silent edits.
+
+First executed cycle (VRC-05/VRC-06, 2026-06-11):
+
+| Record | Type | Status |
+|---|---|---|
+| [2026-06-11-role-assignment-record.yaml](2026-06-11-role-assignment-record.yaml) | Role assignment + COI note + independent-review waiver | recorded |
+| [2026-06-11-management-review-record.yaml](2026-06-11-management-review-record.yaml) | Management review (session-based, inputs/decisions/actions) | recorded |
+| [2026-06-11-internal-audit-record.yaml](2026-06-11-internal-audit-record.yaml) | Internal self-audit (NOT independent — waiver applies) | recorded |
+| [capa/CAPA-2026-001-empty-signature-path.yaml](capa/CAPA-2026-001-empty-signature-path.yaml) | Deviation/CAPA (retro-documented, disclosed) | closed |
+| [capa/CAPA-2026-002-orphan-commands.yaml](capa/CAPA-2026-002-orphan-commands.yaml) | Deviation/CAPA | pending_effectiveness_check |
+| [capa/CAPA-2026-003-unwired-attestation-capabilities.yaml](capa/CAPA-2026-003-unwired-attestation-capabilities.yaml) | Deviation/CAPA | pending_effectiveness_check |
+
+Claim boundary: these are operational records of a young QMS executing its
+first cycle. They do not, by themselves, establish certification, Part 11
+compliance, or independent assurance (independent review is explicitly waived
+at alpha and recorded as such).
