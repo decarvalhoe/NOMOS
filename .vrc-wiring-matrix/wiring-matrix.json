@@ -648,6 +648,50 @@
       }
     },
     {
+      "id": "domain_pack_gate",
+      "title": "Domain-pack conformance gate — `nomos pack validate` runs the VRC-20 contract in-engine, resolves lens presets against the pack vocabulary, and rides the golden corpus through the real bundle chain (VRC-21 #564)",
+      "pillar": "D2",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/app/pack_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/pack_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "docx_adapter",
       "title": "DOCX extraction — feasibility-level OOXML extractor exists (ExtractDocx) but has zero production callers; .docx stays a registered placeholder",
       "pillar": "ingestion",
@@ -858,6 +902,7 @@
         "github",
         "help",
         "init",
+        "pack",
         "product-check",
         "report",
         "strict",
@@ -869,9 +914,9 @@
     }
   ],
   "summary": {
-    "capabilities": 19,
+    "capabilities": 20,
     "computed": {
-      "real": 13,
+      "real": 14,
       "partial": 1,
       "sidecar": 4,
       "stub": 0,
