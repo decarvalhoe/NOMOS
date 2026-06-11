@@ -631,6 +631,55 @@
       }
     },
     {
+      "id": "adapter_capability_kits",
+      "title": "Mandatory capability kit per adapter — claim boundary + claim level + refusal taxonomy + gate fixtures, enforced at registration, fail closed (VRC-33 #570, C5; doc 14 principle 4)",
+      "pillar": "C5",
+      "claim_level": "artifact-generated",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/fidelity/adapter_registry.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/fidelity/adapter_registry.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/fidelity/pdf_adapter.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/fidelity/adapter_kit_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "pdf_adapter",
       "title": "PDF born-digital text adapter — claim ladder rung 1 (text), unsupported records for out-of-claim pages, OCR never claimed (VRC-30 #567)",
       "pillar": "ingestion",
@@ -1052,9 +1101,9 @@
     }
   ],
   "summary": {
-    "capabilities": 23,
+    "capabilities": 24,
     "computed": {
-      "real": 15,
+      "real": 16,
       "partial": 1,
       "sidecar": 6,
       "stub": 0,

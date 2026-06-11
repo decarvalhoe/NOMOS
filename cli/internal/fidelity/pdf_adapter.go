@@ -42,6 +42,21 @@ func (PDFAdapter) Name() string { return "pdf" }
 // Extensions returns the extensions this adapter claims.
 func (PDFAdapter) Extensions() []string { return []string{".pdf"} }
 
+// Kit returns the mandatory capability kit (VRC-33, C5): claim ladder rung 1
+// only, with the refusal taxonomy and the gate tests that prove it.
+func (PDFAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Born-digital text only (claim ladder rung 1): positioned text runs reconstructed into lines with page locators. Tagged-PDF structure is NOT claimed; pages without extractable text become unsupported records — OCR is never claimed without proof.",
+		ClaimLevel:       "born-digital-text",
+		UnsupportedKinds: []string{"scanned_image_only_pages", "tagged_pdf_structure", "encrypted_documents", "decoded_byte_offsets"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/pdf_adapter_test.go#TestPDFAdapter_ScannedPageBecomesUnsupportedRecord",
+			"test://cli/internal/fidelity/pdf_adapter_test.go#TestPDFAdapter_ByteMutationDriftsTheParse",
+			"test://cli/internal/fidelity/pdf_adapter_test.go#TestPDFAdapter_FullyScannedStaysOutOfClaim",
+		},
+	}
+}
+
 // pdfLine is one reconstructed text line of one page.
 // ExtractedPDFLine is one reconstructed text line of one page — exported so
 // the atomization engine (W23-1 #590) rides the SAME extraction core as the

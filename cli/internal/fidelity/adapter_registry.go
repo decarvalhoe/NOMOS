@@ -32,18 +32,72 @@ type ValidationResult struct {
 	Findings []string `json:"findings,omitempty"`
 }
 
+// AdapterKit is the MANDATORY capability kit every adapter ships (VRC-33
+// #570, C5; doc 14 principle 4 « capability versionnée avec limites
+// déclarées »): the claim boundary, the declared claim level, the honest
+// taxonomy of what the adapter REFUSES, and the gate fixtures that prove the
+// behavior. Registration without a complete kit fails closed — a format
+// claim with no mapped evidence cannot enter the registry.
+type AdapterKit struct {
+	// ClaimBoundary states what this adapter's output may and may not be
+	// used to claim — one honest sentence, never empty.
+	ClaimBoundary string
+	// ClaimLevel names the rung actually held (e.g. "structural-spans",
+	// "born-digital-text", "declared-placeholder").
+	ClaimLevel string
+	// UnsupportedKinds is the refusal taxonomy: what the adapter does NOT
+	// handle and how that surfaces. Nothing parses everything — an empty
+	// list is a lie, not a feature.
+	UnsupportedKinds []string
+	// GateFixtures anchor the kit to executable evidence: either a
+	// repo-relative fixture path, or "test://<file>#<TestSymbol>" naming
+	// the gate test that generates/exercises the fixture in-test. The
+	// registry conformance test resolves every reference.
+	GateFixtures []string
+}
+
 // Adapter is the interface every format parser must implement.
 type Adapter interface {
 	// Name returns the adapter's unique identifier.
 	Name() string
 	// Extensions returns file extensions this adapter handles (e.g. ".md").
 	Extensions() []string
+	// Kit returns the adapter's mandatory capability kit (VRC-33).
+	Kit() AdapterKit
 	// Parse parses raw source content and returns structural nodes with spans.
 	Parse(source []byte, filename string) (ParseResult, error)
 	// Validate checks the source for structural correctness.
 	Validate(source []byte, filename string) ValidationResult
 	// Spans extracts source spans without full parsing (fast path).
 	Spans(source []byte, filename string) ([]SpanInfo, error)
+}
+
+// validateKit is the C5 gate: every registered adapter carries a complete
+// kit. Each missing piece is named — fail closed, never best-effort.
+func validateKit(name string, kit AdapterKit) error {
+	if strings.TrimSpace(kit.ClaimBoundary) == "" {
+		return fmt.Errorf("adapter %q: kit has no claim boundary — an adapter without a boundary claims everything", name)
+	}
+	if strings.TrimSpace(kit.ClaimLevel) == "" {
+		return fmt.Errorf("adapter %q: kit declares no claim level", name)
+	}
+	if len(kit.UnsupportedKinds) == 0 {
+		return fmt.Errorf("adapter %q: kit declares nothing unsupported — nothing parses everything", name)
+	}
+	for _, kind := range kit.UnsupportedKinds {
+		if strings.TrimSpace(kind) == "" {
+			return fmt.Errorf("adapter %q: kit has a blank unsupported kind", name)
+		}
+	}
+	if len(kit.GateFixtures) == 0 {
+		return fmt.Errorf("adapter %q: kit names no gate fixtures — the claim is not mapped to evidence", name)
+	}
+	for _, ref := range kit.GateFixtures {
+		if strings.TrimSpace(ref) == "" {
+			return fmt.Errorf("adapter %q: kit has a blank gate-fixture reference", name)
+		}
+	}
+	return nil
 }
 
 // Registry holds registered adapters and resolves them by extension.
@@ -73,6 +127,10 @@ func (r *Registry) Register(a Adapter) error {
 	}
 	if _, exists := r.adapters[name]; exists {
 		return fmt.Errorf("adapter %q already registered", name)
+	}
+	// VRC-33 (C5): no kit, no registration.
+	if err := validateKit(name, a.Kit()); err != nil {
+		return err
 	}
 
 	for _, ext := range a.Extensions() {
@@ -156,6 +214,18 @@ type MarkdownAdapter struct{}
 func (MarkdownAdapter) Name() string           { return "markdown" }
 func (MarkdownAdapter) Extensions() []string   { return []string{".md", ".mdx"} }
 
+func (MarkdownAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Line-level structural spans only — no claim of full CommonMark/GFM semantics; semantic atomization lives in the portable atomizer, not here.",
+		ClaimLevel:       "structural-spans",
+		UnsupportedKinds: []string{"nested_block_structure", "embedded_html_semantics", "reference_link_resolution"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestMarkdownSpans",
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestMarkdownValidateNoHeading",
+		},
+	}
+}
+
 func (m MarkdownAdapter) Parse(source []byte, filename string) (ParseResult, error) {
 	spans, err := m.Spans(source, filename)
 	if err != nil {
@@ -229,6 +299,18 @@ type YAMLAdapter struct{}
 func (YAMLAdapter) Name() string           { return "yaml" }
 func (YAMLAdapter) Extensions() []string   { return []string{".yaml", ".yml"} }
 
+func (YAMLAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Line-level structural spans and a tabs check only — no claim of YAML semantic parsing, anchor/alias resolution, or schema validation.",
+		ClaimLevel:       "structural-spans",
+		UnsupportedKinds: []string{"anchor_alias_resolution", "multi_document_streams", "semantic_schema_validation"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestYAMLParse",
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestYAMLValidateWithTabs",
+		},
+	}
+}
+
 func (y YAMLAdapter) Parse(source []byte, filename string) (ParseResult, error) {
 	spans, err := y.Spans(source, filename)
 	if err != nil {
@@ -281,6 +363,18 @@ type JSONAdapter struct{}
 func (JSONAdapter) Name() string           { return "json" }
 func (JSONAdapter) Extensions() []string   { return []string{".json"} }
 
+func (JSONAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Line-level structural spans and a root-token check only — no claim of JSON grammar validation or schema conformance.",
+		ClaimLevel:       "structural-spans",
+		UnsupportedKinds: []string{"grammar_validation", "schema_conformance", "streaming_documents"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestJSONParse",
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestJSONValidateInvalid",
+		},
+	}
+}
+
 func (j JSONAdapter) Parse(source []byte, filename string) (ParseResult, error) {
 	spans, err := j.Spans(source, filename)
 	if err != nil {
@@ -331,6 +425,18 @@ type PlaceholderAdapter struct {
 
 func (p PlaceholderAdapter) Name() string         { return p.AdapterName }
 func (p PlaceholderAdapter) Extensions() []string { return p.Exts }
+
+func (p PlaceholderAdapter) Kit() AdapterKit {
+	return AdapterKit{
+		ClaimBoundary:    "Nothing is claimable: every call refuses loudly. The placeholder exists so the extension is RESERVED, never silently mis-parsed.",
+		ClaimLevel:       "declared-placeholder",
+		UnsupportedKinds: []string{"all_content"},
+		GateFixtures: []string{
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestPlaceholderParseErrors",
+			"test://cli/internal/fidelity/adapter_registry_test.go#TestPlaceholderValidate",
+		},
+	}
+}
 
 func (p PlaceholderAdapter) Parse(_ []byte, _ string) (ParseResult, error) {
 	return ParseResult{}, fmt.Errorf("adapter %q is not yet implemented", p.AdapterName)
