@@ -47,8 +47,30 @@ TRUST_SCORE_INDICATIVE_GATE = 0.80
 # content tokens appear in the union of retrieved/cited span text. A neural NLI
 # backend is a pluggable upgrade; the contract is that a self-declared score may
 # only LOWER the gated value, never raise it.
+#
+# CKM-H6-FU (#538): close the no-span-text bypass. Previously, when the producer
+# omitted the `text` field from every span, recompute was skipped and the gate
+# fell back to *structural* citation coverage (~1.0 for a well-formed-but-
+# fabricated answer), so the same hallucination passed at the declared 0.99. Now,
+# when an answer REQUIRES grounding (acceptable, non-refusal, has answer text) but
+# no span text is available to verify against, groundedness is 0 (a blocking
+# finding) — the producer can no longer disarm the gate by withholding span text.
+# The "declared score may only lower, never raise" property holds in the no-text
+# case too: 0 is the floor, and a declared score cannot raise it.
+#
+# Limitation (documented in the claim-boundary output): the lexical-entailment
+# proxy is NEGATION-BLIND — "X is covered" and "X is not covered" share content
+# tokens, so a negated contradiction can score as supported. NLI is the pluggable
+# upgrade (see GROUNDEDNESS_UPGRADE); this gate does not implement it.
 GROUNDEDNESS_SENTENCE_THRESHOLD = 0.6
 GROUNDEDNESS_METHOD = "lexical_entailment_v1"
+GROUNDEDNESS_METHOD_NO_TEXT = "no_span_text"
+GROUNDEDNESS_UPGRADE = "neural NLI entailment (pluggable; not yet implemented)"
+GROUNDEDNESS_LIMITATION = (
+    "lexical_entailment_v1 is negation-blind: it matches content-token overlap and "
+    "cannot distinguish a claim from its negation. NLI is the pluggable upgrade. "
+    "Spans that require grounding but carry no text score 0 (cannot be verified)."
+)
 _GROUNDEDNESS_STOPWORDS = {
     "the", "a", "an", "and", "or", "of", "to", "in", "is", "are", "be", "for",
     "that", "this", "it", "as", "by", "on", "with", "must", "not", "no", "from",
@@ -103,6 +125,22 @@ def has_explicit_refusal(answer: dict[str, Any]) -> bool:
     refusal_status = str(answer.get("refusal_status", "")).strip()
     policy_outcome = str(answer.get("policy_outcome", "")).strip()
     return refusal_status in {"refused", "unsupported"} and policy_outcome in REFUSAL_OUTCOMES
+
+
+def requires_grounding(answer: dict[str, Any]) -> bool:
+    """True when the answer asserts content that must be grounded in spans.
+
+    An explicit refusal asserts nothing, so it requires no grounding. Any other
+    answer that carries non-empty answer text and is not a refusal must be
+    verifiable against retrieved/cited span text — including the `acceptable`
+    answers the faithfulness gate blocks on. This is the discriminator that
+    closes the no-span-text bypass (#538): such an answer cannot be considered
+    grounded when there is no span text to verify against.
+    """
+    if has_explicit_refusal(answer):
+        return False
+    answer_text = answer.get("answer")
+    return isinstance(answer_text, str) and bool(answer_text.strip())
 
 
 def response_contract(answer: dict[str, Any]) -> dict[str, Any]:
@@ -190,14 +228,39 @@ def _support_corpus(answer: dict[str, Any]) -> list[str]:
 def recompute_groundedness(answer: dict[str, Any]) -> dict[str, Any] | None:
     """Recompute groundedness from the retrieved span text vs the answer text.
 
-    Returns None when there is no span text to recompute from (the gate then
-    falls back to structural citation coverage — it still never trusts the
-    self-declared score). This is the H6 fix: the gate derives the score from the
-    evidence, not from a number the producer asserted about itself.
+    Returns a dict with a derived score, or None when grounding is genuinely not
+    applicable (e.g. an explicit refusal, or an answer with no text to ground).
+    The gate derives the score from the evidence, never from a number the
+    producer asserted about itself.
+
+    CKM-H6-FU (#538): the critical case is "requires grounding but no span text".
+    Earlier this returned None and the caller fell back to structural citation
+    coverage (~1.0), which is exactly the bypass — a fabricated answer with valid-
+    looking citations but no verifiable span text passed at its declared score.
+    Now this returns an explicit zero-score result (method=no_span_text) so the
+    answer is treated as UNGROUNDED and blocked. The producer can no longer disarm
+    the gate by omitting span text.
     """
-    support = _support_corpus(answer)
     answer_text = answer.get("answer")
-    if not support or not isinstance(answer_text, str) or not answer_text.strip():
+    has_answer_text = isinstance(answer_text, str) and bool(answer_text.strip())
+    support = _support_corpus(answer)
+
+    if not support:
+        # No span text to verify against. If the answer nonetheless asserts
+        # content that must be grounded, it is unverifiable -> score 0. Otherwise
+        # (e.g. a refusal, or no answer text) grounding is not applicable.
+        if requires_grounding(answer):
+            sentences = _sentences(answer_text) if has_answer_text else []
+            return {
+                "method": GROUNDEDNESS_METHOD_NO_TEXT,
+                "score": 0.0,
+                "supported_sentences": 0,
+                "total_sentences": len(sentences),
+                "reason": "answer requires grounding but no span text was provided to verify against",
+            }
+        return None
+
+    if not has_answer_text:
         return None
     support_tokens: set[str] = set()
     for text in support:
@@ -227,10 +290,15 @@ def faithfulness_score(answer: dict[str, Any], alce: dict[str, float]) -> float:
         return 1.0
     recomputed = recompute_groundedness(answer)
     if recomputed is not None:
+        # Derived from evidence — including the no-span-text floor of 0.
         base = recomputed["score"]
+    elif requires_grounding(answer):
+        # Defensive: an answer that requires grounding but produced no recompute
+        # result is treated as ungrounded, never structurally inflated.
+        base = 0.0
     else:
-        # No span text to recompute from: fall back to structural citation
-        # coverage. The self-declared score is never trusted to RAISE this.
+        # Grounding is not applicable (no answer text / non-asserting). Fall back
+        # to structural citation coverage; the self-declared score never RAISES.
         base = min(alce["citation_recall"], alce["citation_precision"])
     declared = answer.get("faithfulness_score")
     if isinstance(declared, (int, float)) and 0 <= declared <= 1:
@@ -242,13 +310,20 @@ def faithfulness_score(answer: dict[str, Any], alce: dict[str, float]) -> float:
 def groundedness_detail(answer: dict[str, Any], alce: dict[str, float]) -> dict[str, Any]:
     recomputed = recompute_groundedness(answer)
     declared = answer.get("faithfulness_score")
+    recomputed_from_spans = recomputed is not None and recomputed.get("method") == GROUNDEDNESS_METHOD
     detail: dict[str, Any] = {
-        "recomputed_from_spans": recomputed is not None,
+        "recomputed_from_spans": recomputed_from_spans,
         "self_declared": declared if isinstance(declared, (int, float)) else None,
         "self_declared_trusted": False,
+        "limitation": GROUNDEDNESS_LIMITATION,
+        "upgrade": GROUNDEDNESS_UPGRADE,
     }
     if recomputed is not None:
         detail.update(recomputed)
+    elif requires_grounding(answer):
+        detail["method"] = GROUNDEDNESS_METHOD_NO_TEXT
+        detail["score"] = 0.0
+        detail["reason"] = "answer requires grounding but no span text was provided to verify against"
     else:
         detail["method"] = "structural_citation_coverage"
         detail["score"] = round(min(alce["citation_recall"], alce["citation_precision"]), 4)
@@ -473,6 +548,18 @@ def build_report(root: Path, fixtures_path: Path) -> dict[str, Any]:
         "status": "failed" if findings else "generated",
         "generated_at_utc": utc_now(),
         "claim_boundary": CLAIM_BOUNDARY,
+        "groundedness_method": {
+            "name": GROUNDEDNESS_METHOD,
+            "sentence_threshold": GROUNDEDNESS_SENTENCE_THRESHOLD,
+            "recomputed_from_span_text": True,
+            "self_declared_score_can_only_lower": True,
+            "no_span_text_rule": (
+                "an answer that requires grounding but whose spans carry no text scores 0 "
+                "(unverifiable) and is blocked; the declared score cannot raise it"
+            ),
+            "limitation": GROUNDEDNESS_LIMITATION,
+            "upgrade": GROUNDEDNESS_UPGRADE,
+        },
         "source_documents": {
             "fixtures": rel(fixtures_path, root),
         },

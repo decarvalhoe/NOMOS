@@ -556,11 +556,13 @@ answers:
         source_id: SRC-001
         source_hash: {source_hash}
         span: "1-3"
+        text: "Only cited governed facts are used in a governed answer."
     source_spans:
       - source_id: SRC-001
         source_hash: {source_hash}
         span: "1-3"
         chunk_id: CHUNK-001
+        text: "Only cited governed facts are used in a governed answer."
     citation_status: source_backed
     refusal_status: not_refused
     confidence: 0.96
@@ -655,6 +657,91 @@ answers:
                 any(finding["code"] == "ALCE_CITATION_RECALL_BELOW_GATE" for finding in report["findings"]),
                 report.get("findings", []),
             )
+
+    def test_rag_answer_evidence_blocks_high_declared_score_when_spans_have_no_text(self) -> None:
+        # CKM-H6-FU (#538) ADVERSARIAL PROOF: a fabricated answer that declares
+        # faithfulness_score 0.99 but whose spans carry NO `text` must make the
+        # gate EXIT NON-ZERO. Before this fix the same answer passed at 0.99 via a
+        # structural-citation fallback (~1.0). The structural citations here are
+        # perfectly well-formed (recall/precision 1.0) — the ONLY thing missing is
+        # verifiable span text, which is exactly the bypass being closed.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            fixtures = repo / "docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml"
+            source_hash = "0123456789abcdef"
+            write(
+                fixtures,
+                f"""
+schema_version: "0.1.0"
+answers:
+  - answer_id: ANS-NO-SPAN-TEXT-HALLUCINATION
+    prompt_id: PROMPT-CITATION-001
+    fixture_type: citation
+    answer: "Quarterly revenue grew twelve percent on new enterprise contracts in Asia."
+    structured_facts:
+      - unit_id: RULE-001
+        source: read_model
+    citations:
+      - source_id: SRC-001
+        locator: "section 1"
+        chunk_id: CHUNK-001
+    uncertainties: []
+    requires_human_decision: false
+    model:
+      provider: example-provider
+      name: example-model
+      version: "2026-05-14"
+    retrieved_chunks:
+      - chunk_id: CHUNK-001
+        source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+    source_spans:
+      - source_id: SRC-001
+        source_hash: {source_hash}
+        span: "1-3"
+        chunk_id: CHUNK-001
+    citation_status: source_backed
+    refusal_status: not_refused
+    confidence: 0.96
+    faithfulness_score: 0.99
+    policy_outcome: acceptable
+""".lstrip(),
+            )
+            output = repo / "out/rag-answer-evidence.json"
+
+            result = run_script(
+                "regulated_rag_answer_evidence.py",
+                "--root",
+                str(repo),
+                "--fixtures",
+                str(fixtures),
+                "--output",
+                str(output),
+                cwd=repo,
+            )
+
+            self.assertEqual(result.returncode, 1, result.stderr + result.stdout)
+            report = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "failed")
+            record = report["answers"][0]
+            # Structural citation coverage is perfect — proving the block is due to
+            # missing verifiable span text, not a citation-coverage problem.
+            self.assertEqual(record["metrics"]["alce"]["citation_recall"], 1.0)
+            self.assertEqual(record["metrics"]["alce"]["citation_precision"], 1.0)
+            # Faithfulness is the no-span-text floor of 0, NOT the declared 0.99.
+            self.assertEqual(record["metrics"]["deepeval"]["faithfulness"], 0.0)
+            self.assertEqual(record["metrics"]["groundedness"]["method"], "no_span_text")
+            self.assertFalse(record["metrics"]["groundedness"]["self_declared_trusted"])
+            self.assertTrue(
+                any(
+                    finding["code"] == "DEEPEVAL_FAITHFULNESS_BELOW_GATE"
+                    for finding in report["findings"]
+                ),
+                report.get("findings", []),
+            )
+            # The lexical-proxy limitation is documented in the gate output.
+            self.assertIn("negation-blind", report["groundedness_method"]["limitation"].lower())
 
     def test_legal_domain_profile_links_citation_custody_and_privilege_fixture(self) -> None:
         import yaml
