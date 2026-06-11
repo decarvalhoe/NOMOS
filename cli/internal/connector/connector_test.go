@@ -147,6 +147,43 @@ func TestEvidence_RejectsUncoveredBytes(t *testing.T) {
 	}
 }
 
+// ELI content negotiation (VRC-32 / #569): when an Accept is requested it must
+// be SENT on the wire and RECORDED in the provenance — otherwise the hash of a
+// negotiated representation is not reproducible. Without an Accept, the request
+// stays byte-identical to the historical behavior (no header, nothing recorded).
+func TestFetch_AcceptNegotiationIsSentAndRecorded(t *testing.T) {
+	var gotAccept string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAccept = r.Header.Get("Accept")
+		w.Header().Set("Content-Type", "application/rdf+xml;charset=UTF-8")
+		_, _ = w.Write([]byte("<rdf:RDF/>\n"))
+	}))
+	defer srv.Close()
+
+	_, result, err := Fetch(context.Background(), srv.URL, FetchOptions{Accept: "application/rdf+xml"})
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	if gotAccept != "application/rdf+xml" {
+		t.Fatalf("Accept header on the wire = %q, want application/rdf+xml", gotAccept)
+	}
+	if result.Accept != "application/rdf+xml" {
+		t.Fatalf("recorded Accept = %q, want application/rdf+xml", result.Accept)
+	}
+
+	gotAccept = "unset-sentinel"
+	_, result, err = Fetch(context.Background(), srv.URL, FetchOptions{})
+	if err != nil {
+		t.Fatalf("Fetch without Accept: %v", err)
+	}
+	if gotAccept != "" {
+		t.Fatalf("no-Accept fetch still sent Accept=%q (behavior change)", gotAccept)
+	}
+	if result.Accept != "" {
+		t.Fatalf("no-Accept fetch recorded Accept=%q, want empty", result.Accept)
+	}
+}
+
 func TestVerifyContentHash(t *testing.T) {
 	content := []byte(sampleCSV)
 	fetch := FetchResult{URL: "https://x", ByteCount: len(content), SHA256: sha256Prefixed(content)}

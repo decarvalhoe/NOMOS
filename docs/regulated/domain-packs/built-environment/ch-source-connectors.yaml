@@ -9,22 +9,29 @@ connectors:
     source_family: fedlex_eli
     authority_level: confederation
     machine_source: true
-    # Not yet fetched live. Declared placeholder so no validator/consumer can
-    # mistake it for real evidence (CKM-H5 follow-up #539).
-    status: declared_placeholder
+    # Real live fetch (VRC-32 / #569). The ELI entry for the federal
+    # spatial-planning act (LAT, RS 700 — the built-environment anchor law) is
+    # fetched on fedlex.data.admin.ch with explicit content negotiation:
+    # `Accept: application/rdf+xml`. A plain GET on www.fedlex.admin.ch serves
+    # the Angular app shell, NOT the source — hashing that would be dishonest,
+    # which is why the evidence records the Accept that produced the bytes.
+    # content_hash is the sha256 of the bytes that actually came back;
+    # evidence_ref is the committed point-in-time receipt.
+    status: fetched
+    evidence_ref: docs/regulated/ch-connectors/ch-fedlex-eli.evidence.json
     retrieval:
       mode: read_only_api
       write_policy: read_only
-      endpoint_pattern: "https://www.fedlex.admin.ch/eli/{eli_id}"
-      retrieved_at_utc: "2026-06-09T09:00:00Z"
+      endpoint_pattern: "https://fedlex.data.admin.ch/eli/{eli_id}"
+      retrieved_at_utc: "2026-06-11T07:24:38Z"
     dating:
       as_of_date_policy: required
       date_fields: [eli_id, publication_date, effective_date]
       timezone: Europe/Zurich
     hashing:
-      content_hash: placeholder:not-fetched
-      hash_scope: canonical_snapshot
-      canonicalization: "Sort metadata keys, preserve ELI identifiers, hash UTF-8 snapshot bytes."
+      content_hash: sha256:7e89ae36834526f360eb7ce2a2dd80b1c696c295a02f72761c295672def81e2c
+      hash_scope: raw_response
+      canonicalization: "Hash raw RDF/XML response bytes of the ELI work entry, negotiated via Accept: application/rdf+xml (recorded in the evidence)."
     outputs:
       source_manifest_type: api_export
       stores_full_text: false

@@ -1,0 +1,73 @@
+{
+  "schema_version": "nomos-connector-evidence-v1",
+  "connector_id": "ch-fedlex-eli",
+  "source": {
+    "id": "ch-fedlex-eli",
+    "jurisdiction": "CH",
+    "authority": "Chancellerie fédérale (Fedlex / ELI)",
+    "access": "open_law",
+    "license_note": "Fedlex open federal law; redistributed as hash + span coverage only (no full-text copy).",
+    "description": "Swiss federal legislation addressed by ELI."
+  },
+  "fetch": {
+    "url": "https://fedlex.data.admin.ch/eli/cc/1979/1573_1573_1573",
+    "fetched_at": "2026-06-11T07:24:38Z",
+    "status_code": 200,
+    "content_type": "application/rdf+xml;charset=UTF-8",
+    "byte_count": 80801,
+    "sha256": "sha256:7e89ae36834526f360eb7ce2a2dd80b1c696c295a02f72761c295672def81e2c",
+    "accept": "application/rdf+xml"
+  },
+  "body_ledger": {
+    "method": "line_segments",
+    "total_bytes": 80801,
+    "covered_bytes": 80801,
+    "uncovered_bytes": 0,
+    "segment_count": 808
+  },
+  "atom_count": 808,
+  "atom_sample": [
+    {
+      "atom_id": "CH-ATOM-0000",
+      "line": 1,
+      "start_byte": 0,
+      "end_byte": 40,
+      "content_hash": "sha256:0283faf144f3163fab12c3378575abd848c77e1b35cc03ff4b116fd65ec4029d",
+      "preview": "\u003c?xml version=\"1.0\" encoding=\"utf-8\" ?\u003e"
+    },
+    {
+      "atom_id": "CH-ATOM-0001",
+      "line": 2,
+      "start_byte": 40,
+      "end_byte": 49,
+      "content_hash": "sha256:43f6b0cf56f313914d2dbcd264ad68e7122277c62f8af6baadc50049aa21c898",
+      "preview": "\u003crdf:RDF"
+    },
+    {
+      "atom_id": "CH-ATOM-0002",
+      "line": 3,
+      "start_byte": 49,
+      "end_byte": 106,
+      "content_hash": "sha256:3137583f43438f9493d4b1a696896249dc9b01ee2c538fc7c4663b275da23d14",
+      "preview": "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\""
+    },
+    {
+      "atom_id": "CH-ATOM-0003",
+      "line": 4,
+      "start_byte": 106,
+      "end_byte": 158,
+      "content_hash": "sha256:4ddd1999bc2a4b4ec20be935fb96277d4584ca8c7470ac3291d40ce614dead4b",
+      "preview": "xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\""
+    },
+    {
+      "atom_id": "CH-ATOM-0004",
+      "line": 5,
+      "start_byte": 158,
+      "end_byte": 201,
+      "content_hash": "sha256:7738cf2c624c71d13c99997c2ee2a745ee08ad62711281a1b94616587e36440d",
+      "preview": "xmlns:dcterms=\"http://purl.org/dc/terms/\""
+    }
+  ],
+  "no_full_text": true,
+  "claim_boundary": "Read-only fetch + real content hash + byte-coverage proof only. No full-text redistribution; no correctness, completeness, or licensing claim about the source."
+}
