@@ -9,6 +9,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | Document | Use |
 |---|---|
 | [Public claim boundary](public-claim-boundary.md) | What Nomos can and cannot claim at the current release. **Read this first.** |
+| [43 - Development doctrine](43-development-doctrine.md) | Formal cross-product development approach & principles (zero-regression, claim-boundary, no *done* without adversarial proof). NOMOS × Aedifica. |
 | [Release notes v0.1.0-ALPHA](release-v0.1.0-alpha.md) | Current release scope and the publication gate. |
 | [External assessment pack](external-assessment/) | Impartial inputs for an external assessment: evidence, maturity, and neutral valuation frameworks. |
 

@@ -130,11 +130,12 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 	docRef := flags.String("doc-ref", "", "document reference slug")
 	domain := flags.String("domain", "", "domain name")
 	state := flags.String("state", "draft", "default review state")
+	facets := flags.Bool("facets", false, "emit CKM-01 facets on each atom")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if flags.NArg() != 1 {
-		fmt.Fprintln(stderr, "usage: nomos atomize units [--doc-ref REF] [--domain DOM] <file.md>")
+		fmt.Fprintln(stderr, "usage: nomos atomize units [--doc-ref REF] [--domain DOM] [--facets] <file.md>")
 		return 2
 	}
 
@@ -151,6 +152,7 @@ func atomizeUnits(args []string, stdout io.Writer, stderr io.Writer) int {
 		SourceFile:   filePath,
 		Domain:       *domain,
 		DefaultState: atomization.ReviewState(*state),
+		EmitFacets:   *facets,
 	})
 
 	return writeAtomJSON(stdout, stderr, set)
