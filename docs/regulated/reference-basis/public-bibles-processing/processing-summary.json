@@ -1,0 +1,48 @@
+{
+  "artifacts_present": {
+    "atomization_feed": true,
+    "attestation": true,
+    "manifest": true,
+    "snapshot": true
+  },
+  "bible_split": {
+    "canon_status": "requires_evidence",
+    "licensed_blocked": [
+      {
+        "id": "ISO-13485-2016",
+        "source_class": "licensed"
+      },
+      {
+        "id": "ISO-IEC-IEEE-12207-2026",
+        "source_class": "licensed"
+      },
+      {
+        "id": "ISO-IEC-25010-2023",
+        "source_class": "licensed"
+      },
+      {
+        "id": "ISPE-GAMP5-2E-2022",
+        "source_class": "licensed"
+      }
+    ],
+    "public_count": 23
+  },
+  "claim_boundary": "Public-reference processing evidence only; the licensed bibles are blocked on procurement and are not processed.",
+  "licensed_leak": [],
+  "pipeline_steps": {
+    "attest": 0,
+    "feed": 0,
+    "manifest": 0,
+    "scan": 0
+  },
+  "processed_corpus": {
+    "file_count": 2,
+    "files": [
+      "README.md",
+      "nomos-bible-corpus-policy.md"
+    ]
+  },
+  "read_only_guard": "pass",
+  "schema_version": "nomos-public-bibles-processing-v1",
+  "source_mutation": "none"
+}
