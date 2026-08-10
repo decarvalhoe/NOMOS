@@ -1,0 +1,585 @@
+# Rend l'atomisation systématique au lieu de la laisser à la vigilance.
+#
+# Deux temps :
+#   - à chaud, sur chaque issue ouverte ou réétiquetée, la contradiction
+#     « pilotable par un agent » + « bloqué » est refusée immédiatement ;
+#   - à froid, une fois par semaine, l'ensemble des issues ouvertes est passé
+#     en revue, parce qu'un ticket devient non actionable en cours de route
+#     sans que personne ne retouche ses étiquettes.
+#
+# Aucune action tierce, aucune dépendance à jq.
+
+name: Convention — actionnabilité
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, reopened]
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  a-chaud:
+    if: github.event_name == 'issues'
+    runs-on: docker
+    steps:
+      - name: Refuser un ticket à la fois pilotable et bloqué
+        env:
+          ETIQUETTES: ${{ toJSON(github.event.issue.labels) }}
+          NUMERO: ${{ github.event.issue.number }}
+          CORPS: ${{ github.event.issue.body }}
+        shell: sh
+        run: |
+          set -u
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "Python 3 absent : validation JSON fail-closed impossible."; exit 1
+          fi
+          if ! printf '%s' "$ETIQUETTES" | python3 -c 'import json, sys; value = json.load(sys.stdin); raise SystemExit(0 if isinstance(value, list) and all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in value) else 1)' >/dev/null 2>&1; then
+            echo "Étiquettes de l’évènement invalides."; exit 1
+          fi
+          a() {
+            printf '%s' "$ETIQUETTES" | python3 -c 'import json, sys; names = [item["name"] for item in json.load(sys.stdin)]; raise SystemExit(0 if sys.argv[1] in names else 1)' "$1"
+          }
+          axe() {
+            printf '%s' "$ETIQUETTES" | python3 -c 'import json, re, sys; pattern = re.compile(re.escape(sys.argv[1]) + r":[A-Za-z0-9][A-Za-z0-9._-]*\Z"); raise SystemExit(0 if sum(bool(pattern.fullmatch(item["name"])) for item in json.load(sys.stdin)) == 1 else 1)' "$1"
+          }
+
+          echecs=0
+          probleme() { echo "ECHEC  $*"; echecs=$((echecs + 1)); }
+
+          if a "agent:cli-ready" && { a "status:waiting" || a "status:blocked"; }; then
+            probleme "#$NUMERO est déclaré pilotable par un agent ET bloqué."
+            echo
+            echo "Les deux ne peuvent pas être vrais du même ticket. Soit il est"
+            echo "exécutable et rien ne l'attend, soit il attend et un agent ne peut"
+            echo "pas le prendre. Le plus souvent il contient les deux : une part"
+            echo "exécutable prise en otage par une part bloquée."
+            echo
+            echo "Ouvrir une issue « Atomisation d'un ticket » et scinder :"
+            echo "  - la part exécutable part en enfant avec status:ready ;"
+            echo "  - seul un humain ajoute ensuite agent:cli-ready après vérification ;"
+            echo "  - le parent garde le reste, la cause nommée, et perd agent:cli-ready."
+          fi
+
+          axe status || probleme "#$NUMERO doit porter exactement une étiquette status: valide"
+          axe type   || probleme "#$NUMERO doit porter exactement une étiquette type: valide"
+
+          if ! diagnostic=$(ETIQUETTES="$ETIQUETTES" CORPS="$CORPS" python3 -c '
+          import json, os, re, sys, unicodedata
+
+          labels = {item["name"] for item in json.loads(os.environ["ETIQUETTES"])}
+          body = os.environ.get("CORPS", "").replace("\r\n", "\n").replace("\r", "\n")
+
+          def visible_sections(text):
+              sections, current, fence, raw_tag = {}, None, None, None
+              comment_state = [False]
+              def without_comments(line):
+                  while True:
+                      if comment_state[0]:
+                          end = line.find("-->")
+                          if end < 0:
+                              return ""
+                          line, comment_state[0] = line[end + 3:], False
+                      start = line.find("<!--")
+                      if start < 0:
+                          return line
+                      end = line.find("-->", start + 4)
+                      if end < 0:
+                          comment_state[0] = True
+                          return line[:start]
+                      line = line[:start] + line[end + 3:]
+              raw_open = re.compile(r"^[ ]{0,3}<(address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noembed|noframes|ol|optgroup|option|p|param|plaintext|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul|xmp)(?:[ \t>]|$)", re.I)
+              for line in text.split("\n"):
+                  if fence is not None:
+                      closing = re.fullmatch(r"[ ]{0,3}(`{3,}|~{3,})[ \t]*", line)
+                      if closing:
+                          marker = closing.group(1)
+                          if marker[0] == fence[0] and len(marker) >= fence[1]:
+                              fence = None
+                      continue
+                  if raw_tag is not None:
+                      if raw_tag == "__until_blank__":
+                          if not line.strip():
+                              raw_tag = None
+                      elif re.search(r"</" + re.escape(raw_tag) + r"[ \t]*>", line, re.I):
+                          raw_tag = None
+                      continue
+                  line = without_comments(line)
+                  opening = raw_open.match(line)
+                  if opening:
+                      tag = opening.group(1).lower()
+                      if tag in {"pre", "script", "style", "textarea"}:
+                          if not re.search(r"</" + re.escape(tag) + r"[ \t]*>", line[opening.end():], re.I):
+                              raw_tag = tag
+                      else:
+                          raw_tag = "__until_blank__"
+                      continue
+                  fence_match = re.match(r"^[ ]{0,3}(`{3,}|~{3,})(.*)$", line)
+                  if fence_match and fence_match.group(1).startswith("`") and "`" in fence_match.group(2):
+                      fence_match = None
+                  if fence_match:
+                      marker = fence_match.group(1)
+                      fence = (marker[0], len(marker))
+                      continue
+                  heading_match = re.fullmatch(r"[ ]{0,3}(#{1,6})[ \t]+(.+?)(?:[ \t]+#+[ \t]*|[ \t]*)", line)
+                  if heading_match:
+                      current = heading_match.group(2) if len(heading_match.group(1)) == 2 else None
+                      if current is not None:
+                          sections.setdefault(current, []).append([])
+                      continue
+                  if current is not None:
+                      sections[current][-1].append(line)
+              return sections
+
+          sections = visible_sections(body)
+
+          def section(*titles):
+              values = [lines for title in titles for lines in sections.get(title, [])]
+              if len(values) != 1:
+                  return None
+              value = "\n".join(values[0]).strip()
+              return value or None
+
+          def explicitly_absent(title, value):
+              if value is None:
+                  return False
+              normalized = "".join(
+                  char for char in unicodedata.normalize("NFKD", value.lower())
+                  if not unicodedata.combining(char)
+              )
+              normalized = re.sub(r"[’\047]", " ", normalized)
+              compact = re.sub(r"[\W_]+", " ", normalized).strip()
+              if compact in {"neant", "non applicable", "n a", "na", "rien", "sans objet", "aucun", "aucune", "nul", "information indisponible"}:
+                  return True
+              patterns = {
+                  "Cause du blocage": r"\b(?:aucun(?:e)?\s+(?:blocage|cause)|il\s+n\s+existe\s+pas\s+de\s+(?:blocage|cause)|absence\s+de\s+(?:blocage|cause)|(?:le\s+)?blocage\s+n\s+existe\s+pas|cause\s+(?:hypothetique|inconnue|a\s+(?:confirmer|determiner))|diagnostic\s+sera\s+precise\s+ulterieurement|a\s+confirmer|tbd)\b",
+                  "Responsable capable de lever": r"\b(?:aucun(?:e)?\s+responsable|personne|nul\s+n\s+(?:est\s+responsable|peut\s+(?:le\s+)?lever)|responsable\s+(?:inconnu|non\s+identifie|a\s+(?:determiner|definir)(?:\s+plus\s+tard)?)|il\s+n\s+y\s+a\s+pas\s+de\s+responsable|responsable\s+sera\s+choisi\s+ulterieurement|a\s+definir\s+plus\s+tard|tbd)\b",
+                  "Condition de reprise": r"\b(?:aucun(?:e)?\s+condition|pas\s+de\s+condition|jamais\s+de\s+condition|condition\s+(?:non\s+necessaire|inconnue|a\s+(?:determiner|definir|confirmer))|ne\s+jamais\s+reprendre|(?:la\s+)?reprise\s+n\s+arrivera\s+jamais|condition\s+sera\s+fixee\s+ulterieurement|on\s+verra(?:\s+eventuellement)?|sans\s+objet|tbd)\b",
+              }
+              return re.search(patterns[title], normalized) is not None
+
+          problems = []
+          ready = "status:ready" in labels
+          blocked = bool(labels & {"status:blocked", "status:waiting"})
+          parent = None
+
+          if ready:
+              if section("Critères d’acceptation", "Critères d\047acceptation") is None:
+                  problems.append("status:ready sans section visible et non vide ## Critères d’acceptation")
+              if section("Vérification") is None:
+                  problems.append("status:ready sans section visible et non vide ## Vérification")
+              parent_value = section("Parent de suivi")
+              if parent_value is None:
+                  problems.append("status:ready sans section visible et non vide ## Parent de suivi")
+              elif parent_value == "Aucun — ticket autonome.":
+                  pass
+              else:
+                  match = re.fullmatch(r"#([1-9][0-9]*)", parent_value)
+                  if match:
+                      parent = int(match.group(1))
+                  else:
+                      problems.append("## Parent de suivi doit valoir #N ou Aucun — ticket autonome.")
+
+          if blocked:
+              for title in ("Cause du blocage", "Responsable capable de lever", "Condition de reprise"):
+                  value = section(title)
+                  if value is None:
+                      problems.append(f"ticket bloqué sans section visible et non vide ## {title}")
+                  elif explicitly_absent(title, value):
+                      problems.append(f"ticket bloqué avec valeur explicitement absente dans ## {title}")
+
+          if parent is not None:
+              if section("Hors périmètre bloqué") is None:
+                  problems.append("enfant atomisé sans section visible et non vide ## Hors périmètre bloqué")
+              if section("Autorisation de prise") is None:
+                  problems.append("enfant atomisé sans section visible et non vide ## Autorisation de prise")
+
+          if problems:
+              print("\n".join(problems))
+              sys.exit(1)
+          ' 2>&1); then
+            while IFS= read -r motif; do
+              [ -n "$motif" ] && probleme "#$NUMERO $motif"
+            done <<EOF
+          $diagnostic
+          EOF
+          fi
+
+          if [ "$echecs" -gt 0 ]; then exit 1; fi
+          echo "ok     #$NUMERO porte un verdict d'actionnabilité cohérent."
+
+  revue-hebdomadaire:
+    if: github.event_name != 'issues'
+    runs-on: docker
+    steps:
+      - name: Lister les tickets à atomiser
+        env:
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+        shell: sh
+        run: |
+          set -u
+          if command -v curl >/dev/null 2>&1; then
+            get() { curl -fsS -m 45 -H "Authorization: token ${JETON}" "$1"; }
+          elif command -v wget >/dev/null 2>&1; then
+            get() { wget -qO- -T 45 --header="Authorization: token $JETON" "$1"; }
+          else
+            echo "Ni curl ni wget dans l'image du runner : revue impossible."; exit 1
+          fi
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "Python 3 absent : validation JSON fail-closed impossible."; exit 1
+          fi
+
+          # On interroge l'API une fois par étiquette et on croise les numéros,
+          # au lieu de découper le JSON complet. Chaque page est capturée avant
+          # parsing : une panne HTTP/réseau ou une réponse non JSON doit faire
+          # échouer le contrôle, jamais devenir silencieusement une liste vide.
+          numeros() {
+            etiquette="$1"
+            page=1
+            while :; do
+              [ "$page" -le 10000 ] || { echo "Pagination issues excessive pour $etiquette." >&2; return 1; }
+              if ! corps=$(get "$API/issues?state=open&type=issues&limit=100&page=$page&labels=$etiquette"); then
+                echo "Lecture API impossible pour l'étiquette $etiquette (page $page)." >&2
+                return 1
+              fi
+              if ! extraits=$(printf '%s' "$corps" | python3 -c 'import json, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and type(item.get("number")) is int and item["number"] > 0 for item in value); valid or sys.exit(1); print(*(item["number"] for item in value), sep="\n")' 2>/dev/null); then
+                echo "Réponse API invalide pour l'étiquette $etiquette (page $page)." >&2
+                return 1
+              fi
+              [ -n "$extraits" ] && printf '%s\n' "$extraits"
+              compte=$(printf '%s\n' "$extraits" | sed '/^$/d' | wc -l | tr -d ' ')
+              [ "$compte" -lt 100 ] && break
+              page=$((page + 1))
+            done
+          }
+
+          pilotables=''
+          bloques_bruts=''
+          bloques=''
+          nettoyer() {
+            [ -z "$pilotables" ] || rm -f -- "$pilotables"
+            [ -z "$bloques_bruts" ] || rm -f -- "$bloques_bruts"
+            [ -z "$bloques" ] || rm -f -- "$bloques"
+          }
+          trap nettoyer EXIT HUP INT TERM
+          pilotables=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-pilotables.XXXXXX") || exit 1
+          bloques_bruts=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-bloques-bruts.XXXXXX") || exit 1
+          bloques=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-bloques.XXXXXX") || exit 1
+
+          if ! numeros 'agent%3Acli-ready' > "$pilotables"; then exit 1; fi
+          : > "$bloques_bruts"
+          for etiquette in 'status%3Awaiting' 'status%3Ablocked'; do
+            if ! numeros "$etiquette" >> "$bloques_bruts"; then exit 1; fi
+          done
+          sort -u "$bloques_bruts" > "$bloques"
+
+          ecarts=0
+          while IFS= read -r num; do
+            [ -n "$num" ] || continue
+            if grep -qx "$num" "$bloques"; then
+              echo "à atomiser  #$num"
+              ecarts=$((ecarts + 1))
+            fi
+          done < "$pilotables"
+
+          # La contradiction de labels ne suffit pas : la revue périodique lit
+          # aussi tous les corps pour imposer critères, cause/responsable et
+          # structure des enfants atomisés. Le nombre d'objets JSON pilote la
+          # pagination, jamais le nombre de valeurs extraites.
+          page=1
+          while :; do
+            [ "$page" -le 10000 ] || { echo "Pagination de revue des corps excessive." >&2; exit 1; }
+            if ! corps=$(get "$API/issues?state=open&type=issues&limit=100&page=$page"); then
+              echo "Lecture API impossible pour la revue des corps (page $page)." >&2
+              exit 1
+            fi
+            if ! diagnostics=$(printf '%s' "$corps" | python3 -c '
+          import json, re, sys, unicodedata
+
+          value = json.load(sys.stdin)
+          valid = isinstance(value, list) and all(
+              isinstance(issue, dict)
+              and type(issue.get("number")) is int
+              and issue["number"] > 0
+              and (issue.get("body") is None or isinstance(issue.get("body"), str))
+              and isinstance(issue.get("labels"), list)
+              and all(isinstance(label, dict) and isinstance(label.get("name"), str) for label in issue["labels"])
+              for issue in value
+          )
+          valid or sys.exit(1)
+
+          def visible_sections(text):
+              sections, current, fence, raw_tag = {}, None, None, None
+              comment_state = [False]
+              def without_comments(line):
+                  while True:
+                      if comment_state[0]:
+                          end = line.find("-->")
+                          if end < 0:
+                              return ""
+                          line, comment_state[0] = line[end + 3:], False
+                      start = line.find("<!--")
+                      if start < 0:
+                          return line
+                      end = line.find("-->", start + 4)
+                      if end < 0:
+                          comment_state[0] = True
+                          return line[:start]
+                      line = line[:start] + line[end + 3:]
+              raw_open = re.compile(r"^[ ]{0,3}<(address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noembed|noframes|ol|optgroup|option|p|param|plaintext|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul|xmp)(?:[ \t>]|$)", re.I)
+              for line in text.split("\n"):
+                  if fence is not None:
+                      closing = re.fullmatch(r"[ ]{0,3}(`{3,}|~{3,})[ \t]*", line)
+                      if closing:
+                          marker = closing.group(1)
+                          if marker[0] == fence[0] and len(marker) >= fence[1]:
+                              fence = None
+                      continue
+                  if raw_tag is not None:
+                      if raw_tag == "__until_blank__":
+                          if not line.strip():
+                              raw_tag = None
+                      elif re.search(r"</" + re.escape(raw_tag) + r"[ \t]*>", line, re.I):
+                          raw_tag = None
+                      continue
+                  line = without_comments(line)
+                  opening = raw_open.match(line)
+                  if opening:
+                      tag = opening.group(1).lower()
+                      if tag in {"pre", "script", "style", "textarea"}:
+                          if not re.search(r"</" + re.escape(tag) + r"[ \t]*>", line[opening.end():], re.I):
+                              raw_tag = tag
+                      else:
+                          raw_tag = "__until_blank__"
+                      continue
+                  fence_match = re.match(r"^[ ]{0,3}(`{3,}|~{3,})(.*)$", line)
+                  if fence_match and fence_match.group(1).startswith("`") and "`" in fence_match.group(2):
+                      fence_match = None
+                  if fence_match:
+                      marker = fence_match.group(1)
+                      fence = (marker[0], len(marker))
+                      continue
+                  heading_match = re.fullmatch(r"[ ]{0,3}(#{1,6})[ \t]+(.+?)(?:[ \t]+#+[ \t]*|[ \t]*)", line)
+                  if heading_match:
+                      current = heading_match.group(2) if len(heading_match.group(1)) == 2 else None
+                      if current is not None:
+                          sections.setdefault(current, []).append([])
+                      continue
+                  if current is not None:
+                      sections[current][-1].append(line)
+              return sections
+
+          def section(sections, *titles):
+              values = [lines for title in titles for lines in sections.get(title, [])]
+              if len(values) != 1:
+                  return None
+              value = "\n".join(values[0]).strip()
+              return value or None
+
+          def explicitly_absent(title, value):
+              if value is None:
+                  return False
+              normalized = "".join(
+                  char for char in unicodedata.normalize("NFKD", value.lower())
+                  if not unicodedata.combining(char)
+              )
+              normalized = re.sub(r"[’\047]", " ", normalized)
+              compact = re.sub(r"[\W_]+", " ", normalized).strip()
+              if compact in {"neant", "non applicable", "n a", "na", "rien", "sans objet", "aucun", "aucune", "nul", "information indisponible"}:
+                  return True
+              patterns = {
+                  "Cause du blocage": r"\b(?:aucun(?:e)?\s+(?:blocage|cause)|il\s+n\s+existe\s+pas\s+de\s+(?:blocage|cause)|absence\s+de\s+(?:blocage|cause)|(?:le\s+)?blocage\s+n\s+existe\s+pas|cause\s+(?:hypothetique|inconnue|a\s+(?:confirmer|determiner))|diagnostic\s+sera\s+precise\s+ulterieurement|a\s+confirmer|tbd)\b",
+                  "Responsable capable de lever": r"\b(?:aucun(?:e)?\s+responsable|personne|nul\s+n\s+(?:est\s+responsable|peut\s+(?:le\s+)?lever)|responsable\s+(?:inconnu|non\s+identifie|a\s+(?:determiner|definir)(?:\s+plus\s+tard)?)|il\s+n\s+y\s+a\s+pas\s+de\s+responsable|responsable\s+sera\s+choisi\s+ulterieurement|a\s+definir\s+plus\s+tard|tbd)\b",
+                  "Condition de reprise": r"\b(?:aucun(?:e)?\s+condition|pas\s+de\s+condition|jamais\s+de\s+condition|condition\s+(?:non\s+necessaire|inconnue|a\s+(?:determiner|definir|confirmer))|ne\s+jamais\s+reprendre|(?:la\s+)?reprise\s+n\s+arrivera\s+jamais|condition\s+sera\s+fixee\s+ulterieurement|on\s+verra(?:\s+eventuellement)?|sans\s+objet|tbd)\b",
+              }
+              return re.search(patterns[title], normalized) is not None
+
+          axis_pattern = lambda axis: re.compile(re.escape(axis) + r":[A-Za-z0-9][A-Za-z0-9._-]*\Z")
+          for issue in value:
+              labels = {label["name"] for label in issue["labels"]}
+              body = (issue.get("body") or "").replace("\r\n", "\n").replace("\r", "\n")
+              sections = visible_sections(body)
+              problems = []
+              ready = "status:ready" in labels
+              blocked = bool(labels & {"status:blocked", "status:waiting"})
+              parent = None
+
+              if sum(bool(axis_pattern("status").fullmatch(name)) for name in labels) != 1:
+                  problems.append("doit porter exactement une étiquette status: valide")
+              if sum(bool(axis_pattern("type").fullmatch(name)) for name in labels) != 1:
+                  problems.append("doit porter exactement une étiquette type: valide")
+              if "agent:cli-ready" in labels and blocked:
+                  problems.append("déclaré pilotable et bloqué à la fois")
+
+              if ready:
+                  if section(sections, "Critères d’acceptation", "Critères d\047acceptation") is None:
+                      problems.append("status:ready sans section visible et non vide ## Critères d’acceptation")
+                  if section(sections, "Vérification") is None:
+                      problems.append("status:ready sans section visible et non vide ## Vérification")
+                  parent_value = section(sections, "Parent de suivi")
+                  if parent_value is None:
+                      problems.append("status:ready sans section visible et non vide ## Parent de suivi")
+                  elif parent_value == "Aucun — ticket autonome.":
+                      pass
+                  else:
+                      match = re.fullmatch(r"#([1-9][0-9]*)", parent_value)
+                      if match:
+                          parent = int(match.group(1))
+                      else:
+                          problems.append("## Parent de suivi doit valoir #N ou Aucun — ticket autonome.")
+
+              if blocked:
+                  for title in ("Cause du blocage", "Responsable capable de lever", "Condition de reprise"):
+                      value = section(sections, title)
+                      if value is None:
+                          problems.append(f"bloqué sans section visible et non vide ## {title}")
+                      elif explicitly_absent(title, value):
+                          problems.append(f"bloqué avec valeur explicitement absente dans ## {title}")
+
+              if parent is not None:
+                  if section(sections, "Hors périmètre bloqué") is None:
+                      problems.append("enfant atomisé sans section visible et non vide ## Hors périmètre bloqué")
+                  if section(sections, "Autorisation de prise") is None:
+                      problems.append("enfant atomisé sans section visible et non vide ## Autorisation de prise")
+
+              for problem in problems:
+                  print("#{} {}".format(issue["number"], problem))
+          ' 2>/dev/null); then
+              echo "Réponse API invalide pour la revue des corps (page $page)." >&2
+              exit 1
+            fi
+            if [ -n "$diagnostics" ]; then
+              while IFS= read -r motif; do
+                [ -n "$motif" ] || continue
+                echo "écart corps  $motif"
+                ecarts=$((ecarts + 1))
+              done <<EOF
+          $diagnostics
+          EOF
+            fi
+
+            if ! liens=$(printf '%s' "$corps" | python3 -c '
+          import json, re, sys, unicodedata
+          def parent_from_body(body):
+              values, current, fence, raw_tag = [], False, None, None
+              comment_state = [False]
+              def without_comments(line):
+                  while True:
+                      if comment_state[0]:
+                          end = line.find("-->")
+                          if end < 0:
+                              return ""
+                          line, comment_state[0] = line[end + 3:], False
+                      start = line.find("<!--")
+                      if start < 0:
+                          return line
+                      end = line.find("-->", start + 4)
+                      if end < 0:
+                          comment_state[0] = True
+                          return line[:start]
+                      line = line[:start] + line[end + 3:]
+              raw_open = re.compile(r"^[ ]{0,3}<(address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noembed|noframes|ol|optgroup|option|p|param|plaintext|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul|xmp)(?:[ \t>]|$)", re.I)
+              for line in body.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+                  if fence is not None:
+                      closing = re.fullmatch(r"[ ]{0,3}(`{3,}|~{3,})[ \t]*", line)
+                      if closing:
+                          marker = closing.group(1)
+                          if marker[0] == fence[0] and len(marker) >= fence[1]:
+                              fence = None
+                      continue
+                  if raw_tag is not None:
+                      if raw_tag == "__until_blank__":
+                          if not line.strip():
+                              raw_tag = None
+                      elif re.search(r"</" + re.escape(raw_tag) + r"[ \t]*>", line, re.I):
+                          raw_tag = None
+                      continue
+                  line = without_comments(line)
+                  opening = raw_open.match(line)
+                  if opening:
+                      tag = opening.group(1).lower()
+                      if tag in {"pre", "script", "style", "textarea"}:
+                          if not re.search(r"</" + re.escape(tag) + r"[ \t]*>", line[opening.end():], re.I):
+                              raw_tag = tag
+                      else:
+                          raw_tag = "__until_blank__"
+                      continue
+                  fence_match = re.match(r"^[ ]{0,3}(`{3,}|~{3,})(.*)$", line)
+                  if fence_match and fence_match.group(1).startswith("`") and "`" in fence_match.group(2):
+                      fence_match = None
+                  if fence_match:
+                      marker = fence_match.group(1)
+                      fence = (marker[0], len(marker))
+                      continue
+                  heading = re.fullmatch(r"[ ]{0,3}(#{1,6})[ \t]+(.+?)(?:[ \t]+#+[ \t]*|[ \t]*)", line)
+                  if heading:
+                      current = len(heading.group(1)) == 2 and heading.group(2) == "Parent de suivi"
+                      if current:
+                          values.append([])
+                      continue
+                  if current:
+                      values[-1].append(line)
+              if len(values) != 1:
+                  return None
+              value = "\n".join(values[0]).strip()
+              match = re.fullmatch(r"#([1-9][0-9]*)", value)
+              return match.group(1) if match else None
+          for issue in json.load(sys.stdin):
+              parent = parent_from_body(issue.get("body") or "")
+              if parent is not None and "status:ready" in {label["name"] for label in issue["labels"]}:
+                  print(parent, issue["number"])
+          ' 2>/dev/null); then
+              echo "Extraction des dépendances d'atomisation impossible (page $page)." >&2
+              exit 1
+            fi
+            if [ -n "$liens" ]; then
+              while IFS=' ' read -r parent enfant; do
+                [ -n "$parent" ] && [ -n "$enfant" ] || continue
+                page_dependances=1
+                lie=0
+                while :; do
+                  [ "$page_dependances" -le 10000 ] || { echo "Pagination des dépendances excessive pour #$parent." >&2; exit 1; }
+                  if ! dependances=$(get "$API/issues/$parent/dependencies?limit=100&page=$page_dependances"); then
+                    echo "Lecture des dépendances de #$parent impossible (page $page_dependances)." >&2
+                    exit 1
+                  fi
+                  if ! numeros_dependances=$(printf '%s' "$dependances" | python3 -c 'import json, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and type(item.get("number")) is int and item["number"] > 0 for item in value); valid or sys.exit(1); print(*(item["number"] for item in value), sep="\n")' 2>/dev/null); then
+                    echo "Réponse de dépendances invalide pour #$parent (page $page_dependances)." >&2
+                    exit 1
+                  fi
+                  if printf '%s\n' "$numeros_dependances" | grep -Fxq -- "$enfant"; then
+                    lie=1
+                    break
+                  fi
+                  if ! compte_dependances=$(printf '%s' "$dependances" | python3 -c 'import json, sys; print(len(json.load(sys.stdin)))' 2>/dev/null); then
+                    echo "Comptage des dépendances impossible pour #$parent." >&2
+                    exit 1
+                  fi
+                  [ "$compte_dependances" -lt 100 ] && break
+                  page_dependances=$((page_dependances + 1))
+                done
+                if [ "$lie" -ne 1 ]; then
+                  echo "écart lien   #$enfant n’est pas une dépendance native de #$parent"
+                  ecarts=$((ecarts + 1))
+                fi
+              done <<EOF
+          $liens
+          EOF
+            fi
+
+            if ! compte=$(printf '%s' "$corps" | python3 -c 'import json, sys; value = json.load(sys.stdin); print(len(value))' 2>/dev/null); then
+              echo "Comptage JSON impossible pour la revue des corps (page $page)." >&2
+              exit 1
+            fi
+            [ "$compte" -lt 100 ] && break
+            page=$((page + 1))
+          done
+
+          echo
+          if [ "$ecarts" -gt 0 ]; then
+            echo "$ecarts écart(s) d'actionnabilité ou d'atomisation."
+            echo "Corriger les labels et le corps, ou scinder le ticket avant toute prise par un agent."
+            exit 1
+          fi
+          echo "Toutes les issues ouvertes portent un verdict et une structure d'atomisation cohérents."
