@@ -1,0 +1,76 @@
+name: Tâche exécutable par un agent
+about: Décrire un travail suffisamment cadré pour qu'un agent puisse le prendre sans revenir poser de questions.
+title: "[tâche] "
+labels:
+  - type:task
+  - status:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        La demande doit dire comment reconnaître le succès et où l'agent a le droit
+        d'aller. Le contrat Markdown obligatoire ci-dessous couvre ces garanties.
+
+        Tant que ses cinq sections ne sont pas réellement remplies, ne posez pas
+        `status:ready`. Ce label dit que le ticket est spécifié ; seul un humain peut
+        ensuite ajouter `agent:cli-ready`, après succès du contrôle d'attribution.
+
+  - type: textarea
+    id: contrat
+    attributes:
+      label: Contrat Markdown prêt à exécuter
+      description: >
+        Remplir chaque section sans renommer les titres. Les commentaires d’aide ne
+        comptent pas comme contenu : ils doivent être remplacés par des informations
+        concrètes avant d’ajouter `status:ready`.
+      value: |
+        ## Critères d’acceptation
+        <!-- Décrire l’état final observable, pas la méthode. -->
+
+        ## Vérification
+        <!-- Donner les commandes, sorties attendues ou la procédure reproductible. -->
+
+        ## Parent de suivi
+        <!-- Écrire #N pour un enfant atomisé, ou exactement : Aucun — ticket autonome. -->
+
+        ## Hors périmètre bloqué
+        <!-- Nommer les accès, secrets, décisions, production, déploiement ou UAT exclus. -->
+
+        ## Autorisation de prise
+        <!-- Indiquer que seul un humain peut ajouter agent:cli-ready après contrôle vert. -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte utile
+      description: Historique, tickets liés, fichiers de référence, décisions déjà prises à ne pas rejouer.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acces
+    attributes:
+      label: Accès nécessaires
+      description: >
+        Jetons, comptes, réseaux ou droits requis. Si un accès manque, l'agent doit poser
+        `status:blocked` et dire en commentaire ce qui manque, plutôt que de tenter un
+        contournement.
+      placeholder: "Aucun au-delà du jeton de dépôt standard."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: supervision
+    attributes:
+      label: Niveau de supervision proposé
+      description: >
+        L'attribution finale de `agent:cli-ready` reste à la main d'un humain :
+        un agent ne se déclare pas lui-même autorisé.
+      options:
+        - Autonome — l'agent peut proposer une PR sans arbitrage
+        - Supervisé — relecture humaine obligatoire avant fusion
+        - Humain uniquement — ne pas confier à un agent
+    validations:
+      required: true
