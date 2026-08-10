@@ -1,0 +1,119 @@
+name: Atomisation d'un ticket
+about: Scinder un ticket qui mélange du travail exécutable et du travail bloqué, pour libérer la part exécutable.
+title: "[atomisation] #"
+labels:
+  - type:task
+  - status:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Un ticket ne porte qu'un seul verdict d'actionnabilité. S'il contient à la fois
+        de l'exécutable et du bloqué, l'exécutable est pris en otage : un agent qui le
+        lit ne sait pas quoi faire et attend. C'est ainsi qu'on se retrouve avec sept
+        tickets ouverts dont un seul est déclaré actionable — alors que six contiennent
+        chacun une part qui pourrait avancer aujourd'hui.
+
+        Ce ticket sert à opérer le découpage. Il se ferme dès que les enfants existent.
+
+        Signaux qui déclenchent une atomisation : contradiction de labels ou mélange
+        d'actions exécutables, humaines, Ops, déploiement et UAT dans le même ticket.
+
+  - type: textarea
+    id: contrat
+    attributes:
+      label: Contrat de l'opération d'atomisation
+      value: |
+        ## Critères d'acceptation
+        <!-- Décrire les enfants à créer et l'état non exécutable attendu du parent. -->
+
+        ## Vérification
+        <!-- Indiquer comment vérifier les issues, labels et dépendances Forgejo natives. -->
+
+        ## Parent de suivi
+        <!-- Écrire exactement : Aucun — ticket autonome. -->
+
+        ## Hors périmètre bloqué
+        <!-- Lister accès, secrets, production, déploiement et UAT non autorisés. -->
+
+        ## Autorisation de prise
+        <!-- Rappeler que seul un humain peut ajouter agent:cli-ready après contrôle vert. -->
+    validations:
+      required: true
+
+  - type: input
+    id: parent
+    attributes:
+      label: Ticket à scinder
+      description: Numéro du ticket concerné.
+      placeholder: "#37"
+    validations:
+      required: true
+
+  - type: textarea
+    id: executable
+    attributes:
+      label: Part exécutable aujourd'hui
+      description: >
+        Ce qui peut avancer **sans lever aucun blocage**. Une ligne par futur ticket
+        enfant, avec son critère de vérification. Si vous n'arrivez pas à écrire le
+        critère, la ligne n'est pas encore exécutable : elle appartient à la section
+        suivante.
+      value: |
+        - [ ] …
+              vérification :
+        - [ ] …
+              vérification :
+    validations:
+      required: true
+
+  - type: textarea
+    id: bloque
+    attributes:
+      label: Part bloquée
+      description: >
+        Ce qui reste dans le parent. Pour chaque élément : la cause nommée, et **qui**
+        peut la lever. « Bloqué » sans nom de cause ni de personne n'est pas un blocage,
+        c'est un renoncement.
+      value: |
+        - … — cause : … — levée par : …
+    validations:
+      required: true
+
+  - type: textarea
+    id: hors-perimetre
+    attributes:
+      label: Part hors périmètre
+      description: Ce qui traînait dans le ticket sans y avoir sa place. À sortir, pas à porter.
+    validations:
+      required: false
+
+  - type: textarea
+    id: enfants
+    attributes:
+      label: Tickets enfants créés
+      description: >
+        À compléter une fois le découpage fait. Chaque enfant issu de la part exécutable
+        porte `status:ready`, des sections visibles et non vides, et
+        `## Parent de suivi` avec `#N`. Un ticket autonome déclare exactement
+        `Aucun — ticket autonome.`. Le parent reçoit `status:blocked` ou
+        `status:waiting`, les trois sections de blocage, et perd `agent:cli-ready`.
+      placeholder: "#72 — …, #73 — …"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: verrous
+    attributes:
+      label: Vérifications de fin d'atomisation
+      options:
+        - label: Chaque enfant exécutable porte un critère de vérification
+          required: false
+        - label: Chaque enfant déclare `## Parent de suivi` et est lié comme dépendance native
+          required: false
+        - label: Le parent porte cause, responsable capable de lever et condition de reprise
+          required: false
+        - label: Le parent ne porte plus `agent:cli-ready` s'il reste bloqué
+          required: false
+        - label: Le parent référence ses enfants
+          required: false
