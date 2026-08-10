@@ -1,0 +1,113 @@
+# Vérifie que le dépôt reste équipé pour le travail agentique.
+#
+# Un dépôt dérive : quelqu'un supprime AGENTS.md, un import écrase .forgejo/,
+# les étiquettes disparaissent après une restauration. Ce contrôle périodique
+# le signale au lieu de le laisser découvrir par un agent qui travaille à
+# l'aveugle.
+#
+# Interroge l'API de la forge plutôt que de faire un checkout : pas d'action
+# tierce nécessaire (DEFAULT_ACTIONS_URL=self), et rien à cloner.
+
+name: Convention — hygiène du dépôt
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'AGENTS.md'
+      - '.forgejo/**'
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  hygiene:
+    runs-on: docker
+    steps:
+      - name: Vérifier équipement et étiquettes
+        env:
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+        shell: sh
+        run: |
+          set -u
+          echecs=0
+          probleme() { echo "ECHEC  $*"; echecs=$((echecs + 1)); }
+          ok()       { echo "ok     $*"; }
+
+          if command -v curl >/dev/null 2>&1; then
+            recuperer() { curl -fsS -m 30 -H "Authorization: token ${JETON}" "$1"; }
+            code()      { curl -sS -m 30 -o /dev/null -w '%{http_code}' -H "Authorization: token ${JETON}" "$1"; }
+          elif command -v wget >/dev/null 2>&1; then
+            recuperer() { wget -qO- -T 30 --header="Authorization: token $JETON" "$1"; }
+            code()      { wget -qO /dev/null -T 30 --header="Authorization: token $JETON" "$1" && echo 200 || echo 404; }
+          else
+            echo "Ni curl ni wget dans l'image du runner : contrôle impossible."
+            echo "Choisir une image qui en fournit un (voir runs-on / labels du runner)."
+            exit 1
+          fi
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "Python 3 absent : validation JSON fail-closed impossible."
+            exit 1
+          fi
+
+          # --- fichiers attendus ------------------------------------------
+          for chemin in \
+            AGENTS.md \
+            .forgejo/PULL_REQUEST_TEMPLATE.md \
+            .forgejo/issue_template/config.yaml \
+            .forgejo/issue_template/tache-agent.yaml \
+            .forgejo/issue_template/bug.yaml \
+            .forgejo/issue_template/decision.yaml \
+            .forgejo/issue_template/atomisation.yaml \
+            .forgejo/workflows/controle-actionnabilite.yml \
+            .forgejo/workflows/controle-etiquette.yml \
+            .forgejo/workflows/controle-hygiene.yml \
+            .forgejo/workflows/controle-pr.yml
+          do
+            if [ "$(code "$API/contents/$chemin")" = 200 ]; then
+              ok "$chemin"
+            else
+              probleme "$chemin absent"
+            fi
+          done
+
+          # --- axes d'étiquettes ------------------------------------------
+          # labels.json reste la source de vérité. L'API est paginée et chaque
+          # page doit être une liste JSON d'objets portant un nom textuel.
+          axes_etiquettes() {
+            page=1
+            while :; do
+              [ "$page" -le 10000 ] || { echo "Pagination des étiquettes excessive." >&2; return 1; }
+              if ! corps=$(recuperer "$API/labels?limit=100&page=$page"); then
+                echo "Lecture API des étiquettes impossible (page $page)." >&2
+                return 1
+              fi
+              if ! analyse=$(printf '%s' "$corps" | python3 -c 'import json, re, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in value); valid or sys.exit(1); names = [item["name"] for item in value]; axes = ("agent", "status", "type", "waiting"); print(len(value)); print(*(axis for axis in axes if any(re.fullmatch(re.escape(axis) + r":[A-Za-z0-9][A-Za-z0-9._-]*", name) for name in names)), sep="\n")' 2>/dev/null); then
+                echo "Réponse API des étiquettes invalide (page $page)." >&2
+                return 1
+              fi
+              compte=$(printf '%s\n' "$analyse" | sed -n '1p')
+              axes_page=$(printf '%s\n' "$analyse" | sed -n '2,$p')
+              [ -n "$axes_page" ] && printf '%s\n' "$axes_page"
+              [ "$compte" -lt 100 ] && break
+              page=$((page + 1))
+            done
+          }
+          if ! axes_presents=$(axes_etiquettes); then exit 1; fi
+          for axe in agent status type waiting; do
+            if printf '%s\n' "$axes_presents" | grep -Fxq -- "$axe"; then
+              ok "axe d’étiquettes $axe:"
+            else
+              probleme "aucune étiquette de l’axe $axe: dans ce dépôt"
+            fi
+          done
+
+          echo
+          if [ "$echecs" -gt 0 ]; then
+            echo "$echecs manque(s) constaté(s)."
+            echo "Réappliquer la convention depuis le dépôt forge-souveraine :"
+            echo "  ./conventions-agentiques/appliquer.sh ${{ github.repository }}"
+            exit 1
+          fi
+          echo "Dépôt correctement équipé."
