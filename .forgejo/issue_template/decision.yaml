@@ -1,0 +1,82 @@
+name: Demande d'arbitrage
+about: Ouvert par un agent quand la suite dépend d'un choix humain. Sert aussi à tracer la décision.
+title: "[décision] "
+labels:
+  - type:decision
+  - status:blocked
+body:
+  - type: markdown
+    attributes:
+      value: |
+        À utiliser quand un agent rencontre un choix qu'il ne doit pas trancher seul :
+        compromis produit, dépense, action irréversible, accès à créer, divergence entre
+        deux consignes. L'agent s'arrête, ouvre ce ticket, et ne contourne pas.
+
+        Ce ticket est aussi l'archive de la décision : il ne se ferme pas sans la
+        réponse écrite dans le dernier champ.
+
+  - type: textarea
+    id: contrat-blocage
+    attributes:
+      label: Contrat de blocage
+      value: |
+        ## Cause du blocage
+        <!-- Nommer le choix, l'accès ou la décision qui empêche la suite. -->
+
+        ## Responsable capable de lever
+        <!-- Nommer une personne, une équipe ou un rôle habilité précis. -->
+
+        ## Condition de reprise
+        <!-- Décrire l'événement vérifiable qui autorisera la reprise. -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question précise
+      description: Une seule question, formulée pour être tranchée par oui/non ou par choix d'option.
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options envisagées
+      description: Pour chacune, la conséquence et le coût. Recommander une option et dire pourquoi.
+      value: |
+        Option A —
+        - conséquence :
+        - coût / risque :
+
+        Option B —
+        - conséquence :
+        - coût / risque :
+
+        Recommandation :
+    validations:
+      required: true
+
+  - type: textarea
+    id: bloque
+    attributes:
+      label: Ce qui est bloqué en attendant
+      description: Tickets, PR ou travaux à l'arrêt. Permet d'estimer l'urgence de l'arbitrage.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reversibilite
+    attributes:
+      label: Réversibilité
+      description: Si la décision se révèle mauvaise, que coûte le retour arrière ?
+    validations:
+      required: false
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: Décision retenue (à remplir par l'humain)
+      description: Option choisie, motif, date. Champ à compléter avant clôture.
+    validations:
+      required: false
