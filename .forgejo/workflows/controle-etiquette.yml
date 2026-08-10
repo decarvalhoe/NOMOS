@@ -1,0 +1,122 @@
+# Empêche un agent de s'auto-attribuer son propre droit de travailler.
+#
+# La convention repose sur une règle simple : les étiquettes `agent:*` disent qui
+# a le droit de traiter un ticket, et elles sont posées par un humain. Un agent
+# qui se pose lui-même `agent:cli-ready` s’accorde une autorisation — c'est
+# exactement le contournement que la convention cherche à rendre visible.
+#
+# Le contrôle échoue fermé tant que la variable de dépôt COMPTES_AGENTS n'est
+# pas renseignée : l'absence de liste ne doit jamais transformer un auteur
+# inconnu en humain autorisé.
+#
+#   Paramètres du dépôt > Actions > Variables
+#   COMPTES_AGENTS = agent-claude,agent-codex,agent-gemini,ordo-fleet-001
+
+name: Convention — attribution d'étiquette
+
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [labeled]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  attribution:
+    runs-on: docker
+    steps:
+      - name: Vérifier qui pose l'étiquette
+        env:
+          ETIQUETTE: ${{ github.event.label.name }}
+          ID_ETIQUETTE: ${{ github.event.label.id }}
+          AUTEUR: ${{ github.event.sender.login }}
+          COMPTES_AGENTS: ${{ vars.COMPTES_AGENTS }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          NUMERO: ${{ github.event.issue.number || github.event.pull_request.number }}
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+        shell: sh
+        run: |
+          set -u
+
+          case "$ETIQUETTE" in
+            agent:*) ;;
+            *) echo "Étiquette « $ETIQUETTE » hors du champ de ce contrôle."; exit 0 ;;
+          esac
+
+          retirer_etiquette_interdite() {
+            if [ -z "$API" ] || [ -z "$NUMERO" ] || [ -z "$ID_ETIQUETTE" ] || [ -z "$JETON" ]; then
+              echo "ECHEC  retrait de « $ETIQUETTE » invérifiable : contexte API incomplet."
+              return 1
+            fi
+            if ! command -v curl >/dev/null 2>&1; then
+              echo "ECHEC  curl absent : retrait de « $ETIQUETTE » impossible."
+              return 1
+            fi
+            tentative=1
+            while [ "$tentative" -le 3 ]; do
+              code=000
+              if code=$(curl -sS -m 30 -o /dev/null -w '%{http_code}' -X DELETE \
+                -H "Authorization: token $JETON" \
+                "$API/issues/$NUMERO/labels/$ID_ETIQUETTE") && [ "$code" = 204 ]; then
+                echo "ok     étiquette interdite « $ETIQUETTE » retirée."
+                return 0
+              fi
+              echo "ECHEC  retrait de « $ETIQUETTE » non confirmé, tentative $tentative/3 (HTTP $code)."
+              tentative=$((tentative + 1))
+            done
+            echo "ECHEC  révocation de « $ETIQUETTE » impossible après 3 tentatives ; état non sûr."
+            return 1
+          }
+
+          # Rogner uniquement les bords de chaque entrée. Les blancs internes,
+          # séparateurs étrangers et identifiants non Forgejo rendent la liste invalide.
+          if ! comptes_normalises=$(COMPTES_AGENTS="$COMPTES_AGENTS" python3 -c '
+          import os, re, sys
+          parts = [part.strip() for part in os.environ.get("COMPTES_AGENTS", "").split(",")]
+          valid = bool(parts) and all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", part) for part in parts)
+          valid or sys.exit(1)
+          print(",".join(parts))
+          ' 2>/dev/null); then
+            echo "ECHEC  COMPTES_AGENTS absente, vide ou mal formée : attribution agent:* invérifiable."
+            echo "Renseigner une liste de comptes exacte, séparée par des virgules."
+            retirer_etiquette_interdite || {
+              echo "ECHEC  attribution interdite potentiellement encore active."
+              exit 1
+            }
+            exit 1
+          fi
+          if ! AUTEUR="$AUTEUR" python3 -c '
+          import os, re, sys
+          sys.exit(0 if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", os.environ.get("AUTEUR", "")) else 1)
+          ' 2>/dev/null; then
+            echo "ECHEC  identité de l’auteur absente ou mal formée : attribution invérifiable."
+            retirer_etiquette_interdite || {
+              echo "ECHEC  attribution interdite potentiellement encore active."
+              exit 1
+            }
+            exit 1
+          fi
+
+          # Comparaison exacte avec bordures : « ordo » ne doit pas
+          # correspondre à « ordo-fleet-001 ».
+          liste=",$comptes_normalises,"
+          if printf '%s' "$liste" | grep -Fq -- ",$AUTEUR,"; then
+            echo "ECHEC  « $AUTEUR » est un compte agent et a posé « $ETIQUETTE »."
+            echo
+            echo "Les étiquettes agent:* déterminent qui a le droit de traiter le"
+            echo "ticket. Elles relèvent de l'arbitrage humain : un agent qui se les"
+            echo "attribue s'auto-autorise."
+            echo
+            retirer_etiquette_interdite || {
+              echo "ECHEC  attribution interdite potentiellement encore active."
+              exit 1
+            }
+            echo "Demander l'arbitrage, ou ouvrir une issue"
+            echo "« Demande d'arbitrage » si la suite en dépend."
+            exit 1
+          fi
+
+          echo "ok     « $AUTEUR » n'est pas un compte agent : attribution légitime."
