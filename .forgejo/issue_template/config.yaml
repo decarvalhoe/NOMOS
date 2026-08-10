@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Convention de travail agentique
+    url: https://rbok-tools.jcloud.ik-server.com/RBOKproject/forge-souveraine/src/branch/main/conventions-agentiques/README.md
+    about: Signification des labels, cycle de vie d'un ticket, règles d'arrêt pour les agents.
