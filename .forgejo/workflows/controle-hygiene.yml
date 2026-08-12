@@ -61,7 +61,6 @@ jobs:
             .forgejo/issue_template/decision.yaml \
             .forgejo/issue_template/atomisation.yaml \
             .forgejo/workflows/controle-actionnabilite.yml \
-            .forgejo/workflows/controle-etiquette.yml \
             .forgejo/workflows/controle-hygiene.yml \
             .forgejo/workflows/controle-pr.yml
           do
@@ -83,7 +82,7 @@ jobs:
                 echo "Lecture API des étiquettes impossible (page $page)." >&2
                 return 1
               fi
-              if ! analyse=$(printf '%s' "$corps" | python3 -c 'import json, re, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in value); valid or sys.exit(1); names = [item["name"] for item in value]; axes = ("agent", "status", "type", "waiting"); print(len(value)); print(*(axis for axis in axes if any(re.fullmatch(re.escape(axis) + r":[A-Za-z0-9][A-Za-z0-9._-]*", name) for name in names)), sep="\n")' 2>/dev/null); then
+              if ! analyse=$(printf '%s' "$corps" | python3 -c 'import json, re, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in value); valid or sys.exit(1); names = [item["name"] for item in value]; axes = ("status", "type", "waiting"); print(len(value)); print(*(axis for axis in axes if any(re.fullmatch(re.escape(axis) + r":[A-Za-z0-9][A-Za-z0-9._-]*", name) for name in names)), sep="\n")' 2>/dev/null); then
                 echo "Réponse API des étiquettes invalide (page $page)." >&2
                 return 1
               fi
@@ -95,7 +94,7 @@ jobs:
             done
           }
           if ! axes_presents=$(axes_etiquettes); then exit 1; fi
-          for axe in agent status type waiting; do
+          for axe in status type waiting; do
             if printf '%s\n' "$axes_presents" | grep -Fxq -- "$axe"; then
               ok "axe d’étiquettes $axe:"
             else

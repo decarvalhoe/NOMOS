@@ -29,7 +29,12 @@ name: Convention — contrôle de sortie
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    # `edited` est indispensable : ce contrôle exige que les chemins sensibles
+    # soient nommés dans la DESCRIPTION. Sans ce déclencheur, l'auteur corrige la
+    # description exactement comme demandé et rien ne se relance — le contrôle
+    # reste rouge sur un défaut déjà réparé. Constaté le 2026-08-10 sur
+    # `yhb-master#7`, la première PR que ce workflow ait jamais examinée.
+    types: [opened, edited, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:

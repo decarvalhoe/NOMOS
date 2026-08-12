@@ -8,12 +8,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        La demande doit dire comment reconnaître le succès et où l'agent a le droit
-        d'aller. Le contrat Markdown obligatoire ci-dessous couvre ces garanties.
+        La demande doit dire comment reconnaître le succès et comment le vérifier
+        sans revenir demander un avis. Le contrat Markdown ci-dessous couvre ces
+        garanties.
 
-        Tant que ses cinq sections ne sont pas réellement remplies, ne posez pas
-        `status:ready`. Ce label dit que le ticket est spécifié ; seul un humain peut
-        ensuite ajouter `agent:cli-ready`, après succès du contrôle d'attribution.
+        Tant que ses sections ne sont pas réellement remplies, ne posez pas
+        `status:ready`. Ce label dit que le ticket est spécifié — et un ticket
+        spécifié est prenable par un agent, sans autorisation supplémentaire.
 
   - type: textarea
     id: contrat
@@ -31,13 +32,14 @@ body:
         <!-- Donner les commandes, sorties attendues ou la procédure reproductible. -->
 
         ## Parent de suivi
-        <!-- Écrire #N pour un enfant atomisé, ou exactement : Aucun — ticket autonome. -->
+        <!-- Écrire #N pour un enfant atomisé, ou : Aucun — ticket autonome. -->
 
-        ## Hors périmètre bloqué
-        <!-- Nommer les accès, secrets, décisions, production, déploiement ou UAT exclus. -->
+        ## Hors périmètre
+        <!-- Nommer ce que ce ticket ne couvre pas : production, déploiement, UAT, autres marques. -->
 
-        ## Autorisation de prise
-        <!-- Indiquer que seul un humain peut ajouter agent:cli-ready après contrôle vert. -->
+        ## Gate de vérification
+        <!-- Nommer le contrôle CI qui prouve le résultat (workflow, script, test). Si aucun
+             n'existe encore, le dire : l'outiller fait partie du ticket. -->
     validations:
       required: true
 
@@ -54,9 +56,9 @@ body:
     attributes:
       label: Accès nécessaires
       description: >
-        Jetons, comptes, réseaux ou droits requis. Si un accès manque, l'agent doit poser
-        `status:blocked` et dire en commentaire ce qui manque, plutôt que de tenter un
-        contournement.
+        Jetons, comptes, réseaux ou droits requis. Si un accès manque réellement, l'agent
+        pose `status:blocked` avec cause, responsable et condition de reprise, plutôt que
+        de tenter un contournement — mais il traite d'abord tout ce qui avance sans cet accès.
       placeholder: "Aucun au-delà du jeton de dépôt standard."
     validations:
       required: false
@@ -66,10 +68,11 @@ body:
     attributes:
       label: Niveau de supervision proposé
       description: >
-        L'attribution finale de `agent:cli-ready` reste à la main d'un humain :
-        un agent ne se déclare pas lui-même autorisé.
+        La supervision se joue à la fusion, pas à la prise : un agent peut toujours
+        prendre le ticket et proposer une PR. « Humain uniquement » se marque avec
+        `status:blocked` et une cause nommée.
       options:
-        - Autonome — l'agent peut proposer une PR sans arbitrage
+        - Autonome — PR fusionnable dès que les gates CI sont vertes
         - Supervisé — relecture humaine obligatoire avant fusion
         - Humain uniquement — ne pas confier à un agent
     validations:

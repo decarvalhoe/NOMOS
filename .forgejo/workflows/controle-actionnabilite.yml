@@ -1,8 +1,15 @@
-# Rend l'atomisation systématique au lieu de la laisser à la vigilance.
+# Garde l'actionnabilité vérifiable au lieu de la laisser à la vigilance.
+#
+# Principe (ADR 0005) : un ticket est prenable par défaut. Ce qui décide de sa
+# prise n'est pas une autorisation posée à la main, c'est son contenu — des
+# critères d'acceptation et une vérification exécutable. Le contrôle porte donc
+# sur ce qui rend un ticket faisable, jamais sur qui a le droit de le faire.
 #
 # Deux temps :
 #   - à chaud, sur chaque issue ouverte ou réétiquetée, la contradiction
-#     « pilotable par un agent » + « bloqué » est refusée immédiatement ;
+#     « exécutable maintenant » + « en attente d'un tiers » est refusée
+#     immédiatement : c'est elle qui immobilise un agent devant un ticket
+#     que plus personne ne bloque ;
 #   - à froid, une fois par semaine, l'ensemble des issues ouvertes est passé
 #     en revue, parce qu'un ticket devient non actionable en cours de route
 #     sans que personne ne retouche ses étiquettes.
@@ -23,7 +30,7 @@ jobs:
     if: github.event_name == 'issues'
     runs-on: docker
     steps:
-      - name: Refuser un ticket à la fois pilotable et bloqué
+      - name: Refuser un ticket à la fois exécutable et en attente
         env:
           ETIQUETTES: ${{ toJSON(github.event.issue.labels) }}
           NUMERO: ${{ github.event.issue.number }}
@@ -43,22 +50,28 @@ jobs:
           axe() {
             printf '%s' "$ETIQUETTES" | python3 -c 'import json, re, sys; pattern = re.compile(re.escape(sys.argv[1]) + r":[A-Za-z0-9][A-Za-z0-9._-]*\Z"); raise SystemExit(0 if sum(bool(pattern.fullmatch(item["name"])) for item in json.load(sys.stdin)) == 1 else 1)' "$1"
           }
+          axe_present() {
+            printf '%s' "$ETIQUETTES" | python3 -c 'import json, re, sys; pattern = re.compile(re.escape(sys.argv[1]) + r":[A-Za-z0-9][A-Za-z0-9._-]*\Z"); raise SystemExit(0 if any(pattern.fullmatch(item["name"]) for item in json.load(sys.stdin)) else 1)' "$1"
+          }
 
           echecs=0
           probleme() { echo "ECHEC  $*"; echecs=$((echecs + 1)); }
 
-          if a "agent:cli-ready" && { a "status:waiting" || a "status:blocked"; }; then
-            probleme "#$NUMERO est déclaré pilotable par un agent ET bloqué."
+          if a "status:ready" && axe_present waiting; then
+            probleme "#$NUMERO est déclaré exécutable ET en attente d'un tiers."
             echo
             echo "Les deux ne peuvent pas être vrais du même ticket. Soit il est"
-            echo "exécutable et rien ne l'attend, soit il attend et un agent ne peut"
-            echo "pas le prendre. Le plus souvent il contient les deux : une part"
-            echo "exécutable prise en otage par une part bloquée."
+            echo "exécutable et rien ne l'attend, soit il attend et son étiquette"
+            echo "status: doit le dire. Une étiquette waiting: laissée sur un ticket"
+            echo "redevenu exécutable immobilise les agents devant un travail que"
+            echo "plus personne ne bloque : c'est la panne que ce contrôle vise."
             echo
-            echo "Ouvrir une issue « Atomisation d'un ticket » et scinder :"
-            echo "  - la part exécutable part en enfant avec status:ready ;"
-            echo "  - seul un humain ajoute ensuite agent:cli-ready après vérification ;"
-            echo "  - le parent garde le reste, la cause nommée, et perd agent:cli-ready."
+            echo "Corriger dans un sens ou dans l'autre :"
+            echo "  - le tiers a répondu → retirer l'étiquette waiting: ;"
+            echo "  - le tiers est toujours attendu → passer en status:waiting et"
+            echo "    renseigner cause, responsable et condition de reprise ;"
+            echo "  - une part avance sans le tiers → la sortir en ticket enfant"
+            echo "    status:ready, le parent gardant l'attente."
           fi
 
           axe status || probleme "#$NUMERO doit porter exactement une étiquette status: valide"
@@ -161,7 +174,6 @@ jobs:
           problems = []
           ready = "status:ready" in labels
           blocked = bool(labels & {"status:blocked", "status:waiting"})
-          parent = None
 
           if ready:
               if section("Critères d’acceptation", "Critères d\047acceptation") is None:
@@ -169,16 +181,8 @@ jobs:
               if section("Vérification") is None:
                   problems.append("status:ready sans section visible et non vide ## Vérification")
               parent_value = section("Parent de suivi")
-              if parent_value is None:
-                  problems.append("status:ready sans section visible et non vide ## Parent de suivi")
-              elif parent_value == "Aucun — ticket autonome.":
-                  pass
-              else:
-                  match = re.fullmatch(r"#([1-9][0-9]*)", parent_value)
-                  if match:
-                      parent = int(match.group(1))
-                  else:
-                      problems.append("## Parent de suivi doit valoir #N ou Aucun — ticket autonome.")
+              if parent_value is not None and not re.fullmatch(r"#[1-9][0-9]*", parent_value) and not re.match(r"(?i)aucun\b", parent_value):
+                  problems.append("## Parent de suivi doit valoir #N, ou nommer l’absence de parent")
 
           if blocked:
               for title in ("Cause du blocage", "Responsable capable de lever", "Condition de reprise"):
@@ -187,12 +191,6 @@ jobs:
                       problems.append(f"ticket bloqué sans section visible et non vide ## {title}")
                   elif explicitly_absent(title, value):
                       problems.append(f"ticket bloqué avec valeur explicitement absente dans ## {title}")
-
-          if parent is not None:
-              if section("Hors périmètre bloqué") is None:
-                  problems.append("enfant atomisé sans section visible et non vide ## Hors périmètre bloqué")
-              if section("Autorisation de prise") is None:
-                  problems.append("enfant atomisé sans section visible et non vide ## Autorisation de prise")
 
           if problems:
               print("\n".join(problems))
@@ -212,7 +210,7 @@ jobs:
     if: github.event_name != 'issues'
     runs-on: docker
     steps:
-      - name: Lister les tickets à atomiser
+      - name: Lister les tickets non exécutables en l'état
         env:
           API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
           JETON: ${{ secrets.GITHUB_TOKEN }}
@@ -230,63 +228,15 @@ jobs:
             echo "Python 3 absent : validation JSON fail-closed impossible."; exit 1
           fi
 
-          # On interroge l'API une fois par étiquette et on croise les numéros,
-          # au lieu de découper le JSON complet. Chaque page est capturée avant
-          # parsing : une panne HTTP/réseau ou une réponse non JSON doit faire
-          # échouer le contrôle, jamais devenir silencieusement une liste vide.
-          numeros() {
-            etiquette="$1"
-            page=1
-            while :; do
-              [ "$page" -le 10000 ] || { echo "Pagination issues excessive pour $etiquette." >&2; return 1; }
-              if ! corps=$(get "$API/issues?state=open&type=issues&limit=100&page=$page&labels=$etiquette"); then
-                echo "Lecture API impossible pour l'étiquette $etiquette (page $page)." >&2
-                return 1
-              fi
-              if ! extraits=$(printf '%s' "$corps" | python3 -c 'import json, sys; value = json.load(sys.stdin); valid = isinstance(value, list) and all(isinstance(item, dict) and type(item.get("number")) is int and item["number"] > 0 for item in value); valid or sys.exit(1); print(*(item["number"] for item in value), sep="\n")' 2>/dev/null); then
-                echo "Réponse API invalide pour l'étiquette $etiquette (page $page)." >&2
-                return 1
-              fi
-              [ -n "$extraits" ] && printf '%s\n' "$extraits"
-              compte=$(printf '%s\n' "$extraits" | sed '/^$/d' | wc -l | tr -d ' ')
-              [ "$compte" -lt 100 ] && break
-              page=$((page + 1))
-            done
-          }
-
-          pilotables=''
-          bloques_bruts=''
-          bloques=''
-          nettoyer() {
-            [ -z "$pilotables" ] || rm -f -- "$pilotables"
-            [ -z "$bloques_bruts" ] || rm -f -- "$bloques_bruts"
-            [ -z "$bloques" ] || rm -f -- "$bloques"
-          }
-          trap nettoyer EXIT HUP INT TERM
-          pilotables=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-pilotables.XXXXXX") || exit 1
-          bloques_bruts=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-bloques-bruts.XXXXXX") || exit 1
-          bloques=$(mktemp "${TMPDIR:-/tmp}/controle-actionnabilite-bloques.XXXXXX") || exit 1
-
-          if ! numeros 'agent%3Acli-ready' > "$pilotables"; then exit 1; fi
-          : > "$bloques_bruts"
-          for etiquette in 'status%3Awaiting' 'status%3Ablocked'; do
-            if ! numeros "$etiquette" >> "$bloques_bruts"; then exit 1; fi
-          done
-          sort -u "$bloques_bruts" > "$bloques"
-
           ecarts=0
-          while IFS= read -r num; do
-            [ -n "$num" ] || continue
-            if grep -qx "$num" "$bloques"; then
-              echo "à atomiser  #$num"
-              ecarts=$((ecarts + 1))
-            fi
-          done < "$pilotables"
 
-          # La contradiction de labels ne suffit pas : la revue périodique lit
-          # aussi tous les corps pour imposer critères, cause/responsable et
-          # structure des enfants atomisés. Le nombre d'objets JSON pilote la
-          # pagination, jamais le nombre de valeurs extraites.
+          # Un seul parcours des issues ouvertes : chaque page porte déjà les
+          # étiquettes et le corps, donc la contradiction ready/waiting et les
+          # écarts de structure se lisent d'un même passage. Chaque page est
+          # capturée avant parsing : une panne HTTP/réseau ou une réponse non
+          # JSON doit faire échouer le contrôle, jamais devenir silencieusement
+          # une liste vide. Le nombre d'objets JSON pilote la pagination, jamais
+          # le nombre de valeurs extraites.
           page=1
           while :; do
             [ "$page" -le 10000 ] || { echo "Pagination de revue des corps excessive." >&2; exit 1; }
@@ -403,14 +353,13 @@ jobs:
               problems = []
               ready = "status:ready" in labels
               blocked = bool(labels & {"status:blocked", "status:waiting"})
-              parent = None
 
               if sum(bool(axis_pattern("status").fullmatch(name)) for name in labels) != 1:
                   problems.append("doit porter exactement une étiquette status: valide")
               if sum(bool(axis_pattern("type").fullmatch(name)) for name in labels) != 1:
                   problems.append("doit porter exactement une étiquette type: valide")
-              if "agent:cli-ready" in labels and blocked:
-                  problems.append("déclaré pilotable et bloqué à la fois")
+              if ready and any(axis_pattern("waiting").fullmatch(name) for name in labels):
+                  problems.append("déclaré exécutable et en attente d’un tiers à la fois")
 
               if ready:
                   if section(sections, "Critères d’acceptation", "Critères d\047acceptation") is None:
@@ -418,16 +367,10 @@ jobs:
                   if section(sections, "Vérification") is None:
                       problems.append("status:ready sans section visible et non vide ## Vérification")
                   parent_value = section(sections, "Parent de suivi")
-                  if parent_value is None:
-                      problems.append("status:ready sans section visible et non vide ## Parent de suivi")
-                  elif parent_value == "Aucun — ticket autonome.":
-                      pass
-                  else:
-                      match = re.fullmatch(r"#([1-9][0-9]*)", parent_value)
-                      if match:
-                          parent = int(match.group(1))
-                      else:
-                          problems.append("## Parent de suivi doit valoir #N ou Aucun — ticket autonome.")
+                  if (parent_value is not None
+                          and not re.match(r"(?i)aucun\b", parent_value)
+                          and not re.fullmatch(r"#[1-9][0-9]*", parent_value)):
+                      problems.append("## Parent de suivi doit valoir #N, ou nommer l’absence de parent")
 
               if blocked:
                   for title in ("Cause du blocage", "Responsable capable de lever", "Condition de reprise"):
@@ -436,12 +379,6 @@ jobs:
                           problems.append(f"bloqué sans section visible et non vide ## {title}")
                       elif explicitly_absent(title, value):
                           problems.append(f"bloqué avec valeur explicitement absente dans ## {title}")
-
-              if parent is not None:
-                  if section(sections, "Hors périmètre bloqué") is None:
-                      problems.append("enfant atomisé sans section visible et non vide ## Hors périmètre bloqué")
-                  if section(sections, "Autorisation de prise") is None:
-                      problems.append("enfant atomisé sans section visible et non vide ## Autorisation de prise")
 
               for problem in problems:
                   print("#{} {}".format(issue["number"], problem))
@@ -579,7 +516,8 @@ jobs:
           echo
           if [ "$ecarts" -gt 0 ]; then
             echo "$ecarts écart(s) d'actionnabilité ou d'atomisation."
-            echo "Corriger les labels et le corps, ou scinder le ticket avant toute prise par un agent."
+            echo "Corriger les labels et le corps, ou scinder le ticket, pour qu'un agent"
+            echo "puisse le prendre sans demander d'arbitrage."
             exit 1
           fi
-          echo "Toutes les issues ouvertes portent un verdict et une structure d'atomisation cohérents."
+          echo "Toutes les issues ouvertes sont exécutables et vérifiables en l'état."

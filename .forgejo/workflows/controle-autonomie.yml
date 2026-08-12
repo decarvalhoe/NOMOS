@@ -1,28 +1,29 @@
 name: Convention — contrat d'autonomie
 
-# Ce workflow remplace un contrôle d'IDENTITÉ par un contrôle de CONTRAT.
+# Ce workflow vérifie un CONTRAT, jamais une IDENTITÉ ni une AUTORISATION.
 #
-# `controle-etiquette.yml` vérifie QUI a posé `agent:cli-ready` et révoque
-# l'étiquette si c'est un compte agent. L'identité n'est qu'un proxy de la vraie
-# question : « ce ticket est-il sûr à exécuter sans supervision ? » Cette
-# question est directement vérifiable — c'est ce que fait ce fichier — ce qui
-# rend le proxy inutile et permet à un agent de se saisir lui-même d'un ticket
-# qui remplit le contrat.
+# Il a d'abord remplacé `controle-etiquette.yml`, qui vérifiait QUI avait posé
+# `agent:cli-ready` et révoquait l'étiquette si c'était un compte agent. Il
+# gardait cependant l'étiquette comme déclencheur : un ticket sans elle sortait
+# sans être vérifié, et il fallait toujours que quelqu'un la pose.
 #
-# ATTENTION — DOCTRINES OPPOSÉES. `controle-etiquette.yml` et ce workflow ne
-# peuvent pas coexister sur un même dépôt : le premier révoque ce que le second
-# autorise. Déployer celui-ci implique de retirer l'autre. C'est une décision de
-# gouvernance, pas un détail de configuration.
+# Mesuré sur la forge le 12.08.2026, cette étiquette bloquait plus qu'elle ne
+# protégeait : sur `websites`, 28 issues ouvertes sur 38 — dont 22 d'une même
+# marque et 2 P0 — étaient hors de portée de tout agent faute d'un geste jamais
+# posé ; 21 dépôts de l'organisation portaient l'étiquette, et ~17 tickets
+# spécifiés et non contestés attendaient une autorisation ailleurs.
 #
-# Ce que ce contrôle NE vérifie PAS : que le tronc du dépôt est protégé. Cette
-# garantie est de niveau dépôt, pas de niveau ticket, et sa lecture exige des
-# droits d'administration que le jeton éphémère d'un run n'a pas. Elle se vérifie
-# avec `poste-agent/bin/autonomie.mjs etat`, et se pose avec
-# `autonomie proteger --appliquer`. Sans elle, accorder l'autonomie revient à
-# autoriser une poussée directe sur le tronc.
+# Le déclencheur est donc devenu `status:ready`, et l'axe `agent:` a disparu :
+# un ticket spécifié est prenable. Voir l'ADR 0005 de `RBOKproject/websites`.
 #
-# Aucune action tierce (`uses:`) : l'instance résout `uses:` sur elle-même. Aucun
-# appel réseau non plus — le corps et les étiquettes sont dans l'évènement.
+# Partage du travail avec `controle-actionnabilite.yml`, pour qu'un même défaut
+# ne soit pas signalé deux fois :
+#   - actionnabilité = STRUCTURE (axes d'étiquettes, critères, vérification,
+#     cause/responsable/condition d'un ticket bloqué) ;
+#   - autonomie = RISQUE (périmètre déclaré, effets non réversibles).
+#
+# Aucune action tierce (`uses:`) : l'instance résout `uses:` sur elle-même.
+# Aucun appel réseau non plus — le corps et les étiquettes sont dans l'évènement.
 
 on:
   issues:
@@ -56,38 +57,28 @@ jobs:
             printf '%s' "$compact" | grep -q "\"name\":\"$1\""
           }
 
-          if ! porte 'agent:cli-ready'; then
-            echo "Ticket sans agent:cli-ready : le contrat d'autonomie ne s'applique pas."
+          if ! porte 'status:ready'; then
+            echo "Ticket non déclaré exécutable : le contrat d'autonomie ne s'applique pas."
             exit 0
           fi
 
-          echo "Ticket #$NUMERO porte agent:cli-ready — vérification du contrat."
+          echo "Ticket #$NUMERO est status:ready — vérification du contrat."
           echo
 
-          # --- clause 1 : statut ------------------------------------------
-          if porte 'status:ready'; then
-            ok "status:ready"
-          else
-            probleme "un ticket pilotable doit être status:ready"
+          # Le corps arrive encodé en JSON. Le décoder à la main au sed laissait
+          # les guillemets englobants : la toute première ligne du corps devenait
+          # « "## Critères d'acceptation » et aucune section placée en tête
+          # n'était reconnue — un ticket correctement rédigé pouvait être refusé.
+          # Un décodage JSON réel évite aussi les pièges des échappements \" et
+          # \uXXXX. Fail-closed : sans python3, on ne devine pas le contenu.
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "Python 3 absent : décodage du corps impossible, contrôle non concluant."
+            exit 1
           fi
-
-          for interdit in status:blocked status:waiting; do
-            if porte "$interdit"; then
-              probleme "$interdit contredit agent:cli-ready — signal d'atomisation"
-            fi
-          done
-
-          # --- clause 2 : type réversible ---------------------------------
-          for interdit in type:decision type:security type:ops type:migration; do
-            if porte "$interdit"; then
-              probleme "$interdit porte des effets qu'un revert ne rattrape pas : arbitrage humain requis"
-            fi
-          done
-
-          # Le corps arrive encodé en JSON : on le décode en remplaçant les
-          # échappements par de vraies fins de ligne, sans passer par un
-          # interpréteur.
-          corps_lisible=$(printf '%s' "$CORPS" | sed 's/\\r//g; s/\\n/\n/g')
+          if ! corps_lisible=$(printf '%s' "$CORPS" | python3 -c 'import json, sys; value = json.load(sys.stdin); print(value if isinstance(value, str) else "")'); then
+            echo "Corps d'issue illisible : contrôle non concluant."
+            exit 1
+          fi
 
           # Les modèles d'issue emploient l'apostrophe typographique U+2019 ;
           # la normaliser évite de déclarer absente une section bien présente.
@@ -102,37 +93,44 @@ jobs:
             ' | sed 's/<!--.*-->//' | tr -d " \t\r\n"
           }
 
-          exiger_section() {
-            if [ -n "$(section "$1")" ]; then
-              ok "section « $1 » renseignée"
-            else
-              probleme "section « $1 » absente ou vide — $2"
-            fi
-          }
-
-          exiger_section "Critères d'acceptation" \
-            "sans critère, l'agent produit du plausible et de l'invérifiable"
-          exiger_section "Vérification" \
-            "sans commande de vérification, personne ne peut contredire l'agent"
-          exiger_section "Parent de suivi" \
-            "un enfant d'atomisation orphelin se referme sans que le parent le sache"
-          exiger_section "Autorisation de prise" \
-            "c'est la clause qui dit jusqu'où l'agent a le droit d'aller"
-
-          if [ -n "$(section "Hors périmètre bloqué")" ] || [ -n "$(section "Périmètre autorisé")" ]; then
+          # --- clause unique et bloquante : le périmètre -------------------
+          # « Hors périmètre » est le titre courant ; les deux formes plus
+          # anciennes restent acceptées pour ne pas invalider les tickets déjà
+          # rédigés — un contrôle qui casse le stock existant ne protège rien.
+          if [ -n "$(section "Hors périmètre")" ] ||
+             [ -n "$(section "Hors périmètre bloqué")" ] ||
+             [ -n "$(section "Périmètre autorisé")" ]; then
             ok "périmètre déclaré"
           else
             probleme "aucun périmètre déclaré — l'agent élargira pour bien faire"
+          fi
+
+          # --- signal non bloquant : effets non réversibles ----------------
+          # Ces types portent des effets qu'un revert ne rattrape pas. Ce n'est
+          # pas une raison d'en interdire la PRISE : la supervision se joue à la
+          # fusion — tronc protégé et revue croisée — pas à l'entrée du ticket.
+          # Refuser ici rendrait non actionnables des tickets ops ou migration
+          # parfaitement spécifiés, et recréerait la file d'attente que l'axe
+          # agent: avait déjà produite.
+          risque=""
+          for type_sensible in type:decision type:security type:ops type:migration; do
+            if porte "$type_sensible"; then
+              risque="$risque $type_sensible"
+            fi
+          done
+          if [ -n "$risque" ]; then
+            echo "note   effets non réversibles :$risque"
+            echo "       Le ticket reste prenable. Sa pull request demande une revue"
+            echo "       humaine avant fusion, et le déploiement reste une étape"
+            echo "       distincte — une CI verte prouve le job, pas la production."
           fi
 
           echo
           if [ "$echecs" -gt 0 ]; then
             echo "$echecs clause(s) du contrat d'autonomie non remplie(s)."
             echo
-            echo "Ce ticket porte agent:cli-ready sans en remplir les conditions."
-            echo "Il ne s'agit pas de savoir QUI a posé l'étiquette : un ticket sans"
-            echo "critère d'acceptation, sans vérification ou sans périmètre n'est"
-            echo "exécutable en autonomie par personne, agent ou humain."
+            echo "Un ticket sans périmètre déclaré n'est exécutable en autonomie par"
+            echo "personne, agent ou humain : rien n'y dit où s'arrêter."
             echo
             echo "Compléter le ticket, ou le renvoyer à l'arbitrage :"
             echo "  arbitrage voir <depot>#$NUMERO"
