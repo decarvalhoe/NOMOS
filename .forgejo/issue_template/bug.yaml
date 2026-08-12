@@ -24,13 +24,14 @@ body:
         <!-- Donner la commande ou le test qui échoue avant et passe après. -->
 
         ## Parent de suivi
-        <!-- Écrire #N pour un enfant, sinon exactement : Aucun — ticket autonome. -->
+        <!-- Écrire #N pour un enfant, sinon : Aucun — ticket autonome. -->
 
-        ## Hors périmètre bloqué
+        ## Hors périmètre
         <!-- Lister ce qui ne sera pas modifié, notamment production, secrets et UAT. -->
 
-        ## Autorisation de prise
-        <!-- Seul un humain peut ajouter agent:cli-ready après contrôle vert. -->
+        ## Gate de vérification
+        <!-- Nommer le contrôle CI qui prouve la correction (test de non-régression,
+             smoke, conformité). S'il n'existe pas, l'écrire : le poser fait partie du ticket. -->
     validations:
       required: true
 

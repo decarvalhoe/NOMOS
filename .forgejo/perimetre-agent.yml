@@ -1,0 +1,69 @@
+# Périmètre agent — modèle à copier en `.forgejo/perimetre-agent.yml`
+#
+# CE FICHIER REMPLACE UN VERROU PAR UNE BORNE.
+#
+# Jusqu'ici, ce qu'un agent avait le droit de toucher était écrit dans chaque
+# ticket : `## Périmètre autorisé`, `## Hors périmètre bloqué`,
+# `## Autorisation de prise`. Trois sections à rédiger par un humain, à chaque
+# fois, avant qu'un agent puisse commencer. Le 2026-08-10, la conséquence était
+# mesurable : 37 tickets prêts, 6 seulement autorisés. Le travail n'attendait
+# pas une capacité, il attendait une permission.
+#
+# Le périmètre se déclare désormais UNE FOIS PAR DÉPÔT. Un agent le lit, sait
+# immédiatement où il peut aller, et n'a plus besoin qu'on le lui répète. La
+# garde ne disparaît pas : elle passe du ticket à la CI, qui vérifie ce que la
+# PR a réellement touché — un contrôle de fait, pas d'intention.
+#
+# Vérification locale avant de pousser, sans attendre personne :
+#     node poste-agent/bin/perimetre.mjs verifier
+#
+# Application en CI : `.forgejo/workflows/controle-sortie.yml`.
+
+version: 1
+
+# Chemins qu'aucune pull request d'agent ne peut modifier, quelle qu'en soit la
+# raison. Une PR qui y touche est refusée : c'est la seule liste réellement
+# contraignante, et elle doit rester courte pour rester lue.
+#
+# Y mettre ce qui est irréversible ou faux par construction : fichiers générés,
+# migrations déjà appliquées, secrets, état de production.
+interdits:
+  - "**/*.env"
+  - "**/secrets/**"
+  # - "docs/modele-metier.*"        # généré, toute édition à la main est perdue
+  # - "**/migrations/**"            # déjà appliquées en base
+
+# Chemins qu'un agent modifie librement. Tout ce qui n'est ni interdit ni
+# sensible tombe ici par défaut : cette liste sert à documenter, pas à autoriser.
+libres:
+  - "src/**"
+  - "docs/**"
+  - "tests/**"
+  - "**/*.md"
+
+# Chemins modifiables, mais dont la modification doit être **justifiée dans la
+# description de la PR**. Ce n'est pas une interdiction : c'est l'obligation de
+# dire pourquoi. Le contrôle cherche une mention explicite du chemin touché.
+sensibles:
+  - ".forgejo/**"
+  - "Dockerfile"
+  - "docker-compose.yml"
+  - "package.json"
+
+# Motifs refusés partout dans le diff, indépendamment du fichier. Expressions
+# régulières POSIX étendues. Le contrôle n'inspecte que les lignes ajoutées :
+# une chaîne présente avant la PR n'est pas le problème de cette PR.
+motifs_interdits:
+  - "-----BEGIN [A-Z ]*PRIVATE KEY-----"
+  - "(password|passwd|secret|token)[[:space:]]*[=:][[:space:]]*['\"][^'\"]{8,}"
+  - "xox[baprs]-[0-9A-Za-z-]{10,}"
+
+# Commande qui doit passer avant fusion. Elle est exécutée par la CI propre du
+# dépôt, pas par le contrôle de périmètre : ce champ sert à la déclarer en un
+# endroit qu'un agent peut lire sans deviner.
+verification: ""
+
+# Nombre maximal de fichiers qu'une PR d'agent peut toucher. Une PR énorme n'est
+# pas relisible, donc pas vérifiable, donc pas fusionnable en autonomie. 0 = pas
+# de limite.
+fichiers_max: 0
