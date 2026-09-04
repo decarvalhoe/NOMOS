@@ -195,7 +195,7 @@ Current structured source-to-feed POC:
 | Strict gate | `pass`, exit code 0 |
 | Source mutation check | no source mutation detected |
 
-This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, and the proof is bounded to the recorded corpus, commit, and build (attestation `claim_coverage` is now wired — `corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs and computes coverage; the recorded POC run keeps its historical WARN). The next hardening work targets CI repeatability, additional document formats, customer validation, and broader universal-fidelity evidence.
+This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, and the proof is bounded to the recorded corpus, commit, and build (attestation `claim_coverage` is now wired — `corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs and computes coverage; the recorded POC run keeps its historical WARN). The next hardening work targets CI repeatability, additional document formats, customer validation, and broader universal-fidelity evidence. CI repeatability is now **measured** rather than announced (VRC-14 #560): `scripts/repeated_ci_evidence.py` counts the scheduled-run chain on the private corpus and publishes a dated index under `docs/regulated/evidence-index/repeated-ci-evidence/`; measured 2026-09-04, 4 consecutive green runs of the 8 targeted, so the claim stays locked.
 
 ## Continuously Computed Proofs
 
@@ -364,7 +364,7 @@ Nomos does not make an LLM authoritative. In the intended architecture, determin
 
 Nomos does not remove the need for validation. In regulated environments, customers still need intended-use definition, risk assessment, validation planning, test evidence, change control, supplier assessment, security review, and approval records.
 
-Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The feed-quality roadmap explicitly addresses unsupported document formats, residual semantic warnings, customer validation packs, and CI repeatability on private corpora.
+Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The feed-quality roadmap explicitly addresses unsupported document formats, residual semantic warnings, customer validation packs, and CI repeatability on private corpora — the last of these is measured continuously, at 4 consecutive green runs out of 8, with 5 missed weekly occurrences in July and 2 distinct corpus revisions across the whole recorded window.
 
 The cite-or-abstain gate and its public bench measure the gate, not an LLM: the faithfulness proxy is lexical and negation-blind (stated in every verdict, published as a false cite in the bench); the NLI second judge is a verified protocol, not a shipped model, and no CI run scores with a neural model. The bench says nothing about the quality of a retrieval, an embedding or an LLM, nor about the business correctness of an answer.
 

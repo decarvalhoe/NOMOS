@@ -1874,6 +1874,65 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "repeated_ci_evidence_private_corpus",
+      "title": "Repeated CI evidence on the private corpus — scripts/repeated_ci_evidence.py MEASURES the scheduled-run chain of rbok-lawbook-e2e.yml from the Actions API and publishes a dated index; a run counts only if it is green AND still holds an unexpired archived pack, and a missed weekly occurrence breaks the chain (the streak ignoring cadence is published beside it so the rule's cost is visible); measured 2026-09-04 at 4 of 8 consecutive green runs, so the claim STAYS LOCKED — the offline CI gate fails on a hand-edited number, a policy edited after publication, a workflow that lost its schedule or lowered retention, a ledger that disagrees with the measurement, or prose asserting the claim (VRC-14 #560). Deliberately declared sidecar, not real: this is a Python guard over CI history with no Go engine, and the doctrine reads sidecar as PARTIAL — which is exactly the state of the chain at 4/8.",
+      "pillar": "P1",
+      "claim_level": "evidence-measurement only (one workflow, one private corpus; no coverage claim, and the claim it gates is locked until the target is met)",
+      "promotion_issue": "VRC-14",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": ".github/workflows/rbok-lawbook-e2e.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/repeated_ci_evidence.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/evidence-index/repeated-ci-evidence/policy.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/evidence-index/repeated-ci-evidence/README.md",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/evidence-index/evidence-ledger.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_repeated_ci_evidence.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -1909,11 +1968,11 @@
     }
   ],
   "summary": {
-    "capabilities": 38,
+    "capabilities": 39,
     "computed": {
       "real": 29,
       "partial": 0,
-      "sidecar": 4,
+      "sidecar": 5,
       "stub": 0,
       "absent": 5
     },
