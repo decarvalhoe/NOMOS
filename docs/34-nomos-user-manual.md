@@ -69,6 +69,8 @@ nomos corpus body-ledger
 nomos corpus attest
 nomos rag export
 nomos rag manifest
+nomos rag delta
+nomos rag verify
 nomos strict
 nomos github plan
 ```

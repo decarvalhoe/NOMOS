@@ -103,6 +103,8 @@ cite-or-abstain (`nomos answer`). La couture est `nomos rag` :
 ```bash
 nomos rag export   --feed feed.json --format jsonl|langchain|llamaindex --strict
 nomos rag manifest --feed feed.json --strict
+nomos rag delta    --old manifest-indexe.json --new manifest-courant.json
+nomos rag verify   --manifest manifest-indexe.json --feed feed.json
 ```
 
 Contrat d'export (`nomos-rag-chunk-v1`) :
@@ -130,12 +132,30 @@ deux exports du même feed sont identiques octet pour octet.
 qui a été remis à l'index : digest global et digest par source, lié au
 `source_hash`. Une source dont le hash bouge invalide exactement ses chunks,
 pas l'index entier — la règle « un changement de source invalide les chunks
-liés » devient vérifiable côté consommateur.
+liés » devient vérifiable côté consommateur. Le manifeste porte aussi
+l'empreinte de chaque chunk (`embedding_hash`, `body_hash`, `source_hash`), et
+son digest est recalculable depuis cette seule liste.
+
+`nomos rag delta --old A --new B` calcule le plan de réindexation exact entre
+deux manifestes (`nomos-rag-index-delta-v1`). Par chunk : `embed` (corps ou
+contexte modifié, chunk ajouté), `update_metadata` (texte identique mais
+`source_hash` déplacé : rafraîchir la provenance stockée pour que les citations
+se re-prouvent) ou `delete` (chunk disparu) ; par source : `unchanged`,
+`changed`, `added`, `removed`. Un changement de schéma de record ou de
+grammaire de contexte force une réindexation complète. `nomos rag verify
+--manifest A --feed feed.json` rejoue ce calcul contre le corpus tel qu'il est
+maintenant et sort en code 1 dès que l'index est périmé : c'est le gate qu'un
+consommateur exécute avant de faire confiance à son index. Un manifeste
+retouché à la main (digest différent de sa propre liste de chunks) ou sans
+empreintes par chunk ne peut pas se porter garant d'un index : réindexation
+complète, jamais « frais » par défaut.
 
 Le gate CI `scripts/rag-export-gate.sh` rejoue ces propriétés sur le corpus de
 référence public du dépôt : export et manifeste bit-identiques, zéro refus,
-aucune fuite du préfixe dans le corps citable, et une mutation d'un octet
-d'une source déplace le digest de cette source seule.
+aucune fuite du préfixe dans le corps citable, une mutation d'un octet d'une
+source déplace le digest de cette source seule, et `rag verify` rend frais
+(code 0) sur re-scan, périmé (code 1) sur mutation avec un plan limité à la
+source touchée, et refuse un manifeste falsifié.
 
 > Périmètre de revendication : le contrat d'export (déterminisme, liaison à la
 > provenance, détection de staleness). Aucune qualité de retrieval n'est

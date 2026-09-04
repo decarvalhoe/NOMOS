@@ -250,3 +250,162 @@ func TestRAGCommand_IsAdvertisedInHelp(t *testing.T) {
 		t.Fatal("`rag` is registered but not advertised in the help text")
 	}
 }
+
+// --- delta / verify ---------------------------------------------------------
+
+// ragManifestFile builds a manifest from a feed fixture, the way a consumer
+// records what it indexed.
+func ragManifestFile(t *testing.T, feedBody string) string {
+	t.Helper()
+	feed := writeFeed(t, feedBody)
+	out := filepath.Join(t.TempDir(), "manifest.json")
+	code, _, stderr := runRAG(t, "manifest", "--feed", feed, "--output", out)
+	if code != 0 {
+		t.Fatalf("manifest exited %d: %s", code, stderr)
+	}
+	return out
+}
+
+type ragPlan struct {
+	Stale       bool `json:"stale"`
+	FullReindex bool `json:"full_reindex"`
+	Chunks      []struct {
+		ChunkID string `json:"chunk_id"`
+		Action  string `json:"action"`
+		Reason  string `json:"reason"`
+	} `json:"chunks"`
+	Summary struct {
+		Unchanged int `json:"unchanged"`
+		Embed     int `json:"embed"`
+	} `json:"summary"`
+	FullReindexReasons []string `json:"full_reindex_reasons"`
+}
+
+func decodePlan(t *testing.T, stdout string) ragPlan {
+	t.Helper()
+	var p ragPlan
+	if err := json.Unmarshal([]byte(stdout), &p); err != nil {
+		t.Fatalf("decode plan: %v\n%s", err, stdout)
+	}
+	return p
+}
+
+func TestRAGVerify_FreshIndexPasses(t *testing.T) {
+	manifest := ragManifestFile(t, feedFixture)
+	feed := writeFeed(t, feedFixture)
+
+	code, stdout, stderr := runRAG(t, "verify", "--manifest", manifest, "--feed", feed)
+	if code != 0 {
+		t.Fatalf("a fresh index must exit 0, got %d (stderr: %s)", code, stderr)
+	}
+	p := decodePlan(t, stdout)
+	if p.Stale || len(p.Chunks) != 0 || p.Summary.Unchanged != 2 {
+		t.Fatalf("fresh index reported work: %+v", p)
+	}
+	if !strings.Contains(stderr, "index fresh") {
+		t.Fatalf("verdict missing from stderr: %s", stderr)
+	}
+}
+
+// The gate: an edited corpus turns the exit code red and the plan names
+// exactly the chunk to re-embed — not the whole index.
+func TestRAGVerify_StaleIndexFailsClosed(t *testing.T) {
+	manifest := ragManifestFile(t, feedFixture)
+	edited := writeFeed(t, strings.Replace(
+		feedFixture, "hauteur de neuf metres", "hauteur de douze metres", 1))
+
+	code, stdout, stderr := runRAG(t, "verify", "--manifest", manifest, "--feed", edited)
+	if code != 1 {
+		t.Fatalf("a stale index must exit 1, got %d (stderr: %s)", code, stderr)
+	}
+	p := decodePlan(t, stdout)
+	if !p.Stale || p.FullReindex {
+		t.Fatalf("expected stale without full reindex, got %+v", p)
+	}
+	if len(p.Chunks) != 1 || p.Chunks[0].ChunkID != "chunk:S1:100-220" ||
+		p.Chunks[0].Action != "embed" || p.Chunks[0].Reason != "body_changed" {
+		t.Fatalf("plan must name exactly the edited chunk as embed/body_changed, got %+v", p.Chunks)
+	}
+	if p.Summary.Unchanged != 1 {
+		t.Fatalf("the untouched chunk must stay unchanged, got %+v", p.Summary)
+	}
+	if !strings.Contains(stderr, "index stale") {
+		t.Fatalf("verdict missing from stderr: %s", stderr)
+	}
+}
+
+// A manifest edited by hand keeps its digest but not its chunk list: it must
+// be refused as a baseline, or a forged manifest could certify a stale index.
+func TestRAGVerify_TamperedManifestIsRefused(t *testing.T) {
+	manifest := ragManifestFile(t, feedFixture)
+	raw, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	chunks := m["chunks"].([]any)
+	chunks[0].(map[string]any)["embedding_hash"] = "sha256:" + strings.Repeat("0", 64)
+	forged, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(manifest, forged, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	feed := writeFeed(t, feedFixture)
+	code, stdout, _ := runRAG(t, "verify", "--manifest", manifest, "--feed", feed)
+	if code != 1 {
+		t.Fatalf("a tampered manifest must exit 1, got %d", code)
+	}
+	p := decodePlan(t, stdout)
+	if !p.FullReindex || !strings.Contains(stdout, "old_manifest_digest_mismatch") {
+		t.Fatalf("tampering not reported as a digest mismatch: %+v", p)
+	}
+}
+
+func TestRAGVerify_RefusesNonManifestInput(t *testing.T) {
+	feed := writeFeed(t, feedFixture)
+	code, _, stderr := runRAG(t, "verify", "--manifest", feed, "--feed", feed)
+	if code != 1 || !strings.Contains(stderr, "is not a nomos-rag-index-manifest-v1 document") {
+		t.Fatalf("a feed passed as manifest must be refused, got %d / %s", code, stderr)
+	}
+}
+
+// `rag delta` is a plan, not a gate: it exits 0 and lists exactly the work.
+func TestRAGDelta_PlansExactlyTheChangedChunks(t *testing.T) {
+	oldManifest := ragManifestFile(t, feedFixture)
+	newManifest := ragManifestFile(t, strings.Replace(
+		feedFixture, "recul minimal est de cinq metres", "recul minimal est de six metres", 1))
+
+	code, stdout, stderr := runRAG(t, "delta", "--old", oldManifest, "--new", newManifest)
+	if code != 0 {
+		t.Fatalf("delta is informational and must exit 0, got %d (stderr: %s)", code, stderr)
+	}
+	p := decodePlan(t, stdout)
+	if !p.Stale || len(p.Chunks) != 1 || p.Chunks[0].ChunkID != "chunk:S1:300-380" || p.Chunks[0].Reason != "body_changed" {
+		t.Fatalf("plan must name exactly the edited chunk, got %+v", p)
+	}
+	if p.Summary.Embed != 1 || p.Summary.Unchanged != 1 {
+		t.Fatalf("summary drifted: %+v", p.Summary)
+	}
+}
+
+func TestRAGDeltaVerify_UsageErrors(t *testing.T) {
+	if code, _, _ := runRAG(t, "delta", "--old", "only-one.json"); code != 2 {
+		t.Fatalf("delta without --new must be a usage error, got %d", code)
+	}
+	if code, _, _ := runRAG(t, "verify", "--manifest", "only-one.json"); code != 2 {
+		t.Fatalf("verify without --feed must be a usage error, got %d", code)
+	}
+	if code, _, _ := runRAG(t, "delta", "--old", "missing.json", "--new", "missing.json"); code != 1 {
+		t.Fatalf("delta on missing files must fail, got %d", code)
+	}
+	code, stdout, _ := runRAG(t, "help")
+	if code != 0 || !strings.Contains(stdout, "delta") || !strings.Contains(stdout, "verify") {
+		t.Fatal("`rag help` must list delta and verify")
+	}
+}

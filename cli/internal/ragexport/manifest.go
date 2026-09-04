@@ -25,6 +25,7 @@ type Manifest struct {
 	RejectedCount        int              `json:"rejected_count"`
 	ChunkDigest          string           `json:"chunk_digest"`
 	Sources              []ManifestSource `json:"sources"`
+	Chunks               []ManifestChunk  `json:"chunks"`
 }
 
 // ManifestSource binds a source to the chunks that entered the index from it,
@@ -35,6 +36,29 @@ type ManifestSource struct {
 	SourceHash  string `json:"source_hash"`
 	ChunkCount  int    `json:"chunk_count"`
 	ChunkDigest string `json:"chunk_digest"`
+}
+
+// ManifestChunk is the per-chunk fingerprint: what a consumer needs to decide,
+// chunk by chunk and without the export at hand, what to re-embed (embedding
+// text moved), what to re-cite (body moved), what merely needs its provenance
+// refreshed (source hash moved, text identical) and what to delete.
+type ManifestChunk struct {
+	ChunkID       string `json:"chunk_id"`
+	SourceID      string `json:"source_id"`
+	SourceHash    string `json:"source_hash"`
+	EmbeddingHash string `json:"embedding_hash"`
+	BodyHash      string `json:"body_hash"`
+}
+
+// fingerprintOf reduces a record to its manifest fingerprint.
+func fingerprintOf(rec Record) ManifestChunk {
+	return ManifestChunk{
+		ChunkID:       rec.ChunkID,
+		SourceID:      rec.Provenance.SourceID,
+		SourceHash:    rec.Provenance.SourceHash,
+		EmbeddingHash: "sha256:" + hashText(rec.EmbeddingText),
+		BodyHash:      "sha256:" + hashText(rec.BodyText),
+	}
 }
 
 // BuildManifest fingerprints an export result against the feed it came from.
@@ -48,11 +72,16 @@ func BuildManifest(feed *corpus.Feed, result Result, format Format) Manifest {
 		RejectedCount:        len(result.Rejections),
 		ChunkDigest:          digestOf(result.Records),
 		Sources:              []ManifestSource{},
+		Chunks:               make([]ManifestChunk, 0, len(result.Records)),
 	}
 	if feed != nil {
 		m.FeedFormat = feed.Format
 		m.FeedContentHash = feed.ContentHash
 		m.FeedGeneratedAt = feed.GeneratedAt
+	}
+	// Records are already sorted by chunk_id, so the fingerprint list is too.
+	for _, rec := range result.Records {
+		m.Chunks = append(m.Chunks, fingerprintOf(rec))
 	}
 
 	// Group by source so a per-source digest can be compared independently.
