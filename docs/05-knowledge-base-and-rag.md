@@ -347,6 +347,174 @@ Le verdict expose les deux juges (`lexical_supported_sentences`,
 niveau du protocole (backend injecté, backend absent) ; aucun run CI ne score
 avec le modèle neuronal, et NOMOS ne revendique rien sur la précision de HHEM.
 
+### Bench Public Cite-Or-Abstain
+
+Le bench public (VRC-46, #582) **mesure** le gate au lieu de le déclarer.
+`docs/regulated/ai-rag-governance/cite-or-abstain-bench/` contient le corpus
+étiqueté construit sur les documents publics du dépôt
+(`docs/regulated/reference-basis/`), les seuils versionnés, les références
+citées avec leur date de vérification, la méthodologie et les résultats datés.
+Chaque item est une réponse déjà produite, avec ses spans et ses citations,
+étiquetée `cite` ou `abstain` par construction et rangée dans la catégorie
+qu'elle sonde (`grounded`, `forged_citation`, `no_span_text`, `negation`,
+`over_verbosity`, `prompt_injection`, `unsupported_question`). Il n'y a ni
+modèle, ni retrieval, ni réseau dans la boucle.
+
+```bash
+nomos answer bench \
+  --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root .            # rejoue et compare au résultat publié
+python3 scripts/cite_or_abstain_bench.py --root . --publish  # re-publie un résultat daté
+```
+
+La mesure est volontairement asymétrique, parce que les deux erreurs ne
+coûtent pas la même chose :
+
+- `must_abstain_recall` et `false_cite_rate` : parmi les items qui doivent
+  être bloqués, combien le sont, et combien passent. Un faux « cite » est
+  l'erreur dangereuse (une réponse non fondée publiée comme sourcée) ; il est
+  publié tel quel, jamais noyé dans une exactitude globale ;
+- `must_cite_recall` et `missed_cites` : parmi les réponses légitimement
+  citables, combien sont citées. La sur-abstention est aussi un défaut (un
+  gate qui bloque tout est parfait côté sûreté, et inutile) ;
+- `agreement` : décision observée = décision attendue, par item et par
+  catégorie.
+
+Un item sans `expected_decision` utilisable est un défaut du bench, jamais une
+mesure. Les seuils (`max_false_cite_rate`, `min_must_abstain_recall`,
+`min_must_cite_recall`) ne peuvent être posés que sur un côté de la matrice de
+confusion effectivement mesuré (fail-closed, même règle que le harnais).
+
+Résultat publié du 2026-09-04 (proxy lexical, aucun scorer) : 9 items,
+`must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6),
+`false_cite_rate` 0.1667. Le seul faux « cite » est la catégorie `negation`,
+l'angle mort documenté du proxy lexical ; le même corpus avec `--scorer-cmd`
+(second juge NLI) doit la faire basculer, et le test Go du bench le prouve
+avec un juge factice. La porte de reproduction vérifie que les sources citées
+n'ont pas bougé (sha256 déclaré = réel, chaque span cité verbatim dans sa
+source), que chaque référence citée porte une vérification datée, que le
+moteur est déterministe (deux runs, mêmes octets), que les seuils tiennent et
+que la mesure rejouée est identique à celle publiée : toute dérive est nommée
+et rouge en CI.
+
+Ce que le bench ne dit pas : rien sur la qualité d'un retrieval, d'un
+embedding ou d'un LLM (aucun n'est dans la boucle), rien sur la justesse
+métier des réponses, rien sur la précision d'un modèle NLI (aucun run CI n'en
+exécute). Il mesure le gate sur neuf items publics, un par mode de défaillance ;
+c'est la preuve externe de la méthode, pas une évaluation de produit.
+
+### Bench Public Cite-Or-Abstain
+
+Le bench public (VRC-46, #582) **mesure** le gate au lieu de le déclarer.
+`docs/regulated/ai-rag-governance/cite-or-abstain-bench/` contient un corpus
+étiqueté construit sur les documents publics du dépôt
+(`docs/regulated/reference-basis/`), les seuils versionnés, les références
+citées avec leur date de vérification, la méthodologie et les résultats datés.
+Chaque item est une réponse déjà produite, avec ses spans et ses citations,
+étiquetée `cite` ou `abstain` par construction et rangée dans la catégorie
+qu'elle sonde (`grounded`, `forged_citation`, `no_span_text`, `negation`,
+`over_verbosity`, `prompt_injection`, `unsupported_question`). Il n'y a ni
+modèle, ni retrieval, ni réseau dans la boucle.
+
+```bash
+nomos answer bench --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root .           # rejoue et compare aux résultats publiés
+python3 scripts/cite_or_abstain_bench.py --root . --publish # re-publie un résultat daté
+```
+
+La mesure est volontairement asymétrique, parce que les deux erreurs ne
+coûtent pas la même chose :
+
+- `must_abstain_recall` et `false_cite_rate` : parmi les items qui doivent
+  être bloqués, combien le sont, et combien passent. Un faux « cite » est
+  l'erreur dangereuse (une réponse non fondée publiée comme sourcée) ; il est
+  publié tel quel, par catégorie, jamais noyé dans une exactitude globale ;
+- `must_cite_recall` et `missed_cites` : parmi les réponses légitimement
+  citables, combien sont citées. La sur-abstention est aussi un défaut (un
+  gate qui bloque tout est parfait côté sûreté et inutile) ;
+- `agreement` : décision observée = décision attendue, par item.
+
+Un item sans `expected_decision` utilisable est un défaut du bench, jamais une
+mesure ; une borne (`max_false_cite_rate`, `min_must_abstain_recall`,
+`min_must_cite_recall`) ne peut être posée que sur un côté de la matrice de
+confusion effectivement mesuré (fail-closed, même règle que le harnais).
+
+Résultat publié du 2026-09-04 (proxy lexical, aucun scorer) : 9 items,
+`must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6),
+`false_cite_rate` 0.1667. Le seul faux « cite » est la catégorie `negation`,
+l'angle mort documenté du proxy lexical ; le test Go du bench prouve qu'un
+second juge injecté la fait basculer, et le même corpus se rejoue avec
+`--scorer-cmd` hors CI. La porte de reproduction
+(`scripts/cite_or_abstain_bench.py`) vérifie que les sources citées n'ont pas
+bougé (sha256 déclaré = réel, chaque span cité verbatim dans sa source), que
+chaque référence citée porte une vérification datée, que le moteur est
+déterministe (deux runs, mêmes octets), que les seuils tiennent et que la
+mesure rejouée est identique à celle publiée : toute dérive est nommée et
+rouge en CI.
+
+Ce que le bench ne dit pas : rien sur la qualité d'un retrieval, d'un
+embedding ou d'un LLM (aucun n'est dans la boucle), rien sur la justesse
+métier des réponses, rien sur la précision d'un modèle NLI (aucun run CI n'en
+exécute). Il mesure le gate sur neuf items publics, un par mode de défaillance :
+c'est la preuve externe de la méthode, pas une évaluation de produit.
+
+### Bench Public Cite-Or-Abstain
+
+Le bench public (VRC-46, #582) **mesure** le gate au lieu de le déclarer :
+`docs/regulated/ai-rag-governance/cite-or-abstain-bench/` contient un corpus
+étiqueté construit sur les documents publics du dépôt
+(`docs/regulated/reference-basis/`), les seuils versionnés, les références
+citées avec leur date de vérification, la méthodologie et les résultats datés.
+Chaque item est une réponse déjà produite, avec ses spans et ses citations,
+étiquetée `cite` ou `abstain` par construction et rangée dans la catégorie
+qu'elle sonde (`grounded`, `forged_citation`, `no_span_text`, `negation`,
+`over_verbosity`, `prompt_injection`, `unsupported_question`). Il n'y a ni
+modèle, ni retrieval, ni réseau dans la boucle.
+
+```bash
+nomos answer bench --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root .           # rejoue et compare aux résultats publiés
+python3 scripts/cite_or_abstain_bench.py --root . --publish # re-publie un résultat daté
+```
+
+La mesure est volontairement asymétrique, parce que les deux erreurs ne
+coûtent pas la même chose :
+
+- `must_abstain_recall` et `false_cite_rate` : parmi les items qui doivent
+  être bloqués, combien le sont, et combien passent. Un faux « cite » est
+  l'erreur dangereuse (une réponse non fondée publiée comme sourcée) ; il est
+  publié tel quel, par catégorie, jamais noyé dans une exactitude globale ;
+- `must_cite_recall` et `missed_cites` : parmi les réponses légitimement
+  citables, combien sont citées. La sur-abstention est aussi un défaut (un
+  gate qui bloque tout est parfait côté sûreté et inutile) ;
+- `agreement` : décision observée = décision attendue, par item.
+
+Un item sans `expected_decision` utilisable est un défaut du bench, jamais une
+mesure ; une borne (`max_false_cite_rate`, `min_must_abstain_recall`,
+`min_must_cite_recall`) posée sur un côté de la matrice de confusion que rien
+ne mesure fait échouer le bench (fail-closed, même règle que le harnais).
+
+Résultat publié du 2026-09-04 (proxy lexical, aucun scorer) : 9 items,
+`must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6),
+`false_cite_rate` 0.1667. Le seul faux « cite » est la catégorie `negation`,
+l'angle mort documenté du proxy lexical ; le test Go du bench prouve qu'un
+second juge injecté la fait basculer, et le même corpus se rejoue avec
+`--scorer-cmd` hors CI. La porte de reproduction vérifie que les sources
+citées n'ont pas bougé (sha256 déclaré = réel, chaque span cité verbatim dans
+sa source), que les références portent une vérification datée, que le moteur
+est déterministe (deux runs, mêmes octets), que les seuils tiennent et que la
+mesure rejouée est identique à celle publiée : toute dérive est nommée et
+rouge en CI.
+
+Ce que le bench ne dit pas : rien sur la qualité d'un retrieval, d'un
+embedding ou d'un LLM (aucun n'est dans la boucle), rien sur la justesse
+métier des réponses, rien sur la précision d'un modèle NLI (aucun run CI n'en
+exécute). Il mesure le gate, sur neuf items publics : c'est la preuve externe
+de la méthode, pas une évaluation de produit.
+
 ## Tests Associés
 
 - Toutes les sources actives sont indexées.

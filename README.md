@@ -41,9 +41,10 @@ and auditable product evidence before software or AI consumes them.
 | Produit | Moteur authority-to-product pour logiciels, IA et RAG gouvernés. |
 | Release | `v0.1.0-ALPHA`. |
 | Preuve actuelle | POC alpha sur un vrai corpus privé, traité en lecture seule. |
-| Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation. |
-| Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. |
-| Prochain durcissement | Evidence CI répétée, formats documentaires additionnels, validation packs clients. |
+| Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation ; puis, dans le moteur Go : gate cite-or-abstain (fidélité recalculée depuis les spans, jamais déclarée), harnais d'évaluation RAG en CI, export RAG interopérable à staleness prouvable, bench public reproductible du gate. |
+| Registre de capacités | 38 capacités déclarées dans `scripts/vrc_wiring_matrix_registry.json` ; leur statut est CALCULÉ depuis l'arbre à chaque CI (29 réelles, 4 sidecar, 5 absentes, 0 écart) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. Le bench public mesure le gate sur neuf items, pas un produit. |
+| Prochain durcissement | Les cinq capacités `absent` du registre, chacune liée à une issue VRC ouverte : Sigstore keyless, pack EU AI Act, substrat d'exécution de règles, graphe de renvois, vocabulaires SKOS/SHACL ; puis validation packs clients et formats documentaires additionnels. |
 | Claim boundary | Pas un eQMS certifié, pas un système GxP validé, pas une certification réglementaire. |
 
 ## Documentation Et Integration
@@ -55,7 +56,12 @@ Les guides d'exploitation et d'integration sont centralises dans [`docs/`](./doc
 - [`35-nomos-integration-manual.md`](./docs/35-nomos-integration-manual.md) : manuel d'integration GitHub/workflow/output/downstream application ;
 - [`36-rbok-integration-recommendation-plan.md`](./docs/36-rbok-integration-recommendation-plan.md) : plan downstream RBOK, sans modification du repo RBOK depuis NOMOS ;
 - [`37-rbok-nomos-recommendations-implementation-plan.md`](./docs/37-rbok-nomos-recommendations-implementation-plan.md) : plan d'implementation detaille des recommandations RBOK.
-- [`38-domain-opportunity-roadmap.md`](./docs/38-domain-opportunity-roadmap.md) : analyse opportunites/domaines et backlog atomique pour GxP, medical, IA, finance, legal, Six Sigma, provenance, cyber et haute assurance.
+- [`38-domain-opportunity-roadmap.md`](./docs/38-domain-opportunity-roadmap.md) : analyse opportunites/domaines et backlog atomique pour GxP, medical, IA, finance, legal, Six Sigma, provenance, cyber et haute assurance ;
+- [`05-knowledge-base-and-rag.md`](./docs/05-knowledge-base-and-rag.md) : base de connaissance et RAG gouvernés — gate cite-or-abstain, harnais d'évaluation, scorer NLI enfichable, export interopérable, bench public ;
+- [`43-development-doctrine.md`](./docs/43-development-doctrine.md) : doctrine de développement — un résultat de pipeline est calculé, jamais déclaré ; la preuve est adversariale ; un sidecar est partiel, pas fini ;
+- [`45-vision-reality-closure-plan.md`](./docs/45-vision-reality-closure-plan.md) et [`46-vrc-epic-issue-list.md`](./docs/46-vrc-epic-issue-list.md) : plan de fermeture vision/réalité et ses issues VRC ;
+- [`public-claim-boundary.md`](./docs/public-claim-boundary.md) : ce que les preuves soutiennent et ce qu'elles ne soutiennent pas, capacité par capacité ;
+- [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md) : la matrice de câblage générée, statut calculé de chaque capacité.
 
 ## Pourquoi Nomos Existe
 
@@ -133,6 +139,17 @@ La release actuelle fournit une CLI et une chaîne d'evidence fonctionnelle pour
 - squelette documentaire regulated-by-design, templates d'evidence et control records ;
 - workflows CI pour Go, CUE, corpus, RBOK lawbook E2E, runtime E2E, fidelity proof reports, documentation régulée et evidence pack.
 
+Depuis l'alpha, le moteur a gagné les capacités suivantes. Chacune est une entrée du registre de capacités dont le statut est calculé en CI depuis les ancres de l'arbre (moteur, appelant de production, test adversarial, gate CI) ; une capacité qui n'a que son sidecar Python ou son schéma CUE est comptée `sidecar`, jamais `real` :
+
+- **gate cite-or-abstain dans le moteur** (`nomos answer gate`, VRC-10) : fidélité recalculée depuis le texte des spans retrouvés, jamais prise d'un score déclaré ; citation falsifiée, span sans texte ou réponse sans source → abstention forcée ; `trust_tier` par réponse ; second juge NLI enfichable (`--scorer-cmd`, le plus strict gagne, fail-closed, aucun modèle dans le moteur) ; le sidecar d'évidence Python consomme ce verdict au lieu d'en produire un ;
+- **harnais d'évaluation RAG** (`nomos answer eval`, VRC-13) : corpus doré, seuils versionnés, `context_recall`, `context_precision` pondérée par le rang et `noise_sensitivity` ; une régression sous le plancher bloque la PR ;
+- **bench public cite-or-abstain** (`nomos answer bench`, VRC-46) : corpus étiqueté sur les documents publics du dépôt, résultats datés, porte de reproduction en CI (sources verbatim et non déplacées, références vérifiées et datées, déterminisme, bornes, mesure identique au publié) ;
+- **export RAG interopérable** (`nomos rag export|manifest|delta|verify`) : chunks indexables et citables pour n'importe quelle pile RAG, empreinte de l'index par source, plan de réindexation exact, gate de staleness, export scopé par Knowledge Lens avec contrat de retrieval calculé ;
+- **atomisation CKM** : facettes dérivées, Knowledge Lens dans le moteur et la CLI, promotion de canon (jamais `certified`, silo de confidentialité), résolveur point-in-time, Canonical Knowledge Bundle, alignement d'ontologie de facettes rendu par le gate de pack ;
+- **preuve et attestation** : signature ECDSA P-256 DSSE, preuves Merkle du body ledger émises et vérifiées, `claim_coverage` calculée dans l'attestation, prédicat supply-chain in-toto, evidence packs en BOM CycloneDX/SPDX recoupés avec le ledger ;
+- **packs de domaine et adaptateurs** : `nomos pack validate` sur contrat déclaratif, kits de capacité par adaptateur, adaptateurs PDF et DOCX nés numériques (échelle de claims explicite), connecteur suisse live (fetch réel, hash réel) ;
+- **gardes de vérité** : matrice de câblage calculée (VRC-00), guard claim-boundary sur les mots « signé / Sigstore / certifié », guard de couplage core/pack, sidecar HHEM et kits de retrieval/conformité de référence (comptés `sidecar`).
+
 ## Preuves Du POC Alpha
 
 Nomos v0.1.0-ALPHA a été testé sur le vrai corpus privé `realisons-business/01_rbok`, dans des clones en lecture seule. RBOK est le premier corpus de preuve ; ce n'est pas le scope produit.
@@ -203,6 +220,17 @@ POC source-to-feed structuré actuel :
 
 Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, et cette preuve reste bornée au corpus, commit et build enregistrés (`claim_coverage` est désormais câblé dans l'attestation — `corpus attest --corpus-body-ledger` vérifie les preuves Merkle du ledger puis calcule la couverture ; le run POC enregistré garde son WARN historique). Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle.
 
+## Preuves Calculées En Continu
+
+Au-delà du POC enregistré, deux preuves sont recalculées à chaque CI et échouent sur toute dérive :
+
+| Preuve | Résultat courant | Comment il est tenu |
+|---|---|---|
+| Matrice de câblage (VRC-00) | 38 capacités, 0 écart entre registre et arbre, 0 commande fantôme | `scripts/vrc_wiring_matrix.py` ; le fichier généré est comparé au commit |
+| Bench public cite-or-abstain (VRC-46, résultat du 2026-09-04, proxy lexical) | 9 items : `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — le seul faux « cite » est la négation, angle mort documenté du proxy | `scripts/cite_or_abstain_bench.py` : sources verbatim et non déplacées, références vérifiées et datées, deux runs octet pour octet identiques, bornes versionnées, mesure identique au résultat publié |
+
+Méthodologie, corpus, seuils et résultats datés : [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
+
 ## Posture Regulated-Ready
 
 Nomos est construit pour les équipes qui opèrent près d'environnements IT régulés, audités ou à haute intégrité. Le repository contient une structure operated-by-design couvrant :
@@ -266,6 +294,28 @@ Diagnostiquer un projet :
 ./nomos diagnose --root . --format json
 ```
 
+Passer le gate cite-or-abstain, rejouer le harnais et le bench public :
+
+```bash
+./nomos answer gate --fixtures docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml
+./nomos answer eval \
+  --corpus docs/regulated/ai-rag-governance/rag-eval-corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
+./nomos answer bench \
+  --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root . --nomos-bin ./nomos   # rejoue le résultat publié, rouge sur toute dérive
+```
+
+Exporter vers une pile RAG, empreinter l'index et prouver sa fraîcheur :
+
+```bash
+./nomos rag export --feed /path/to/out/feed.json --format jsonl --strict --output chunks.jsonl
+./nomos rag manifest --feed /path/to/out/feed.json --output index-manifest.json
+./nomos rag delta --old index-manifest.json --new index-manifest.next.json      # plan exact : embed / update_metadata / delete
+./nomos rag verify --feed /path/to/out/feed.json --manifest index-manifest.json --strict   # exit 1 si l'index est périmé
+```
+
 Exécuter un profil corpus :
 
 ```bash
@@ -306,7 +356,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `ci/` | Documentation d'intégration CI réutilisable. |
 | `control-plane/` | Packages Go exploratoires archivés (dashboard, registry, storage) : zéro caller de production, gel acté par ADR-0006, réexamen au jalon portfolio v0.9.x. |
 | `policies/` | Répertoire placeholder pour un futur cadre de policies ; non opérationnel à ce stade. |
-| `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation. |
+| `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation ; registre de capacités (`vrc_wiring_matrix_registry.json`), guards (matrice de câblage, claim boundary, couplage core/pack), gates RAG et bench, sidecars (evidence RAG, scorer HHEM, kits de référence). |
+| `.vrc-wiring-matrix/` | Matrice de câblage GÉNÉRÉE (JSON + Markdown) : statut de chaque capacité calculé depuis l'arbre ; toute édition manuelle ou dérive est rouge en CI. |
+| `attestations/` | Contrats CUE des attestations in-toto et prédicat signé de claim boundary. |
+| `tests/` | Tests Python des workflows, sidecars, guards et gates (adversariaux : la preuve est l'échec attendu). |
 | `reports/` | Artefacts locaux générés. |
 | `references/` | Registre de références méthodologiques et externes. |
 
@@ -315,12 +368,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 Le processus de release utilise actuellement :
 
 ```bash
-go test ./...                 # depuis cli/
+go vet ./... && go test -race ./...            # depuis cli/
+python -m unittest discover -s tests -v        # tests Python (pyyaml requis ; construit le moteur Go pour les gates qui le consomment)
+python scripts/claim_boundary_guard.py --root .          # aucun « signé / Sigstore / certifié » sans preuve
+python scripts/vrc_wiring_matrix.py --root .             # matrice de câblage : registre et arbre en lockstep
+python scripts/cite_or_abstain_bench.py --root .         # bench public : le résultat publié se rejoue
+bash scripts/ckm-non-regression.sh             # harnais CKM-00 : CLI, CUE, Python, e2e, RBOK, gate cite-or-abstain
 powershell -File scripts/e2e.ps1
-python -m unittest discover -s tests -v
 ```
 
-GitHub Actions execute aussi CI, tests corpus Linux/macOS/Windows, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, regulated documentation gate et regulated evidence pack jobs.
+GitHub Actions exécute : CI (Go vet & test, gate de pack de domaine, harnais RAG eval, gate d'export RAG, replay du bench public, tests corpus Linux/macOS/Windows, CUE vet, YAML lint, tests Python avec guard claim-boundary et matrice de câblage sans dérive), harnais CKM non-régression, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, regulated documentation gate et regulated evidence pack (dont l'évidence RAG consommant le verdict du moteur construit).
 
 ## Ce Que Nomos Ne Revendique Pas
 
@@ -331,6 +388,10 @@ Nomos ne rend pas un LLM autoritaire. Dans l'architecture visée, les contrats d
 Nomos ne supprime pas le besoin de validation. En environnement régulé, les clients doivent toujours définir intended use, risk assessment, validation plan, preuves de test, change control, supplier assessment, security review et approval records.
 
 Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, les validation packs clients et la répétabilité CI sur corpus privés.
+
+Le gate cite-or-abstain et son bench public mesurent le gate, pas un LLM : le proxy de fidélité est lexical et aveugle à la négation (dit dans chaque verdict, publié comme faux « cite » dans le bench) ; le second juge NLI est un protocole vérifié, pas un modèle livré, et aucun run CI ne score avec un modèle neuronal. Le bench ne dit rien sur la qualité d'un retrieval, d'un embedding ou d'un LLM, ni sur la justesse métier d'une réponse.
+
+Nomos n'embarque pas de signature keyless Sigstore : l'attestation est signée localement (ECDSA P-256 DSSE) et le guard claim-boundary refuse toute prose qui prétendrait plus.
 
 ## Roadmap Release
 

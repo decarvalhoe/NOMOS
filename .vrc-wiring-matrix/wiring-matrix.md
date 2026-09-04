@@ -45,7 +45,7 @@
 | `rule_execution_substrate` | B3 | absent | absent | ✅ | VRC-42 | — |
 | `cross_reference_graph` | B5 | absent | absent | ✅ | VRC-43 | — |
 | `vocabulary_skos_shacl` | B4 | absent | absent | ✅ | VRC-44 | — |
-| `public_cite_or_abstain_bench` | A-exit | absent | absent | ✅ | VRC-46 | — |
+| `public_cite_or_abstain_bench` | A-exit | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -53,7 +53,7 @@
 
 ## Summary
 
-- capabilities: 38 (real=28, partial=0, sidecar=4, stub=0, absent=6)
+- capabilities: 38 (real=29, partial=0, sidecar=4, stub=0, absent=5)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

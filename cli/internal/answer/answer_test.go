@@ -42,7 +42,7 @@ func TestGate_ForgedCitationHashIsBlocked(t *testing.T) {
 	// key no longer binds to any retrieved chunk → recall/precision collapse →
 	// the answer is forced to abstain.
 	a := groundedAnswer()
-	a.SourceSpans[0].ChunkID = ""          // force source-span keying
+	a.SourceSpans[0].ChunkID = "" // force source-span keying
 	a.SourceSpans[0].SourceHash = "sha256:TAMPERED"
 	a.RetrievedChunks = []Chunk{{SourceID: "S1", SourceHash: "sha256:abc", Span: "L1-L2",
 		Text: "Le gabarit retient une hauteur de neuf metres au faite."}}
