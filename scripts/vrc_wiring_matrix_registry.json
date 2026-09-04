@@ -395,6 +395,30 @@
       ]
     },
     {
+      "id": "rag_index_staleness_verify",
+      "title": "RAG index staleness verification — `nomos rag delta` computes the exact per-chunk reindexing plan (embed / update_metadata / delete) between two manifests; `nomos rag verify` gates an index manifest against the corpus feed as it is now (exit 1 when stale); a hand-edited manifest whose digest does not match its own chunk list cannot vouch for an index; fresh/stale/tampered verdicts replayed on the real public reference corpus in CI (#616, follow-up of #614)",
+      "pillar": "interop",
+      "claim_level": "artifact-generated (staleness contract only; no retrieval-quality claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/ragexport/delta.go", "contains": ["func Diff(", "DeltaSchemaVersion", "ReasonOldDigestMismatch", "ActionUpdateMetadata"]},
+        {"path": "cli/internal/ragexport/manifest.go", "contains": ["type ManifestChunk struct", "func fingerprintOf("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.Diff(", "ragDeltaCommand", "ragVerifyCommand"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/ragexport/delta_test.go", "contains": ["TestDiff_BodyEditIsReindexedNotIgnored", "TestDiff_TamperedOldManifestCannotVouchForFreshness", "TestDiff_ContextGrammarBumpForcesFullReindex", "TestDiff_SourceRehashWithSameTextOnlyRefreshesMetadata"]},
+        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGVerify_StaleIndexFailsClosed", "TestRAGVerify_TamperedManifestIsRefused", "TestRAGVerify_FreshIndexPasses"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh"]},
+        {"path": "scripts/rag-export-gate.sh", "contains": ["rag verify --manifest", "old_manifest_digest_mismatch"]}
+      ]
+    },
+    {
       "id": "reference_retrieval_kit",
       "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
       "pillar": "B1",

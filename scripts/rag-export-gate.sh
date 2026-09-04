@@ -209,5 +209,55 @@ if not kept:
 print(f"mutated={moved[0]} (digest moved) untouched={kept} (digest kept)")
 PY
 
+# ---- rag verify: the gate a consumer runs before trusting its index --------
+
+step "rag verify: an index built from A is fresh against re-scan B"
+"$NOMOS_BIN" rag verify --manifest "$MANIFEST" --feed "$OUT_DIR/b/feed.json" --strict \
+  --output "$OUT_DIR/b/verify.json" \
+  || die "rag verify called the index stale on an unchanged corpus"
+
+step "rag verify: the same index is stale against mutated M, exit 1, README only"
+set +e
+"$NOMOS_BIN" rag verify --manifest "$MANIFEST" --feed "$OUT_DIR/m/feed.json" --strict \
+  --output "$OUT_DIR/m/verify.json"
+verify_rc=$?
+set -e
+[[ $verify_rc -eq 1 ]] || die "rag verify must exit 1 on a mutated source, got $verify_rc"
+python3 - "$OUT_DIR/m/verify.json" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+if not d["stale"]:
+    sys.exit("verify plan says fresh after a source mutation")
+if d["full_reindex"]:
+    sys.exit(f"a one-source edit must not force a full reindex: {d['full_reindex_reasons']}")
+changed = [s["source_id"] for s in d["sources"] if s["status"] != "unchanged"]
+if changed != ["CORPUS-README"]:
+    sys.exit(f"expected only CORPUS-README to change, got {changed}")
+if not d["chunks"]:
+    sys.exit("stale index but an empty plan: nothing to reindex would be reported")
+foreign = sorted({c["source_id"] for c in d["chunks"] if c["source_id"] != "CORPUS-README"})
+if foreign:
+    sys.exit(f"plan touches untouched source(s) {foreign}: invalidation is not per source")
+actions = sorted({c["action"] for c in d["chunks"]})
+print(f"plan: {len(d['chunks'])} chunk action(s) {actions}, all on CORPUS-README; summary={d['summary']}")
+PY
+
+step "rag verify: a hand-edited manifest cannot vouch for an index"
+python3 - "$MANIFEST" "$OUT_DIR/a/manifest-tampered.json" <<'PY'
+import json, sys
+m = json.load(open(sys.argv[1], encoding="utf-8"))
+# Forge freshness: keep the digest, swap one chunk fingerprint.
+m["chunks"][0]["embedding_hash"] = "sha256:" + "0" * 64
+json.dump(m, open(sys.argv[2], "w", encoding="utf-8"), indent=2)
+PY
+set +e
+"$NOMOS_BIN" rag verify --manifest "$OUT_DIR/a/manifest-tampered.json" --feed "$OUT_DIR/b/feed.json" \
+  --output "$OUT_DIR/a/verify-tampered.json" 2>/dev/null
+tamper_rc=$?
+set -e
+[[ $tamper_rc -eq 1 ]] || die "rag verify accepted a manifest whose digest does not match its chunk list (exit $tamper_rc)"
+grep -q '"old_manifest_digest_mismatch"' "$OUT_DIR/a/verify-tampered.json" \
+  || die "tampered manifest was not reported as a digest mismatch"
+
 echo ""
-echo "rag export gate: OK — $CHUNKS chunk(s), $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["sources"]))' "$MANIFEST") source(s), digest $DIGEST; deterministic, fail-closed, staleness provable per source"
+echo "rag export gate: OK — $CHUNKS chunk(s), $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["sources"]))' "$MANIFEST") source(s), digest $DIGEST; deterministic, fail-closed, staleness provable per source, verify gates fresh/stale/tampered"

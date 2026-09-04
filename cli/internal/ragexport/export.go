@@ -433,13 +433,25 @@ func filterEmpty(in []string) []string {
 // the exact text a consumer indexed. It changes when a body changes, when the
 // context grammar changes, and when chunks appear or disappear.
 func digestOf(records []Record) string {
-	h := sha256.New()
+	prints := make([]ManifestChunk, 0, len(records))
 	for _, rec := range records {
-		h.Write([]byte(rec.ChunkID))
+		prints = append(prints, fingerprintOf(rec))
+	}
+	return digestOfFingerprints(prints)
+}
+
+// digestOfFingerprints is the digest recomputed from manifest fingerprints
+// alone. Because it needs no export, a consumer (or `rag verify`) can check
+// that a manifest's digest is the one its own chunk list produces: a
+// hand-edited manifest cannot vouch for an index.
+func digestOfFingerprints(prints []ManifestChunk) string {
+	h := sha256.New()
+	for _, p := range prints {
+		h.Write([]byte(p.ChunkID))
 		h.Write([]byte{0})
-		h.Write([]byte(rec.Provenance.SourceHash))
+		h.Write([]byte(p.SourceHash))
 		h.Write([]byte{0})
-		h.Write([]byte(hashText(rec.EmbeddingText)))
+		h.Write([]byte(strings.TrimPrefix(p.EmbeddingHash, "sha256:")))
 		h.Write([]byte{0})
 	}
 	return "sha256:" + hex.EncodeToString(h.Sum(nil))
