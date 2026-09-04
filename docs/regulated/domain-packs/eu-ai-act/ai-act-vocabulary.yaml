@@ -1,0 +1,52 @@
+# VRC-22 (#565) — EU AI Act pack vocabulary.
+#
+# The pack owns TERMS; the core owns AXES. Three open axes are used, one of
+# which (risk_tier) exists because of this pack — see ADR-0002.
+record_type: pack_vocabulary
+schema_version: "0.1.0"
+domain_profile: eu-ai-act
+
+# What is being done. Processes, in the BFO sense.
+activity:
+  - id: ai_act.gestion_risque
+    label_fr: "Gestion des risques"
+  - id: ai_act.evaluation_conformite
+    label_fr: "Évaluation de la conformité"
+  - id: ai_act.documentation_technique
+    label_fr: "Documentation technique"
+  - id: ai_act.surveillance_post_marche
+    label_fr: "Surveillance après commercialisation"
+  - id: ai_act.enregistrement
+    label_fr: "Enregistrement"
+
+# Who bears the obligation. Roles, in the BFO sense — an operator holds a role,
+# it is not a property of the operator itself.
+discipline_role:
+  - id: ai_act.fournisseur
+    label_fr: "Fournisseur"
+  - id: ai_act.deployeur
+    label_fr: "Déployeur"
+  - id: ai_act.importateur
+    label_fr: "Importateur"
+  - id: ai_act.distributeur
+    label_fr: "Distributeur"
+  - id: ai_act.autorite_notifiante
+    label_fr: "Autorité notifiante"
+
+# How dangerous the regulated system is. A quality of the system, distinct from
+# how far its evidence may be trusted (trust_tier) and from whether a rule
+# reaches it (applicability). This axis is the one core change this vertical
+# cost — ADR-0002 records why the other eight could not carry it.
+risk_tier:
+  - id: ai_act.risque_inacceptable
+    label_fr: "Risque inacceptable"
+  - id: ai_act.haut_risque
+    label_fr: "Haut risque"
+  - id: ai_act.risque_limite
+    label_fr: "Risque limité"
+  - id: ai_act.risque_minimal
+    label_fr: "Risque minimal"
+
+references:
+  regulation: "Regulation (EU) 2024/1689 (CELEX 32024R1689)"
+  eli: "http://data.europa.eu/eli/reg/2024/1689/oj"

@@ -1712,21 +1712,78 @@
     },
     {
       "id": "eu_ai_act_pack",
-      "title": "Pack « EU AI Act evidence » pilot-grade — aucun pack AI Act livré ; le gate D2 existe, son premier vertical réglementaire non (VRC-22 #565)",
+      "title": "Pack « EU AI Act evidence » pilot-grade (VRC-22 #565) — SECOND vertical réel : vocabulaires des rôles porteurs d'obligation, des activités de conformité et des quatre niveaux de risque (14 termes alignés BFO→IOF sur 3 axes), ancre d'autorité datée vers le règlement (EU) 2024/1689 (CELEX 32024R1689, ELI, JO), 3 presets de lentilles dont deux cadrent sur risk_tier, corpus doré synthétique de 4 documents qui traverse la chaîne réelle (32 nœuds). `nomos pack validate` passe en CI sur le pack réel. Pilot-grade : aucun claim de conformité, aucune classification d'un système réel, aucun texte du règlement reproduit — le pack enregistre OÙ le texte fait autorité, pas ce qu'il dit. D6 : 0 chemin core requis par le pack tel qu'il est, et 1 changement core pour y arriver (l'axe risk_tier, ADR-0002) — les deux chiffres sont publiés.",
       "pillar": "D3",
-      "claim_level": "not implemented (no pack shipped)",
-      "promotion_issue": "VRC-22",
-      "expected": "absent",
-      "computed": "absent",
+      "claim_level": "artifact-generated (pilot-grade evidence pack; ni conformité, ni classification, ni évaluation de conformité)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
       "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
-        "ci_gates": [],
-        "sidecar": [],
+        "engine": [
+          {
+            "path": "cli/internal/app/pack_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/pack_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "docs/regulated/domain-packs/eu-ai-act/pack.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/eu-ai-act/eurlex-source-connectors.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/eu-ai-act/README.md",
+            "ok": false,
+            "missing": [
+              "synthétique"
+            ]
+          },
+          {
+            "path": "docs/adr/0002-risk-tier-open-facet-axis.md",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "stub_markers": []
       }
     },
@@ -2024,11 +2081,11 @@
   "summary": {
     "capabilities": 40,
     "computed": {
-      "real": 29,
+      "real": 30,
       "partial": 0,
       "sidecar": 6,
       "stub": 0,
-      "absent": 5
+      "absent": 4
     },
     "mismatches": 0,
     "generic_check_failures": 0,

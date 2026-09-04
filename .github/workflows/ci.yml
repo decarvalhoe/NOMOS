@@ -28,6 +28,11 @@ jobs:
       # mutilated pack (or a drifted artifact) turns this job red.
       - name: Domain pack gate (VRC-21)
         run: go run . pack validate --manifest ../docs/regulated/domain-packs/built-environment/pack.yaml --repo-root ..
+      # VRC-22 (#565): the SECOND vertical runs through the same gate on the
+      # real pack. Two verticals passing one unchanged gate is what makes the
+      # generality claim measurable rather than asserted.
+      - name: Domain pack gate — EU AI Act vertical (VRC-22)
+        run: go run . pack validate --manifest ../docs/regulated/domain-packs/eu-ai-act/pack.yaml --repo-root ..
       # VRC-13 (#559): the regulated RAG eval harness runs the cite-or-abstain
       # gate over the golden corpus against versioned thresholds — a citation-
       # recall (or faithfulness) regression turns this job red (fail-closed).
