@@ -44,7 +44,7 @@
 | `eu_ai_act_pack` | D3 | real | real | ✅ | — | — |
 | `rule_execution_substrate` | B3 | absent | absent | ✅ | VRC-42 | — |
 | `cross_reference_graph` | B5 | real | real | ✅ | — | — |
-| `vocabulary_skos_shacl` | B4 | absent | absent | ✅ | VRC-44 | — |
+| `vocabulary_skos_shacl` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `public_cite_or_abstain_bench` | A-exit | real | real | ✅ | — | — |
 | `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | VRC-14 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 | `training_competence_status` | P1 | sidecar | sidecar | ✅ | VRC-16 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
@@ -55,7 +55,7 @@
 
 ## Summary
 
-- capabilities: 40 (real=31, partial=0, sidecar=6, stub=0, absent=3)
+- capabilities: 40 (real=31, partial=0, sidecar=7, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
