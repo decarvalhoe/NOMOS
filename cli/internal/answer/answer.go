@@ -30,11 +30,11 @@ import (
 // Config carries the configurable gate thresholds. Defaults() mirrors the
 // sidecar's published gates so the Go verdict and the Python evidence agree.
 type Config struct {
-	ALCEGate               float64
-	FaithfulnessGate       float64
-	TrustScoreCertified    float64
-	TrustScoreIndicative   float64
-	SentenceThreshold      float64
+	ALCEGate             float64
+	FaithfulnessGate     float64
+	TrustScoreCertified  float64
+	TrustScoreIndicative float64
+	SentenceThreshold    float64
 }
 
 // Defaults returns the canonical gate configuration.
@@ -57,9 +57,9 @@ const (
 )
 
 var refusalOutcomes = map[string]bool{
-	"acceptable_refusal":         true,
-	"unsupported":                true,
-	"blocked_prompt_injection":   true,
+	"acceptable_refusal":       true,
+	"unsupported":              true,
+	"blocked_prompt_injection": true,
 }
 
 var stopwords = map[string]bool{
@@ -108,6 +108,10 @@ type Answer struct {
 	FaithfulnessScore *float64 `json:"faithfulness_score,omitempty"`
 	SourceSpans       []Span   `json:"source_spans"`
 	RetrievedChunks   []Chunk  `json:"retrieved_chunks"`
+	// ExpectedChunkIDs is golden-corpus ground truth (#620): the chunks a
+	// correct retrieval returns for this prompt. Gate answers leave it empty;
+	// it never changes the cite/abstain decision, only the context metrics.
+	ExpectedChunkIDs []string `json:"expected_chunk_ids,omitempty"`
 }
 
 // Finding is one blocking gate violation.
@@ -119,14 +123,14 @@ type Finding struct {
 
 // Groundedness records how faithfulness was derived.
 type Groundedness struct {
-	Method             string  `json:"method"`
-	Score              float64 `json:"score"`
-	SupportedSentences int     `json:"supported_sentences"`
-	TotalSentences     int     `json:"total_sentences"`
-	RecomputedFromSpans bool   `json:"recomputed_from_spans"`
-	SelfDeclared       *float64 `json:"self_declared"`
-	SelfDeclaredTrusted bool   `json:"self_declared_trusted"`
-	Limitation         string  `json:"limitation"`
+	Method              string   `json:"method"`
+	Score               float64  `json:"score"`
+	SupportedSentences  int      `json:"supported_sentences"`
+	TotalSentences      int      `json:"total_sentences"`
+	RecomputedFromSpans bool     `json:"recomputed_from_spans"`
+	SelfDeclared        *float64 `json:"self_declared"`
+	SelfDeclaredTrusted bool     `json:"self_declared_trusted"`
+	Limitation          string   `json:"limitation"`
 }
 
 // Verdict is the gate's decision for one answer.
@@ -140,6 +144,8 @@ type Verdict struct {
 	TrustScore        float64      `json:"trust_score"`
 	Groundedness      Groundedness `json:"groundedness"`
 	Findings          []Finding    `json:"findings"`
+	// Context is present only when the answer declares expected_chunk_ids.
+	Context *ContextMetrics `json:"context,omitempty"`
 }
 
 func round4(f float64) float64 { return math.Round(f*1e4) / 1e4 }
@@ -356,6 +362,7 @@ func Evaluate(a Answer, cfg Config) Verdict {
 		TrustScore:        trustScore,
 		Groundedness:      ground,
 		Findings:          findings,
+		Context:           a.contextMetrics(cfg),
 	}
 	// cite-or-abstain: an explicit refusal abstains legitimately; an acceptable
 	// answer with no blocking findings cites; anything else is forced to abstain.
@@ -381,7 +388,9 @@ func clamp01(f float64) float64 {
 
 func (a Answer) validate(cfg Config, recall, precision, faithfulness float64) []Finding {
 	findings := []Finding{}
-	add := func(code, msg string) { findings = append(findings, Finding{Code: code, Severity: "error", Message: msg}) }
+	add := func(code, msg string) {
+		findings = append(findings, Finding{Code: code, Severity: "error", Message: msg})
+	}
 
 	if strings.TrimSpace(a.CitationStatus) == "source_backed" && !a.hasSourceBackedCitation() {
 		add("SOURCE_BACKED_CITATION_WITHOUT_SOURCE_SPANS",
@@ -424,12 +433,12 @@ func trustTier(cfg Config, recall, precision, faithfulness, trustScore float64, 
 
 // GateResult aggregates verdicts over a batch of answers.
 type GateResult struct {
-	Status   string    `json:"status"` // "pass" | "fail"
-	Checked  int       `json:"checked"`
-	Cited    int       `json:"cited"`
-	Abstained int      `json:"abstained"`
-	Findings int       `json:"findings"`
-	Verdicts []Verdict `json:"verdicts"`
+	Status    string    `json:"status"` // "pass" | "fail"
+	Checked   int       `json:"checked"`
+	Cited     int       `json:"cited"`
+	Abstained int       `json:"abstained"`
+	Findings  int       `json:"findings"`
+	Verdicts  []Verdict `json:"verdicts"`
 }
 
 // Gate evaluates a batch and fails closed if any answer carries findings.

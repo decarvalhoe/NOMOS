@@ -256,6 +256,33 @@ traçables, conserve les faits structurés et expose les incertitudes ou la déc
 humaine requise. La décision réglementaire, juridique, clinique ou métier reste
 hors revendication NOMOS.
 
+### Harnais `nomos answer eval` : Métriques De Contexte
+
+Le harnais CI (VRC-13) rejoue le gate cite-or-abstain sur le corpus doré
+`docs/regulated/ai-rag-governance/rag-eval-corpus.yaml` contre les seuils
+versionnés de `rag-eval-thresholds.yaml` (`citation_recall`,
+`citation_precision`, `faithfulness`, réponses en échec). Chaque réponse du
+corpus doré déclare en plus `expected_chunk_ids`, la vérité terrain des chunks
+pertinents pour le prompt, ce qui permet trois métriques côté retrieval,
+calculées et jamais déclarées :
+
+- `context_recall` : part des chunks attendus effectivement retrouvés ;
+- `context_precision` : précision pondérée par le rang sur l'ordre de
+  `retrieved_chunks` (un distracteur classé avant le chunk pertinent la fait
+  baisser, classé après non) ;
+- `noise_sensitivity` : part des phrases de la réponse supportées
+  **uniquement** par des chunks retrouvés hors attendus. La fidélité lexicale
+  compte une telle phrase comme supportée (ses mots sont dans le corpus de
+  support) ; cette métrique est celle qui attrape la contamination que la
+  fidélité ne voit pas.
+
+Les bornes de contexte (`min_mean_context_recall`,
+`min_mean_context_precision`, `max_mean_noise_sensitivity`) sont optionnelles :
+absentes, les métriques sont rapportées sans bloquer ; posées alors qu'aucune
+réponse ne déclare d'attentes, le harnais échoue (fail-closed : une borne que
+personne ne mesure est un faux confort). Limite : le proxy de support reste
+lexical et aveugle à la négation.
+
 ## Tests Associés
 
 - Toutes les sources actives sont indexées.

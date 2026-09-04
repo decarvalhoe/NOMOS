@@ -19,6 +19,15 @@ Nomos must treat AI output as assistance, not authority. Product law requires so
 `rag-answer-fixtures.yaml`. The gate blocks any answer marked acceptable unless
 it has source-backed citations or an explicit refusal/unsupported state.
 
+`nomos answer eval --corpus rag-eval-corpus.yaml --thresholds rag-eval-thresholds.yaml`
+is the CI harness (VRC-13). Each golden answer declares `expected_chunk_ids`,
+the ground-truth chunks for its prompt, so the harness also computes
+`context_recall`, rank-weighted `context_precision` and `noise_sensitivity`
+(answer sentences supported by distractor chunks only). The thresholds file
+carries the versioned bounds; bump them deliberately, never to paper over a
+regression, and never set a context bound on a corpus that declares no
+expectations (the harness fails closed).
+
 `scripts/regulated_ai_provider_ledger.py` emits
 `.regulated-evidence-pack/ai-provider-change-ledger.json` from
 `ai-provider-change-ledger.yaml`. The regulated documentation gate blocks

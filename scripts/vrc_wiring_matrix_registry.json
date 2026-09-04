@@ -370,6 +370,31 @@
       ]
     },
     {
+      "id": "rag_eval_context_metrics",
+      "title": "RAG eval context metrics — context_recall, rank-weighted context_precision and noise_sensitivity computed from the golden corpus' expected_chunk_ids against the retrieved chunks; noise_sensitivity catches sentences supported by distractor chunks only, which lexical faithfulness counts as supported; optional versioned bounds, fail-closed when a bound is set but no answer declares expectations (#620, VRC-13 follow-up)",
+      "pillar": "B2",
+      "claim_level": "artifact-generated (deterministic; the lexical support proxy stays negation-blind)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/answer/context_metrics.go", "contains": ["func (a Answer) contextMetrics(", "NoiseInducedSentences", "methodContext"]},
+        {"path": "cli/internal/answer/eval.go", "contains": ["MaxMeanNoiseSensitivity", "MinMeanContextRecall", "mean_noise_sensitivity above the versioned ceiling"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/answer/answer.go", "contains": ["a.contextMetrics("]},
+        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Eval("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/answer/context_metrics_test.go", "contains": ["TestEval_NoiseSensitivityCatchesWhatFaithfulnessCannot", "TestEval_ContextRecallRegressionTurnsRed", "TestEval_ContextThresholdWithoutExpectationsFailsClosed"]},
+        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerEval_NoiseRegressionTurnsRed"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["answer eval --corpus"]},
+        {"path": "docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml", "contains": ["max_mean_noise_sensitivity"]}
+      ]
+    },
+    {
       "id": "rag_interop_export",
       "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
       "pillar": "interop",
