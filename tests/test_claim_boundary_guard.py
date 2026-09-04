@@ -57,6 +57,40 @@ def _make_tree(tmp: Path, *, with_signing: bool, readme_extra: str = "") -> Path
     return root
 
 
+# Structural fixtures for the precision test. Each is comfortably above
+# MIN_CLAIM_TOKENS so that, if the structural skip were removed, the repeated
+# block would be compared and reported — which is what makes the skip
+# load-bearing rather than decorative.
+_LONG_BULLET = (
+    "- the corpus integrity report for this build is present and passes on "
+    "coverage, duplicate spans, junk content, feed linkage and RAG linkage, "
+    "and the strict release gate consumes it, which is recorded per dossier "
+    "and never generalised into a platform wide statement about arbitrary "
+    "customer corpora or arbitrary document formats\n"
+    "- second entry of the same enumeration, kept short"
+)
+
+_LONG_TABLE = (
+    "| level | meaning | gating |\n"
+    "| --- | --- | --- |\n"
+    "| artifact-generated | NOMOS produced the artifact without crashing and "
+    "with the documented schema | existing validate and canonical check gates, "
+    "active today on the recorded profile feeds and nowhere else |\n"
+    "| source-traced | generated nodes carry source spans that resolve to a "
+    "recorded source manifest entry | source span emission and manifest hash "
+    "check, active today on the recorded profile feeds |"
+)
+
+_LONG_FENCE = (
+    "```\n"
+    "python3 scripts/claim_boundary_guard.py --root . --quiet\n"
+    "python3 scripts/cite_or_abstain_bench.py --root . --verify-references\n"
+    "python3 scripts/regulated_evidence_pack.py --output evidence-pack.json\n"
+    "nomos answer bench --corpus corpus.yaml --thresholds thresholds.yaml\n"
+    "nomos corpus attest --corpus-body-ledger --profile rbok-lawbook\n"
+    "```"
+)
+
 class ClaimBoundaryGuardTests(unittest.TestCase):
     def test_clean_tree_with_signing_capability_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -146,6 +180,94 @@ class ClaimBoundaryGuardTests(unittest.TestCase):
     def test_real_repository_tree_is_clean(self) -> None:
         # The committed tree must pass the guard as shipped.
         self.assertEqual(guard.scan(ROOT), [], "shipped tree has an unbacked claim")
+
+    def test_restated_claim_turns_guard_red(self) -> None:
+        # ADVERSARIAL (#582 regression): the same claim landed three times in
+        # docs/public-claim-boundary.md as three paraphrases. Every individual
+        # line was clean, so the line-based checks stayed green. Re-stating a
+        # claim in different words must be caught: a claim has one normative
+        # wording, and a reader cannot tell which of three variants binds.
+        claim = (
+            "The cite-or-abstain gate is measured by a public bench over a labelled "
+            "corpus built on the in-repo public reference basis documents, and it "
+            "reports the two error directions separately, false cite rate and must "
+            "cite recall, so that over abstention is visible as its own defect "
+            "rather than hidden inside a single aggregate accuracy number."
+        )
+        paraphrase = (
+            "The cite-or-abstain gate is measured by a public bench over a labelled "
+            "corpus built on the in-repo public reference-basis documents; it "
+            "reports the two error directions separately — false cite rate and must "
+            "cite recall — so that over-abstention is visible as its own defect, "
+            "rather than hidden inside a single aggregate accuracy number."
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = _make_tree(Path(tmpdir), with_signing=True)
+            doc = root / "docs" / "public-claim-boundary.md"
+            doc.write_text(
+                f"# Claim Boundary\n\n{claim}\n\n{paraphrase}\n",
+                encoding="utf-8",
+            )
+
+            duplicates = guard.find_duplicate_claims(root)
+            self.assertEqual(len(duplicates), 1, duplicates)
+            self.assertIn("restates the claim already made", duplicates[0][3])
+
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "--root", str(root)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("restated claim", result.stderr)
+
+            # Dropping the paraphrase makes the guard green again.
+            doc.write_text(f"# Claim Boundary\n\n{claim}\n", encoding="utf-8")
+            self.assertEqual(guard.find_duplicate_claims(root), [])
+
+    def test_distinct_claims_and_structure_are_not_flagged(self) -> None:
+        # Precision: two genuinely different claims of similar length, a repeated
+        # table row, a repeated list item, and a repeated fenced code block are
+        # all legitimate and must not read as a restated claim.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = _make_tree(Path(tmpdir), with_signing=True)
+            (root / "docs" / "two-claims.md").write_text(
+                "# Two Claims\n\n"
+                "The export gate proves that every emitted chunk carries a chunk "
+                "identifier, a source identifier, a source hash and a body, and it "
+                "refuses any record missing one of them, which is a contract claim "
+                "about the export shape and not about retrieval quality at all.\n\n"
+                "The fidelity gate proves that a recorded strict run reported full "
+                "fidelity for one specific corpus and configuration, which is a run "
+                "scoped statement about that dossier and never a platform wide "
+                "source to feed proof across arbitrary customer corpora.\n\n"
+                # Two separate list blocks that enumerate the same long entry:
+                # legitimate in a checklist repeated per section, and long enough
+                # to clear the token floor, so only the structural skip keeps it
+                # out of the comparison.
+                f"{_LONG_BULLET}\n\n"
+                "Some prose between the two enumerations keeps them apart.\n\n"
+                f"{_LONG_BULLET}\n\n"
+                # Same for two identical table blocks.
+                f"{_LONG_TABLE}\n\n"
+                "More prose between the two tables keeps them apart.\n\n"
+                f"{_LONG_TABLE}\n\n"
+                # And for two identical fenced code blocks, which the fence
+                # handling must drop before any comparison happens.
+                f"{_LONG_FENCE}\n\n"
+                f"{_LONG_FENCE}\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(guard.find_duplicate_claims(root), [])
+
+    def test_real_repository_tree_has_no_restated_claims(self) -> None:
+        # The shipped tree states each claim exactly once.
+        self.assertEqual(
+            guard.find_duplicate_claims(ROOT),
+            [],
+            "shipped tree restates a claim in different words",
+        )
 
     def test_script_runs_as_subprocess(self) -> None:
         # End-to-end: the script is invokable and exits 0 on the real tree.

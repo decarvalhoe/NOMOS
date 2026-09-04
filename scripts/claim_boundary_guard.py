@@ -29,6 +29,16 @@ Precision (avoid false positives). The guard deliberately does NOT flag:
 * future / aspirational phrasing ("intended", "planned", "follow-up",
   "expansion", "roadmap", "will", "future") on the same line.
 
+It also fails when a claim is **restated** in the same file in different words.
+A claim has exactly one normative wording; three paraphrases of one claim leave a
+reader unable to tell which one binds. #582 landed the cite-or-abstain bench
+paragraph three times in ``docs/public-claim-boundary.md`` and its whole section
+three times in ``docs/05-knowledge-base-and-rag.md``: every individual line was
+clean, so the line-based checks above stayed green. Prose paragraphs at or above
+``MIN_CLAIM_TOKENS`` whose normalised token sets overlap at or above
+``DUPLICATE_CLAIM_RATIO`` are reported. Headings, tables, list blocks and fenced
+code are excluded — enumerations and command blocks legitimately repeat wording.
+
 Run standalone (exit 0 = clean, 1 = a bare claim was found):
 
     python3 scripts/claim_boundary_guard.py --root .
@@ -243,6 +253,105 @@ def classify_line(line: str, signing_present: bool, section_deferred: bool = Fal
     return None
 
 
+# A claim stated twice in slightly different words has no normative form: a
+# reader cannot tell which wording binds. Paragraphs at or above this many
+# tokens whose normalised token sets overlap at or above the ratio below are
+# reported as the same claim restated. #582 landed the bench paragraph three
+# times (three paraphrases of one claim) and the line-based checks above could
+# not see it, because every individual line was clean.
+MIN_CLAIM_TOKENS = 40
+DUPLICATE_CLAIM_RATIO = 0.90
+_CLAIM_TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def _claim_tokens(paragraph: str) -> list[str]:
+    """Normalise a paragraph to comparable claim tokens.
+
+    Backticks, punctuation and dash style are dropped, so two paraphrases that
+    differ only in typography normalise to the same tokens.
+    """
+    return _CLAIM_TOKEN.findall(paragraph.lower())
+
+
+def _claim_paragraphs(lines: list[str]) -> list[tuple[int, str]]:
+    """Yield ``(first_lineno, text)`` for prose paragraphs, skipping code fences.
+
+    Headings, tables and list blocks are excluded: enumerations legitimately
+    repeat wording, and only free prose carries a claim.
+    """
+    paragraphs: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    start = 0
+    in_fence = False
+
+    def flush() -> None:
+        if not buffer:
+            return
+        text = " ".join(buffer)
+        stripped = buffer[0].lstrip()
+        structural = stripped.startswith(("#", "|", "-", "*", ">", "+")) or (
+            stripped[:2].isdigit() and stripped[1:2] == "."
+        )
+        if not structural:
+            paragraphs.append((start, text))
+
+    for lineno, line in enumerate(lines, start=1):
+        if line.lstrip().startswith("```"):
+            flush()
+            buffer = []
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.strip():
+            if not buffer:
+                start = lineno
+            buffer.append(line.strip())
+            continue
+        flush()
+        buffer = []
+    flush()
+    return paragraphs
+
+
+def find_duplicate_claims(root: Path) -> list[tuple[Path, int, str, str]]:
+    """Report paragraphs that restate a claim already made in the same file."""
+    violations: list[tuple[Path, int, str, str]] = []
+    for path in iter_scoped_files(root):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        seen: list[tuple[int, set[str]]] = []
+        for lineno, text in _claim_paragraphs(lines):
+            tokens = _claim_tokens(text)
+            if len(tokens) < MIN_CLAIM_TOKENS:
+                continue
+            current = set(tokens)
+            for earlier_lineno, earlier in seen:
+                union = current | earlier
+                if not union:
+                    continue
+                overlap = len(current & earlier) / len(union)
+                if overlap >= DUPLICATE_CLAIM_RATIO:
+                    violations.append(
+                        (
+                            path,
+                            lineno,
+                            text[:160],
+                            (
+                                f"restates the claim already made at line {earlier_lineno} "
+                                f"({overlap:.0%} token overlap); a claim has exactly one "
+                                "normative wording"
+                            ),
+                        )
+                    )
+                    break
+            else:
+                seen.append((lineno, current))
+    return violations
+
+
 def scan(root: Path) -> list[tuple[Path, int, str, str]]:
     signing_present = signing_capability_present(root)
     violations: list[tuple[Path, int, str, str]] = []
@@ -274,6 +383,9 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).resolve()
     signing_present = signing_capability_present(root)
     violations = scan(root)
+    duplicates = find_duplicate_claims(root)
+    violations.extend(duplicates)
+    violations.sort(key=lambda item: (item[0].as_posix(), item[1]))
 
     if violations:
         if not args.quiet:
@@ -282,15 +394,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{rel}:{lineno}: claim-boundary violation: {reason}", file=sys.stderr)
                 print(f"    > {snippet}", file=sys.stderr)
         print(
-            f"claim-boundary guard: FAIL — {len(violations)} unbacked attestation claim(s) "
+            f"claim-boundary guard: FAIL — {len(violations) - len(duplicates)} unbacked "
+            f"attestation claim(s), {len(duplicates)} restated claim(s) "
             f"(signing capability present={signing_present})",
             file=sys.stderr,
         )
         return 1
 
     print(
-        f"claim-boundary guard: OK — no unbacked attestation-capability claims "
-        f"(signing capability present={signing_present})"
+        f"claim-boundary guard: OK — no unbacked attestation-capability claims, "
+        f"no restated claims (signing capability present={signing_present})"
     )
     return 0
 
