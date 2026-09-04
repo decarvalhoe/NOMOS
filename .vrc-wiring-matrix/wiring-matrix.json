@@ -1792,21 +1792,86 @@
     },
     {
       "id": "public_cite_or_abstain_bench",
-      "title": "Bench public cite-or-abstain reproductible — sortie du chantier A ; le harnais interne (VRC-13 #559) existe, sa publication non (VRC-46 #582)",
+      "title": "Public cite-or-abstain bench — `nomos answer bench` MEASURES the gate over a labelled public corpus (nine items quoting the in-repo reference-basis documents, one per failure mode) and reports the two error directions separately: false_cite_rate (an ungrounded answer published as source-backed) and must_cite_recall (over-abstention); an unlabelled item is a defect, a bound over an unmeasured side of the confusion matrix fails closed; the dated published result (lexical proxy, the negation miss published as such) is replayed in CI by scripts/cite_or_abstain_bench.py — sources unmoved and verbatim, references verified and dated, engine byte-deterministic, versioned bounds held, measurement identical (VRC-46 #582, exit of workstream A)",
       "pillar": "A-exit",
-      "claim_level": "not implemented (unpublished)",
-      "promotion_issue": "VRC-46",
-      "expected": "absent",
-      "computed": "absent",
+      "claim_level": "artifact-generated (measurement of the gate on nine public items; no retrieval, LLM or NLI-accuracy claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
       "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
-        "ci_gates": [],
-        "sidecar": [],
+        "engine": [
+          {
+            "path": "cli/internal/answer/bench.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/answer_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/answer/bench_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/answer_cmd_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_cite_or_abstain_bench.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/cite_or_abstain_bench.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/references.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "stub_markers": []
       }
     }
@@ -1846,11 +1911,11 @@
   "summary": {
     "capabilities": 38,
     "computed": {
-      "real": 28,
+      "real": 29,
       "partial": 0,
       "sidecar": 4,
       "stub": 0,
-      "absent": 6
+      "absent": 5
     },
     "mismatches": 0,
     "generic_check_failures": 0,

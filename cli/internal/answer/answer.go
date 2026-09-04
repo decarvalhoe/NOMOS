@@ -555,11 +555,11 @@ func trustTier(cfg Config, recall, precision, faithfulness, trustScore float64, 
 
 // GateResult aggregates verdicts over a batch of answers.
 type GateResult struct {
-	Status    string    `json:"status"` // "pass" | "fail"
-	Checked   int       `json:"checked"`
-	Cited     int       `json:"cited"`
-	Abstained int       `json:"abstained"`
-	Findings  int       `json:"findings"`
+	Status    string `json:"status"` // "pass" | "fail"
+	Checked   int    `json:"checked"`
+	Cited     int    `json:"cited"`
+	Abstained int    `json:"abstained"`
+	Findings  int    `json:"findings"`
 	// Gates are the thresholds the verdicts were judged against (#624).
 	Gates    Gates     `json:"gates"`
 	Verdicts []Verdict `json:"verdicts"`

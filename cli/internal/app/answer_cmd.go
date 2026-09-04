@@ -21,7 +21,7 @@ import (
 // accept an external faithfulness scorer (#622) as a second judge.
 func answerCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: nomos answer <gate --fixtures <answers.yaml> | eval --corpus <corpus.yaml> --thresholds <thresholds.yaml>> [--scorer-cmd <cmd> [--scorer-threshold 0.5] [--scorer-timeout 2m]]")
+		fmt.Fprintln(stderr, "usage: nomos answer <gate --fixtures <answers.yaml> | eval --corpus <corpus.yaml> --thresholds <thresholds.yaml> | bench --corpus <corpus.yaml> [--thresholds <thresholds.yaml>]> [--scorer-cmd <cmd> [--scorer-threshold 0.5] [--scorer-timeout 2m]]")
 		return 2
 	}
 	switch args[0] {
@@ -29,14 +29,23 @@ func answerCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return answerGateCommand(args[1:], stdout, stderr)
 	case "eval":
 		return answerEvalCommand(args[1:], stdout, stderr)
+	case "bench":
+		return answerBenchCommand(args[1:], stdout, stderr)
 	default:
-		fmt.Fprintf(stderr, "unknown answer subcommand %q (try: gate, eval)\n", args[0])
+		fmt.Fprintf(stderr, "unknown answer subcommand %q (try: gate, eval, bench)\n", args[0])
 		return 2
 	}
 }
 
 type answerFixtureDoc struct {
 	Answers []answer.Answer `json:"answers"`
+}
+
+// answerBenchDoc is the public cite-or-abstain bench corpus (VRC-46 #582):
+// labelled items (expected_decision + category) the bench MEASURES the gate
+// against.
+type answerBenchDoc struct {
+	Items []answer.BenchItem `json:"items"`
 }
 
 // scorerFlags are the optional second-judge flags (#622), shared by `gate`
@@ -166,6 +175,60 @@ func answerEvalCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "answer eval: write: %v\n", err)
 		return 1
 	}
+	if result.Status == "fail" {
+		return 1
+	}
+	return 0
+}
+
+// answerBenchCommand runs the public cite-or-abstain bench (VRC-46 #582): the
+// gate over a LABELLED corpus, reported as a MEASUREMENT (agreement,
+// must_abstain_recall, false_cite_rate, must_cite_recall, per-category). The
+// engine reads no wall clock, so a published run can be replayed and compared
+// byte for byte instead of being trusted; the reproduction gate binds the
+// corpus digest and the engine version around this output.
+func answerBenchCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("answer bench", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	corpus := flags.String("corpus", "", "labelled bench corpus YAML (items: [...]) (required)")
+	thresholdsPath := flags.String("thresholds", "", "optional versioned bounds YAML (max_false_cite_rate, min_must_abstain_recall, min_must_cite_recall)")
+	out := flags.String("out", "", "write the measurement to this path as well as stdout")
+	scorer := registerScorerFlags(flags)
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if strings.TrimSpace(*corpus) == "" {
+		fmt.Fprintln(stderr, "answer bench: --corpus is required")
+		return 2
+	}
+	cfg, code := scorer.config("answer bench", stderr)
+	if code != 0 {
+		return code
+	}
+	var doc answerBenchDoc
+	if code := loadYAMLInto(*corpus, &doc, "answer bench: corpus", stderr); code != 0 {
+		return code
+	}
+	var th answer.BenchThresholds
+	if strings.TrimSpace(*thresholdsPath) != "" {
+		if code := loadYAMLInto(*thresholdsPath, &th, "answer bench: thresholds", stderr); code != 0 {
+			return code
+		}
+	}
+
+	result := answer.Bench(doc.Items, cfg, th)
+	encoded, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		fmt.Fprintf(stderr, "answer bench: encode: %v\n", err)
+		return 1
+	}
+	if strings.TrimSpace(*out) != "" {
+		if err := os.WriteFile(*out, append(encoded, '\n'), 0o644); err != nil {
+			fmt.Fprintf(stderr, "answer bench: write: %v\n", err)
+			return 1
+		}
+	}
+	fmt.Fprintln(stdout, string(encoded))
 	if result.Status == "fail" {
 		return 1
 	}

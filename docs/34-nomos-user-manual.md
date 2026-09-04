@@ -73,6 +73,7 @@ nomos rag delta
 nomos rag verify
 nomos answer gate
 nomos answer eval
+nomos answer bench
 nomos strict
 nomos github plan
 ```

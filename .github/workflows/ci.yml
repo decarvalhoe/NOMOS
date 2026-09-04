@@ -44,6 +44,14 @@ jobs:
         run: python3 -m pip install --quiet pyyaml
       - name: "RAG interop export gate (#614, #616, #618)"
         run: bash ../scripts/rag-export-gate.sh
+      # VRC-46 (#582): the public cite-or-abstain bench replays its published
+      # result — quoted sources unmoved and verbatim, cited references carrying
+      # a dated verification, engine byte-deterministic, versioned bounds held,
+      # measurement identical to results-<date>.json. Any drift is named (red).
+      - name: "Public cite-or-abstain bench replay (VRC-46 #582)"
+        run: |
+          go build -o "$RUNNER_TEMP/nomos-bench" .
+          python3 ../scripts/cite_or_abstain_bench.py --root .. --nomos-bin "$RUNNER_TEMP/nomos-bench"
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating

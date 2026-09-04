@@ -279,3 +279,120 @@ func TestAnswerGate_ScorerFlagsAreValidated(t *testing.T) {
 		}
 	}
 }
+
+// VRC-46 (#582) — the `answer bench` CLI surface: it MEASURES the gate against
+// labelled ground truth, publishes the dangerous direction on its own, and
+// refuses to pass a bound that nothing was measured against.
+
+const benchCorpus = `items:
+  - answer_id: B-GOOD
+    prompt_id: P1
+    category: grounded
+    expected_decision: cite
+    answer: "Le gabarit retient une hauteur de neuf metres au faite."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.99
+    source_spans:
+      - source_id: S1
+        source_hash: "sha256:abc"
+        span: L1-L2
+        chunk_id: c1
+        text: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
+    retrieved_chunks:
+      - chunk_id: c1
+        text: "Le gabarit retient une hauteur de neuf metres au faite."
+  - answer_id: B-NEGATED
+    prompt_id: P2
+    category: negation
+    expected_decision: abstain
+    answer: "Le delai ne court pas des la notification."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.99
+    source_spans:
+      - source_id: S1
+        source_hash: "sha256:abc"
+        span: L4-L5
+        chunk_id: c-delai
+        text: "Le delai court des la notification."
+    retrieved_chunks:
+      - chunk_id: c-delai
+        text: "Le delai court des la notification."
+`
+
+const unlabelledBenchCorpus = `items:
+  - answer_id: B-GOOD
+    prompt_id: P1
+    category: grounded
+    answer: "Le gabarit retient une hauteur de neuf metres au faite."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.99
+    source_spans:
+      - source_id: S1
+        source_hash: "sha256:abc"
+        span: L1-L2
+        chunk_id: c1
+        text: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
+    retrieved_chunks:
+      - chunk_id: c1
+        text: "Le gabarit retient une hauteur de neuf metres au faite."
+`
+
+func TestAnswerBench_MeasuresAndPublishesTheFalseCite(t *testing.T) {
+	corpus := evalFixtureFile(t, "bench.yaml", benchCorpus)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "bench", "--corpus", corpus}, &stdout, &stderr); code != 0 {
+		t.Fatalf("a labelled corpus is a measurement, not a failure, got %d: %s", code, stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		`"status": "measured"`,
+		`"items": 2`,
+		`"expected_decision": "abstain"`,
+		`"false_cites": 1`,
+		`"must_abstain_total": 1`,
+		`"false_cite_rate": 1`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("bench output must contain %s: %s", want, out)
+		}
+	}
+}
+
+func TestAnswerBench_CeilingTurnsTheBenchRed(t *testing.T) {
+	corpus := evalFixtureFile(t, "bench.yaml", benchCorpus)
+	thresholds := evalFixtureFile(t, "bench-thresholds.yaml", "max_false_cite_rate: 0\n")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "bench", "--corpus", corpus, "--thresholds", thresholds}, &stdout, &stderr); code != 1 {
+		t.Fatalf("a false cite above the ceiling must exit 1, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "false_cite_rate above the versioned ceiling") {
+		t.Fatalf("the violation must be named: %s", stdout.String())
+	}
+}
+
+func TestAnswerBench_UnlabelledCorpusIsADefect(t *testing.T) {
+	corpus := evalFixtureFile(t, "bench.yaml", unlabelledBenchCorpus)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "bench", "--corpus", corpus}, &stdout, &stderr); code != 1 {
+		t.Fatalf("an unlabelled corpus must exit 1, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "no usable expected_decision") {
+		t.Fatalf("the defect must be named: %s", stdout.String())
+	}
+}
+
+func TestAnswerBench_ScorerMovesTheMeasurement(t *testing.T) {
+	corpus := evalFixtureFile(t, "bench.yaml", benchCorpus)
+	cmd := helperScorerCmd(t, "ok")
+	thresholds := evalFixtureFile(t, "bench-thresholds.yaml", "max_false_cite_rate: 0\n")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "bench", "--corpus", corpus, "--thresholds", thresholds, "--scorer-cmd", cmd}, &stdout, &stderr); code != 0 {
+		t.Fatalf("with the second judge the negation is blocked and the ceiling holds, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"false_cites": 0`) {
+		t.Fatalf("the scorer must move the measurement: %s", stdout.String())
+	}
+}

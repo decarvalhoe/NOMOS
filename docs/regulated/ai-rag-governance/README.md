@@ -54,6 +54,17 @@ closed with `FAITHFULNESS_SCORER_FAILED`. `scripts/nomos_hhem_scorer.py` is
 the reference adapter for HHEM-2.1-Open; the CI harness itself stays lexical
 and no CI run scores with a neural model.
 
+`cite-or-abstain-bench/` is the public bench of the gate (VRC-46, #582): a
+labelled corpus quoting the in-repo public reference-basis documents
+(`corpus.yaml`), versioned bounds (`bench-thresholds.yaml`), the references
+the methodology cites with their verification date (`references.yaml`), the
+methodology (`README.md`) and dated results (`results-<date>.json`).
+`nomos answer bench` measures; `scripts/cite_or_abstain_bench.py` replays the
+published result in CI and turns red on any drift (moved source, non-verbatim
+quote, unverified reference, non-determinism, broken bound, edited number).
+`--publish` writes a new dated result: do it in the same change that
+legitimately moves the numbers, never to hide a regression.
+
 `scripts/regulated_ai_provider_ledger.py` emits
 `.regulated-evidence-pack/ai-provider-change-ledger.json` from
 `ai-provider-change-ledger.yaml`. The regulated documentation gate blocks
