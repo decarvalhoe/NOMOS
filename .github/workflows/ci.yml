@@ -188,7 +188,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install --quiet pyyaml
+      - run: pip install --quiet pyyaml pyshacl
+      # VRC-44 (#580): the facet vocabularies are emitted as a SKOS/OWL graph and
+      # validated with standard SHACL shapes. The portability is the point — the
+      # same verdict is reachable with any SHACL engine, so the check is
+      # reproducible outside NOMOS. A term on two disjoint axes turns this red.
+      - name: Facet SKOS/SHACL gate (VRC-44)
+        run: python scripts/facet_shacl_gate.py --root .
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
       # VRC-14 (#560): the published repeated-evidence index must replay exactly

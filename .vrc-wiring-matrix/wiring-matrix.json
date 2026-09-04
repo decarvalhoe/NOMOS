@@ -1858,21 +1858,45 @@
     },
     {
       "id": "vocabulary_skos_shacl",
-      "title": "Outillage vocabulaires SKOS/SHACL — standards ouverts à adopter (VRC-44 #580)",
+      "title": "Outillage vocabulaires SKOS/SHACL (VRC-44 #580) — les vocabulaires de facettes sont émis en graphe SKOS/OWL réel et validés par des shapes SHACL standard (specs/shacl/facet-ontology.shapes.ttl). Ce que cela ajoute au gate Go n’est pas une redite : les shapes sont du SHACL standard sur un graphe standard, donc pySHACL, Apache Jena ou TopBraid rendent le même verdict sur les mêmes octets — la vérification est rejouable HORS de NOMOS, ce qui en fait une preuve et non une auto-attestation. Contraintes : schéma étiqueté et déclarant ses axes disjoints, axe ancré à exactement un BFO root et une classe IOF (IRI réels) et portant au moins un terme, concept à exactement un prefLabel / scheme / axe / mapping BFO / mapping IOF et un id namespacé, et surtout ORTHOGONALITÉ — aucun terme sur deux axes déclarés disjoints, exprimée en SPARQL parce que c’est une relation à trois nœuds. Reste déclaré sidecar : la sonde must_be_absent garde SKOS/SHACL hors du moteur Go, et la doctrine lit sidecar comme PARTIAL.",
       "pillar": "B4",
-      "claim_level": "not implemented (adopt open standards)",
-      "promotion_issue": "VRC-44",
-      "expected": "absent",
-      "computed": "absent",
+      "claim_level": "artifact-generated (conformité du graphe aux shapes ; aucune revendication sur la justesse ontologique des ancrages BFO/IOF choisis)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
       "mismatch": false,
-      "reasons": [],
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
       "drift": [],
       "checks": {
         "engine": [],
         "production_callers": [],
         "adversarial_tests": [],
-        "ci_gates": [],
-        "sidecar": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/facet_shacl_gate.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "specs/shacl/facet-ontology.shapes.ttl",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_facet_shacl_gate.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "stub_markers": []
       }
     },
@@ -2112,9 +2136,9 @@
     "computed": {
       "real": 31,
       "partial": 0,
-      "sidecar": 6,
+      "sidecar": 7,
       "stub": 0,
-      "absent": 3
+      "absent": 2
     },
     "mismatches": 0,
     "generic_check_failures": 0,

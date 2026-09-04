@@ -1,0 +1,117 @@
+# VRC-44 (#580, doc 45 §3 B4) — SHACL shapes for NOMOS facet vocabularies.
+#
+# These shapes are the PORTABLE half of the facet contract. The Go pack gate
+# already checks the pack manifest's own rules; what it cannot give is a check a
+# third party can re-run without NOMOS. These shapes are standard SHACL over a
+# standard SKOS/OWL graph: pySHACL, Apache Jena and TopBraid all render the same
+# verdict on the same bytes. That portability is the evidence.
+#
+# The shapes deliberately restate nothing the CUE schema already enforces about
+# FILE shape. They constrain the GRAPH: that the vocabulary is a well-formed
+# concept scheme, that every concept is anchored in an upper ontology, and that
+# the axes declared disjoint actually are.
+
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix nomos:  <https://nomos.dev/ns/facets#> .
+
+nomos:ConceptSchemeShape
+    a sh:NodeShape ;
+    sh:targetClass skos:ConceptScheme ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "A concept scheme carries a preferred label."
+    ] ;
+    sh:property [
+        sh:path nomos:disjointAxis ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A scheme declares which axes are mutually disjoint; declaring none would make orthogonality unfalsifiable."
+    ] .
+
+nomos:FacetAxisShape
+    a sh:NodeShape ;
+    sh:targetClass nomos:FacetAxis ;
+    sh:property [
+        sh:path nomos:bfoRoot ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "An axis is anchored to exactly one BFO root, given as an IRI."
+    ] ;
+    sh:property [
+        sh:path nomos:iofClass ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "An axis is anchored to exactly one IOF class, given as an IRI."
+    ] ;
+    sh:property [
+        sh:path [ sh:inversePath nomos:onAxis ] ;
+        sh:minCount 1 ;
+        sh:message "An axis with no term is a declaration with nothing behind it."
+    ] .
+
+nomos:ConceptShape
+    a sh:NodeShape ;
+    sh:targetClass skos:Concept ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:Literal ;
+        sh:message "A concept carries exactly one preferred label."
+    ] ;
+    sh:property [
+        sh:path skos:inScheme ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A concept belongs to exactly one scheme."
+    ] ;
+    sh:property [
+        sh:path nomos:onAxis ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A concept sits on exactly one axis."
+    ] ;
+    sh:property [
+        sh:path nomos:bfoMapping ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A concept maps to exactly one BFO class."
+    ] ;
+    sh:property [
+        sh:path nomos:iofMapping ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A concept maps to exactly one IOF class."
+    ] ;
+    sh:property [
+        sh:path nomos:termId ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:pattern "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" ;
+        sh:message "A term id is pack-namespaced, e.g. ai_act.haut_risque."
+    ] .
+
+# The orthogonality constraint the issue asks for: a term that sits on two axes
+# both declared disjoint violates owl:disjointUnionOf. Expressed in SPARQL
+# because it is a relation between three nodes, which property shapes cannot
+# state.
+nomos:OrthogonalityShape
+    a sh:NodeShape ;
+    sh:targetClass skos:ConceptScheme ;
+    sh:sparql [
+        sh:message "Term {?termId} sits on disjoint axes {?axisA} and {?axisB} — owl:disjointUnionOf is violated." ;
+        sh:prefixes nomos: ;
+        sh:select """
+            PREFIX nomos: <https://nomos.dev/ns/facets#>
+            SELECT $this ?termId ?axisA ?axisB
+            WHERE {
+                $this nomos:disjointAxis ?axisA .
+                $this nomos:disjointAxis ?axisB .
+                ?conceptA nomos:onAxis ?axisA ; nomos:termId ?termId ; skos:inScheme $this .
+                ?conceptB nomos:onAxis ?axisB ; nomos:termId ?termId ; skos:inScheme $this .
+                FILTER (STR(?axisA) < STR(?axisB))
+            }
+        """ ;
+    ] .

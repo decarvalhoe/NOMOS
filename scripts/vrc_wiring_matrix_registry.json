@@ -756,11 +756,19 @@
     },
     {
       "id": "vocabulary_skos_shacl",
-      "title": "Outillage vocabulaires SKOS/SHACL — standards ouverts à adopter (VRC-44 #580)",
+      "title": "Outillage vocabulaires SKOS/SHACL (VRC-44 #580) — les vocabulaires de facettes sont émis en graphe SKOS/OWL réel et validés par des shapes SHACL standard (specs/shacl/facet-ontology.shapes.ttl). Ce que cela ajoute au gate Go n\u2019est pas une redite : les shapes sont du SHACL standard sur un graphe standard, donc pySHACL, Apache Jena ou TopBraid rendent le même verdict sur les mêmes octets — la vérification est rejouable HORS de NOMOS, ce qui en fait une preuve et non une auto-attestation. Contraintes : schéma étiqueté et déclarant ses axes disjoints, axe ancré à exactement un BFO root et une classe IOF (IRI réels) et portant au moins un terme, concept à exactement un prefLabel / scheme / axe / mapping BFO / mapping IOF et un id namespacé, et surtout ORTHOGONALITÉ — aucun terme sur deux axes déclarés disjoints, exprimée en SPARQL parce que c\u2019est une relation à trois nœuds. Reste déclaré sidecar : la sonde must_be_absent garde SKOS/SHACL hors du moteur Go, et la doctrine lit sidecar comme PARTIAL.",
       "pillar": "B4",
-      "claim_level": "not implemented (adopt open standards)",
-      "promotion_issue": "VRC-44",
-      "expected": "absent",
+      "claim_level": "artifact-generated (conformité du graphe aux shapes ; aucune revendication sur la justesse ontologique des ancrages BFO/IOF choisis)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["facet_shacl_gate.py", "pyshacl"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/facet_shacl_gate.py", "contains": ["def build_graph(", "def validate_pack(", "shacl_validate", "SKOS.ConceptScheme", "NOMOS.disjointAxis"]},
+        {"path": "specs/shacl/facet-ontology.shapes.ttl", "contains": ["nomos:OrthogonalityShape", "sh:sparql", "disjointUnionOf is violated", "orthogonality unfalsifiable"]},
+        {"path": "tests/test_facet_shacl_gate.py", "contains": ["test_non_orthogonal_vocabulary_turns_the_gate_red", "test_orthogonality_is_unfalsifiable_without_declared_disjoint_axes", "test_axis_with_no_term_is_refused", "test_every_shipped_pack_conforms"]}
+      ],
       "must_be_absent": [
         {"dir": "cli", "regex": "skos|shacl", "suffixes": [".go"], "ignore_case": true}
       ]
