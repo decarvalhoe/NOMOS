@@ -1644,6 +1644,106 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "eu_ai_act_pack",
+      "title": "Pack « EU AI Act evidence » pilot-grade — aucun pack AI Act livré ; le gate D2 existe, son premier vertical réglementaire non (VRC-22 #565)",
+      "pillar": "D3",
+      "claim_level": "not implemented (no pack shipped)",
+      "promotion_issue": "VRC-22",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "rule_execution_substrate",
+      "title": "Substrat d'exécution de règles L4/OpenFisca/Catala — adoption, jamais réinvention (anti-objectif doc 45 §10.3) (VRC-42 #578)",
+      "pillar": "B3",
+      "claim_level": "not implemented (adopt, never build)",
+      "promotion_issue": "VRC-42",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "cross_reference_graph",
+      "title": "Graphe de renvois déterministe — pas de sonde must_be_absent : le vocabulaire « cross-reference » est déjà employé ailleurs dans le moteur, un marqueur générique produirait un faux positif (VRC-43 #579)",
+      "pillar": "B5",
+      "claim_level": "not implemented",
+      "promotion_issue": "VRC-43",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "vocabulary_skos_shacl",
+      "title": "Outillage vocabulaires SKOS/SHACL — standards ouverts à adopter (VRC-44 #580)",
+      "pillar": "B4",
+      "claim_level": "not implemented (adopt open standards)",
+      "promotion_issue": "VRC-44",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "public_cite_or_abstain_bench",
+      "title": "Bench public cite-or-abstain reproductible — sortie du chantier A ; le harnais interne (VRC-13 #559) existe, sa publication non (VRC-46 #582)",
+      "pillar": "A-exit",
+      "claim_level": "not implemented (unpublished)",
+      "promotion_issue": "VRC-46",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -1679,13 +1779,13 @@
     }
   ],
   "summary": {
-    "capabilities": 32,
+    "capabilities": 37,
     "computed": {
       "real": 27,
       "partial": 0,
       "sidecar": 4,
       "stub": 0,
-      "absent": 1
+      "absent": 6
     },
     "mismatches": 0,
     "generic_check_failures": 0,
