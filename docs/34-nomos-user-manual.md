@@ -71,6 +71,8 @@ nomos rag export
 nomos rag manifest
 nomos rag delta
 nomos rag verify
+nomos answer gate
+nomos answer eval
 nomos strict
 nomos github plan
 ```

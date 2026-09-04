@@ -283,6 +283,44 @@ réponse ne déclare d'attentes, le harnais échoue (fail-closed : une borne que
 personne ne mesure est un faux confort). Limite : le proxy de support reste
 lexical et aveugle à la négation.
 
+### Scorer De Fidélité Enfichable (NLI)
+
+Le proxy lexical du gate est aveugle à la négation par construction : « le
+délai court » et « le délai ne court pas » partagent leurs mots pleins. Le gate
+accepte un second juge, externe au moteur, sur les mêmes paires (texte de
+support retrouvé/cité, phrase de la réponse) :
+
+```bash
+nomos answer gate --fixtures answers.yaml \
+  --scorer-cmd "python3 scripts/nomos_hhem_scorer.py" --scorer-threshold 0.5
+nomos answer eval --corpus ... --thresholds ... --scorer-cmd "..."
+```
+
+Contrat : `nomos-scorer-request-v1` sur stdin, `nomos-scorer-response-v1` sur
+stdout, une probabilité de support dans [0,1] par paire, alignée par `id`.
+Règles :
+
+- **le plus strict gagne**, phrase par phrase : une phrase n'est supportée que
+  si le proxy lexical ET le scorer la supportent. Brancher un scorer ne peut
+  que durcir le verdict, jamais l'assouplir (même sens que la règle « un score
+  auto-déclaré ne peut que baisser ») ;
+- **fail-closed** : scorer qui échoue, dépasse le délai, répond hors schéma,
+  oublie ou duplique une paire, ou renvoie un score hors [0,1] → la réponse
+  score 0 et porte le finding `FAITHFULNESS_SCORER_FAILED`, quel que soit son
+  `policy_outcome` ; pas de repli silencieux sur le lexical. Les refus
+  n'affirment rien et ne sont pas scorés ;
+- NOMOS n'embarque aucun modèle : le moteur reste déterministe, le juge
+  neuronal vit dans un sidecar. `scripts/nomos_hhem_scorer.py` est
+  l'adaptateur de référence pour HHEM-2.1-Open (Vectara, modèle ouvert,
+  chargé à l'exécution) ; il refuse d'émettre des scores quand le backend est
+  indisponible ou répond hors contrat.
+
+Le verdict expose les deux juges (`lexical_supported_sentences`,
+`scorer_supported_sentences`, `supported_sentences` final, `scorer_method`,
+`scorer_threshold`). Limite de revendication : la CI n'exerce le sidecar qu'au
+niveau du protocole (backend injecté, backend absent) ; aucun run CI ne score
+avec le modèle neuronal, et NOMOS ne revendique rien sur la précision de HHEM.
+
 ## Tests Associés
 
 - Toutes les sources actives sont indexées.
