@@ -25,6 +25,7 @@
 | `pdf_adapter` | ingestion | real | real | ✅ | — | — |
 | `domain_pack_gate` | D2 | real | real | ✅ | — | — |
 | `rag_eval_harness` | B2 | real | real | ✅ | — | — |
+| `rag_eval_context_metrics` | B2 | real | real | ✅ | — | — |
 | `rag_interop_export` | interop | real | real | ✅ | — | — |
 | `rag_index_staleness_verify` | interop | real | real | ✅ | — | — |
 | `rag_lens_scoped_export` | interop | real | real | ✅ | — | — |
@@ -44,7 +45,7 @@
 
 ## Summary
 
-- capabilities: 29 (real=25, partial=0, sidecar=3, stub=0, absent=1)
+- capabilities: 30 (real=26, partial=0, sidecar=3, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
