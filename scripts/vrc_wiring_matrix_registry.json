@@ -370,6 +370,31 @@
       ]
     },
     {
+      "id": "rag_interop_export",
+      "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
+      "pillar": "interop",
+      "claim_level": "artifact-generated (export contract only; no retrieval-quality claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/ragexport/export.go", "contains": ["func Build(", "func BuildContextPrefix(", "RecordSchemaVersion", "RejectMissingSourceHash"]},
+        {"path": "cli/internal/ragexport/manifest.go", "contains": ["func BuildManifest(", "digestOf("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.Build(", "ragexport.BuildManifest(", "ragExportCommand", "ragManifestCommand"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/ragexport/export_test.go", "contains": ["TestBuild_ContextPrefixNeverLeaksIntoCitableBody", "TestBuild_RejectsChunksThatCouldNotBeCited", "TestBuild_OrderIsIndependentOfInputOrder"]},
+        {"path": "cli/internal/ragexport/manifest_test.go", "contains": ["TestManifest_DigestMovesWhenSourceHashChanges", "TestManifest_PerSourceDigestIsolatesTheChangedSource"]},
+        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGExport_ReportsRejectionsAndStrictFailsClosed", "TestRAGManifest_DigestMovesWhenTheCorpusMoves"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh"]},
+        {"path": "scripts/rag-export-gate.sh", "contains": ["rag export --feed", "rag manifest --feed", "cmp -s", "context prefix leaked"]}
+      ]
+    },
+    {
       "id": "reference_retrieval_kit",
       "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
       "pillar": "B1",

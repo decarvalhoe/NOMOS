@@ -33,6 +33,13 @@ jobs:
       # recall (or faithfulness) regression turns this job red (fail-closed).
       - name: RAG eval harness (VRC-13)
         run: go run . answer eval --corpus ../docs/regulated/ai-rag-governance/rag-eval-corpus.yaml --thresholds ../docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
+      # #614: the RAG interop export gate replays the `nomos rag` contract on the
+      # REAL in-repo public reference corpus — export/manifest byte-identical
+      # across runs, zero chunks rejected under --strict, no context-prefix leak
+      # into the citable body, and a 1-byte source mutation moves that source's
+      # digest only (fail-closed).
+      - name: "RAG interop export gate (#614)"
+        run: bash ../scripts/rag-export-gate.sh
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating

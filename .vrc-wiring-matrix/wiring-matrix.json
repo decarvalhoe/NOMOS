@@ -899,6 +899,75 @@
       }
     },
     {
+      "id": "rag_interop_export",
+      "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
+      "pillar": "interop",
+      "claim_level": "artifact-generated (export contract only; no retrieval-quality claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/ragexport/export.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/manifest.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/rag_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/ragexport/export_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/manifest_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/rag_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/rag-export-gate.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "reference_retrieval_kit",
       "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
       "pillar": "B1",
@@ -1289,6 +1358,7 @@
         "pack",
         "pointintime",
         "product-check",
+        "rag",
         "report",
         "strict",
         "validate",
@@ -1299,9 +1369,9 @@
     }
   ],
   "summary": {
-    "capabilities": 26,
+    "capabilities": 27,
     "computed": {
-      "real": 22,
+      "real": 23,
       "partial": 0,
       "sidecar": 3,
       "stub": 0,
