@@ -3,10 +3,13 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/RBOKproject/Nomos/cli/internal/answer"
 )
 
 // VRC-10 (#556) — the `answer gate` CLI surface: cites a grounded answer,
@@ -152,5 +155,127 @@ func TestAnswerGate_RequiresFixtures(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := Run([]string{"answer", "gate"}, &stdout, &stderr); code != 2 {
 		t.Fatalf("missing --fixtures must exit 2, got %d", code)
+	}
+}
+
+// --- external faithfulness scorer (#622) --------------------------------------
+
+// negatedFixture contradicts its own source; the lexical proxy cannot tell.
+const negatedFixture = `answers:
+  - answer_id: NEG-1
+    prompt_id: P-NEG
+    answer: "Le delai ne court pas des la notification."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.99
+    source_spans:
+      - source_id: S1
+        source_hash: "sha256:abc"
+        span: L4-L5
+        chunk_id: c-delai
+        text: "Le delai court des la notification."
+    retrieved_chunks:
+      - chunk_id: c-delai
+        text: "Le delai court des la notification."
+`
+
+// TestHelperScorerProcess is not a test: it is the external scorer the CLI
+// tests spawn — this test binary re-executed in helper mode.
+func TestHelperScorerProcess(t *testing.T) {
+	if os.Getenv("NOMOS_SCORER_HELPER") != "1" {
+		return
+	}
+	defer os.Exit(0)
+	var req answer.ScorerRequest
+	if err := json.NewDecoder(os.Stdin).Decode(&req); err != nil {
+		fmt.Fprintln(os.Stderr, "helper: bad request:", err)
+		os.Exit(2)
+	}
+	if os.Getenv("NOMOS_SCORER_MODE") == "crash" {
+		fmt.Fprintln(os.Stderr, "model backend unavailable")
+		os.Exit(3)
+	}
+	resp := answer.ScorerResponse{SchemaVersion: answer.ScorerResponseSchema, Method: "helper-nli"}
+	for _, p := range req.Pairs {
+		score := 0.95
+		if strings.Contains(" "+p.Hypothesis+" ", " ne ") {
+			score = 0.05
+		}
+		resp.Scores = append(resp.Scores, answer.ScorerScore{ID: p.ID, Score: score})
+	}
+	_ = json.NewEncoder(os.Stdout).Encode(resp)
+}
+
+// helperScorerCmd returns the --scorer-cmd value that re-executes this binary
+// as the scorer, in the given mode.
+func helperScorerCmd(t *testing.T, mode string) string {
+	t.Helper()
+	if strings.ContainsAny(os.Args[0], " \t") {
+		t.Skip("--scorer-cmd is whitespace-split; the test binary path contains spaces")
+	}
+	t.Setenv("NOMOS_SCORER_HELPER", "1")
+	t.Setenv("NOMOS_SCORER_MODE", mode)
+	return os.Args[0] + " -test.run=^TestHelperScorerProcess$ --"
+}
+
+func TestAnswerGate_ScorerCmdBlocksNegatedClaim(t *testing.T) {
+	fixtures := evalFixtureFile(t, "answers.yaml", negatedFixture)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "gate", "--fixtures", fixtures}, &stdout, &stderr); code != 0 {
+		t.Fatalf("precondition: the lexical proxy alone accepts the negated claim (documented limitation), got %d: %s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	cmd := helperScorerCmd(t, "ok")
+	if code := Run([]string{"answer", "gate", "--fixtures", fixtures, "--scorer-cmd", cmd}, &stdout, &stderr); code != 1 {
+		t.Fatalf("with the scorer the negated claim must be blocked (exit 1), got %d: %s", code, stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, `"method": "lexical_entailment_v1+helper-nli"`) || !strings.Contains(out, `"decision": "abstain"`) {
+		t.Fatalf("the verdict must show both judges and abstain: %s", out)
+	}
+}
+
+func TestAnswerGate_ScorerCmdFailureFailsClosed(t *testing.T) {
+	fixtures := evalFixtureFile(t, "answers.yaml", groundedFixture)
+	cmd := helperScorerCmd(t, "crash")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "gate", "--fixtures", fixtures, "--scorer-cmd", cmd}, &stdout, &stderr); code != 1 {
+		t.Fatalf("a crashed scorer must fail the gate closed, got %d: %s", code, stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, answer.FindingScorerFailed) || !strings.Contains(out, `"method": "scorer_failed"`) {
+		t.Fatalf("the failure must be a named finding, got: %s", out)
+	}
+	if strings.Contains(out, `"decision": "cite"`) {
+		t.Fatalf("a failed judge must not leave a cite standing: %s", out)
+	}
+}
+
+func TestAnswerEval_ScorerCmdAppliesToTheHarness(t *testing.T) {
+	corpus := evalFixtureFile(t, "corpus.yaml", negatedFixture)
+	thresholds := evalFixtureFile(t, "thresholds.yaml", baseThresholds)
+	cmd := helperScorerCmd(t, "ok")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"answer", "eval", "--corpus", corpus, "--thresholds", thresholds, "--scorer-cmd", cmd}, &stdout, &stderr); code != 1 {
+		t.Fatalf("the harness must apply the scorer and turn red on the negated claim, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "mean_faithfulness below the versioned floor") {
+		t.Fatalf("regression must be named: %s", stdout.String())
+	}
+}
+
+func TestAnswerGate_ScorerFlagsAreValidated(t *testing.T) {
+	fixtures := evalFixtureFile(t, "answers.yaml", groundedFixture)
+	for _, extra := range [][]string{
+		{"--scorer-cmd", "some-scorer", "--scorer-threshold", "1.5"},
+		{"--scorer-cmd", "some-scorer", "--scorer-threshold", "-0.1"},
+		{"--scorer-cmd", "some-scorer", "--scorer-timeout", "0s"},
+	} {
+		var stdout, stderr bytes.Buffer
+		args := append([]string{"answer", "gate", "--fixtures", fixtures}, extra...)
+		if code := Run(args, &stdout, &stderr); code != 2 {
+			t.Fatalf("%v must be a usage error, got %d: %s", extra, code, stderr.String())
+		}
 	}
 }

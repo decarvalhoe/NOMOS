@@ -395,6 +395,47 @@
       ]
     },
     {
+      "id": "faithfulness_scorer_interface",
+      "title": "Pluggable faithfulness scorer — `nomos answer gate|eval --scorer-cmd` runs an external NLI judge over (support text, answer sentence) pairs through a versioned JSON protocol; strictest-wins per sentence (a scorer can only tighten the lexical verdict, never loosen it); a scorer that crashes, times out, answers off-schema, omits/duplicates a pair or scores outside [0,1] fails the answer closed (FAITHFULNESS_SCORER_FAILED). No model ships in the Go engine — the must_be_absent probe keeps it that way (#622, VRC-10 A1 follow-up)",
+      "pillar": "A1",
+      "claim_level": "artifact-generated (protocol, composition direction and fail-closed proven; no neural model is exercised in CI)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/answer/scorer.go", "contains": ["type Scorer interface", "type ExternalScorer struct", "ScorerRequestSchema", "func validateScores("]},
+        {"path": "cli/internal/answer/answer.go", "contains": ["cfg.Scorer", "FindingScorerFailed", "methodScorerFailed"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/answer_cmd.go", "contains": ["scorer-cmd", "answer.ExternalScorer{", "answer.Gate(doc.Answers, cfg)", "answer.Eval(doc.Answers, cfg, th)"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/answer/scorer_test.go", "contains": ["TestGate_NegatedClaimBlockedByScorerNotByLexicalProxy", "TestGate_ScorerCannotLoosenTheLexicalVerdict", "TestGate_ScorerFailureFailsClosed", "TestExternalScorer_RejectsMalformedResponses", "TestExternalScorer_RoundTripAlignsByID"]},
+        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerGate_ScorerCmdFailureFailsClosed", "TestAnswerGate_ScorerCmdBlocksNegatedClaim"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ],
+      "must_be_absent": [
+        {"dir": "cli", "regex": "huggingface|transformers|\\btorch\\b|onnxruntime", "suffixes": [".go"], "ignore_case": true, "exclude_tests": true}
+      ]
+    },
+    {
+      "id": "hhem_nli_scorer_sidecar",
+      "title": "HHEM-2.1-Open NLI scorer — reference adapter of the scorer protocol as a Python sidecar (model loaded at runtime, never in CI); refuses to emit scores when the backend is unavailable, the request is off-schema, or the backend answers outside [0,1]; the full chain `answer gate --scorer-cmd` without a model is proved to fail closed (#622)",
+      "pillar": "A1",
+      "claim_level": "sidecar (protocol-level tests only; no neural-NLI accuracy claim)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "scripts/nomos_hhem_scorer.py", "contains": ["vectara/hallucination_evaluation_model", "nomos-scorer-request-v1", "nomos-scorer-response-v1", "class BackendUnavailable"]},
+        {"path": "tests/test_nomos_hhem_scorer.py", "contains": ["test_backend_unavailable_exits_nonzero_and_emits_no_scores", "test_backend_score_out_of_range_is_refused", "test_gate_with_unavailable_scorer_fails_closed"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+      ]
+    },
+    {
       "id": "rag_interop_export",
       "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
       "pillar": "interop",

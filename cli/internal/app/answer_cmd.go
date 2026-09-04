@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -16,10 +17,11 @@ import (
 // answerCommand is `nomos answer`: the cite-or-abstain gate (VRC-10 #556, A1).
 // `answer gate` recomputes faithfulness from the retrieved span text and emits
 // a cite/abstain verdict per answer; it exits 1 when any answer carries a
-// blocking finding (the gate is bounding, not advisory).
+// blocking finding (the gate is bounding, not advisory). Both subcommands
+// accept an external faithfulness scorer (#622) as a second judge.
 func answerCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: nomos answer gate --fixtures <answers.yaml> [--format json]")
+		fmt.Fprintln(stderr, "usage: nomos answer <gate --fixtures <answers.yaml> | eval --corpus <corpus.yaml> --thresholds <thresholds.yaml>> [--scorer-cmd <cmd> [--scorer-threshold 0.5] [--scorer-timeout 2m]]")
 		return 2
 	}
 	switch args[0] {
@@ -37,16 +39,61 @@ type answerFixtureDoc struct {
 	Answers []answer.Answer `json:"answers"`
 }
 
+// scorerFlags are the optional second-judge flags (#622), shared by `gate`
+// and `eval`. Nomos ships no model: the scorer is an external command that
+// speaks the versioned JSON protocol (answer.ScorerRequestSchema on stdin,
+// answer.ScorerResponseSchema on stdout).
+type scorerFlags struct {
+	cmd       *string
+	threshold *float64
+	timeout   *time.Duration
+}
+
+func registerScorerFlags(flags *flag.FlagSet) scorerFlags {
+	return scorerFlags{
+		cmd: flags.String("scorer-cmd", "",
+			"external faithfulness scorer command, whitespace-split (JSON protocol "+answer.ScorerRequestSchema+" on stdin, "+answer.ScorerResponseSchema+" on stdout); default: lexical proxy only"),
+		threshold: flags.Float64("scorer-threshold", answer.Defaults().ScorerThreshold,
+			"scorer probability at or above which a sentence counts as supported (strictest-wins with the lexical proxy)"),
+		timeout: flags.Duration("scorer-timeout", answer.DefaultScorerTimeout, "external scorer timeout per batch"),
+	}
+}
+
+// config builds the gate configuration; a non-zero code is a usage error.
+func (s scorerFlags) config(prefix string, stderr io.Writer) (answer.Config, int) {
+	cfg := answer.Defaults()
+	command := strings.Fields(*s.cmd)
+	if len(command) == 0 {
+		return cfg, 0
+	}
+	if *s.threshold < 0 || *s.threshold > 1 {
+		fmt.Fprintf(stderr, "%s: --scorer-threshold must be within [0,1], got %v\n", prefix, *s.threshold)
+		return cfg, 2
+	}
+	if *s.timeout <= 0 {
+		fmt.Fprintf(stderr, "%s: --scorer-timeout must be positive, got %s\n", prefix, *s.timeout)
+		return cfg, 2
+	}
+	cfg.Scorer = answer.ExternalScorer{Command: command, Timeout: *s.timeout}
+	cfg.ScorerThreshold = *s.threshold
+	return cfg, 0
+}
+
 func answerGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("answer gate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	fixtures := flags.String("fixtures", "", "RAG answer fixtures YAML (answers: [...]) (required)")
+	scorer := registerScorerFlags(flags)
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if strings.TrimSpace(*fixtures) == "" {
 		fmt.Fprintln(stderr, "answer gate: --fixtures is required")
 		return 2
+	}
+	cfg, code := scorer.config("answer gate", stderr)
+	if code != 0 {
+		return code
 	}
 	raw, err := os.ReadFile(*fixtures)
 	if err != nil {
@@ -71,7 +118,7 @@ func answerGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 
-	result := answer.Gate(doc.Answers, answer.Defaults())
+	result := answer.Gate(doc.Answers, cfg)
 	enc := json.NewEncoder(stdout)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(result); err != nil {
@@ -91,12 +138,17 @@ func answerEvalCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	corpus := flags.String("corpus", "", "golden RAG eval corpus YAML (required)")
 	thresholdsPath := flags.String("thresholds", "", "versioned thresholds YAML (required)")
+	scorer := registerScorerFlags(flags)
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if strings.TrimSpace(*corpus) == "" || strings.TrimSpace(*thresholdsPath) == "" {
 		fmt.Fprintln(stderr, "answer eval: --corpus and --thresholds are required")
 		return 2
+	}
+	cfg, code := scorer.config("answer eval", stderr)
+	if code != 0 {
+		return code
 	}
 	var doc answerFixtureDoc
 	if code := loadYAMLInto(*corpus, &doc, "answer eval: corpus", stderr); code != 0 {
@@ -107,7 +159,7 @@ func answerEvalCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return code
 	}
 
-	result := answer.Eval(doc.Answers, answer.Defaults(), th)
+	result := answer.Eval(doc.Answers, cfg, th)
 	enc := json.NewEncoder(stdout)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(result); err != nil {

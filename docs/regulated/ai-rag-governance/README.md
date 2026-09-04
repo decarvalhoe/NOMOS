@@ -28,6 +28,15 @@ carries the versioned bounds; bump them deliberately, never to paper over a
 regression, and never set a context bound on a corpus that declares no
 expectations (the harness fails closed).
 
+Both `answer gate` and `answer eval` accept an external faithfulness scorer
+(`--scorer-cmd`, #622): a second judge over (support text, answer sentence)
+pairs through the versioned JSON protocol `nomos-scorer-request-v1` /
+`nomos-scorer-response-v1`. The verdict is strictest-wins per sentence (a
+scorer can only tighten the gate) and any scorer failure fails the answer
+closed with `FAITHFULNESS_SCORER_FAILED`. `scripts/nomos_hhem_scorer.py` is
+the reference adapter for HHEM-2.1-Open; the CI harness itself stays lexical
+and no CI run scores with a neural model.
+
 `scripts/regulated_ai_provider_ledger.py` emits
 `.regulated-evidence-pack/ai-provider-change-ledger.json` from
 `ai-provider-change-ledger.yaml`. The regulated documentation gate blocks

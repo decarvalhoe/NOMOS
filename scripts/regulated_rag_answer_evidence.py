@@ -65,7 +65,11 @@ TRUST_SCORE_INDICATIVE_GATE = 0.80
 GROUNDEDNESS_SENTENCE_THRESHOLD = 0.6
 GROUNDEDNESS_METHOD = "lexical_entailment_v1"
 GROUNDEDNESS_METHOD_NO_TEXT = "no_span_text"
-GROUNDEDNESS_UPGRADE = "neural NLI entailment (pluggable; not yet implemented)"
+GROUNDEDNESS_UPGRADE = (
+    "neural NLI entailment — pluggable in the Go gate (nomos answer gate --scorer-cmd, "
+    "strictest-wins per sentence, fail-closed; reference adapter scripts/nomos_hhem_scorer.py); "
+    "this sidecar stays lexical"
+)
 GROUNDEDNESS_LIMITATION = (
     "lexical_entailment_v1 is negation-blind: it matches content-token overlap and "
     "cannot distinguish a claim from its negation. NLI is the pluggable upgrade. "
