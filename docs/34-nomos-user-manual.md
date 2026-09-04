@@ -67,6 +67,8 @@ nomos corpus validate-sidecar
 nomos corpus feed
 nomos corpus body-ledger
 nomos corpus attest
+nomos rag export
+nomos rag manifest
 nomos strict
 nomos github plan
 ```

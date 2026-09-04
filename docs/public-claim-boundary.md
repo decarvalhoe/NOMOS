@@ -82,6 +82,8 @@ The remaining proof chain is release-scoped: repeated CI evidence on private cor
 
 Attestation `claim_coverage` is wired (VRC-07 #553): `nomos corpus attest --corpus-body-ledger` verifies the ledger's Merkle inclusion proofs (recomputing every leaf from the ledger rows) and computes `claim_coverage` from the verified ledger; `nomos corpus body-ledger --verify` exposes the same verification standalone. A tampered ledger fails the attestation (adversarial tests in tree). This is a tree capability claim; recorded POC dossiers keep their original run-scoped statements.
 
+RAG interop export is wired (#614): `nomos rag export` emits chunk records any RAG stack can index and later cite (`embedding_text` carries a deterministic structural context prefix; `body_text` is the citable source text and never contains that prefix), refusing any chunk without `chunk_id`, `source_id`, `source_hash`, or body; `nomos rag manifest` fingerprints the export per source so index staleness is provable against the source hash. Exports are byte-deterministic (no wall clock is read). Adversarial tests are in tree, and `scripts/rag-export-gate.sh` replays determinism, prefix-leak absence, and 1-byte staleness detection on the public reference corpus in CI. This is a tree capability claim about the export contract only; it claims nothing about retrieval quality, embedding behaviour, or LLM answers, which remain governed by the cite-or-abstain gate and the eval harness.
+
 ## Claim Levels
 
 NOMOS public claims are organised in increasing assurance order. Each level may only be advertised when the level below it is satisfied.

@@ -93,6 +93,55 @@ Règles Canonical-First :
 - un changement de source, structure, atome ou matrice invalide les chunks liés ;
 - une réponse RAG doit refuser de conclure quand le chunk retrouvé pointe vers un atome `missing`, `blocked`, `deprecated` ou `needs_review` au-delà du niveau de risque autorisé.
 
+## Export Vers Une Stack RAG
+
+NOMOS n'est pas un moteur RAG : il n'embed pas, ne retrouve pas, ne reclasse
+pas. Il remet un corpus prouvable à n'importe quelle stack (LangChain,
+LlamaIndex, index maison) et vérifie ce qui en revient via le gate
+cite-or-abstain (`nomos answer`). La couture est `nomos rag` :
+
+```bash
+nomos rag export   --feed feed.json --format jsonl|langchain|llamaindex --strict
+nomos rag manifest --feed feed.json --strict
+```
+
+Contrat d'export (`nomos-rag-chunk-v1`) :
+
+- `embedding_text` : ce que le consommateur embed **et** indexe en lexical
+  (BM25) — préfixe de contexte structurel + corps. Le préfixe est dérivé de la
+  structure déjà parsée (source, rôle, domaine, chemin de titres, table et
+  ligne, colonnes, chemin YAML), sans modèle dans la boucle : reproductible et
+  vérifiable. Sa grammaire est versionnée (`context_prefix_version`) ; tout
+  changement de grammaire impose un ré-embedding.
+- `body_text` : ce que le consommateur affiche et cite. Le préfixe de contexte
+  n'y entre jamais : une citation ne doit contenir que du texte présent dans
+  la source.
+- `provenance` : `source_id`, `source_hash`, spans (octets, lignes), segments
+  source, unité canonique — le minimum pour re-prouver un chunk retrouvé.
+- `metadata` : enveloppe filtrable, mêmes noms de champs que le vocabulaire
+  corpus.
+
+Règles fail-closed : un chunk sans `chunk_id`, sans `source_id`, sans
+`source_hash` ou sans corps est refusé et compté, jamais tu. `--strict` rend
+le refus bloquant. L'export est trié par `chunk_id` et ne lit aucune horloge :
+deux exports du même feed sont identiques octet pour octet.
+
+`nomos rag manifest` (`nomos-rag-index-manifest-v1`) fixe l'empreinte de ce
+qui a été remis à l'index : digest global et digest par source, lié au
+`source_hash`. Une source dont le hash bouge invalide exactement ses chunks,
+pas l'index entier — la règle « un changement de source invalide les chunks
+liés » devient vérifiable côté consommateur.
+
+Le gate CI `scripts/rag-export-gate.sh` rejoue ces propriétés sur le corpus de
+référence public du dépôt : export et manifeste bit-identiques, zéro refus,
+aucune fuite du préfixe dans le corps citable, et une mutation d'un octet
+d'une source déplace le digest de cette source seule.
+
+> Périmètre de revendication : le contrat d'export (déterminisme, liaison à la
+> provenance, détection de staleness). Aucune qualité de retrieval n'est
+> revendiquée ; l'effet du préfixe de contexte sur le retrieval reste à mesurer
+> par le harnais d'évaluation.
+
 ## Recherche Et Citations
 
 Une réponse assistée doit distinguer :
