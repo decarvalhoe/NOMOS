@@ -235,20 +235,46 @@ Un RAG Canonical-First doit être évalué sur :
 
 ### Gate Cite-Or-Abstain CKM
 
-Le gate CKM mesure les réponses RAG conservées comme preuves avec
-`scripts/regulated_rag_answer_evidence.py`. Il expose, par réponse et en
-synthèse :
+Le gate CKM est calculé par le moteur Go (`nomos answer gate`) et consigné
+comme preuve par `scripts/regulated_rag_answer_evidence.py`. Le sidecar Python
+ne note plus rien lui-même : il consomme le verdict du moteur (VRC-10 A1,
+#624). Il expose, par réponse et en synthèse :
 
 - `metrics.alce.citation_recall` : part des chunks récupérés couverte par des citations source-backed ;
 - `metrics.alce.citation_precision` : part des citations qui se lient aux chunks récupérés ;
 - `metrics.deepeval.faithfulness` : score de support par les citations ou score de fixture explicite ;
 - `metrics.trust_score` : moyenne déterministe recall/precision/faithfulness/confidence ;
-- `trust_tier` : `certified`, `indicative` ou `unverified`.
+- `trust_tier` : `certified`, `indicative` ou `unverified` ;
+- `metrics.verdict_source` : `go_engine` (verdict du moteur) ou `python_fallback`.
 
 Le tiers `certified` exige recall, precision, faithfulness et trust-score au-dessus
 du seuil du gate. `indicative` signale une preuve exploitable mais insuffisante
 pour une revendication certifiée. `unverified` est utilisé dès qu'un finding
 bloquant existe.
+
+Le rapport porte les seuils mêmes qui ont servi au verdict (`gates`, renvoyés
+par le moteur) : il ne les duplique donc jamais, et un seuil qui change dans le
+moteur apparaît dans le rapport. Ce que le moteur ne sait pas reste au sidecar :
+l'enveloppe de preuve (champs obligatoires de l'enregistrement, contrat de
+réponse, plage de confiance, unicité des `answer_id`).
+
+Deux modes, un seul défaut :
+
+- `--engine required` (défaut, celui de la CI) : sans moteur, ou si le moteur
+  n'émet pas de verdict (crash, timeout, sortie non JSON, verdict non aligné
+  sur les fixtures), le sidecar sort en 2 et n'écrit **aucun** rapport — un
+  rapport périmé présent à la sortie est supprimé. Rien n'est noté localement ;
+- `--engine fallback` : repli EXPLICITE sur le proxy lexical du sidecar
+  (CKM-H6, aveugle à la négation) quand le moteur est indisponible. Le rapport
+  le dit (`engine.verdict_source: python_fallback`, finding d'avertissement
+  `RAG_GATE_VERDICT_FROM_PYTHON_FALLBACK`), et chaque tiers est plafonné à
+  `indicative`. Aucun gate CI n'utilise ce mode (une sonde
+  `must_be_absent` du registre de wiring l'interdit dans les scripts shell).
+
+`--scorer-cmd` (et son seuil, son timeout) est transmis au moteur : un second
+juge NLI atteint donc la preuve sans qu'aucun modèle ne vive dans le sidecar.
+Un refus explicite n'affirme rien : son verdict nomme sa méthode de groundedness
+(`explicit_refusal`) au lieu de la laisser vide.
 
 Ce gate ne prouve pas la justesse métier finale d'une réponse LLM. Il prouve
 seulement que la réponse suit le contrat cite-or-abstain, cite des spans

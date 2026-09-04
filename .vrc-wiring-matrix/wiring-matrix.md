@@ -28,6 +28,7 @@
 | `rag_eval_context_metrics` | B2 | real | real | ✅ | — | — |
 | `faithfulness_scorer_interface` | A1 | real | real | ✅ | — | — |
 | `hhem_nli_scorer_sidecar` | A1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `rag_evidence_sidecar_consumes_go_verdict` | A1 | real | real | ✅ | — | — |
 | `rag_interop_export` | interop | real | real | ✅ | — | — |
 | `rag_index_staleness_verify` | interop | real | real | ✅ | — | — |
 | `rag_lens_scoped_export` | interop | real | real | ✅ | — | — |
@@ -52,7 +53,7 @@
 
 ## Summary
 
-- capabilities: 37 (real=27, partial=0, sidecar=4, stub=0, absent=6)
+- capabilities: 38 (real=28, partial=0, sidecar=4, stub=0, absent=6)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

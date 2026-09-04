@@ -201,7 +201,10 @@ print("metadata remains open for CKM additive fields")
 PY
 
 step "8/11 - CKM cite-or-abstain metrics gate"
+# #624: the sidecar CONSUMES the verdict of the engine built in step 2. No
+# --engine fallback here: without a verdict there is no evidence to record.
 python3 scripts/regulated_rag_answer_evidence.py \
+  --nomos-bin "$CLI_BIN" \
   --output "$OUT_DIR/rag-answer-evidence.json"
 
 step "9/11 - Baseline e2e"

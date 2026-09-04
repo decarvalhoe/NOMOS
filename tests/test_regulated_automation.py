@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,6 +31,32 @@ def run_script(script: str, *args: str, cwd: Path) -> subprocess.CompletedProces
         capture_output=True,
         check=False,
     )
+
+
+_NOMOS_BUILD: tempfile.TemporaryDirectory | None = None
+_NOMOS_BIN: Path | None = None
+
+
+def nomos_binary() -> Path:
+    """Build the Go engine once: the RAG evidence sidecar consumes its verdict
+    (#624), so the tests that run the sidecar need a real `nomos`."""
+    global _NOMOS_BUILD, _NOMOS_BIN
+    if _NOMOS_BIN is None:
+        if shutil.which("go") is None:
+            raise unittest.SkipTest("go not on PATH — the RAG evidence sidecar consumes the Go gate verdict")
+        _NOMOS_BUILD = tempfile.TemporaryDirectory()
+        target = Path(_NOMOS_BUILD.name) / "nomos"
+        build = subprocess.run(
+            ["go", "build", "-o", str(target), "."],
+            cwd=ROOT / "cli",
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+            raise AssertionError(f"engine build failed: {build.stderr}{build.stdout}")
+        _NOMOS_BIN = target
+    return _NOMOS_BIN
 
 
 REQUIRED_ALCOA_ENVELOPE_PATHS = (
@@ -510,6 +537,8 @@ answers:
                 str(fixtures),
                 "--output",
                 str(output),
+                "--nomos-bin",
+                str(nomos_binary()),
                 cwd=repo,
             )
 
@@ -580,6 +609,8 @@ answers:
                 str(fixtures),
                 "--output",
                 str(output),
+                "--nomos-bin",
+                str(nomos_binary()),
                 cwd=repo,
             )
 
@@ -646,6 +677,8 @@ answers:
                 str(fixtures),
                 "--output",
                 str(output),
+                "--nomos-bin",
+                str(nomos_binary()),
                 cwd=repo,
             )
 
@@ -718,6 +751,8 @@ answers:
                 str(fixtures),
                 "--output",
                 str(output),
+                "--nomos-bin",
+                str(nomos_binary()),
                 cwd=repo,
             )
 

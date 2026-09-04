@@ -57,11 +57,47 @@ func Defaults() Config {
 	}
 }
 
+// Gates are the thresholds every verdict in a batch was judged against. They
+// are emitted with the batch (#624) so a consumer such as the evidence sidecar
+// reads them from the verdict instead of duplicating engine constants.
+type Gates struct {
+	ALCEGate             float64 `json:"alce_gate"`
+	FaithfulnessGate     float64 `json:"faithfulness_gate"`
+	TrustScoreCertified  float64 `json:"trust_score_certified"`
+	TrustScoreIndicative float64 `json:"trust_score_indicative"`
+	SentenceThreshold    float64 `json:"sentence_threshold"`
+	ScorerConfigured     bool    `json:"scorer_configured"`
+	ScorerThreshold      float64 `json:"scorer_threshold,omitempty"`
+}
+
+// Gates reports the effective thresholds of a configuration.
+func (c Config) Gates() Gates {
+	g := Gates{
+		ALCEGate:             c.ALCEGate,
+		FaithfulnessGate:     c.FaithfulnessGate,
+		TrustScoreCertified:  c.TrustScoreCertified,
+		TrustScoreIndicative: c.TrustScoreIndicative,
+		SentenceThreshold:    c.SentenceThreshold,
+	}
+	if g.SentenceThreshold <= 0 {
+		g.SentenceThreshold = Defaults().SentenceThreshold
+	}
+	if c.Scorer != nil {
+		g.ScorerConfigured = true
+		g.ScorerThreshold = c.ScorerThreshold
+	}
+	return g
+}
+
 const (
 	methodLexical      = "lexical_entailment_v1"
 	methodNoText       = "no_span_text"
 	methodStruct       = "structural_citation_coverage"
 	methodScorerFailed = "scorer_failed"
+	// methodRefusal: an explicit refusal asserts nothing, so there is nothing
+	// to ground; the verdict says so instead of leaving the method blank
+	// (consumers such as the evidence sidecar record the method verbatim).
+	methodRefusal = "explicit_refusal"
 
 	groundednessLimitation = "lexical_entailment_v1 is negation-blind: it matches content-token overlap and cannot distinguish a claim from its negation. NLI is the pluggable upgrade. Spans that require grounding but carry no text score 0 (cannot be verified)."
 	scorerLimitation       = "The external scorer is a second judge combined strictest-wins per sentence (a sentence is supported only when both the lexical proxy and the scorer support it); Nomos verifies the scorer's protocol and direction, not its model."
@@ -404,6 +440,9 @@ func Evaluate(a Answer, cfg Config) Verdict {
 	switch {
 	case a.hasExplicitRefusal():
 		base = 1.0
+		if ground.Method == "" {
+			ground = Groundedness{Method: methodRefusal, Score: 1.0}
+		}
 	case applicable:
 		base = ground.Score
 	case a.requiresGrounding():
@@ -521,12 +560,14 @@ type GateResult struct {
 	Cited     int       `json:"cited"`
 	Abstained int       `json:"abstained"`
 	Findings  int       `json:"findings"`
-	Verdicts  []Verdict `json:"verdicts"`
+	// Gates are the thresholds the verdicts were judged against (#624).
+	Gates    Gates     `json:"gates"`
+	Verdicts []Verdict `json:"verdicts"`
 }
 
 // Gate evaluates a batch and fails closed if any answer carries findings.
 func Gate(answers []Answer, cfg Config) GateResult {
-	res := GateResult{Status: "pass"}
+	res := GateResult{Status: "pass", Gates: cfg.Gates()}
 	for _, a := range answers {
 		v := Evaluate(a, cfg)
 		res.Verdicts = append(res.Verdicts, v)
