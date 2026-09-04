@@ -192,6 +192,13 @@ jobs:
       # must agree with the measurement. Offline and deterministic: no API call.
       - name: Repeated CI evidence gate (VRC-14)
         run: python scripts/repeated_ci_evidence.py --root .
+      # VRC-16 (#562): per-role competence status is computed from signed
+      # attestations, never declared. The gate refuses an unsigned, failed,
+      # expired or unknown-competence record, an unwaived self-assessment, a
+      # role handed to a human with no defined training, and any published
+      # status that drifts from the records.
+      - name: Training and competence gate (VRC-16)
+        run: python scripts/training_competence_gate.py --root .
       - name: VRC wiring matrix guard (computed statuses match registry, committed matrix has no drift)
         run: |
           python scripts/vrc_wiring_matrix.py --root .

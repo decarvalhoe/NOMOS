@@ -47,6 +47,7 @@
 | `vocabulary_skos_shacl` | B4 | absent | absent | ✅ | VRC-44 | — |
 | `public_cite_or_abstain_bench` | A-exit | real | real | ✅ | — | — |
 | `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | VRC-14 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `training_competence_status` | P1 | sidecar | sidecar | ✅ | VRC-16 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
 
 ## Generic checks
 
@@ -54,7 +55,7 @@
 
 ## Summary
 
-- capabilities: 39 (real=29, partial=0, sidecar=5, stub=0, absent=5)
+- capabilities: 40 (real=29, partial=0, sidecar=6, stub=0, absent=5)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

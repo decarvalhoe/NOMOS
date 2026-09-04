@@ -1,0 +1,92 @@
+# VRC-16 (#560 sibling, #562) — reconciliation of the three role vocabularies.
+#
+# The repository named roles in three places, with three different vocabularies:
+#
+#   1. the role assignment record (VRC-05, #551) — the roles actually held by a
+#      named human;
+#   2. training-matrix.yaml — the roles that carry required competences;
+#   3. the training and competence SOP — a third list again.
+#
+# Only `release_manager` appeared in all three. Four assigned roles had no entry
+# in the matrix at all, so "the matrix is filled for the named humans" was not
+# merely unmet — it was unstateable.
+#
+# This file is the explicit crosswalk. It is not a convenience mapping: the gate
+# refuses any assigned role that is absent here, so a new role cannot be handed
+# to a human without deciding what competence it requires.
+schema_version: "nomos-role-crosswalk-v1"
+document_id: RCP-014-ROLE-CROSSWALK
+issue: "VRC-16 (#562)"
+status: draft
+claim_boundary: >-
+  Vocabulary reconciliation only. Mapping a role here asserts nothing about any
+  person's training or competence; that comes from signed attestation records
+  and from nowhere else.
+
+# disposition:
+#   mapped                 — the assigned role has required competences in the matrix.
+#   requires_definition    — the role is held by a human but no required training
+#                            has been defined for it yet. The gate treats this as
+#                            an open gap: the role can never reach `established`.
+#   vacant                 — the role is not held by anyone, so there is nobody to
+#                            train. Recorded, not silently dropped.
+assigned_roles:
+  - assigned_role: quality_owner
+    matrix_role_id: quality_owner
+    sop_role: "Quality owner"
+    disposition: mapped
+
+  - assigned_role: validation_owner
+    matrix_role_id: validation_owner
+    sop_role: "Validation owner"
+    disposition: mapped
+
+  - assigned_role: security_owner
+    matrix_role_id: security_owner
+    sop_role: "Security owner"
+    disposition: mapped
+
+  - assigned_role: data_integrity_owner
+    matrix_role_id: data_integrity_owner
+    sop_role: "Data integrity owner"
+    disposition: mapped
+
+  - assigned_role: release_manager
+    matrix_role_id: release_manager
+    sop_role: null
+    disposition: mapped
+    note: >-
+      The only role that already existed in the training matrix. The SOP's
+      required-training table does not list it; the matrix entry is the
+      authority until the SOP is revised.
+
+  - assigned_role: product_owner
+    matrix_role_id: null
+    sop_role: null
+    disposition: requires_definition
+    note: >-
+      Held by a named human since 2026-06-11, but neither the SOP nor the matrix
+      defines what training a product owner needs. Naming the gap is the honest
+      state; inventing competences to close it would be worse than leaving it
+      open.
+
+  - assigned_role: independent_reviewer
+    matrix_role_id: reviewer
+    sop_role: "AI/RAG reviewer"
+    disposition: vacant
+    note: >-
+      Vacant and waived at alpha by the role assignment record (solo operator).
+      Mapped so the mapping exists the day the waiver is lifted, but there is
+      nobody to train while it is vacant.
+
+# Matrix roles that no assigned human holds. Recorded so the matrix is not
+# quietly assumed to be fully exercised.
+unassigned_matrix_roles:
+  - matrix_role_id: developer
+    note: "Required competences defined; no human currently assigned this role id."
+  - matrix_role_id: approver
+    note: "Required competences defined; no human currently assigned this role id."
+  - matrix_role_id: quality_unit
+    note: >-
+      Superseded by quality_owner in the assignment vocabulary. Kept because the
+      matrix entry predates the crosswalk; retire it when the matrix is revised.
