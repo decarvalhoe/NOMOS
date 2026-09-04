@@ -58,6 +58,19 @@ evidence_categories:
     expected_location: ".regulated-evidence-pack/"
     current_status: generated_by_workflow_when_run
     claim_allowed: "evidence_inventory_only"
+  - id: EV-CI-REPEAT-001
+    category: repeated_ci_evidence_private_corpus
+    expected_location: "docs/regulated/evidence-index/repeated-ci-evidence/"
+    current_status: requires_evidence
+    claim_allowed: "none"
+    detail: >-
+      VRC-14 (#560). Scheduled weekly runs of the RBOK lawbook E2E workflow on
+      the private corpus, indexed and measured by
+      scripts/repeated_ci_evidence.py. Measured 2026-09-04: 4 of the 8
+      consecutive green runs the target requires. Status flips to
+      present_measured, and claim_allowed to
+      repeated_ci_evidence_private_corpora, only when the measurement says so;
+      the gate refuses any other combination.
   - id: EV-PLAN-001
     category: regulated_compliance_closure_plan
     expected_location: "docs/28-regulated-compliance-closure-plan.md"
@@ -97,6 +110,16 @@ blocking_gaps:
     blocks_claims:
       - github_validated_operating_model
       - approved_release_evidence
+  - id: GAP-REPEATED-CI-EVIDENCE
+    description: >-
+      Repeated CI evidence on the private corpus is measured but below target:
+      4 of 8 consecutive green scheduled runs as of 2026-09-04, with 5 missed
+      weekly occurrences between 2026-06-29 and 2026-08-10, and only 2 distinct
+      corpus revisions across the whole recorded window.
+    severity: major
+    status: open
+    blocks_claims:
+      - repeated_ci_evidence_private_corpora
   - id: GAP-LICENSED-BIBLES
     description: "Licensed bible references, including GAMP 5 and ISO standards, require licensed local artifacts before full-text atomization and clause-level mapping."
     severity: major

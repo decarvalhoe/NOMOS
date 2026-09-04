@@ -1,0 +1,57 @@
+# VRC-14 (#560) — repeated CI evidence on the private corpus.
+#
+# This file is the versioned definition of what counts as one unit of repeated
+# evidence, and of the target that unlocks the claim. It is hashed into every
+# published index: changing a rule here invalidates the published measurement
+# and forces a dated re-publication.
+schema_version: "nomos-repeated-ci-evidence-policy-v1"
+policy_id: repeated-ci-evidence-private-corpus
+issue: "VRC-14 (#560)"
+
+# The evidence-producing workflow. The private corpus is checked out read-only
+# from RBOKproject/realisons-business; NOMOS CI never writes to it.
+workflow:
+  path: ".github/workflows/rbok-lawbook-e2e.yml"
+  name: "RBOK Lawbook E2E"
+  workflow_id: 269838249
+  event: schedule
+  branch: main
+  cron: "0 5 * * 1"
+
+# Weekly cadence. A run that GitHub delays inside the tolerance is still that
+# week's run; a longer gap is a MISSED OCCURRENCE, and a missed occurrence
+# breaks the chain. Runs that happened cannot vouch for weeks that produced
+# nothing: a workflow that ran in June, went dark for six weeks, then ran again
+# in August has not produced consecutive weekly evidence.
+cadence:
+  period_days: 7
+  max_gap_days: 10
+
+# What makes a run countable as one unit of evidence. All three must hold.
+countable_run:
+  conclusion: success
+  # A green run that archived no pack proves nothing that can be re-inspected.
+  require_artifact: true
+  # An expired pack is not archived evidence. Retention is finite, so the chain
+  # decays on its own unless runs keep coming: this is deliberate.
+  require_unexpired_artifact: true
+
+# The target named by the issue. Below it, the claim stays locked.
+target:
+  consecutive_green_runs: 8
+  # The chain must also be current: a streak that ended months ago is history,
+  # not repeated evidence.
+  require_current_streak: true
+
+# Retention declared by the workflow. The gate fails if the workflow drops
+# below this, because shortening retention silently erases archived evidence.
+retention:
+  artifact_retention_days: 90
+
+claim:
+  id: repeated_ci_evidence_private_corpora
+  ledger_entry: EV-CI-REPEAT-001
+  blocking_gap: GAP-REPEATED-CI-EVIDENCE
+  # Wording is checked against docs/public-claim-boundary.md by the gate: the
+  # unlocked sentence may not appear in the tree while the target is unmet.
+  unlocked_marker: "repeated CI evidence on private corpora is proven"

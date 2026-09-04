@@ -218,7 +218,7 @@ POC source-to-feed structuré actuel :
 | Strict gate | `pass`, exit code 0 |
 | Contrôle mutation source | aucune mutation détectée |
 
-Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, et cette preuve reste bornée au corpus, commit et build enregistrés (`claim_coverage` est désormais câblé dans l'attestation — `corpus attest --corpus-body-ledger` vérifie les preuves Merkle du ledger puis calcule la couverture ; le run POC enregistré garde son WARN historique). Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle.
+Cette distinction est essentielle. L'alpha actuelle prouve une traçabilité source-to-artifact défendable et un feed/RAG source-backed utilisable comme POC, tout en gardant une claim boundary stricte : les warnings restants sont reviewables, et cette preuve reste bornée au corpus, commit et build enregistrés (`claim_coverage` est désormais câblé dans l'attestation — `corpus attest --corpus-body-ledger` vérifie les preuves Merkle du ledger puis calcule la couverture ; le run POC enregistré garde son WARN historique). Le durcissement suivant vise la répétabilité CI, les formats documentaires additionnels, la validation client et l'extension de la fidélité universelle. La répétabilité CI est désormais **mesurée** et non annoncée (VRC-14 #560) : `scripts/repeated_ci_evidence.py` compte la chaîne de runs planifiés sur le corpus privé et publie un index daté sous `docs/regulated/evidence-index/repeated-ci-evidence/` ; mesure du 2026-09-04, 4 runs verts consécutifs sur les 8 visés, donc le claim reste verrouillé.
 
 ## Preuves Calculées En Continu
 
@@ -387,7 +387,7 @@ Nomos ne rend pas un LLM autoritaire. Dans l'architecture visée, les contrats d
 
 Nomos ne supprime pas le besoin de validation. En environnement régulé, les clients doivent toujours définir intended use, risk assessment, validation plan, preuves de test, change control, supplier assessment, security review et approval records.
 
-Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, les validation packs clients et la répétabilité CI sur corpus privés.
+Nomos ne revendique pas aujourd'hui que son feed alpha est une reconstruction sémantique parfaite de tout corpus supporté. La roadmap feed-quality traite explicitement les formats documentaires non encore supportés, les warnings sémantiques résiduels, les validation packs clients et la répétabilité CI sur corpus privés — cette dernière est mesurée en continu, à 4 runs verts consécutifs sur 8, avec 5 occurrences hebdomadaires manquées en juillet et 2 révisions de corpus distinctes sur toute la fenêtre enregistrée.
 
 Le gate cite-or-abstain et son bench public mesurent le gate, pas un LLM : le proxy de fidélité est lexical et aveugle à la négation (dit dans chaque verdict, publié comme faux « cite » dans le bench) ; le second juge NLI est un protocole vérifié, pas un modèle livré, et aucun run CI ne score avec un modèle neuronal. Le bench ne dit rien sur la qualité d'un retrieval, d'un embedding ou d'un LLM, ni sur la justesse métier d'une réponse.
 

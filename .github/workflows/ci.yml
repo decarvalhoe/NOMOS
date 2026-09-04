@@ -186,6 +186,12 @@ jobs:
       - run: pip install --quiet pyyaml
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
+      # VRC-14 (#560): the published repeated-evidence index must replay exactly
+      # from the runs it records, the workflow must still carry the schedule and
+      # the retention the chain relies on, and the ledger and the claim boundary
+      # must agree with the measurement. Offline and deterministic: no API call.
+      - name: Repeated CI evidence gate (VRC-14)
+        run: python scripts/repeated_ci_evidence.py --root .
       - name: VRC wiring matrix guard (computed statuses match registry, committed matrix has no drift)
         run: |
           python scripts/vrc_wiring_matrix.py --root .

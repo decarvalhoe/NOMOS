@@ -764,6 +764,25 @@
         {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/references.yaml", "contains": ["verified_at_utc"]},
         {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md", "contains": ["false_cite_rate"]}
       ]
+    },
+    {
+      "id": "repeated_ci_evidence_private_corpus",
+      "title": "Repeated CI evidence on the private corpus — scripts/repeated_ci_evidence.py MEASURES the scheduled-run chain of rbok-lawbook-e2e.yml from the Actions API and publishes a dated index; a run counts only if it is green AND still holds an unexpired archived pack, and a missed weekly occurrence breaks the chain (the streak ignoring cadence is published beside it so the rule's cost is visible); measured 2026-09-04 at 4 of 8 consecutive green runs, so the claim STAYS LOCKED — the offline CI gate fails on a hand-edited number, a policy edited after publication, a workflow that lost its schedule or lowered retention, a ledger that disagrees with the measurement, or prose asserting the claim (VRC-14 #560). Deliberately declared sidecar, not real: this is a Python guard over CI history with no Go engine, and the doctrine reads sidecar as PARTIAL — which is exactly the state of the chain at 4/8.",
+      "pillar": "P1",
+      "claim_level": "evidence-measurement only (one workflow, one private corpus; no coverage claim, and the claim it gates is locked until the target is met)",
+      "promotion_issue": "VRC-14",
+      "expected": "sidecar",
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["repeated_ci_evidence.py"]},
+        {"path": ".github/workflows/rbok-lawbook-e2e.yml", "contains": ["schedule:", "cron: '0 5 * * 1'", "retention-days: 90"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/repeated_ci_evidence.py", "contains": ["def measure(", "def run_is_countable(", "def check_replay(", "def check_claim_language(", "consecutive_green_runs_ignoring_cadence", "every archived artifact has expired"]},
+        {"path": "docs/regulated/evidence-index/repeated-ci-evidence/policy.yaml", "contains": ["consecutive_green_runs: 8", "max_gap_days", "require_unexpired_artifact"]},
+        {"path": "docs/regulated/evidence-index/repeated-ci-evidence/README.md", "contains": ["consecutive_green_runs", "Claim unlocked"]},
+        {"path": "docs/regulated/evidence-index/evidence-ledger.yaml", "contains": ["EV-CI-REPEAT-001", "GAP-REPEATED-CI-EVIDENCE"]},
+        {"path": "tests/test_repeated_ci_evidence.py", "contains": ["test_missed_week_breaks_the_chain", "test_expired_pack_makes_a_green_run_uncountable", "test_hand_edited_streak_is_named", "test_stale_chain_does_not_unlock_the_claim", "test_prose_asserting_a_locked_claim_turns_the_gate_red", "test_lowering_artifact_retention_turns_the_gate_red"]}
+      ]
     }
   ]
 }
