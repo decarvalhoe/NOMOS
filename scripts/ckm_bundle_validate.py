@@ -27,8 +27,9 @@ def as_list(value: Any) -> list[Any]:
 def load_facets_vocab(path: Path = FACETS_VOCAB_PATH) -> dict[str, list[str]]:
     """Load the controlled scalar-axis vocabularies generated from facets.cue.
 
-    Returns a mapping axis -> allowed values. discipline_role / activity are open
-    #FacetTermRef lists in the contract and are intentionally not enumerated.
+    Returns a mapping axis -> allowed values. discipline_role / activity /
+    risk_tier are open #FacetTermRef lists in the contract and are
+    intentionally not enumerated.
     """
     data = json.loads(path.read_text(encoding="utf-8"))
     axes = data.get("scalar_axes", {})

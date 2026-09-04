@@ -77,6 +77,9 @@ func mergeFacets(base, over atomization.Facets) atomization.Facets {
 	if len(over.Activity) > 0 {
 		out.Activity = append([]string(nil), over.Activity...)
 	}
+	if len(over.RiskTier) > 0 {
+		out.RiskTier = append([]string(nil), over.RiskTier...)
+	}
 	if len(over.VocabularyRefs) > 0 {
 		out.VocabularyRefs = append([]string(nil), over.VocabularyRefs...)
 	}

@@ -73,10 +73,15 @@ var (
 
 // Facets mirrors #Facets in specs/facets.cue. All axes are optional; an atom or
 // chunk with no facets is valid against the base atomization spine.
+//
+// RiskTier is the third open-term axis (VRC-22, #565). It grades how dangerous
+// the regulated thing itself is — which TrustTier (how far an artifact may be
+// trusted) and Applicability (whether a rule applies) do not say.
 type Facets struct {
 	Nature          FacetNature          `json:"nature,omitempty"`
 	DisciplineRole  []string             `json:"discipline_role,omitempty"`
 	Activity        []string             `json:"activity,omitempty"`
+	RiskTier        []string             `json:"risk_tier,omitempty"`
 	ScopeLevel      FacetScopeLevel      `json:"scope_level,omitempty"`
 	TrustTier       FacetTrustTier       `json:"trust_tier,omitempty"`
 	Provenance      FacetProvenance      `json:"provenance,omitempty"`
@@ -90,6 +95,7 @@ type Facets struct {
 // and are valid (the no-facet case).
 func (f Facets) IsZero() bool {
 	return f.Nature == "" && len(f.DisciplineRole) == 0 && len(f.Activity) == 0 &&
+		len(f.RiskTier) == 0 &&
 		f.ScopeLevel == "" && f.TrustTier == "" && f.Provenance == "" &&
 		f.Confidentiality == "" && f.Applicability == "" &&
 		len(f.VocabularyRefs) == 0 && len(f.Extensions) == 0
@@ -97,8 +103,8 @@ func (f Facets) IsZero() bool {
 
 // Validate enforces the #Facets contract in-engine: every set scalar axis must
 // be a member of its controlled vocabulary, and the term-list axes
-// (discipline_role, activity) must, when present, hold at least one non-empty
-// term — exactly as `[#FacetTermRef, ...#FacetTermRef]` requires in CUE.
+// (discipline_role, activity, risk_tier) must, when present, hold at least one
+// non-empty term — exactly as `[#FacetTermRef, ...#FacetTermRef]` requires in CUE.
 func (f Facets) Validate() error {
 	if f.Nature != "" && !facetNatures[f.Nature] {
 		return fmt.Errorf("facets: invalid nature %q", f.Nature)
@@ -126,6 +132,11 @@ func (f Facets) Validate() error {
 	}
 	if f.Activity != nil {
 		if err := validateTermList("activity", f.Activity); err != nil {
+			return err
+		}
+	}
+	if f.RiskTier != nil {
+		if err := validateTermList("risk_tier", f.RiskTier); err != nil {
 			return err
 		}
 	}
@@ -212,6 +223,7 @@ type LensFacetSelection struct {
 	Nature          FacetNature          `json:"nature,omitempty"`
 	DisciplineRole  []string             `json:"discipline_role,omitempty"`
 	Activity        []string             `json:"activity,omitempty"`
+	RiskTier        []string             `json:"risk_tier,omitempty"`
 	ScopeLevel      FacetScopeLevel      `json:"scope_level,omitempty"`
 	TrustTier       FacetTrustTier       `json:"trust_tier,omitempty"`
 	Provenance      FacetProvenance      `json:"provenance,omitempty"`
@@ -262,6 +274,8 @@ func (f Facets) axisValues(axis string) []string {
 		return f.DisciplineRole
 	case "activity":
 		return f.Activity
+	case "risk_tier":
+		return f.RiskTier
 	default:
 		return nil
 	}
@@ -293,6 +307,9 @@ func (s LensFacetSelection) axes() map[string][]string {
 	}
 	if len(s.Activity) > 0 {
 		out["activity"] = s.Activity
+	}
+	if len(s.RiskTier) > 0 {
+		out["risk_tier"] = s.RiskTier
 	}
 	return out
 }

@@ -377,3 +377,149 @@ func TestPackValidate_SmuggledFieldFailsClosed(t *testing.T) {
 		t.Fatalf("expected the manifest rung (strict decode): %s", stderr)
 	}
 }
+
+// --- VRC-22 (#565): risk_tier, the third open-term axis ---------------------
+//
+// The D6 measurement of VRC-22 is "how much core changed to admit a second
+// vertical". The answer is one named change: risk_tier joined the open axes,
+// because the EU AI Act classifies by risk and no closed axis carries that
+// meaning. These tests pin what that change did AND what it deliberately did
+// not do — the core still owns the axis list.
+
+// riskTierPack turns the scaffold into a pack that also declares risk_tier.
+func riskTierPack(t *testing.T) (string, string) {
+	t.Helper()
+	root, manifest := scaffoldPack(t)
+	packDir := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack")
+	write := func(rel, content string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(packDir, rel), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("vocab.yaml", `record_type: pack_vocabulary
+schema_version: "0.1.0"
+domain_profile: test-pack
+activity:
+  - id: test.phase_a
+    label_fr: "Phase A"
+discipline_role:
+  - id: test.role_a
+    label_fr: "Rôle A"
+risk_tier:
+  - id: test.risque_eleve
+    label_fr: "Risque élevé"
+`)
+	write("facet-ontology.yaml", `schema_version: ckm-facet-ontology-v1
+facet_axes:
+  - id: activity
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: test.phase_a
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+  - id: discipline_role
+    root: http://purl.obolibrary.org/obo/BFO_0000023
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+    terms:
+      - id: test.role_a
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+  - id: risk_tier
+    root: http://purl.obolibrary.org/obo/BFO_0000019
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Quality
+    terms:
+      - id: test.risque_eleve
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000019
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Quality
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [activity, discipline_role, risk_tier]
+claim_boundary: test
+`)
+	mutateManifest(t, manifest,
+		"axes: [activity, discipline_role]",
+		"axes: [activity, discipline_role, risk_tier]")
+	return root, manifest
+}
+
+func TestPackValidate_RiskTierAxisIsAccepted(t *testing.T) {
+	// The change actually admits a pack that classifies by risk.
+	root, manifest := riskTierPack(t)
+	code, stdout, stderr := runPackValidate(t, root, manifest)
+	if code != 0 {
+		t.Fatalf("risk_tier pack should be green: %s %s", stdout, stderr)
+	}
+}
+
+func TestPackValidate_EmptyRiskTierAxisFailsClosed(t *testing.T) {
+	// ADVERSARIAL: declaring the axis without terms is the same defect as for
+	// the two older axes — the new axis gets no softer treatment.
+	root, manifest := riskTierPack(t)
+	vocab := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack", "vocab.yaml")
+	raw, err := os.ReadFile(vocab)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cut := strings.Index(string(raw), "risk_tier:")
+	if cut < 0 {
+		t.Fatal("fixture lost its risk_tier block")
+	}
+	if err := os.WriteFile(vocab, []byte(string(raw)[:cut]+"risk_tier: []\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("empty risk_tier: the gate passed")
+	}
+	if !strings.Contains(stderr, "FAIL [vocabulary]") {
+		t.Fatalf("expected the vocabulary rung: %s", stderr)
+	}
+}
+
+func TestPackValidate_UnnamespacedRiskTierTermFailsClosed(t *testing.T) {
+	// ADVERSARIAL: packs own terms, and a term still has to be pack-namespaced.
+	root, manifest := riskTierPack(t)
+	vocab := filepath.Join(root, "docs", "regulated", "domain-packs", "test-pack", "vocab.yaml")
+	raw, err := os.ReadFile(vocab)
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched := strings.Replace(string(raw), "id: test.risque_eleve", "id: risque_eleve", 1)
+	if err := os.WriteFile(vocab, []byte(patched), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("unnamespaced risk_tier term: the gate passed")
+	}
+	if !strings.Contains(stderr, "FAIL [vocabulary]") && !strings.Contains(stderr, "FAIL [ontology]") {
+		t.Fatalf("expected vocabulary or ontology rung: %s", stderr)
+	}
+}
+
+func TestPackValidate_CoreStillOwnsTheAxisList(t *testing.T) {
+	// THE POINT OF THE D6 MEASUREMENT: one axis was added to the core, and the
+	// door did NOT open. A pack still cannot invent an axis of its own — that
+	// remains a core change, made deliberately, not a pack-side extension.
+	root, manifest := riskTierPack(t)
+	mutateManifest(t, manifest,
+		"axes: [activity, discipline_role, risk_tier]",
+		"axes: [activity, discipline_role, risk_tier, sector]")
+	code, _, stderr := runPackValidate(t, root, manifest)
+	if code == 0 {
+		t.Fatal("pack-invented axis: the gate passed")
+	}
+	if !strings.Contains(stderr, "packs own TERMS; core owns AXES") {
+		t.Fatalf("expected the ownership boundary to be named: %s", stderr)
+	}
+}
+
+// Non-regression for the first vertical after the core change is already
+// covered by TestPackValidate_RealBuiltEnvironmentPackIsGreen above, which runs
+// the shipped built-environment pack — which declares no risk_tier — through
+// the same gate on the real tree.
