@@ -11,6 +11,7 @@ failure is the proof.
 from __future__ import annotations
 
 import importlib.util
+import sys
 import unittest
 from pathlib import Path
 
@@ -20,6 +21,9 @@ _SPEC = importlib.util.spec_from_file_location(
 )
 gate = importlib.util.module_from_spec(_SPEC)
 assert _SPEC.loader is not None
+# The sidecar declares PEP 563 annotations; dataclasses resolves them through
+# sys.modules, so the module has to be registered before it is executed.
+sys.modules["rag_gate"] = gate
 _SPEC.loader.exec_module(gate)
 
 

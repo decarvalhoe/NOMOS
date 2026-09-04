@@ -1066,6 +1066,71 @@
       }
     },
     {
+      "id": "rag_evidence_sidecar_consumes_go_verdict",
+      "title": "The RAG answer evidence sidecar CONSUMES the Go verdict — `nomos answer gate` is the only source of the citation metrics, the faithfulness, the trust score/tier, the cite/abstain decision and the gate findings; the batch carries the thresholds it was judged against (`gates`) and an explicit refusal names its groundedness method instead of leaving it blank. The sidecar keeps only the evidence envelope (record fields, response contract, confidence range, unique answer ids). `--engine required` (the default, what CI runs) refuses to score: no engine, a crashing engine, a timeout or a non-verdict exits 2 and leaves NO report, not even a stale one; `--engine fallback` is explicit, marked `python_fallback`, warned and capped at `indicative`. `--scorer-cmd` is forwarded to the engine, so an NLI second judge reaches the evidence pack without a model in the sidecar (#624, VRC-10 A1)",
+      "pillar": "A1",
+      "claim_level": "artifact-generated (verdict consumption, threshold provenance and fail-closed proven; no model accuracy claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/answer/answer.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/answer_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/answer/answer_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_rag_evidence_consumes_go_verdict.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/regulated-evidence-pack.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/ckm-non-regression.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/regulated_rag_answer_evidence.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "rag_interop_export",
       "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
       "pillar": "interop",
@@ -1779,9 +1844,9 @@
     }
   ],
   "summary": {
-    "capabilities": 37,
+    "capabilities": 38,
     "computed": {
-      "real": 27,
+      "real": 28,
       "partial": 0,
       "sidecar": 4,
       "stub": 0,

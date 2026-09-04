@@ -125,6 +125,50 @@ func TestGate_ExplicitRefusalAbstainsLegitimately(t *testing.T) {
 	if v.Faithfulness != 1.0 {
 		t.Fatalf("a refusal asserts nothing → faithfulness 1.0, got %v", v.Faithfulness)
 	}
+	if v.Groundedness.Method != methodRefusal || v.Groundedness.Score != 1.0 {
+		t.Fatalf("a refusal must carry an explicit groundedness method, got %+v", v.Groundedness)
+	}
+}
+
+// gatesProbeScorer is a second judge that supports everything; it exists only
+// to show a configured scorer in the emitted gates.
+type gatesProbeScorer struct{}
+
+func (gatesProbeScorer) Score(pairs []Pair) (ScoreResult, error) {
+	scores := make([]float64, len(pairs))
+	for i := range scores {
+		scores[i] = 1.0
+	}
+	return ScoreResult{Method: "probe", Scores: scores}, nil
+}
+
+// #624 — the batch carries the thresholds it was judged against, so a consumer
+// (the evidence sidecar) reads them from the verdict and never duplicates
+// engine constants.
+func TestGate_EmitsGatesAndBatchThresholds(t *testing.T) {
+	want := Defaults()
+	res := Gate([]Answer{groundedAnswer()}, want)
+	if res.Gates.ALCEGate != want.ALCEGate || res.Gates.FaithfulnessGate != want.FaithfulnessGate ||
+		res.Gates.TrustScoreCertified != want.TrustScoreCertified || res.Gates.TrustScoreIndicative != want.TrustScoreIndicative ||
+		res.Gates.SentenceThreshold != want.SentenceThreshold {
+		t.Fatalf("gates must mirror the configuration, got %+v", res.Gates)
+	}
+	if res.Gates.ScorerConfigured || res.Gates.ScorerThreshold != 0 {
+		t.Fatalf("no scorer configured, yet the batch claims one: %+v", res.Gates)
+	}
+
+	cfg := Defaults()
+	cfg.Scorer = gatesProbeScorer{}
+	cfg.ScorerThreshold = 0.7
+	with := Gate([]Answer{groundedAnswer()}, cfg)
+	if !with.Gates.ScorerConfigured || with.Gates.ScorerThreshold != 0.7 {
+		t.Fatalf("a configured scorer must be visible in the gates, got %+v", with.Gates)
+	}
+
+	zero := Config{}
+	if got := zero.Gates().SentenceThreshold; got != Defaults().SentenceThreshold {
+		t.Fatalf("an unset sentence threshold must report the effective default, got %v", got)
+	}
 }
 
 func TestGate_BatchFailsClosedOnAnyFinding(t *testing.T) {

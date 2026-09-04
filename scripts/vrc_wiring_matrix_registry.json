@@ -436,6 +436,35 @@
       ]
     },
     {
+      "id": "rag_evidence_sidecar_consumes_go_verdict",
+      "title": "The RAG answer evidence sidecar CONSUMES the Go verdict — `nomos answer gate` is the only source of the citation metrics, the faithfulness, the trust score/tier, the cite/abstain decision and the gate findings; the batch carries the thresholds it was judged against (`gates`) and an explicit refusal names its groundedness method instead of leaving it blank. The sidecar keeps only the evidence envelope (record fields, response contract, confidence range, unique answer ids). `--engine required` (the default, what CI runs) refuses to score: no engine, a crashing engine, a timeout or a non-verdict exits 2 and leaves NO report, not even a stale one; `--engine fallback` is explicit, marked `python_fallback`, warned and capped at `indicative`. `--scorer-cmd` is forwarded to the engine, so an NLI second judge reaches the evidence pack without a model in the sidecar (#624, VRC-10 A1)",
+      "pillar": "A1",
+      "claim_level": "artifact-generated (verdict consumption, threshold provenance and fail-closed proven; no model accuracy claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/answer/answer.go", "contains": ["type Gates struct", "func (c Config) Gates()", "methodRefusal", "Gates: cfg.Gates()"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Gate(doc.Answers, cfg)", "enc.Encode(result)"]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/answer/answer_test.go", "contains": ["TestGate_EmitsGatesAndBatchThresholds", "methodRefusal"]},
+        {"path": "tests/test_rag_evidence_consumes_go_verdict.py", "contains": ["test_required_mode_without_engine_writes_no_report", "test_required_mode_engine_failure_never_falls_back", "test_required_mode_refuses_an_engine_that_emits_no_thresholds", "test_alignment_is_by_id_not_by_position", "test_report_follows_the_engine_verdict_not_the_python_proxy", "test_fallback_proxy_agrees_with_the_engine_on_the_real_fixtures"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/regulated-evidence-pack.yml", "contains": ["go build -o", "--nomos-bin"]},
+        {"path": "scripts/ckm-non-regression.sh", "contains": ["regulated_rag_answer_evidence.py", "--nomos-bin"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["VERDICT_SOURCE_ENGINE", "run_engine_gate", "ENGINE_UNAVAILABLE_CODE", "RAG_GATE_VERDICT_FROM_PYTHON_FALLBACK"]}
+      ],
+      "must_be_absent": [
+        {"dir": "scripts", "regex": "python_fallback", "suffixes": [".sh"], "ignore_case": false, "exclude_tests": true}
+      ]
+    },
+    {
       "id": "rag_interop_export",
       "title": "RAG interop export — `nomos rag export` hands any RAG stack chunks it can index AND later cite (embedding_text carries a deterministic structural context prefix; body_text is the citable source text and never contains it), fail-closed on chunks without chunk_id/source_id/source_hash/body; `nomos rag manifest` fingerprints the index per source so staleness is provable; byte-deterministic and replayed on the real public reference corpus in CI (#614)",
       "pillar": "interop",

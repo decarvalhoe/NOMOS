@@ -19,6 +19,23 @@ Nomos must treat AI output as assistance, not authority. Product law requires so
 `rag-answer-fixtures.yaml`. The gate blocks any answer marked acceptable unless
 it has source-backed citations or an explicit refusal/unsupported state.
 
+The sidecar CONSUMES the verdict of the Go engine, it does not produce one
+(#624, VRC-10 A1): it runs `nomos answer gate --fixtures …` and takes from the
+verdict the citation metrics, the faithfulness, the trust score and tier, the
+cite/abstain decision, the gate findings and the thresholds (`gates`) the batch
+was judged against. It keeps only what the engine cannot know: the evidence
+envelope (required record fields, response contract, confidence range, unique
+`answer_id`s). `--engine required` (the default, what CI runs) refuses to score:
+no engine, a crash, a timeout, non-JSON output or a verdict that cannot be
+aligned with the fixtures exits 2 and leaves no report — a stale report at the
+output path is removed. `--engine fallback` is the explicit, marked PARTIAL path
+(`engine.verdict_source: python_fallback`, a `RAG_GATE_VERDICT_FROM_PYTHON_FALLBACK`
+warning, every trust tier capped at `indicative`); no CI gate uses it. The
+engine is located with `--nomos-bin`, else `$NOMOS_BIN`, else `go run .` in
+`cli/`, else `nomos` on PATH. `--scorer-cmd` is forwarded to the engine (#622),
+so an external NLI judge reaches the evidence record without any model in the
+sidecar.
+
 `nomos answer eval --corpus rag-eval-corpus.yaml --thresholds rag-eval-thresholds.yaml`
 is the CI harness (VRC-13). Each golden answer declares `expected_chunk_ids`,
 the ground-truth chunks for its prompt, so the harness also computes

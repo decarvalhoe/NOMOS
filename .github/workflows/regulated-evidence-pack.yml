@@ -12,6 +12,8 @@ on:
       - '.github/workflows/regulated-*.yml'
       - 'scripts/regulated_*.py'
       - 'tests/test_regulated_automation.py'
+      - 'tests/test_rag_evidence_consumes_go_verdict.py'
+      - 'cli/internal/answer/**'
   push:
     branches: [main, develop]
     paths:
@@ -23,6 +25,8 @@ on:
       - '.github/workflows/regulated-*.yml'
       - 'scripts/regulated_*.py'
       - 'tests/test_regulated_automation.py'
+      - 'tests/test_rag_evidence_consumes_go_verdict.py'
+      - 'cli/internal/answer/**'
   workflow_dispatch:
   schedule:
     - cron: '17 5 * * 1'
@@ -43,8 +47,19 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+
       - name: Install validator dependencies
         run: python -m pip install --quiet pyyaml
+
+      - name: Build the nomos engine
+        # #624: the evidence sidecar consumes the Go verdict, in `required`
+        # mode — it never scores a RAG answer on its own.
+        run: go build -o "$RUNNER_TEMP/nomos" .
+        working-directory: cli
 
       - name: Run regulated automation tests
         run: python -m unittest discover -s tests -v
@@ -59,6 +74,7 @@ jobs:
           python scripts/regulated_iq_oq_pq_generator.py \
             --output .regulated-evidence-pack/iq-oq-pq-template-pack.json
           python scripts/regulated_rag_answer_evidence.py \
+            --nomos-bin "$RUNNER_TEMP/nomos" \
             --output .regulated-evidence-pack/rag-answer-evidence.json
           python scripts/regulated_ai_provider_ledger.py \
             --output .regulated-evidence-pack/ai-provider-change-ledger.json
