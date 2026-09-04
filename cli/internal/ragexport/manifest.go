@@ -14,18 +14,23 @@ import (
 // It carries no wall clock of its own — FeedGeneratedAt comes from the feed —
 // so re-running `rag manifest` on an unchanged feed produces identical bytes.
 type Manifest struct {
-	SchemaVersion        string           `json:"schema_version"`
-	RecordSchemaVersion  string           `json:"record_schema_version"`
-	ContextPrefixVersion string           `json:"context_prefix_version"`
-	Format               string           `json:"format"`
-	FeedFormat           string           `json:"feed_format,omitempty"`
-	FeedContentHash      string           `json:"feed_content_hash,omitempty"`
-	FeedGeneratedAt      string           `json:"feed_generated_at,omitempty"`
-	ChunkCount           int              `json:"chunk_count"`
-	RejectedCount        int              `json:"rejected_count"`
-	ChunkDigest          string           `json:"chunk_digest"`
-	Sources              []ManifestSource `json:"sources"`
-	Chunks               []ManifestChunk  `json:"chunks"`
+	SchemaVersion        string `json:"schema_version"`
+	RecordSchemaVersion  string `json:"record_schema_version"`
+	ContextPrefixVersion string `json:"context_prefix_version"`
+	Format               string `json:"format"`
+	FeedFormat           string `json:"feed_format,omitempty"`
+	FeedContentHash      string `json:"feed_content_hash,omitempty"`
+	FeedGeneratedAt      string `json:"feed_generated_at,omitempty"`
+	ChunkCount           int    `json:"chunk_count"`
+	RejectedCount        int    `json:"rejected_count"`
+	ChunkDigest          string `json:"chunk_digest"`
+	// Lens binds the index to the retrieval scope it was built for; nil means
+	// the export was unscoped. A different lens is a different index.
+	Lens                *LensBinding      `json:"lens,omitempty"`
+	ExcludedByLensCount int               `json:"excluded_by_lens_count"`
+	RetrievalContract   RetrievalContract `json:"retrieval_contract"`
+	Sources             []ManifestSource  `json:"sources"`
+	Chunks              []ManifestChunk   `json:"chunks"`
 }
 
 // ManifestSource binds a source to the chunks that entered the index from it,
@@ -71,6 +76,9 @@ func BuildManifest(feed *corpus.Feed, result Result, format Format) Manifest {
 		ChunkCount:           len(result.Records),
 		RejectedCount:        len(result.Rejections),
 		ChunkDigest:          digestOf(result.Records),
+		Lens:                 result.Lens,
+		ExcludedByLensCount:  len(result.Excluded),
+		RetrievalContract:    BuildRetrievalContract(result),
 		Sources:              []ManifestSource{},
 		Chunks:               make([]ManifestChunk, 0, len(result.Records)),
 	}

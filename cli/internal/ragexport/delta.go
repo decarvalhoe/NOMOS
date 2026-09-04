@@ -29,6 +29,7 @@ const (
 	ReasonSourceHashChanged     = "source_hash_changed"
 	ReasonContextGrammarChanged = "context_grammar_changed"
 	ReasonSchemaChanged         = "schema_changed"
+	ReasonLensChanged           = "lens_changed"
 	ReasonNoChunkFingerprints   = "old_manifest_has_no_chunk_fingerprints"
 	ReasonOldDigestMismatch     = "old_manifest_digest_mismatch"
 )
@@ -77,15 +78,36 @@ type DeltaSummary struct {
 // match its own chunk list (hand-edited), or that carries no chunk
 // fingerprints at all, cannot vouch for freshness and forces a full reindex.
 type Delta struct {
-	SchemaVersion      string        `json:"schema_version"`
-	Stale              bool          `json:"stale"`
-	FullReindex        bool          `json:"full_reindex"`
-	FullReindexReasons []string      `json:"full_reindex_reasons"`
-	OldChunkDigest     string        `json:"old_chunk_digest"`
-	NewChunkDigest     string        `json:"new_chunk_digest"`
-	Sources            []SourceDelta `json:"sources"`
-	Chunks             []ChunkDelta  `json:"chunks"`
-	Summary            DeltaSummary  `json:"summary"`
+	SchemaVersion      string   `json:"schema_version"`
+	Stale              bool     `json:"stale"`
+	FullReindex        bool     `json:"full_reindex"`
+	FullReindexReasons []string `json:"full_reindex_reasons"`
+	// FullReindexReason is the machine-readable code behind FullReindex
+	// (schema_changed, context_grammar_changed, lens_changed, ...).
+	FullReindexReason string        `json:"full_reindex_reason,omitempty"`
+	OldChunkDigest    string        `json:"old_chunk_digest"`
+	NewChunkDigest    string        `json:"new_chunk_digest"`
+	Sources           []SourceDelta `json:"sources"`
+	Chunks            []ChunkDelta  `json:"chunks"`
+	Summary           DeltaSummary  `json:"summary"`
+}
+
+func sameLens(a, b *LensBinding) bool {
+	switch {
+	case a == nil && b == nil:
+		return true
+	case a == nil || b == nil:
+		return false
+	default:
+		return a.ID == b.ID && a.Digest == b.Digest
+	}
+}
+
+func describeLens(l *LensBinding) string {
+	if l == nil {
+		return "<unscoped>"
+	}
+	return fmt.Sprintf("%s (%s)", l.ID, l.Digest)
 }
 
 // Diff computes the plan that takes an index built from old to the corpus
@@ -115,6 +137,17 @@ func Diff(old, current Manifest) Delta {
 			fullReason = ReasonContextGrammarChanged
 		}
 	}
+	// A different scope is a different index: chunks that were out of scope
+	// are now in (or the reverse), and the consumer's WHERE clause was written
+	// for the old lens.
+	if !sameLens(old.Lens, current.Lens) {
+		d.FullReindexReasons = append(d.FullReindexReasons,
+			fmt.Sprintf("retrieval scope changed: lens %s -> %s (the index was built for a different scope)",
+				describeLens(old.Lens), describeLens(current.Lens)))
+		if fullReason == "" {
+			fullReason = ReasonLensChanged
+		}
+	}
 	// An old manifest that cannot vouch for its chunks cannot vouch for
 	// freshness either.
 	switch {
@@ -132,6 +165,7 @@ func Diff(old, current Manifest) Delta {
 		}
 	}
 	d.FullReindex = len(d.FullReindexReasons) > 0
+	d.FullReindexReason = fullReason
 
 	oldByID := make(map[string]ManifestChunk, len(old.Chunks))
 	for _, c := range old.Chunks {
@@ -158,7 +192,9 @@ func Diff(old, current Manifest) Delta {
 		switch {
 		case inNew && !inOld:
 			reason := ReasonAdded
-			if fullReason == ReasonNoChunkFingerprints || fullReason == ReasonOldDigestMismatch {
+			// Under a full reindex every embed carries the one cause: the
+			// consumer rebuilds, it does not triage.
+			if d.FullReindex && fullReason != "" {
 				reason = fullReason
 			}
 			d.Chunks = append(d.Chunks, ChunkDelta{ChunkID: id, SourceID: n.SourceID, Action: ActionEmbed, Reason: reason})

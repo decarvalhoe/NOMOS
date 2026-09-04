@@ -102,6 +102,7 @@ cite-or-abstain (`nomos answer`). La couture est `nomos rag` :
 
 ```bash
 nomos rag export   --feed feed.json --format jsonl|langchain|llamaindex --strict
+nomos rag export   --bundle bundle.json --lens permis.lens.yaml --document-facets retrieval-harness.yaml
 nomos rag manifest --feed feed.json --strict
 nomos rag delta    --old manifest-indexe.json --new manifest-courant.json
 nomos rag verify   --manifest manifest-indexe.json --feed feed.json
@@ -150,12 +151,44 @@ retouché à la main (digest différent de sa propre liste de chunks) ou sans
 empreintes par chunk ne peut pas se porter garant d'un index : réindexation
 complète, jamais « frais » par défaut.
 
+### Scope De Retrieval : La Lens Au Niveau Du Corpus Remis
+
+Le feed corpus ne porte pas de facettes ; le bundle CKM (`nomos bundle`) si :
+ses nœuds portent les axes fermés dérivés par le moteur (`nature`,
+`scope_level`, `trust_tier`, `provenance`). Avec `--bundle`, les records
+portent `metadata.facets` (aplaties en `facet_<axe>` pour LangChain et
+LlamaIndex) ; `--document-facets` attache les axes ouverts du pack par
+document source (`activity`, `confidentiality`, `applicability`), avec la
+même sémantique que le kit consommateur : l'axe du pack complète ou écrase
+celui du nœud.
+
+`--lens <lens.yaml>` applique une Knowledge Lens à l'export lui-même : un
+chunk exclu n'est jamais remis à l'index, donc aucun filtre côté consommateur
+ne peut le laisser fuir. Les exclusions sont nommées et comptées, jamais
+tues ; un chunk sans facettes sous une Lens est exclu (son appartenance ne
+peut pas être prouvée) ; `--strict` refuse un export vidé par la Lens. Le
+manifeste lie l'index à `lens.id` et au digest de la Lens ; une autre Lens,
+ou l'abandon de la Lens, est une réindexation complète (`lens_changed`).
+
+Le manifeste porte un bloc `retrieval_contract` **calculé** : le scope
+(`lens` ou `unscoped`), les champs filtrables réellement présents avec leurs
+valeurs observées (`priority`, `status`, `source_role`, `facets.*`…), et ce
+qu'un consommateur ne doit pas déduire de ces records : `temporal_scoping`
+est déclaré non supporté (aucun record ne porte de date d'application ; la
+résolution point-in-time reste `nomos pointintime` sur les atomes). NOMOS ne
+classe pas : il décide l'appartenance au scope, pas l'ordre.
+
 Le gate CI `scripts/rag-export-gate.sh` rejoue ces propriétés sur le corpus de
 référence public du dépôt : export et manifeste bit-identiques, zéro refus,
 aucune fuite du préfixe dans le corps citable, une mutation d'un octet d'une
 source déplace le digest de cette source seule, et `rag verify` rend frais
 (code 0) sur re-scan, périmé (code 1) sur mutation avec un plan limité à la
-source touchée, et refuse un manifeste falsifié.
+source touchée, et refuse un manifeste falsifié. Sur le bundle réel du golden
+corpus AEC, il exporte sous `LENS-AEC-PERMIS` avec les `document_facets` du
+pack et re-dérive les verdicts avec une réimplémentation indépendante de la
+sémantique du kit consommateur : ensemble exporté identique, document
+confidentiel absent, contrat calculé, et `rag verify` périmé sous une autre
+Lens ou sans Lens.
 
 > Périmètre de revendication : le contrat d'export (déterminisme, liaison à la
 > provenance, détection de staleness). Aucune qualité de retrieval n'est
