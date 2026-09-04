@@ -38,7 +38,11 @@ jobs:
       # across runs, zero chunks rejected under --strict, no context-prefix leak
       # into the citable body, and a 1-byte source mutation moves that source's
       # digest only (fail-closed).
-      - name: "RAG interop export gate (#614)"
+      # #618: the gate re-derives the Knowledge Lens verdicts with an independent
+      # Python re-implementation of the consumer kit's semantics; it needs PyYAML.
+      - name: Python deps for the RAG gate's independent lens check
+        run: python3 -m pip install --quiet pyyaml
+      - name: "RAG interop export gate (#614, #616, #618)"
         run: bash ../scripts/rag-export-gate.sh
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane

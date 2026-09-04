@@ -381,7 +381,7 @@
         {"path": "cli/internal/ragexport/manifest.go", "contains": ["func BuildManifest(", "digestOf("]}
       ],
       "production_callers": [
-        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.Build(", "ragexport.BuildManifest(", "ragExportCommand", "ragManifestCommand"]},
+        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.BuildInputs(", "ragexport.BuildManifest(", "ragExportCommand", "ragManifestCommand"]},
         {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
       ],
       "adversarial_tests": [
@@ -416,6 +416,33 @@
       "ci_gates": [
         {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh"]},
         {"path": "scripts/rag-export-gate.sh", "contains": ["rag verify --manifest", "old_manifest_digest_mismatch"]}
+      ]
+    },
+    {
+      "id": "rag_lens_scoped_export",
+      "title": "Lens-scoped RAG export + retrieval contract — `nomos rag export|manifest|verify --bundle` take the faceted CKM bundle as input, `--document-facets` attaches the pack's open axes, `--lens` enforces a Knowledge Lens on the corpus handed to the index (excluded chunks are named and counted, a facet-less chunk under a lens is excluded, fail-closed); the manifest binds the index to the lens digest and carries a COMPUTED retrieval contract (observed filter vocabularies, temporal scoping declared unsupported); a lens change is a full reindex; verdicts re-derived in CI on the real AEC golden bundle with an independent re-implementation of the consumer-kit lens semantics (#618). Nomos still does not rank.",
+      "pillar": "interop",
+      "claim_level": "artifact-generated (scope contract only; no ranking, no retrieval-quality claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/ragexport/export.go", "contains": ["func BuildInputs(", "atomization.ApplyLens(", "ExcludeLensNoFacets"]},
+        {"path": "cli/internal/ragexport/contract.go", "contains": ["func BuildRetrievalContract(", "RetrievalContractSchemaVersion", "temporal_scoping"]},
+        {"path": "cli/internal/ragexport/bundle_input.go", "contains": ["func InputsFromBundle("]},
+        {"path": "cli/internal/ragexport/lens.go", "contains": ["func LensDigest(", "func resolveFacets("]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.BuildInputs(", "ragexport.InputsFromBundle(", "loadKnowledgeLens(", "func loadDocumentFacets("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/ragexport/lens_test.go", "contains": ["TestBuildInputs_LensExcludedChunkIsNeverExported", "TestBuildInputs_LensWithoutFacetsFailsClosed", "TestBuildInputs_DocumentFacetsChangeTheVerdict", "TestManifest_BindsTheLensAndComputesTheContract"]},
+        {"path": "cli/internal/ragexport/delta_test.go", "contains": ["TestDiff_LensChangeForcesFullReindex"]},
+        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGExport_LensScopesTheExportAndReportsExclusions", "TestRAGExport_LensOverFeedFailsClosed", "TestRAGVerify_DifferentLensIsStale"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh", "pyyaml"]},
+        {"path": "scripts/rag-export-gate.sh", "contains": ["rag export --bundle", "--lens", "def lens_includes(", "lens_changed"]}
       ]
     },
     {

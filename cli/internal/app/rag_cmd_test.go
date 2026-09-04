@@ -394,6 +394,260 @@ func TestRAGDelta_PlansExactlyTheChangedChunks(t *testing.T) {
 	}
 }
 
+// --- bundle input / lens scoping / retrieval contract ------------------------
+
+// bundleFixture is a minimal CKM bundle: three faceted nodes over three
+// source documents, the shape `nomos bundle` emits from the AEC golden corpus.
+const bundleFixture = `{
+  "schema_version": "ckm-bundle-v1",
+  "bundle_id": "aec-test",
+  "generated_at": "2026-06-01T00:00:00Z",
+  "producer": "nomos",
+  "claim_boundary": "test",
+  "feeds": [
+    {
+      "feed_id": "aec-test-feed",
+      "format": "nomos.canonical-knowledge-feed.v1",
+      "nodes": [
+        {"node_id": "A-1", "text": "Le gabarit retient une hauteur de neuf metres au faite.", "source_path": "conception.md", "source_hash": "sha256:c1", "span": {"start_line": 3, "end_line": 3}, "parent_chain": [], "facets": {"nature": "rule", "scope_level": "atom", "trust_tier": "unverified", "provenance": "source_backed"}},
+        {"node_id": "A-2", "text": "La mise a l'enquete publique dure trente jours.", "source_path": "permis.md", "source_hash": "sha256:p1", "span": {"start_line": 5, "end_line": 5}, "parent_chain": [], "facets": {"nature": "rule", "scope_level": "atom", "trust_tier": "unverified", "provenance": "source_backed"}},
+        {"node_id": "A-3", "text": "Appreciation interne confidentielle du dossier.", "source_path": "journal-interne.md", "source_hash": "sha256:j1", "span": {"start_line": 2, "end_line": 2}, "parent_chain": [], "facets": {"nature": "rule", "scope_level": "atom", "trust_tier": "unverified", "provenance": "source_backed"}}
+      ]
+    }
+  ],
+  "rag_metadata": [
+    {"node_id": "A-1", "chunk_id": "chunk:A-1", "source_path": "conception.md", "source_hash": "sha256:c1", "parent_chain": []},
+    {"node_id": "A-2", "chunk_id": "chunk:A-2", "source_path": "permis.md", "source_hash": "sha256:p1", "parent_chain": []},
+    {"node_id": "A-3", "chunk_id": "chunk:A-3", "source_path": "journal-interne.md", "source_hash": "sha256:j1", "parent_chain": []}
+  ],
+  "trace_manifest": {},
+  "attestation": {}
+}`
+
+const permisLensFixture = `id: LENS-TEST-PERMIS
+include:
+  all_of:
+    - activity:
+        - aec.permis
+      confidentiality: public
+exclude:
+  any_of:
+    - confidentiality: confidential
+`
+
+const conceptionLensFixture = `id: LENS-TEST-CONCEPTION
+include:
+  all_of:
+    - activity:
+        - aec.conception
+`
+
+// documentFacetsFixture has the shape of a pack retrieval harness file: the
+// open axes live under a top-level document_facets map keyed by source path.
+const documentFacetsFixture = `record_type: pack_retrieval_harness
+document_facets:
+  conception.md:
+    activity: [aec.conception]
+    confidentiality: public
+    applicability: applicable
+  permis.md:
+    activity: [aec.permis]
+    confidentiality: public
+    applicability: applicable
+  journal-interne.md:
+    activity: [aec.permis]
+    confidentiality: confidential
+    applicability: applicable
+`
+
+func ragFixtureFile(t *testing.T, name, body string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), name)
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatalf("write %s: %v", name, err)
+	}
+	return path
+}
+
+func TestRAGExport_BundleInputCarriesFacets(t *testing.T) {
+	b := ragFixtureFile(t, "bundle.json", bundleFixture)
+	code, stdout, stderr := runRAG(t, "export", "--bundle", b)
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d (stderr: %s)", code, stderr)
+	}
+	lines := strings.Split(strings.TrimSpace(stdout), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 records, got %d", len(lines))
+	}
+	var rec struct {
+		ChunkID    string `json:"chunk_id"`
+		BodyText   string `json:"body_text"`
+		Provenance struct {
+			SourceID   string `json:"source_id"`
+			SourceHash string `json:"source_hash"`
+		} `json:"provenance"`
+		Metadata struct {
+			Facets map[string]any `json:"facets"`
+		} `json:"metadata"`
+	}
+	if err := json.Unmarshal([]byte(lines[0]), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.ChunkID != "chunk:A-1" || rec.Provenance.SourceID != "conception.md" || rec.Provenance.SourceHash != "sha256:c1" {
+		t.Fatalf("bundle provenance drifted: %+v", rec)
+	}
+	if rec.Metadata.Facets["nature"] != "rule" {
+		t.Fatalf("bundle records must carry the node facets, got %+v", rec.Metadata.Facets)
+	}
+	if !strings.Contains(rec.BodyText, "neuf metres") {
+		t.Fatalf("node text must be the citable body, got %q", rec.BodyText)
+	}
+}
+
+// Lens at the base level: only the in-scope chunk is handed out; the
+// exclusions are named on stderr and are not rejections (--strict passes).
+func TestRAGExport_LensScopesTheExportAndReportsExclusions(t *testing.T) {
+	b := ragFixtureFile(t, "bundle.json", bundleFixture)
+	lens := ragFixtureFile(t, "permis.lens.yaml", permisLensFixture)
+	facets := ragFixtureFile(t, "harness.yaml", documentFacetsFixture)
+
+	code, stdout, stderr := runRAG(t, "export", "--bundle", b, "--lens", lens, "--document-facets", facets, "--strict")
+	if code != 0 {
+		t.Fatalf("exclusions are not rejections: expected exit 0, got %d (stderr: %s)", code, stderr)
+	}
+	lines := strings.Split(strings.TrimSpace(stdout), "\n")
+	if len(lines) != 1 || !strings.Contains(lines[0], `"chunk_id":"chunk:A-2"`) {
+		t.Fatalf("only the permis chunk is in scope, got %d line(s): %s", len(lines), stdout)
+	}
+	if strings.Contains(stdout, "chunk:A-3") || strings.Contains(stdout, "confidentielle") {
+		t.Fatal("the confidential chunk leaked into the export")
+	}
+	for _, want := range []string{"excluded chunk:A-1 [lens_excluded]", "excluded chunk:A-3 [lens_excluded]", "lens LENS-TEST-PERMIS enforced: 2 chunk(s) excluded"} {
+		if !strings.Contains(stderr, want) {
+			t.Fatalf("stderr must report %q, got: %s", want, stderr)
+		}
+	}
+	if !strings.Contains(lines[0], `"activity":["aec.permis"]`) {
+		t.Fatalf("exported record must carry the merged document facets: %s", lines[0])
+	}
+}
+
+// A feed carries no facets: under a lens nothing can be proved in scope, so
+// nothing is exported, loudly — and --strict refuses to call that a success.
+func TestRAGExport_LensOverFeedFailsClosed(t *testing.T) {
+	feed := writeFeed(t, feedFixture)
+	lens := ragFixtureFile(t, "permis.lens.yaml", permisLensFixture)
+
+	code, stdout, stderr := runRAG(t, "export", "--feed", feed, "--lens", lens)
+	if code != 0 || strings.TrimSpace(stdout) != "" {
+		t.Fatalf("without --strict: exit 0 and an empty export expected, got %d / %q", code, stdout)
+	}
+	if !strings.Contains(stderr, "lens_no_facets") || !strings.Contains(stderr, "2 chunk(s) excluded") {
+		t.Fatalf("exclusions must be reported: %s", stderr)
+	}
+	if code, _, stderr := runRAG(t, "export", "--feed", feed, "--lens", lens, "--strict"); code != 1 || !strings.Contains(stderr, "nothing exported") {
+		t.Fatalf("--strict must refuse an empty scope, got %d / %s", code, stderr)
+	}
+}
+
+func TestRAGManifest_BindsLensAndContract(t *testing.T) {
+	b := ragFixtureFile(t, "bundle.json", bundleFixture)
+	lens := ragFixtureFile(t, "permis.lens.yaml", permisLensFixture)
+	facets := ragFixtureFile(t, "harness.yaml", documentFacetsFixture)
+
+	code, stdout, stderr := runRAG(t, "manifest", "--bundle", b, "--lens", lens, "--document-facets", facets)
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d (stderr: %s)", code, stderr)
+	}
+	var m struct {
+		FeedFormat          string `json:"feed_format"`
+		FeedContentHash     string `json:"feed_content_hash"`
+		ChunkCount          int    `json:"chunk_count"`
+		ExcludedByLensCount int    `json:"excluded_by_lens_count"`
+		Lens                *struct {
+			ID     string `json:"id"`
+			Digest string `json:"digest"`
+		} `json:"lens"`
+		Contract struct {
+			Scope        string `json:"scope"`
+			FilterFields []struct {
+				Field  string   `json:"field"`
+				Values []string `json:"values"`
+			} `json:"filter_fields"`
+			Unsupported []struct {
+				Capability string `json:"capability"`
+			} `json:"unsupported"`
+		} `json:"retrieval_contract"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &m); err != nil {
+		t.Fatalf("decode manifest: %v", err)
+	}
+	if m.Lens == nil || m.Lens.ID != "LENS-TEST-PERMIS" || !strings.HasPrefix(m.Lens.Digest, "sha256:") {
+		t.Fatalf("manifest must bind the lens, got %+v", m.Lens)
+	}
+	if m.ChunkCount != 1 || m.ExcludedByLensCount != 2 {
+		t.Fatalf("counts drifted: chunks=%d excluded=%d", m.ChunkCount, m.ExcludedByLensCount)
+	}
+	if m.FeedFormat != "ckm-bundle-v1" || !strings.HasPrefix(m.FeedContentHash, "sha256:") {
+		t.Fatalf("manifest must bind to the bundle bytes, got %q / %q", m.FeedFormat, m.FeedContentHash)
+	}
+	if m.Contract.Scope != "lens" {
+		t.Fatalf("contract scope must be lens, got %q", m.Contract.Scope)
+	}
+	var activity []string
+	for _, f := range m.Contract.FilterFields {
+		if f.Field == "facets.activity" {
+			activity = f.Values
+		}
+	}
+	if len(activity) != 1 || activity[0] != "aec.permis" {
+		t.Fatalf("contract must list observed activity values, got %v", activity)
+	}
+	if len(m.Contract.Unsupported) == 0 || m.Contract.Unsupported[0].Capability != "temporal_scoping" {
+		t.Fatalf("contract must declare temporal scoping unsupported: %+v", m.Contract.Unsupported)
+	}
+}
+
+// The gate: an index built for one lens is stale for another, and stale when
+// the scope is dropped — the consumer's WHERE clause was written for a scope.
+func TestRAGVerify_DifferentLensIsStale(t *testing.T) {
+	b := ragFixtureFile(t, "bundle.json", bundleFixture)
+	permis := ragFixtureFile(t, "permis.lens.yaml", permisLensFixture)
+	conception := ragFixtureFile(t, "conception.lens.yaml", conceptionLensFixture)
+	facets := ragFixtureFile(t, "harness.yaml", documentFacetsFixture)
+	manifest := filepath.Join(t.TempDir(), "manifest.json")
+	if code, _, stderr := runRAG(t, "manifest", "--bundle", b, "--lens", permis, "--document-facets", facets, "--output", manifest); code != 0 {
+		t.Fatalf("manifest exited %d: %s", code, stderr)
+	}
+
+	code, stdout, _ := runRAG(t, "verify", "--manifest", manifest, "--bundle", b, "--lens", conception, "--document-facets", facets)
+	if code != 1 || !strings.Contains(stdout, "lens_changed") {
+		t.Fatalf("a different lens must be stale with reason lens_changed, got %d / %s", code, stdout)
+	}
+	code, stdout, _ = runRAG(t, "verify", "--manifest", manifest, "--bundle", b, "--document-facets", facets)
+	if code != 1 || !strings.Contains(stdout, "lens_changed") {
+		t.Fatalf("dropping the lens must be stale, got %d / %s", code, stdout)
+	}
+	code, _, stderr := runRAG(t, "verify", "--manifest", manifest, "--bundle", b, "--lens", permis, "--document-facets", facets)
+	if code != 0 {
+		t.Fatalf("the same lens over the same bundle must be fresh, got %d (stderr: %s)", code, stderr)
+	}
+}
+
+func TestRAGInputs_FeedAndBundleAreMutuallyExclusive(t *testing.T) {
+	feed := writeFeed(t, feedFixture)
+	b := ragFixtureFile(t, "bundle.json", bundleFixture)
+	if code, _, stderr := runRAG(t, "export", "--feed", feed, "--bundle", b); code != 2 || !strings.Contains(stderr, "mutually exclusive") {
+		t.Fatalf("both inputs must be a usage error, got %d / %s", code, stderr)
+	}
+	if code, _, stderr := runRAG(t, "manifest"); code != 2 || !strings.Contains(stderr, "one of --feed or --bundle") {
+		t.Fatalf("no input must be a usage error, got %d / %s", code, stderr)
+	}
+	if code, _, stderr := runRAG(t, "export", "--bundle", b, "--lens", filepath.Join(t.TempDir(), "missing.yaml")); code != 1 || !strings.Contains(stderr, "lens") {
+		t.Fatalf("a missing lens file must fail, got %d / %s", code, stderr)
+	}
+}
+
 func TestRAGDeltaVerify_UsageErrors(t *testing.T) {
 	if code, _, _ := runRAG(t, "delta", "--old", "only-one.json"); code != 2 {
 		t.Fatalf("delta without --new must be a usage error, got %d", code)

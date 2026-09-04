@@ -259,5 +259,116 @@ set -e
 grep -q '"old_manifest_digest_mismatch"' "$OUT_DIR/a/verify-tampered.json" \
   || die "tampered manifest was not reported as a digest mismatch"
 
+# ---- lens-scoped export on the REAL AEC golden bundle -----------------------
+#
+# The retrieval-scope promise: a Knowledge Lens is enforced on the corpus
+# handed to the index, so a chunk the lens excludes can never be retrieved.
+# The verdicts are re-derived here with an INDEPENDENT re-implementation of
+# the consumer kit's lens semantics (scripts/nomos_reference_retrieval.py): the
+# gate does not let the engine judge the engine.
+
+step "bundle: emit a REAL CKM bundle from the AEC golden corpus (push-free copy)"
+GOLDEN_SRC="$ROOT_DIR/cli/internal/corpus/testdata/aec-golden-corpus/vd-lausanne"
+PRESETS="$ROOT_DIR/docs/regulated/domain-packs/built-environment/aec-lens-presets"
+HARNESS="$ROOT_DIR/docs/regulated/domain-packs/built-environment/retrieval-harness.yaml"
+G="$OUT_DIR/golden"
+mkdir -p "$G"
+cp -R "$GOLDEN_SRC" "$G/corpus"
+git -c init.defaultBranch=main -C "$G/corpus" init -q
+git -C "$G/corpus" add -A
+git -C "$G/corpus" -c user.email=nomos@local -c user.name=nomos commit -qm "rag gate golden snapshot"
+"$NOMOS_BIN" bundle --root "$G/corpus" --bundle-id aec-golden-rag-gate --repo example/aec-golden \
+  --commit 0123456789abcdef0123456789abcdef01234567 --out "$G/bundle.json" >/dev/null
+
+step "lens-scoped export: LENS-AEC-PERMIS with the pack's document facets, twice, byte-identical"
+"$NOMOS_BIN" rag export --bundle "$G/bundle.json" --lens "$PRESETS/permis.lens.yaml" \
+  --document-facets "$HARNESS" --strict --output "$G/export-permis-1.jsonl"
+"$NOMOS_BIN" rag export --bundle "$G/bundle.json" --lens "$PRESETS/permis.lens.yaml" \
+  --document-facets "$HARNESS" --strict --output "$G/export-permis-2.jsonl" 2>/dev/null
+cmp -s "$G/export-permis-1.jsonl" "$G/export-permis-2.jsonl" || die "lens-scoped export is not byte-deterministic"
+"$NOMOS_BIN" rag manifest --bundle "$G/bundle.json" --lens "$PRESETS/permis.lens.yaml" \
+  --document-facets "$HARNESS" --strict --output "$G/manifest-permis.json" 2>/dev/null
+
+step "independent lens check: exported set == consumer-kit verdicts, no confidential leak, contract computed"
+python3 -c 'import yaml' 2>/dev/null || die "PyYAML is required for the independent lens check (python3 -m pip install pyyaml)"
+python3 - "$G/export-permis-1.jsonl" "$G/manifest-permis.json" "$PRESETS/permis.lens.yaml" "$HARNESS" "$G/bundle.json" <<'PY'
+import json, sys, yaml
+export, manifest, lens_path, harness_path, bundle_path = sys.argv[1:6]
+lens = yaml.safe_load(open(lens_path, encoding="utf-8"))
+doc_facets = yaml.safe_load(open(harness_path, encoding="utf-8"))["document_facets"]
+bundle = json.load(open(bundle_path, encoding="utf-8"))
+nodes = [n for f in bundle["feeds"] for n in f["nodes"]]
+
+def as_list(v):
+    return [] if v is None else (v if isinstance(v, list) else [v])
+def sel_matches(facets, sel):
+    return all(set(as_list(facets.get(a))) & set(as_list(e)) for a, e in sel.items())
+def any_matches(facets, sels):
+    return any(sel_matches(facets, s) for s in sels)
+def lens_includes(facets, lens):
+    ex = lens.get("exclude") or {}
+    if any_matches(facets, ex.get("any_of") or []):
+        return False
+    inc = lens.get("include") or {}
+    if inc.get("all_of") and not all(sel_matches(facets, s) for s in inc["all_of"]):
+        return False
+    if inc.get("any_of") and not any_matches(facets, inc["any_of"]):
+        return False
+    if inc.get("none_of") and any_matches(facets, inc["none_of"]):
+        return False
+    return True
+def enriched(node):
+    f = dict(node.get("facets") or {})
+    f.update(doc_facets.get(node["source_path"], {}))
+    return f
+
+expected_in = {"chunk:" + n["node_id"] for n in nodes if lens_includes(enriched(n), lens)}
+expected_out = {"chunk:" + n["node_id"] for n in nodes} - expected_in
+exported = {}
+with open(export, encoding="utf-8") as fp:
+    for line in fp:
+        rec = json.loads(line)
+        exported[rec["chunk_id"]] = rec
+if set(exported) != expected_in:
+    sys.exit(f"lens verdicts disagree with the consumer-kit semantics: exported={sorted(exported)} expected={sorted(expected_in)}")
+if not expected_out:
+    sys.exit("the lens excluded nothing on the golden corpus: this check would prove nothing")
+for cid, rec in exported.items():
+    if rec["provenance"]["source_path"] == "journal-interne.md":
+        sys.exit(f"confidential document leaked through LENS-AEC-PERMIS: {cid}")
+    if "aec.permis" not in (rec["metadata"].get("facets") or {}).get("activity", []):
+        sys.exit(f"exported record without the permis activity facet: {cid}")
+m = json.load(open(manifest, encoding="utf-8"))
+if (m.get("lens") or {}).get("id") != lens["id"] or not m["lens"]["digest"].startswith("sha256:"):
+    sys.exit(f"manifest does not bind the lens: {m.get('lens')}")
+if m["excluded_by_lens_count"] != len(expected_out) or m["chunk_count"] != len(expected_in):
+    sys.exit(f"manifest counts drifted: {m['chunk_count']}/{m['excluded_by_lens_count']} vs {len(expected_in)}/{len(expected_out)}")
+c = m["retrieval_contract"]
+fields = {f["field"]: f["values"] for f in c["filter_fields"]}
+if c["scope"] != "lens" or fields.get("facets.activity") != ["aec.permis"] or "journal-interne.md" in fields.get("source_id", []):
+    sys.exit(f"retrieval contract drifted: scope={c['scope']} fields={fields}")
+if not any(u["capability"] == "temporal_scoping" for u in c["unsupported"]):
+    sys.exit("retrieval contract must declare temporal scoping unsupported")
+print(f"lens {lens['id']}: {len(expected_in)} in scope, {len(expected_out)} excluded; consumer-kit semantics agree; no confidential leak; contract computed")
+PY
+
+step "rag verify: another lens, or no lens, over the same bundle is stale (lens_changed); the same lens is fresh"
+set +e
+"$NOMOS_BIN" rag verify --manifest "$G/manifest-permis.json" --bundle "$G/bundle.json" \
+  --lens "$PRESETS/dt-chantier.lens.yaml" --document-facets "$HARNESS" --output "$G/verify-other-lens.json" 2>/dev/null
+other_rc=$?
+"$NOMOS_BIN" rag verify --manifest "$G/manifest-permis.json" --bundle "$G/bundle.json" \
+  --document-facets "$HARNESS" --output "$G/verify-no-lens.json" 2>/dev/null
+none_rc=$?
+"$NOMOS_BIN" rag verify --manifest "$G/manifest-permis.json" --bundle "$G/bundle.json" \
+  --lens "$PRESETS/permis.lens.yaml" --document-facets "$HARNESS" --output "$G/verify-same-lens.json" 2>/dev/null
+same_rc=$?
+set -e
+[[ $other_rc -eq 1 ]] || die "verify under another lens must exit 1, got $other_rc"
+[[ $none_rc -eq 1 ]] || die "verify without the lens must exit 1, got $none_rc"
+[[ $same_rc -eq 0 ]] || die "verify under the same lens must exit 0, got $same_rc"
+grep -q '"full_reindex_reason": "lens_changed"' "$G/verify-other-lens.json" || die "lens change not reported as lens_changed"
+grep -q '"full_reindex_reason": "lens_changed"' "$G/verify-no-lens.json" || die "dropped lens not reported as lens_changed"
+
 echo ""
-echo "rag export gate: OK — $CHUNKS chunk(s), $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["sources"]))' "$MANIFEST") source(s), digest $DIGEST; deterministic, fail-closed, staleness provable per source, verify gates fresh/stale/tampered"
+echo "rag export gate: OK — $CHUNKS chunk(s), $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["sources"]))' "$MANIFEST") source(s), digest $DIGEST; deterministic, fail-closed, staleness provable per source, verify gates fresh/stale/tampered, lens enforced at the base level on the AEC golden bundle"

@@ -1032,6 +1032,85 @@
       }
     },
     {
+      "id": "rag_lens_scoped_export",
+      "title": "Lens-scoped RAG export + retrieval contract — `nomos rag export|manifest|verify --bundle` take the faceted CKM bundle as input, `--document-facets` attaches the pack's open axes, `--lens` enforces a Knowledge Lens on the corpus handed to the index (excluded chunks are named and counted, a facet-less chunk under a lens is excluded, fail-closed); the manifest binds the index to the lens digest and carries a COMPUTED retrieval contract (observed filter vocabularies, temporal scoping declared unsupported); a lens change is a full reindex; verdicts re-derived in CI on the real AEC golden bundle with an independent re-implementation of the consumer-kit lens semantics (#618). Nomos still does not rank.",
+      "pillar": "interop",
+      "claim_level": "artifact-generated (scope contract only; no ranking, no retrieval-quality claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/ragexport/export.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/contract.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/bundle_input.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/lens.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/rag_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/ragexport/lens_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ragexport/delta_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/rag_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/rag-export-gate.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
       "id": "reference_retrieval_kit",
       "title": "Reference retrieval consumer kit — lens enforced at the BASE level before scoring, anti-distractor gap MEASURED against versioned thresholds on a real emitted bundle (VRC-35 #572). Deliberately out-of-core: retrieval is a consumer concern.",
       "pillar": "B1",
@@ -1433,9 +1512,9 @@
     }
   ],
   "summary": {
-    "capabilities": 28,
+    "capabilities": 29,
     "computed": {
-      "real": 24,
+      "real": 25,
       "partial": 0,
       "sidecar": 3,
       "stub": 0,

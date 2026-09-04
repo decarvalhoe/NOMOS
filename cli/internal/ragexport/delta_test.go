@@ -256,6 +256,32 @@ func TestDiff_PlanIsDeterministicAndSorted(t *testing.T) {
 	}
 }
 
+// A different lens is a different index: the consumer's WHERE clause and the
+// set of in-scope chunks were both built for the old scope.
+func TestDiff_LensChangeForcesFullReindex(t *testing.T) {
+	m := manifestOf(t, []corpus.ChunkMetadata{sampleChunk()})
+	scoped := m
+	scoped.Lens = &LensBinding{ID: "LENS-A", Digest: "sha256:a"}
+
+	d := Diff(scoped, m)
+	c, ok := chunkPlan(d, "chunk:SRC-1:100-220")
+	if !d.FullReindex || !d.Stale || !ok || c.Reason != ReasonLensChanged {
+		t.Fatalf("dropping the lens must force a full reindex, got %+v", d)
+	}
+
+	edited := m
+	edited.Lens = &LensBinding{ID: "LENS-A", Digest: "sha256:b"}
+	if d := Diff(scoped, edited); !d.FullReindex {
+		t.Fatal("same lens id with a different digest is a different scope: full reindex expected")
+	}
+
+	same := m
+	same.Lens = &LensBinding{ID: "LENS-A", Digest: "sha256:a"}
+	if d := Diff(scoped, same); d.FullReindex || d.Stale {
+		t.Fatalf("identical lens binding must not force a reindex: %+v", d)
+	}
+}
+
 // The digest must be recomputable from the manifest alone, or the tamper
 // check above would be impossible for a consumer to replay.
 func TestManifest_DigestIsRecomputableFromItsOwnFingerprints(t *testing.T) {

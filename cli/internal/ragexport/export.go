@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/RBOKproject/Nomos/cli/internal/atomization"
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
 )
 
@@ -133,6 +134,10 @@ type Metadata struct {
 	CharCount           int      `json:"char_count,omitempty"`
 	IngestedAt          string   `json:"ingested_at,omitempty"`
 	IngestionVersion    string   `json:"ingestion_version,omitempty"`
+	// Facets are the Knowledge Lens axes (closed axes derived by the engine on
+	// bundle nodes, open axes attached from pack document facets). They are
+	// what a consumer's WHERE clause filters on. Feed chunks carry none.
+	Facets *atomization.Facets `json:"facets,omitempty"`
 }
 
 // Rejection is one chunk refused by the export contract, with the reason. The
@@ -152,11 +157,53 @@ const (
 	RejectEmptyBody         = "empty_body"
 )
 
-// Result carries the exported records plus everything refused, so the caller
-// reports a calculated count rather than assuming the export was total.
+// Exclusion is one chunk kept out of the export by the Knowledge Lens. It is
+// not a defect of the chunk (unlike a Rejection): it is out of the requested
+// retrieval scope, and the scope is enforced here, on the corpus handed out,
+// before any consumer scoring can see it.
+type Exclusion struct {
+	ChunkID  string `json:"chunk_id"`
+	SourceID string `json:"source_id"`
+	Code     string `json:"code"`
+	Reason   string `json:"reason"`
+}
+
+// Exclusion codes.
+const (
+	// ExcludeLens: the lens predicate excluded the chunk's facets.
+	ExcludeLens = "lens_excluded"
+	// ExcludeLensNoFacets: a lens was requested but the chunk carries no facets
+	// at all, so its membership in the scope cannot be proved. Fail closed.
+	ExcludeLensNoFacets = "lens_no_facets"
+)
+
+// Input is one chunk to export together with its Knowledge Lens facets, when
+// the producing artifact carries them (bundle nodes do; feed chunks do not).
+type Input struct {
+	Chunk  corpus.ChunkMetadata
+	Facets *atomization.Facets
+}
+
+// Options scope an export.
+type Options struct {
+	// Lens, when set, is enforced on every chunk: excluded chunks are not
+	// exported and are reported, and the manifest binds the index to the lens.
+	Lens *atomization.KnowledgeLens
+	// DocumentFacets is the pack-level enrichment keyed by source path: the
+	// open WHERE axes (activity, confidentiality, applicability) a pack
+	// attaches per source document before the lens runs. Same semantics as
+	// the consumer kit: a document axis overrides the node's value.
+	DocumentFacets map[string]atomization.Facets
+}
+
+// Result carries the exported records plus everything refused or excluded, so
+// the caller reports calculated counts rather than assuming the export was
+// total.
 type Result struct {
-	Records    []Record    `json:"records"`
-	Rejections []Rejection `json:"rejections"`
+	Records    []Record     `json:"records"`
+	Rejections []Rejection  `json:"rejections"`
+	Excluded   []Exclusion  `json:"excluded"`
+	Lens       *LensBinding `json:"lens,omitempty"`
 }
 
 // BuildContextPrefix derives the deterministic situating text for a chunk from
@@ -216,10 +263,28 @@ func bodyOf(m corpus.ChunkMetadata) string {
 }
 
 // Build projects composed chunk metadata into neutral records, refusing any
-// chunk that could not be cited if it were retrieved.
+// chunk that could not be cited if it were retrieved. Feed chunks carry no
+// facets; see BuildInputs for faceted (bundle) input and lens scoping.
 func Build(chunks []corpus.ChunkMetadata) Result {
-	result := Result{Records: []Record{}, Rejections: []Rejection{}}
+	inputs := make([]Input, 0, len(chunks))
 	for _, m := range chunks {
+		inputs = append(inputs, Input{Chunk: m})
+	}
+	return BuildInputs(inputs, Options{})
+}
+
+// BuildInputs projects faceted inputs into neutral records, refusing any chunk
+// that could not be cited if it were retrieved and, when a lens is given,
+// excluding every chunk outside its scope. The lens is enforced here — on the
+// corpus handed out — so no consumer scoring can ever see an out-of-scope
+// chunk. Nomos still does not rank: it decides membership, not order.
+func BuildInputs(inputs []Input, opts Options) Result {
+	result := Result{Records: []Record{}, Rejections: []Rejection{}, Excluded: []Exclusion{}}
+	if opts.Lens != nil {
+		result.Lens = &LensBinding{ID: opts.Lens.ID, Digest: LensDigest(*opts.Lens)}
+	}
+	for _, in := range inputs {
+		m := in.Chunk
 		body := strings.TrimSpace(bodyOf(m))
 		switch {
 		case strings.TrimSpace(m.ChunkID) == "":
@@ -246,6 +311,23 @@ func Build(chunks []corpus.ChunkMetadata) Result {
 				Message: "chunk body is empty: nothing to embed or cite",
 			})
 			continue
+		}
+
+		facets := resolveFacets(in, opts)
+		if opts.Lens != nil {
+			if facets == nil {
+				result.Excluded = append(result.Excluded, Exclusion{
+					ChunkID: m.ChunkID, SourceID: m.SourceID, Code: ExcludeLensNoFacets,
+					Reason: "chunk carries no facets: its membership in lens " + opts.Lens.ID + " cannot be proved",
+				})
+				continue
+			}
+			if dec := atomization.ApplyLens(*facets, *opts.Lens); !dec.Included {
+				result.Excluded = append(result.Excluded, Exclusion{
+					ChunkID: m.ChunkID, SourceID: m.SourceID, Code: ExcludeLens, Reason: dec.Reason,
+				})
+				continue
+			}
 		}
 
 		prefix := BuildContextPrefix(m)
@@ -294,6 +376,7 @@ func Build(chunks []corpus.ChunkMetadata) Result {
 				CharCount:           m.CharCount,
 				IngestedAt:          m.IngestedAt,
 				IngestionVersion:    m.IngestionVersion,
+				Facets:              facets,
 			},
 		})
 	}
@@ -305,6 +388,9 @@ func Build(chunks []corpus.ChunkMetadata) Result {
 	})
 	sort.SliceStable(result.Rejections, func(i, j int) bool {
 		return result.Rejections[i].ChunkID < result.Rejections[j].ChunkID
+	})
+	sort.SliceStable(result.Excluded, func(i, j int) bool {
+		return result.Excluded[i].ChunkID < result.Excluded[j].ChunkID
 	})
 	return result
 }
@@ -400,6 +486,19 @@ func langchainMetadata(rec Record) map[string]any {
 	putInt("char_count", m.CharCount)
 	putString("ingested_at", m.IngestedAt)
 	putString("ingestion_version", m.IngestionVersion)
+	// Facet axes are flattened with a `facet_` prefix so a vector store's
+	// payload filter reads `facet_activity CONTAINS "aec.permis"`.
+	if f := m.Facets; f != nil {
+		putString("facet_nature", string(f.Nature))
+		putString("facet_scope_level", string(f.ScopeLevel))
+		putString("facet_trust_tier", string(f.TrustTier))
+		putString("facet_provenance", string(f.Provenance))
+		putString("facet_confidentiality", string(f.Confidentiality))
+		putString("facet_applicability", string(f.Applicability))
+		putStrings("facet_discipline_role", f.DisciplineRole)
+		putStrings("facet_activity", f.Activity)
+		putStrings("facet_vocabulary_refs", f.VocabularyRefs)
+	}
 	return out
 }
 
