@@ -1,7 +1,7 @@
 record_type: ckm_license_register
 record_id: CKM-14-license-register
 status: review_required
-updated: "2026-06-09"
+updated: "2026-09-05"
 owner: NOMOS maintainers
 policy:
   agpl_boundary: process_api_boundary
@@ -47,3 +47,42 @@ evidence_requirements:
   - upstream license file and SPDX identifier
   - dependency tree and transitive license review
   - counsel or qualified OSS review decision for any non-permissive dependency
+
+# VRC-42 (#578) — the boundary policy above stops being a stated intention and
+# becomes a mechanism. `process_api_boundary` now names something concrete.
+agpl_boundary_implementation:
+  record_id: CKM-14-agpl-boundary-vrc-42
+  implemented_on: "2026-09-05"
+  mechanism: cli/internal/ruleexec (versioned JSON protocol over a spawned process)
+  protocol:
+    request_schema: nomos-rule-substrate-request-v1
+    response_schema: nomos-rule-substrate-response-v1
+    transport: "child process; request on stdin, response on stdout"
+  what_crosses_the_boundary:
+    - the formula expression, verbatim
+    - named parameters supplied on the command line
+    - the atom id and its source trace
+    - back: a status (computed | unsupported), a value or a reason
+  guarantees:
+    - "NOMOS spawns a process. It does not import, link, vendor or copy the substrate."
+    - >-
+      No substrate is named anywhere in the Go engine. A wiring-matrix
+      must_be_absent probe on openfisca|catala over cli/**/*.go keeps it that
+      way, so the boundary cannot erode by accident.
+    - >-
+      The reference adapter scripts/nomos_rule_substrate_demo.py imports no
+      third-party module. An adapter doing `import openfisca` would put AGPL
+      code in the same process as NOMOS-authored code, which this register
+      forbids; an adapter for a real engine must reach it across a process or
+      network boundary, exactly as NOMOS reaches the reference one.
+    - >-
+      NOMOS computes nothing itself. With no substrate configured the execution
+      refuses and produces no values, so there is no path where a home-made
+      evaluator quietly substitutes for the borrowed engine.
+  not_claimed:
+    - >-
+      No OpenFisca, Catala or L4 integration is shipped. Only the boundary and
+      a protocol-conformance fixture are. Integrating a real engine still needs
+      the review this register requires before production integration.
+    - "No opinion is offered on whether this boundary satisfies the AGPL for any given engine; that remains counsel's call."
+
