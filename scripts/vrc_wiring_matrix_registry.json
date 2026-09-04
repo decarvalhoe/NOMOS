@@ -735,11 +735,24 @@
     },
     {
       "id": "cross_reference_graph",
-      "title": "Graphe de renvois déterministe — pas de sonde must_be_absent : le vocabulaire « cross-reference » est déjà employé ailleurs dans le moteur, un marqueur générique produirait un faux positif (VRC-43 #579)",
+      "title": "Graphe de renvois déterministe (VRC-43 #579) — `nomos atomize crossref` PARSE les renvois par règles, jamais par modèle : sept locutions juridiquement distinctes (sous réserve de, sans préjudice de, nonobstant, par dérogation à, conformément à, au sens de, voir/cf.), chaque arête portant le texte verbatim et les offsets demi-ouverts d\u2019où elle vient. VerifyCrossRefGraph re-découpe l\u2019atome et refuse toute arête qui ne se reconstruit pas — c\u2019est ce qui fait de « parsé, jamais généré » une propriété et non une promesse. Une locution sans cible parsable devient un `unsupported` explicite (le silence laisserait croire la règle autonome) ; une cible hors corpus reste `unresolved_target` avec le locateur verbatim, jamais une destination inventée. Les trois issues sont publiées séparément. Renvoi connu du corpus doré prouvé présent avec son span. Toujours pas de sonde must_be_absent, pour la raison notée à la création de l\u2019entrée : un marqueur générique produit un faux positif dans ce paquet (« llm » matche par sous-chaîne dans allMatchedAtomIDs). L\u2019absence de modèle est prouvée par VerifyCrossRefGraph, qui refuse toute arête ne se reconstruisant pas depuis les octets source — une preuve plus forte qu\u2019un grep.",
       "pillar": "B5",
-      "claim_level": "not implemented",
-      "promotion_issue": "VRC-43",
-      "expected": "absent"
+      "claim_level": "artifact-generated (le graphe atteste que le texte le dit, pas que le renvoi soit juridiquement correct, en vigueur ou exhaustif)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/atomization/crossref.go", "contains": ["func BuildCrossRefGraph(", "func VerifyCrossRefGraph(", "CrossRefSubjectTo", "not parsed from the source", "the destination was invented", "no parsable target locator follows the cue"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/atomize_cmd.go", "contains": ["atomization.BuildCrossRefGraph(", "atomization.VerifyCrossRefGraph(", "func atomizeCrossRef("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/atomization/crossref_test.go", "contains": ["TestCrossRef_ForgedEdgeIsRefused", "TestCrossRef_InventedDestinationIsRefused", "TestCrossRef_ShiftedSpanIsRefused", "TestCrossRef_UnparsableCueIsRecordedNotDropped", "TestCrossRef_CueDoesNotLeapAcrossASentence", "TestCrossRef_KnownReferenceOfTheGoldenCorpusIsInTheGraph"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ]
     },
     {
       "id": "vocabulary_skos_shacl",
