@@ -79,6 +79,7 @@ type packVocabularyFile struct {
 	DomainProfile  string            `yaml:"domain_profile"`
 	Activity       []packVocabTerm   `yaml:"activity"`
 	DisciplineRole []packVocabTerm   `yaml:"discipline_role"`
+	RiskTier       []packVocabTerm   `yaml:"risk_tier"`
 	References     map[string]string `yaml:"references"`
 }
 
@@ -123,7 +124,9 @@ var (
 	packTermRe        = regexp.MustCompile(`^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`)
 )
 
-var packOpenAxes = map[string]bool{"activity": true, "discipline_role": true}
+// The open-term axes, mirroring the `[#FacetTermRef, ...]` axes of
+// specs/facets.cue. risk_tier joined them with VRC-22 (#565).
+var packOpenAxes = map[string]bool{"activity": true, "discipline_role": true, "risk_tier": true}
 
 var packScorecardStatuses = map[string]bool{
 	"applicable": true, "partial": true, "out_of_scope": true, "blocked": true,
@@ -259,12 +262,16 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	vocabTerms := map[string]map[string]bool{
 		"activity":        {},
 		"discipline_role": {},
+		"risk_tier":       {},
 	}
 	for _, t := range vocab.Activity {
 		vocabTerms["activity"][t.ID] = true
 	}
 	for _, t := range vocab.DisciplineRole {
 		vocabTerms["discipline_role"][t.ID] = true
+	}
+	for _, t := range vocab.RiskTier {
+		vocabTerms["risk_tier"][t.ID] = true
 	}
 	totalTerms := 0
 	for _, axis := range m.Vocabularies.Axes {
@@ -495,6 +502,7 @@ func lensOpenAxisTerms(lens atomization.KnowledgeLens) map[string][]string {
 			for _, sel := range group {
 				out["activity"] = append(out["activity"], sel.Activity...)
 				out["discipline_role"] = append(out["discipline_role"], sel.DisciplineRole...)
+				out["risk_tier"] = append(out["risk_tier"], sel.RiskTier...)
 			}
 		}
 	}

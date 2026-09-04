@@ -497,6 +497,7 @@ func langchainMetadata(rec Record) map[string]any {
 		putString("facet_applicability", string(f.Applicability))
 		putStrings("facet_discipline_role", f.DisciplineRole)
 		putStrings("facet_activity", f.Activity)
+		putStrings("facet_risk_tier", f.RiskTier)
 		putStrings("facet_vocabulary_refs", f.VocabularyRefs)
 	}
 	return out

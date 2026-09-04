@@ -110,6 +110,12 @@ var contractCollectors = []fieldCollector{
 		}
 		return r.Metadata.Facets.Activity
 	}},
+	{"facets.risk_tier", func(r Record) []string {
+		if r.Metadata.Facets == nil {
+			return nil
+		}
+		return r.Metadata.Facets.RiskTier
+	}},
 }
 
 // BuildRetrievalContract computes the contract from an export result.
