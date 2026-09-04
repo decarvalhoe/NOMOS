@@ -30,6 +30,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"pack":          packCommand,
 		"answer":        answerCommand,
 		"rag":           ragCommand,
+		"rule":          ruleCommand,
 		"canon":         canonCommand,
 		"pointintime":   pointInTimeCommand,
 		"strict":        StrictGateCommand,
@@ -77,6 +78,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  pack       Validate a domain pack against its declarative contract (golden corpus included)")
 	fmt.Fprintln(stdout, "  answer     Cite-or-abstain gate: recompute faithfulness from spans, cite or abstain (gate | eval | bench)")
 	fmt.Fprintln(stdout, "  rag        Export indexable chunks to any RAG stack, fingerprint the index, verify it is not stale")
+	fmt.Fprintln(stdout, "  rule       Execute ```formula atoms through an EXTERNAL substrate (NOMOS computes nothing itself)")
 	fmt.Fprintln(stdout, "  canon      Validate a canon-promotion bundle (user-promoted into the silo, never certified)")
 	fmt.Fprintln(stdout, "  pointintime  Resolve the atom expression in force at a project date (or refuse)")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")

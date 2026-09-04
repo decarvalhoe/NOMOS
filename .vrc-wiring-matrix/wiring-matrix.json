@@ -1789,21 +1789,60 @@
     },
     {
       "id": "rule_execution_substrate",
-      "title": "Substrat d'exécution de règles L4/OpenFisca/Catala — adoption, jamais réinvention (anti-objectif doc 45 §10.3) (VRC-42 #578)",
+      "title": "Substrat d'exécution de règles emprunté, jamais construit (VRC-42 #578) — `nomos rule exec` fait passer un atome ```formula par un substrat EXTERNE via un protocole JSON versionné sur un process enfant. Le paquet cli/internal/ruleexec ne calcule RIEN : aucun évaluateur, aucune arithmétique, aucun parseur d’expression. Sans substrat configuré, rien n’est produit — jamais un défaut, jamais un zéro (test dédié). Un substrat absent, planté, en timeout ou hors contrat échoue fermé sans record partiel ; un résultat pour un atome jamais demandé, une réponse en double, une réponse manquante, un `computed` sans valeur, un `unsupported` sans motif ou portant une valeur : tous refusés. Chaque valeur voyage avec l’expression verbatim et la trace source (ref canonique, fichier, lignes) — sans quoi un nombre n’est qu’un nombre. La frontière AGPL du registre de licences (`process_api_boundary`) cesse d’être une intention et devient ce mécanisme ; aucun substrat n’est nommé dans le Go, et la sonde must_be_absent le garantit. Déclaré sidecar : seuls la frontière et une fixture de conformité de protocole sont livrées, aucun moteur réel intégré.",
       "pillar": "B3",
-      "claim_level": "not implemented (adopt, never build)",
+      "claim_level": "artifact-generated (le record atteste que le substrat nommé a calculé ; NOMOS ne revendique rien sur la justesse du substrat)",
       "promotion_issue": "VRC-42",
-      "expected": "absent",
-      "computed": "absent",
+      "expected": "sidecar",
+      "computed": "sidecar",
       "mismatch": false,
-      "reasons": [],
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+      ],
       "drift": [],
       "checks": {
         "engine": [],
         "production_callers": [],
         "adversarial_tests": [],
-        "ci_gates": [],
-        "sidecar": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "cli/internal/ruleexec/substrate.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/rule_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/nomos_rule_substrate_demo.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/ip-governance/license-register.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/ruleexec/substrate_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/rule_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "stub_markers": []
       }
     },
@@ -2123,6 +2162,7 @@
         "product-check",
         "rag",
         "report",
+        "rule",
         "strict",
         "validate",
         "version"
@@ -2136,9 +2176,9 @@
     "computed": {
       "real": 31,
       "partial": 0,
-      "sidecar": 7,
+      "sidecar": 8,
       "stub": 0,
-      "absent": 2
+      "absent": 1
     },
     "mismatches": 0,
     "generic_check_failures": 0,
