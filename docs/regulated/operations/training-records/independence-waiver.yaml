@@ -1,0 +1,37 @@
+# VRC-16 (#562) — independence waivers for self-assessed competence records.
+#
+# The competence assessment template requires assessor != assessee. NOMOS is
+# operated by a single person holding every role (see the conflict-of-interest
+# note in NOMOS-REC-ROLE-2026-001), so a competence attestation authored today
+# would necessarily be self-assessed.
+#
+# Rather than let that pass silently, the gate refuses every self-assessed
+# record unless it is named here with a date, an approver, and the compensating
+# controls that justify it — the same treatment the role assignment record gave
+# the vacant independent reviewer.
+#
+# The list is EMPTY on purpose. No waiver has been granted, because no
+# attestation exists yet. Granting one is a quality decision for the quality
+# owner, not a tooling step.
+schema_version: "nomos-independence-waiver-v1"
+document_id: RCP-014-INDEPENDENCE-WAIVER
+issue: "VRC-16 (#562)"
+status: draft
+claim_boundary: >-
+  Recording a waiver here does not make a self-assessment independent. It
+  records that the independence requirement was knowingly not met, who accepted
+  that, and what compensates for it.
+
+# Shape of an entry, for whoever grants the first one:
+#
+# waived_records:
+#   - record_id: NOMOS-REC-COMP-2026-00X
+#     waived_on: 2026-09-15
+#     approved_by: "name (role)"
+#     reason: >-
+#       Solo-operator stage; no second assessor exists.
+#     compensating_controls: >-
+#       What actually substitutes for the second pair of eyes — named, and
+#       verifiable. "Care will be taken" is not a compensating control.
+#     review_at: 2027-09-15
+waived_records: []
