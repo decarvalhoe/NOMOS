@@ -1,0 +1,29 @@
+schema_version: "0.1.0"
+domain_profile: eu-ai-act
+name: "EU AI Act evidence mapping"
+summary: >-
+  Thin EU AI Act pack: authority registration for Regulation (EU) 2024/1689,
+  vocabularies for the obligation-bearing roles, the compliance activities and
+  the risk classification, and a synthetic golden corpus exercising the chain.
+intended_use:
+  statement: >-
+    Register the AI Act as an authority source and provide risk, role and
+    activity vocabularies for downstream evidence workflows, without assessing
+    any obligation or claiming conformity for any system.
+  allowed_uses:
+    - "Register Regulation (EU) 2024/1689 as an authority anchor with dated verification."
+    - "Provide risk_tier, discipline_role and activity vocabulary seeds for AI Act evidence packs."
+    - "Scope a corpus by risk tier or obligation-bearing role through the shipped lens presets."
+  not_authorized:
+    - "Claim that any AI system is compliant with Regulation (EU) 2024/1689."
+    - "Classify a real system into a risk tier, or assert that a practice is prohibited."
+    - "Substitute for a conformity assessment, a notified body, or legal advice."
+references:
+  - id: EU-AI-ACT
+    title: >-
+      Regulation (EU) 2024/1689 laying down harmonised rules on artificial
+      intelligence (Artificial Intelligence Act)
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Union-level authority anchor for AI Act evidence registration."

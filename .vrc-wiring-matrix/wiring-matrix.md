@@ -41,7 +41,7 @@
 | `strict_fidelity_gate` | P1 | real | real | ✅ | — | — |
 | `manifest_check_family` | P1 | real | real | ✅ | — | — |
 | `report_and_bom_export` | P7 | real | real | ✅ | — | — |
-| `eu_ai_act_pack` | D3 | absent | absent | ✅ | VRC-22 | — |
+| `eu_ai_act_pack` | D3 | real | real | ✅ | — | — |
 | `rule_execution_substrate` | B3 | absent | absent | ✅ | VRC-42 | — |
 | `cross_reference_graph` | B5 | absent | absent | ✅ | VRC-43 | — |
 | `vocabulary_skos_shacl` | B4 | absent | absent | ✅ | VRC-44 | — |
@@ -55,7 +55,7 @@
 
 ## Summary
 
-- capabilities: 40 (real=29, partial=0, sidecar=6, stub=0, absent=5)
+- capabilities: 40 (real=30, partial=0, sidecar=6, stub=0, absent=4)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

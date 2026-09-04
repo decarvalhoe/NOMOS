@@ -1,0 +1,81 @@
+# VRC-22 (#565) — BFO → IOF → pack anchoring for the EU AI Act vocabulary.
+# Every term maps to an upper-ontology class, and the three axes are declared
+# disjoint: a term may sit on exactly one of them.
+schema_version: ckm-facet-ontology-v1
+facet_axes:
+  - id: activity
+    root: http://purl.obolibrary.org/obo/BFO_0000015
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Process
+    terms:
+      - id: ai_act.gestion_risque
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: ai_act.evaluation_conformite
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: ai_act.documentation_technique
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: ai_act.surveillance_post_marche
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+      - id: ai_act.enregistrement
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000015
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Process
+  - id: discipline_role
+    root: http://purl.obolibrary.org/obo/BFO_0000023
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+    terms:
+      - id: ai_act.fournisseur
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: ai_act.deployeur
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: ai_act.importateur
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: ai_act.distributeur
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+      - id: ai_act.autorite_notifiante
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000023
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/AgentRole
+  - id: risk_tier
+    # A risk tier is a QUALITY that inheres in the system, not a process it
+    # undergoes nor a role it holds. That is why it needed its own axis.
+    root: http://purl.obolibrary.org/obo/BFO_0000019
+    iof_class: https://spec.industrialontologies.org/ontology/core/Core/Quality
+    terms:
+      - id: ai_act.risque_inacceptable
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000019
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Quality
+      - id: ai_act.haut_risque
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000019
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Quality
+      - id: ai_act.risque_limite
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000019
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Quality
+      - id: ai_act.risque_minimal
+        maps_to:
+          bfo: http://purl.obolibrary.org/obo/BFO_0000019
+          iof_core: https://spec.industrialontologies.org/ontology/core/Core/Quality
+orthogonality:
+  owl_construct: owl:disjointUnionOf
+  disjoint_axes: [activity, discipline_role, risk_tier]
+claim_boundary: >-
+  Ontological anchoring of the pack's own terms. It asserts nothing about the
+  legal interpretation of Regulation (EU) 2024/1689.

@@ -1,0 +1,70 @@
+# VRC-22 (#565) — the EU AI Act pack manifest. The pack IS this declaration:
+# vocabularies + authority register + lens presets + golden corpus + claim
+# boundary + scorecard, and never code.
+#
+# This is the SECOND vertical. Its D6 cost is one core change, the risk_tier
+# axis, recorded in docs/adr/0002-risk-tier-open-facet-axis.md.
+schema_version: nomos-domain-pack-v1
+pack_id: eu-ai-act
+domain_profile: eu-ai-act
+profile_ref: specs/examples/nomos-domain-profile.eu-ai-act.valid.yaml
+claim_boundary: >-
+  Ce pack fournit des VALEURS métier AI Act : vocabulaires de rôles,
+  d'activités et de niveaux de risque, ancre d'autorité datée vers le règlement
+  (EU) 2024/1689, presets de lentilles et corpus de preuve synthétique. Il est
+  pilot-grade : il n'autorise aucun claim de conformité, de classification d'un
+  système réel dans un niveau de risque, d'évaluation de conformité ni de
+  certification. Le corpus est SYNTHÉTIQUE et ne reproduit pas le texte du
+  règlement ; le pack enregistre où ce texte fait autorité, pas ce qu'il dit.
+vocabularies:
+  file: docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml
+  axes: [activity, discipline_role, risk_tier]
+ontology:
+  file: docs/regulated/domain-packs/eu-ai-act/facet-ontology.yaml
+source_register:
+  file: docs/regulated/domain-packs/eu-ai-act/eurlex-source-connectors.yaml
+  contract: "#EUAIActSourceConnectors"
+lens_presets:
+  - id: LENS-AIACT-HAUT-RISQUE-FOURNISSEUR
+    file: docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/haut-risque-fournisseur.lens.yaml
+  - id: LENS-AIACT-GESTION-RISQUE
+    file: docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/gestion-risque.lens.yaml
+  - id: LENS-AIACT-PRATIQUES-INTERDITES
+    file: docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/pratiques-interdites.lens.yaml
+golden_corpus:
+  root: cli/internal/corpus/testdata/eu-ai-act-golden-corpus
+  documents:
+    - gestion-risque.md
+    - documentation-technique.md
+    - obligations-deployeur.md
+    - pratiques-interdites.md
+scorecard:
+  - area: "Ancre d'autorité — règlement (EU) 2024/1689 (CELEX, ELI, JO)"
+    status: applicable
+    note: >-
+      Identifiants résolus en direct sur EUR-Lex le 2026-09-04 et datés dans le
+      registre. Aucun texte n'est récupéré ni haché.
+  - area: "Classification par risque comme axe de facette de premier rang"
+    status: applicable
+    note: >-
+      L'axe ouvert risk_tier (ADR-0002) porte les quatre niveaux ; les lentilles
+      cadrent dessus. C'est le changement core que ce vertical a coûté.
+  - area: "Texte du règlement dans le corpus de preuve"
+    status: blocked
+    note: >-
+      Réutilisation AUTORISÉE (Decision 2011/833/EU, CC-BY 4.0) — ce n'est pas
+      un obstacle de licence. Le corpus reste synthétique parce que reproduire
+      un texte normatif exige une fidélité au mot près qu'aucune extraction non
+      vérifiée ne garantit ; publier une citation approximative d'un règlement
+      serait pire que ne pas la publier.
+  - area: "Évaluation d'obligations, classification d'un système réel"
+    status: out_of_scope
+    note: >-
+      Le pack fournit un vocabulaire et un cadrage. Décider qu'un système est à
+      haut risque est un acte juridique, hors de ce que NOMOS produit.
+  - area: "Versions consolidées et application échelonnée"
+    status: partial
+    note: >-
+      Le règlement s'applique par étapes et une version consolidée était en
+      vigueur à la date de vérification. Le pack date son ancre mais ne résout
+      aucun point-in-time ; toute réponse datée devrait porter sa version.

@@ -523,3 +523,33 @@ func TestPackValidate_CoreStillOwnsTheAxisList(t *testing.T) {
 // covered by TestPackValidate_RealBuiltEnvironmentPackIsGreen above, which runs
 // the shipped built-environment pack — which declares no risk_tier — through
 // the same gate on the real tree.
+
+func TestPackValidate_RealEUAIActPackIsGreen(t *testing.T) {
+	// VRC-22 (#565): the SECOND vertical passes the SAME gate, unchanged, on
+	// the real tree. Two verticals through one gate is what makes the
+	// generality claim measurable instead of asserted.
+	root := filepath.Join("..", "..", "..")
+	manifest := filepath.Join(root, "docs", "regulated", "domain-packs", "eu-ai-act", "pack.yaml")
+	if _, err := os.Stat(manifest); err != nil {
+		t.Fatalf("the EU AI Act pack manifest is missing: %v", err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"pack", "validate",
+		"--manifest", manifest,
+		"--repo-root", root,
+		"--repo", "RBOKproject/NOMOS",
+		"--commit", testPackCommit,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("the EU AI Act pack fails its own gate: %s", stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "eu-ai-act") {
+		t.Fatalf("unexpected verdict: %s", out)
+	}
+	// The vertical must actually exercise the axis it cost the core.
+	if !strings.Contains(out, "3 axe(s)") {
+		t.Fatalf("the pack should align three axes (risk_tier included): %s", out)
+	}
+}

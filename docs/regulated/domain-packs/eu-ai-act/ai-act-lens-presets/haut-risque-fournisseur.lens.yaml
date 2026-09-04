@@ -1,0 +1,14 @@
+id: LENS-AIACT-HAUT-RISQUE-FOURNISSEUR
+description: >-
+  Ce qu'un fournisseur doit produire pour un système classé haut risque.
+  Cadrage seulement : la lentille sélectionne des documents, elle ne décide
+  d'aucune classification.
+include:
+  all_of:
+    - risk_tier:
+        - ai_act.haut_risque
+      discipline_role:
+        - ai_act.fournisseur
+exclude:
+  any_of:
+    - applicability: blocked

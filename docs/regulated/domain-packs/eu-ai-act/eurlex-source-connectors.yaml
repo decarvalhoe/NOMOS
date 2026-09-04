@@ -1,0 +1,57 @@
+# VRC-22 (#565) — authority anchors for the EU AI Act pack.
+#
+# The pack registers WHERE the authoritative text lives. It does not reproduce
+# it: the golden corpus is synthetic (see README). Identifiers below were
+# resolved live on EUR-Lex and carry the date they were verified.
+schema_version: ckm-eu-ai-act-connectors-v1
+domain_profile: eu-ai-act
+claim_boundary: >-
+  Read-only authority registration only. Registering a source asserts that the
+  identifier resolves, not that any obligation was assessed, and never that a
+  system is compliant with Regulation (EU) 2024/1689.
+
+reuse_policy:
+  basis: "Commission Decision 2011/833/EU; EUR-Lex legal notice"
+  statement: >-
+    "Unless otherwise specified, you can re-use the legal documents published in
+    EUR-Lex for commercial or non-commercial purposes." Content is offered under
+    CC-BY 4.0 with source acknowledgement and indication of modifications;
+    metadata is CC0.
+  verified_at_utc: "2026-09-04T00:00:00Z"
+  source: https://eur-lex.europa.eu/content/legal-notice/legal-notice.html
+  note: >-
+    Unlike the SIA standards of the built-environment pack, the AI Act text is
+    NOT licence-blocked. The corpus is synthetic for a different reason, stated
+    in the README: fidelity of reproduction, not licensing.
+
+connectors:
+  - id: eurlex-ai-act
+    source_family: eurlex_eli
+    authority_level: union
+    machine_source: true
+    status: registered
+    reference:
+      title: >-
+        Regulation (EU) 2024/1689 of the European Parliament and of the Council
+        of 13 June 2024 laying down harmonised rules on artificial intelligence
+      short_title: "Artificial Intelligence Act"
+      celex: "32024R1689"
+      eli: "http://data.europa.eu/eli/reg/2024/1689/oj"
+      adopted_on: "2024-06-13"
+      official_journal: "OJ L, 2024/1689, 12.7.2024"
+    retrieval:
+      mode: read_only_api
+      write_policy: read_only
+      endpoint_pattern: "https://eur-lex.europa.eu/legal-content/{lang}/TXT/?uri=CELEX:{celex}"
+      verified_at_utc: "2026-09-04T00:00:00Z"
+    dating:
+      as_of_date_policy: required
+      date_fields: [adopted_on, official_journal, consolidated_version]
+      timezone: Europe/Brussels
+      note: >-
+        The regulation applies in stages. A consolidated version was in force at
+        the verification date; any point-in-time answer must carry the version it
+        was computed against, which this pack does not itself resolve.
+    limits:
+      - "No article text is fetched, hashed, or reproduced by this pack."
+      - "No consolidated-version diffing is performed."
