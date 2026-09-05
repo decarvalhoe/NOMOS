@@ -67,3 +67,26 @@ entry at all.
 **Computed 2026-09-04:** 0 valid attestations, 0 of 6 held roles `established`,
 `product_owner` still `requires_definition`. The effectiveness condition on
 training records is therefore not lifted, and this SOP stays `not_effective`.
+
+## What The Gate Does Not Do (#640)
+
+The gate validates a signature **declaration** and the evidence it references.
+It does **not** authenticate a human identity, and no tool in this repository
+does.
+
+`signed_by_assessor: true` is an assertion by whoever wrote the file. The gate
+checks that the assertion is present, dated, and carries `signature_evidence`
+naming where the signature actually lives — a countersigned document, a commit,
+an archived record. A declared signature pointing at nothing is refused, because
+that is a claim rather than a record. Believing the assertion, and verifying the
+person behind it, remains a human act.
+
+Template and gate share one versioned schema
+(`nomos-competence-assessment-v1`). An attestation in an unknown version is
+refused rather than reinterpreted: silently reading a pre-migration record as if
+it were the current shape would turn a migration slip into a wrong competence
+status. The migration steps are in the template's own header.
+
+A synthetic worked example lives in `examples/`, deliberately outside
+`attestations/`, which is the only directory the gate reads. Copying it into
+`attestations/` and changing the names would forge a quality record.
