@@ -33,7 +33,7 @@ sources:
     sha256: a2e5901de93e88d6f147573bd779faa0d0303557c8f988de91a944049f1fc1df
   - source_id: NOMOS-REF-POL-001
     path: docs/regulated/reference-basis/nomos-bible-corpus-policy.md
-    sha256: ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c
+    sha256: 47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993
 items:
   # --- must cite: fully grounded, the gate that blocks these is useless -------
   - answer_id: BENCH-PUB-SNAPSHOT
@@ -67,14 +67,14 @@ items:
     confidence: 0.99
     source_spans:
       - source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
         chunk_id: chunk-no-invention
         text: "Nomos must not invent clauses, approvals, mappings, or compliance conclusions."
     retrieved_chunks:
       - chunk_id: chunk-no-invention
         source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
         text: "Nomos must not invent clauses, approvals, mappings, or compliance conclusions."
 
@@ -88,14 +88,14 @@ items:
     confidence: 0.99
     source_spans:
       - source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L33
         chunk_id: chunk-gamp5
         text: "ISPE GAMP 5 Second Edition is a required Nomos bible for CSV/CSA and GxP computerized-system validation."
     retrieved_chunks:
       - chunk_id: chunk-gamp5
         source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L33
         text: "ISPE GAMP 5 Second Edition is a required Nomos bible for CSV/CSA and GxP computerized-system validation."
 
@@ -134,13 +134,13 @@ items:
     confidence: 0.99
     source_spans:
       - source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
         chunk_id: chunk-no-invention
     retrieved_chunks:
       - chunk_id: chunk-no-invention
         source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
 
   - answer_id: BENCH-NEGATION
@@ -180,14 +180,14 @@ items:
     confidence: 0.99
     source_spans:
       - source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
         chunk_id: chunk-no-invention
         text: "Nomos must not invent clauses, approvals, mappings, or compliance conclusions."
     retrieved_chunks:
       - chunk_id: chunk-no-invention
         source_id: NOMOS-REF-POL-001
-        source_hash: "sha256:ad9f3d71b0e883db2db232117e3e5724bd446298c47f4cec0eb6805e3cb2789c"
+        source_hash: "sha256:47c1ed8d0f35c39da3be03e26e223ccea1054859e4c62c0476814b808b34c993"
         span: L19
         text: "Nomos must not invent clauses, approvals, mappings, or compliance conclusions."
 

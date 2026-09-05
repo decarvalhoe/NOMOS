@@ -49,6 +49,7 @@
 | `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `training_competence_status` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `web_source_contract` | P2 | real | real | ✅ | — | — |
+| `licensed_reference_review_gate` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -56,7 +57,7 @@
 
 ## Summary
 
-- capabilities: 41 (real=33, partial=0, sidecar=7, stub=0, absent=1)
+- capabilities: 42 (real=33, partial=0, sidecar=8, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

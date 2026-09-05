@@ -205,7 +205,7 @@ Ueber den aufgezeichneten POC hinaus werden zwei Nachweise bei jedem CI-Lauf neu
 | Nachweis | Aktuelles Ergebnis | Wie er gehalten wird |
 |---|---|---|
 | Wiring-Matrix (VRC-00) | 40 Faehigkeiten, 0 Abweichung zwischen Register und Baum, 0 Phantom-Befehl | `scripts/vrc_wiring_matrix.py`; die generierte Datei wird mit dem Commit verglichen |
-| Oeffentlicher Cite-or-abstain Bench (VRC-46, Ergebnis vom 2026-09-04, lexikalischer Proxy) | 9 Items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — das einzige falsche "cite" ist die Negation, der dokumentierte blinde Fleck des Proxys | `scripts/cite_or_abstain_bench.py`: Quellen woertlich und unveraendert, Referenzen verifiziert und datiert, zwei byte-identische Laeufe, versionierte Grenzen, Messung identisch mit dem veroeffentlichten Ergebnis |
+| Oeffentlicher Cite-or-abstain Bench (VRC-46, Ergebnis vom 2026-09-05, lexikalischer Proxy) | 9 Items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — das einzige falsche "cite" ist die Negation, der dokumentierte blinde Fleck des Proxys | `scripts/cite_or_abstain_bench.py`: Quellen woertlich und unveraendert, Referenzen verifiziert und datiert, zwei byte-identische Laeufe, versionierte Grenzen, Messung identisch mit dem veroeffentlichten Ergebnis |
 
 Methodik, Corpus, Grenzen und datierte Ergebnisse: [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
 

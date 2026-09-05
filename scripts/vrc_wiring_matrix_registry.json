@@ -885,6 +885,23 @@
         {"path": "templates/source-manifest.schema.yaml", "contains": ["web_source:", "robots_decision"]},
         {"path": "docs/02-source-registry.md", "contains": ["Sources Web (#610)", "WEB_SOURCE_NO_CONTENT_HASH"]}
       ]
+    },
+{
+      "id": "licensed_reference_review_gate",
+      "title": "Revue de licence et no-full-text réel (#641) — un hash d\u2019artefact vérifié prouve ce qui est sur disque, pas la permission de le traiter : le gate sépare `artifact_hash_verified` de `license_use_approved` et rend `verified_license_review_required` avec GAP-LICENSE-REVIEW / USE / SAFETY tant qu\u2019un reviewer ASSIGNÉ n\u2019a pas enregistré une approbation, que l\u2019usage interne n\u2019est pas autorisé et que commit du texte intégral et redistribution ne sont pas explicitement `false` (invariants restaurés de 570ed58, jamais mergé). Le no-full-text cesse d\u2019être un contrôle de champs : `no-full-text-policy.yaml` versionné pilote un scan des arbres publics et des fichiers stagés — copie intégrale détectée par hash de l\u2019artefact enregistré, copie partielle par digest de phrases sentinelles normalisées ; la politique ne stocke que des digests, jamais le texte, et zéro sentinelle est rendu `uncovered`, jamais propre. La décision de licence elle-même reste #194 (humain). Sidecar : guard Python, aucun moteur Go.",
+      "pillar": "P1",
+      "claim_level": "gate-status only (refuse un traitement sans revue ; n\u2019accorde aucune licence et ne détecte pas la paraphrase)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {"path": ".github/workflows/regulated-documentation-gate.yml", "contains": ["regulated_reference_canon.py"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/regulated_reference_canon.py", "contains": ["def verify_license_review(", "def scan_committed_full_text(", "artifact_hash_verified", "license_use_approved", "LICENSED_FULL_TEXT_COMMITTED", "LICENSED_TEXT_PRESENT", "uncovered_no_sentinels_registered"]},
+        {"path": "docs/regulated/reference-basis/no-full-text-policy.yaml", "contains": ["nomos-no-full-text-policy-v1", "requires_licensed_copy", "Never put the sentence here"]},
+        {"path": "templates/regulated/licensed-reference-intake.yaml", "contains": ["required_for_processing", "approved_status_values"]},
+        {"path": "tests/test_regulated_automation.py", "contains": ["test_reference_canon_hash_verified_is_not_use_approved", "test_reference_canon_committed_licensed_artifact_is_an_error", "test_reference_canon_sentinel_sentence_present_is_an_error", "test_reference_canon_honest_blocked_state_is_green_without_claim"]}
+      ]
     }
   ]
 }

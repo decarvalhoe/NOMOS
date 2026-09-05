@@ -229,7 +229,7 @@ Au-delà du POC enregistré, deux preuves sont recalculées à chaque CI et éch
 | Preuve | Résultat courant | Comment il est tenu |
 |---|---|---|
 | Matrice de câblage (VRC-00) | 40 capacités, 0 écart entre registre et arbre, 0 commande fantôme | `scripts/vrc_wiring_matrix.py` ; le fichier généré est comparé au commit |
-| Bench public cite-or-abstain (VRC-46, résultat du 2026-09-04, proxy lexical) | 9 items : `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — le seul faux « cite » est la négation, angle mort documenté du proxy | `scripts/cite_or_abstain_bench.py` : sources verbatim et non déplacées, références vérifiées et datées, deux runs octet pour octet identiques, bornes versionnées, mesure identique au résultat publié |
+| Bench public cite-or-abstain (VRC-46, résultat du 2026-09-05, proxy lexical) | 9 items : `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — le seul faux « cite » est la négation, angle mort documenté du proxy | `scripts/cite_or_abstain_bench.py` : sources verbatim et non déplacées, références vérifiées et datées, deux runs octet pour octet identiques, bornes versionnées, mesure identique au résultat publié |
 
 Méthodologie, corpus, seuils et résultats datés : [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
 
