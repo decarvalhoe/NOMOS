@@ -53,6 +53,7 @@
 | `external_snapshot_input` | P2 | real | real | ✅ | — | — |
 | `public_reference_processing` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `recursio_offline_e2e` | P1 | real | real | ✅ | — | — |
+| `release_candidate_bundle` | P1 | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -60,7 +61,7 @@
 
 ## Summary
 
-- capabilities: 45 (real=35, partial=0, sidecar=9, stub=0, absent=1)
+- capabilities: 46 (real=36, partial=0, sidecar=9, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
