@@ -748,6 +748,10 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 		"body ledger JSON whose Merkle proofs are verified, then claim_coverage is computed from it (FSQ-05 / VRC-07 #553)")
 	feedPath := flags.String("feed", "",
 		"feed JSON used to count extracted units for claim_coverage (calculated, never declared)")
+	extSnapshot := flags.String("external-snapshot", "",
+		"external snapshot envelope (#611/#612): verified fail-closed, then its identity, root, counts and web-source coverage are bound into the attestation metadata")
+	extSnapshotRecords := flags.String("external-snapshot-records", "",
+		"records JSONL for --external-snapshot (default: sources.jsonl beside the envelope)")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -815,6 +819,23 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 		}
 		unitsExtracted = count
 	}
+	metadata := map[string]any{
+		"commit":     snapshot.Commit,
+		"branch":     snapshot.Branch,
+		"repository": snapshot.Repository,
+	}
+	if *extSnapshot != "" {
+		env, records, err := corpus.LoadExternalSnapshot(*extSnapshot, *extSnapshotRecords)
+		if err != nil {
+			fmt.Fprintf(stderr, "corpus attest: external snapshot: %v\n", err)
+			return 1
+		}
+		if _, verr := corpus.VerifyExternalSnapshot(env, records); verr != nil {
+			fmt.Fprintf(stderr, "corpus attest: external snapshot REFUSED, no attestation written: %v\n", verr)
+			return 1
+		}
+		metadata["external_snapshot"] = corpus.SnapshotCoverageMetadata(env, records)
+	}
 	statement, err := corpus.GenerateCorpusAttestation(corpus.CorpusAttestationOptions{
 		CorpusID:       *corpusID,
 		ProjectID:      *projectID,
@@ -828,11 +849,7 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 		UnitsExtracted: unitsExtracted,
 		BodyLedger:     bodyLedger,
 		Now:            time.Now().UTC(),
-		Metadata: map[string]any{
-			"commit":     snapshot.Commit,
-			"branch":     snapshot.Branch,
-			"repository": snapshot.Repository,
-		},
+		Metadata:       metadata,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "corpus attest: %v\n", err)

@@ -96,6 +96,12 @@ type SnapshotRecord struct {
 	CapturedAt  string     `json:"captured_at"`
 	SourceType  string     `json:"source_type,omitempty"`
 	WebSource   *WebSource `json:"web_source,omitempty"`
+	// ExportPath is where the producer wrote the normalised export of this
+	// record (a Markdown file for a web page). A web record has two facts:
+	// its identity — the locator, a URL — and its export, a file the pipeline
+	// can atomise. Both are kept; import uses ExportPath as the manifest path
+	// when present and falls back to the locator otherwise (#612).
+	ExportPath string `json:"export_path,omitempty"`
 }
 
 // SnapshotVerification is the emitted verdict.
@@ -343,9 +349,13 @@ func ImportSnapshotToManifest(env ExternalSnapshot, records []SnapshotRecord, op
 				srcType = "markdown"
 			}
 		}
+		path := r.Locator
+		if strings.TrimSpace(r.ExportPath) != "" {
+			path = r.ExportPath
+		}
 		m := ManifestSource{
 			ID:              id,
-			Path:            r.Locator,
+			Path:            path,
 			Type:            srcType,
 			Domain:          opts.Domain,
 			Priority:        "primary",
@@ -413,4 +423,37 @@ func LoadExternalSnapshot(envelopePath, recordsPath string) (ExternalSnapshot, [
 		return env, nil, err
 	}
 	return env, records, nil
+}
+
+// SnapshotCoverageMetadata is what an attestation binds when it covers an
+// external snapshot (#612): the snapshot's identity and root, its counts, and
+// how many records are web captures carrying #610 provenance. It says which
+// snapshot the attestation is about and which kinds of source it holds; it is
+// not a statement that the snapshot covered the producer's operational store.
+func SnapshotCoverageMetadata(env ExternalSnapshot, records []SnapshotRecord) map[string]any {
+	web := 0
+	types := map[string]int{}
+	for _, r := range records {
+		if r.WebSource != nil {
+			web++
+		}
+		t := r.SourceType
+		if t == "" {
+			t = "unspecified"
+		}
+		types[t]++
+	}
+	return map[string]any{
+		"format":            env.Format,
+		"snapshot_id":       env.SnapshotID,
+		"producer":          env.Producer,
+		"generated_at":      env.GeneratedAt,
+		"content_hash_root": env.ContentHashRoot,
+		"source_count":      env.SourceCount,
+		"version_count":     env.VersionCount,
+		"records":           len(records),
+		"web_sources":       web,
+		"source_types":      types,
+		"claim_boundary":    ExternalSnapshotClaimBoundary,
+	}
 }

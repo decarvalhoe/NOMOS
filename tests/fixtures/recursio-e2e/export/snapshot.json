@@ -1,0 +1,13 @@
+{
+  "format": "nomos.external-snapshot.v1",
+  "snapshot_id": "recursio-fixture-2026-09",
+  "generated_at": "2026-09-05T09:00:00Z",
+  "producer": "recursio-fixture/0.1",
+  "db_schema_version": "recursio-export-v1",
+  "immutable": true,
+  "source_count": 3,
+  "version_count": 3,
+  "content_hash_root": "105b6bed2bd85afc3ee3dc5046d9a68a26a730c99738944753184394b2643c28",
+  "records_file": "sources.jsonl",
+  "claim_boundary": "An immutable export consumed as-is; NOMOS never reads the operational store. The root proves these records are the ones exported, not that the export was complete relative to the store, nor that any record's content is correct."
+}

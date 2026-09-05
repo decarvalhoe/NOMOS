@@ -39,6 +39,9 @@ package nomos
 	captured_at:  #RFC3339
 	source_type?: #SourceType
 	web_source?:  #WebSource
+	// Where the producer wrote the normalised export (#612): a web record
+	// has an identity (locator, a URL) and an export (a file to atomise).
+	export_path?: string & !=""
 }
 
 #RFC3339: =~"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
