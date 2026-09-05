@@ -1,0 +1,272 @@
+{
+  "schema_version": "nomos-portfolio-status-v1",
+  "generated_at": "2026-09-06T00:00:00Z",
+  "repo_root": "cli/internal/portfolio/testdata/minirepo",
+  "freshness_policy": {
+    "stale_after_days": 90
+  },
+  "capabilities": {
+    "available": true,
+    "registry": {
+      "path": "scripts/vrc_wiring_matrix_registry.json",
+      "sha256": "sha256:e8327652bead22449f1acc7f38e9bcf63b8bd6ce2b2e329f159f06b8f52d57e8",
+      "freshness": "undated"
+    },
+    "matrix": {
+      "path": ".vrc-wiring-matrix/wiring-matrix.json",
+      "sha256": "sha256:893c4040334ccd3bf152a9d2a30c796b9989df2dd33abe1277cb0604c4bc5908",
+      "freshness": "undated"
+    },
+    "total": 2,
+    "computed": {
+      "real": 1,
+      "partial": 0,
+      "sidecar": 1,
+      "stub": 0,
+      "absent": 0
+    },
+    "mismatches": 0,
+    "generic_check_failures": 0,
+    "expected_vs_computed_agree": true
+  },
+  "roadmap": {
+    "available": true,
+    "source": {
+      "path": "docs/roadmap-lanes.yaml",
+      "sha256": "sha256:a63c8f1953cb976c1a7e850902e8018120b409bf5898338eecb62cd9e758646f",
+      "freshness": "undated"
+    },
+    "lanes": {
+      "product": {
+        "autonomous_open": 1,
+        "autonomous_closed": 1,
+        "passive": 0,
+        "human": 0,
+        "external": 0,
+        "queue": [
+          11
+        ]
+      },
+      "devops": {
+        "autonomous_open": 0,
+        "autonomous_closed": 0,
+        "passive": 0,
+        "human": 0,
+        "external": 0,
+        "queue": []
+      },
+      "regulated": {
+        "autonomous_open": 0,
+        "autonomous_closed": 0,
+        "passive": 0,
+        "human": 1,
+        "external": 1,
+        "queue": []
+      }
+    },
+    "regulated_items": [
+      {
+        "issue": 20,
+        "dispatch": "human",
+        "delivery_state": "planned",
+        "claim_state": "locked"
+      },
+      {
+        "issue": 21,
+        "dispatch": "external",
+        "delivery_state": "blocked",
+        "claim_state": "prohibited"
+      }
+    ]
+  },
+  "gaps": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/evidence-index/evidence-ledger.yaml",
+      "sha256": "sha256:e197b686e3c13d881c1ece1814f6913d8bcbff519ad0fcbc4d2e04f90566fb13",
+      "as_of": "2026-05-02",
+      "freshness": "stale"
+    },
+    "total": 2,
+    "open": 1,
+    "items": [
+      {
+        "id": "GAP-A",
+        "severity": "major",
+        "status": "open",
+        "blocks_claims": [
+          "x"
+        ]
+      },
+      {
+        "id": "GAP-B",
+        "severity": "minor",
+        "status": "closed",
+        "blocks_claims": []
+      }
+    ]
+  },
+  "capa": {
+    "available": true,
+    "directory": "docs/regulated/operations/records/capa",
+    "total": 2,
+    "open": 1,
+    "records": [
+      {
+        "record_id": "CAPA-2026-001",
+        "status": "closed",
+        "severity": "major",
+        "opened": "2026-06-11",
+        "closed": "2026-06-11",
+        "effectiveness_verified": true,
+        "retro_documented": true,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-001-x.yaml",
+          "sha256": "sha256:ac12426b02c410d63d78b03d71488d90038c27160cfb0bc09e3054d4e6f5fa0e",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      },
+      {
+        "record_id": "CAPA-2026-002",
+        "status": "open",
+        "severity": "minor",
+        "opened": "2026-08-01",
+        "effectiveness_verified": false,
+        "retro_documented": false,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-002-y.yaml",
+          "sha256": "sha256:beace49b37b63a021f5e10e1bbd147dcb085d3279835ba2950a2b15eeaeb03b3",
+          "as_of": "2026-08-01",
+          "freshness": "fresh"
+        }
+      }
+    ]
+  },
+  "reviews": {
+    "available": true,
+    "directory": "docs/regulated/operations/records",
+    "total": 2,
+    "records": [
+      {
+        "record_id": "AUD-1",
+        "record_type": "internal_audit",
+        "date": "2026-06-11",
+        "decisions": 0,
+        "actions": 0,
+        "findings": 1,
+        "source": {
+          "path": "docs/regulated/operations/records/2026-06-11-internal-audit-record.yaml",
+          "sha256": "sha256:30d442c8adca0f530852b7e17a84fc90bffb3308451aeeaf4fa641ce791b9b4c",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      },
+      {
+        "record_id": "MR-1",
+        "record_type": "management_review",
+        "date": "2026-06-11",
+        "decisions": 2,
+        "actions": 1,
+        "findings": 0,
+        "source": {
+          "path": "docs/regulated/operations/records/2026-06-11-management-review-record.yaml",
+          "sha256": "sha256:b0f0abce2610ae49e2ac8d2a47c15e5bf6b2c2b0119a3e21984b6a910177bd4e",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      }
+    ]
+  },
+  "repeated_ci": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/evidence-index/repeated-ci-evidence/index-2026-09-04.json",
+      "sha256": "sha256:c8f1c8a15a39f705a1d0e26da1f86dba8ceca2c3040721803e079f41926fc20a",
+      "as_of": "2026-09-04",
+      "freshness": "fresh"
+    },
+    "consecutive_green_runs": 4,
+    "target_consecutive_green_runs": 8,
+    "claim_unlocked": false
+  },
+  "praxis_gate": {
+    "available": true,
+    "record": {
+      "path": "docs/regulated/qualification/praxis-activation-gate.yaml",
+      "sha256": "sha256:125114f74cacc0751a7d129d919069711040bb06eaf7a6d58fbfed38562c9cf1",
+      "freshness": "undated"
+    },
+    "status": "blocked",
+    "unmet_count": 11,
+    "checks": 11
+  },
+  "competence": {
+    "available": true,
+    "attestation_files": 0,
+    "waiver": {
+      "path": "docs/regulated/operations/training-records/independence-waiver.yaml",
+      "sha256": "sha256:7618ed4a51955e9ec51f521133942279133c393349312cfed5b3d139dd1fcad6",
+      "freshness": "undated"
+    },
+    "waived_records": 0,
+    "role_status_computed_by": "scripts/training_competence_gate.py"
+  },
+  "domain_packs": {
+    "available": true,
+    "directory": "docs/regulated/domain-packs",
+    "total": 2,
+    "packs": [
+      {
+        "pack_id": "demo",
+        "source": {
+          "path": "docs/regulated/domain-packs/demo/pack.yaml",
+          "sha256": "sha256:1df3407114066270139e5ecd26b2276ce688ecba90c68f2621af75ad79238b0a",
+          "freshness": "undated"
+        },
+        "has_claim_boundary": true
+      },
+      {
+        "pack_id": "other",
+        "source": {
+          "path": "docs/regulated/domain-packs/other/pack.yaml",
+          "sha256": "sha256:e2ce618c2f17477fd6ea47c4dbc66afc4da68fa587b250b13ea4230c0671cf50",
+          "freshness": "undated"
+        },
+        "has_claim_boundary": false
+      }
+    ]
+  },
+  "public_sources": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/reference-basis/public-source-snapshots.yaml",
+      "sha256": "sha256:44310582b3d7c7fd58ff14ef6550d1ac4c040d86fdf329d8d6b208f2db95d82c",
+      "as_of": "2026-09-05",
+      "freshness": "fresh"
+    },
+    "total": 3,
+    "by_status": {
+      "blocked": 1,
+      "captured_hash_only": 2
+    }
+  },
+  "release_candidate": {
+    "available": true,
+    "source": {
+      "path": "candidate-manifest.json",
+      "sha256": "sha256:3c5c536f0af298193ae3f2ea5c3946f0704cc389a1531be14ffa7708229cb714",
+      "as_of": "2026-09-05T00:00:00Z",
+      "freshness": "fresh"
+    },
+    "version": "v9.9.9-TEST",
+    "approval_status": "pending",
+    "verdict": "candidate_verified",
+    "open_gaps": 1
+  },
+  "sections_unavailable": 0,
+  "sections_stale": 1,
+  "status_digest": "sha256:28d06e7a4d66e8bce7f6da7cc33976793c4b655de27c030360ef0268888991ef",
+  "claim_boundary": "A computed view of committed machine sources: registry and generated matrix, roadmap lanes, evidence-ledger gaps, CAPA and review records, repeated-CI index, Praxis gate verdict, competence files, domain packs, public-source snapshots, optional release candidate. It creates no evidence, approves nothing and lifts no claim; an unavailable or stale source is shown as such, never hidden.",
+  "summary": "Everything is fine and the portfolio is compliant."
+}

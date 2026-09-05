@@ -2841,6 +2841,65 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "portfolio_status_engine",
+      "title": "Statut de portefeuille calculé depuis les sources machine (NRT-019 #667) — `nomos portfolio status` agrège registre + matrice générée (compteurs par topologie, écarts, accord registre/matrice recalculé ligne à ligne), voies de roadmap (ouverts/fermés par dispatch, files, items régulés), gaps du ledger, records CAPA, records de revue (décisions/actions/findings comptés), dernier index CI répétée, verdict du gate Praxis (recalculé), fichiers de compétence, packs de domaine, snapshots de sources publiques, bundle candidat optionnel (refusé s'il n'est pas `pending`). Chaque section porte `path`, `sha256`, `as_of`, fraîcheur (`fresh|stale|undated`, politique en jours) ; source illisible → section `unavailable` avec raison, jamais omise ; digest du statut. Contrat CUE `#PortfolioStatus` à structs fermées : un champ narratif est refusé (fixture négative). Rendu Markdown depuis les MÊMES valeurs. Prouvé sur mini-dépôt synthétique : source éditée → hash, compteur et digest bougent ; source retirée → `unavailable` ; horloge avancée → `stale` ; ligne de matrice en écart → accord faux ; candidat approuvé → refusé ; record Praxis forgé → `unavailable` avec le refus. Sur le dépôt réel : 52 capacités, accord vrai, ledger d'evidence signalé `stale` (daté 2026-05-02). CE QUE CE N'EST PAS : une evidence, une approbation, un claim — une vue verte d'un outil non validé reste un outil non validé.",
+      "pillar": "P1",
+      "claim_level": "view (statut calculé depuis l'evidence commitée ; ne lève aucun claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/portfolio/status.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/portfolio/render.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/portfolio_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/portfolio/status_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_portfolio_status.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2864,6 +2923,7 @@
         "init",
         "pack",
         "pointintime",
+        "portfolio",
         "product-check",
         "rag",
         "release",
@@ -2878,9 +2938,9 @@
     }
   ],
   "summary": {
-    "capabilities": 52,
+    "capabilities": 53,
     "computed": {
-      "real": 41,
+      "real": 42,
       "partial": 0,
       "sidecar": 10,
       "stub": 0,

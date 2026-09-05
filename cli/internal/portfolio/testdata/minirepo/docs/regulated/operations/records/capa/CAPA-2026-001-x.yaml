@@ -1,0 +1,9 @@
+record_id: CAPA-2026-001
+record_type: deviation_capa
+status: closed
+severity: major
+opened: 2026-06-11
+closed: 2026-06-11
+retro_documented: true
+effectiveness_verification:
+  verified: true

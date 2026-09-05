@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [667, 668, 670]
+    product: [668, 670]
     devops: [669]
     regulated: []
 
@@ -319,17 +319,17 @@ items:
       reliance: manual_verification_required
   - issue: 667
     title: Portfolio status contract and engine (NRT-019)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     regulated_tool:
       intended_use: compute the portfolio status from committed machine sources as an input to management review, never as evidence of validation
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 668
     title: Findings and periodic-review index, queryable (NRT-020)

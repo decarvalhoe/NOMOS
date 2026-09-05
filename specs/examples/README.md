@@ -219,3 +219,5 @@ cue vet specs/nomos-trace-manifest.cue \
 ```
 - `nomos-praxis-evidence.valid.yaml` : échange d'evidence Nomos/Praxis valide (NRT-016 #660), reliance `not_qualified_external_input` ;
 - `nomos-praxis-evidence.invalid-*.yaml` : fixtures négatives (reliance régulée forgée, autorité inversée) qui doivent échouer avec `cue vet specs/nomos-praxis-evidence.cue <fixture> -d '#PraxisEvidenceExchange'`, avec le miroir `specs/nomos-praxis-evidence.schema.json` et avec `nomos evidence praxis-verify`.
+- `portfolio-status.valid.json` : statut de portefeuille calculé sur le mini-dépôt synthétique `cli/internal/portfolio/testdata/minirepo` à horloge fixe (NRT-019 #667) ; régénéré par `nomos portfolio status --repo-root cli/internal/portfolio/testdata/minirepo --now 2026-09-06T00:00:00Z --release-candidate candidate-manifest.json` ;
+- `portfolio-status.invalid-*.json` : fixtures négatives (champ narratif, candidat non `pending`) qui doivent échouer avec `cue vet specs/portfolio-status.cue <fixture> -d '#PortfolioStatus'`.

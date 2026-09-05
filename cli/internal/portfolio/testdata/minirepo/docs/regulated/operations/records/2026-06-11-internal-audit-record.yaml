@@ -1,0 +1,5 @@
+record_id: AUD-1
+record_type: internal_audit
+date: 2026-06-11
+findings:
+  - {id: F1, severity: major, finding: f}
