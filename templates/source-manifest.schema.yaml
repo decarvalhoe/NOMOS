@@ -20,6 +20,42 @@ sources:
     redaction_policy: none
     notes: "Pourquoi cette source existe et comment elle doit être utilisée."
 
+  # #610 — source capturée sur le web. Bloc optionnel ; quand il est présent,
+  # le moteur le valide fail-closed : sans canonical_url, sans content_hash
+  # stable (algo:hex), sans fetched_at ni crawler_version, la source est
+  # REFUSÉE. `undecided` peut être enregistré, jamais admis dans un feed.
+  - id: WEB-EXAMPLE-ART-7
+    path: captures/example/art-7.md          # export Markdown normalisé
+    type: html
+    domain: example-domain
+    priority: primary
+    status: active
+    hash: sha256:replace-with-hash-of-the-markdown-export
+    owner: domain-owner@example.com
+    license: to-be-decided-per-site
+    confidentiality: public
+    allowed_uses: [citation_internal]
+    admission_status: admitted
+    atomization_status: atomized
+    source_role: canonical
+    format_support: supported
+    web_source:
+      canonical_url: https://example.invalid/reglement/art-7
+      fetched_url: https://www.example.invalid/reglement/art-7?utm=x
+      http_status: 200
+      content_type: text/html; charset=utf-8
+      etag: '"abc123"'
+      last_modified: Fri, 04 Sep 2026 10:00:00 GMT
+      content_hash: sha256:replace-with-hash-of-raw-bytes-as-fetched
+      normalized_content_hash: sha256:replace-with-hash-of-normalised-text
+      fetched_at: "2026-09-04T10:00:00Z"
+      crawler_version: recursio/0.4.2
+      scope_policy: in_scope                # seed | in_scope | out_scope
+      robots_decision: allowed              # allowed | disallowed | undecided
+      licence_decision: allowed             # allowed | disallowed | undecided
+      parent_url: https://example.invalid/reglement/
+      depth: 1
+
 enums:
   type:
     - markdown

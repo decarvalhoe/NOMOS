@@ -80,6 +80,9 @@ type ManifestSource struct {
 	SourceRole        string `yaml:"source_role,omitempty"`
 	FormatSupport     string `yaml:"format_support,omitempty"`
 	DerivativeOf      string `yaml:"derivative_of,omitempty"`
+
+	// #610 web-source provenance. Optional; validated fail-closed when present.
+	WebSource *WebSource `yaml:"web_source,omitempty"`
 }
 
 // Admission returns a SourceAdmission projection of the manifest entry.
@@ -94,9 +97,18 @@ func (m ManifestSource) Admission() SourceAdmission {
 	}
 }
 
-// Validate enforces the FSQ-02 admission rules on the manifest entry.
+// Validate enforces the FSQ-02 admission rules on the manifest entry, and the
+// #610 web-source contract when the entry carries provenance.
 func (m ManifestSource) Validate() error {
-	return m.Admission().Validate()
+	if err := m.Admission().Validate(); err != nil {
+		return err
+	}
+	if m.WebSource != nil {
+		if err := m.WebSource.Validate(m.AdmissionStatus == AdmissionAdmitted); err != nil {
+			return fmt.Errorf("web_source: %w", err)
+		}
+	}
+	return nil
 }
 
 // SidecarManifest is the YAML structure matching source-manifest.cue.

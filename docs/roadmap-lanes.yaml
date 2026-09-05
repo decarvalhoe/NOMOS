@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [610, 611, 612, 637, 643]
+    product: [611, 612, 637, 643]
     devops: [641, 644, 639, 645]
     regulated: []
 
@@ -211,13 +211,19 @@ items:
       signature, and the record says so in its own claim boundary.
   - issue: 610
     title: Define the Recursio web-source contract
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: verified
+    evidence_state: present
     claim_state: bounded
     depends_on: []
+    delivered_by: "feat/610-web-source-contract"
+    note: >-
+      Optional web_source block on #Source (CUE) and ManifestSource/FeedSource
+      (Go), validated fail-closed by manifest, feed and `nomos check`; undecided
+      is recordable, never admitted. Robots/licence decisions of a real site
+      remain outside the contract.
   - issue: 611
     title: Verify immutable external corpus snapshots
     state: open

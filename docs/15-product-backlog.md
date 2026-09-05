@@ -51,11 +51,10 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #610 — Define the Recursio web-source contract | #641 — Restore licence-review and no-full-text gates |
-| #611 — Verify immutable external corpus snapshots | #644 — Process real public references and retain evidence |
-| #612 — Recursio to Nomos offline E2E fixture | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
-| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
-| #643 — Static SKOS authoring and distribution | — |
+| #611 — Verify immutable external corpus snapshots | #641 — Restore licence-review and no-full-text gates |
+| #612 — Recursio to Nomos offline E2E fixture | #644 — Process real public references and retain evidence |
+| #637 — Offline Sigstore bundle verification | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
+| #643 — Static SKOS authoring and distribution | #645 — Keyless issuance against injected non-production services |
 <!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is
