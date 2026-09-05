@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [661, 662]
+    product: [662]
     devops: []
     regulated: []
 
@@ -291,17 +291,17 @@ items:
       reliance: supporting_use_until_validated
   - issue: 661
     title: Praxis atom mapping fixture verified against the feed (NRT-017)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [660]
     regulated_tool:
       intended_use: demonstrate and verify the atom-to-Praxis-check mapping on repository fixtures, Nomos remaining the canonical authority
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 662
     title: Praxis activation gate blocked until Nomos proof is verified (NRT-018)

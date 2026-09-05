@@ -112,6 +112,28 @@ For direct database import, Praxis can consume the engine import format:
 }
 ```
 
+## Verified Fixture (NRT-017 #661)
+
+The mapping interface above is exercised on a committed, regenerable fixture:
+
+| Artifact | Path |
+|---|---|
+| approved atom set (real `nomos atomize units` output over the GxP golden source) | `tests/fixtures/praxis/gxp-atoms.json` |
+| mapping fixture, typed by `#PraxisAtomMapping` in `specs/nomos-praxis-evidence.cue` | `specs/examples/nomos-praxis-mapping.valid.json` |
+| negatives (inverted authority, leaked internal field, unapproved atom) | `specs/examples/nomos-praxis-mapping.invalid-*.json` |
+
+```bash
+nomos evidence praxis-mapping-verify --mapping specs/examples/nomos-praxis-mapping.valid.json --atoms tests/fixtures/praxis/gxp-atoms.json
+```
+
+The verifier requires every mapped atom to exist in the atom set with the same
+`content_hash`, `canonical_ref`, type, domain and source position, to be
+`approved` on both sides, to carry at least one Praxis check, and refuses any
+field this document does not expose (`block_id`, `parent_id`, `depth`).
+`authority` is fixed to `nomos`. The fixture demonstrates the flow; it is not
+runtime assurance and does not change this document's `planned` status for
+the regulated activation, which remains gated (see NRT-018 #662).
+
 ## Praxis Responsibilities
 
 Praxis owns the following and Nomos does not interfere:

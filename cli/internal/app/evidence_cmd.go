@@ -81,6 +81,8 @@ func evidenceCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return evidenceVerifyCommand(args[1:], stdout, stderr)
 	case "praxis-verify":
 		return evidencePraxisVerifyCommand(args[1:], stdout, stderr)
+	case "praxis-mapping-verify":
+		return evidencePraxisMappingVerifyCommand(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		printEvidenceUsage(stdout)
 		return 0
@@ -98,6 +100,8 @@ func printEvidenceUsage(w io.Writer) {
 	fmt.Fprintln(w, "  nomos evidence verify --bundle <bundle.json>")
 	fmt.Fprintln(w, "  nomos evidence praxis-verify --exchange <exchange.yaml|json> [--repo-root <dir>] [--out <report.json>]")
 	fmt.Fprintln(w, "      Verify a Nomos/Praxis evidence exchange (NRT-016 #660): shape, authority, references, reliance rule, artifact hashes. Never activates Praxis.")
+	fmt.Fprintln(w, "  nomos evidence praxis-mapping-verify --mapping <mapping.json|yaml> --atoms <atom-set.json> [--out <report.json>]")
+	fmt.Fprintln(w, "      Verify an atom → Praxis check mapping against the Nomos atom set (NRT-017 #661): atoms exist, approved on both sides, same hash and exposed fields; Nomos stays the authority.")
 }
 
 func evidenceHashCommand(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -340,5 +344,49 @@ func evidencePraxisVerifyCommand(args []string, stdout io.Writer, stderr io.Writ
 	}
 	fmt.Fprintf(stdout, "evidence praxis-verify: OK — %s reliance=%s, %d artifact(s) (%d verified), %d scenario(s), hashes_checked=%v → %s\n",
 		report.ExchangeID, report.Reliance, report.Artifacts, report.VerifiedArtifacts, report.Scenarios, report.HashesChecked, *out)
+	return 0
+}
+
+// evidencePraxisMappingVerifyCommand is `nomos evidence praxis-mapping-verify` (NRT-017 #661).
+func evidencePraxisMappingVerifyCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("evidence praxis-mapping-verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	mappingPath := flags.String("mapping", "", "mapping document, JSON or YAML (required)")
+	atomsPath := flags.String("atoms", "", "Nomos atom set JSON the mapping names (required)")
+	out := flags.String("out", "", "write the verification report here (default: stdout)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *mappingPath == "" || *atomsPath == "" {
+		fmt.Fprintln(stderr, "evidence praxis-mapping-verify: --mapping and --atoms are required")
+		return 2
+	}
+	m, err := compliance.LoadPraxisMapping(*mappingPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-mapping-verify: REFUSED — %v\n", err)
+		return 1
+	}
+	report, err := compliance.VerifyPraxisMapping(m, *atomsPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-mapping-verify: REFUSED, no report written — %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(report)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, write); err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-mapping-verify: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "evidence praxis-mapping-verify: OK — %s: %d/%d atom(s) mapped, %d check(s) bound, atom set %s → %s\n",
+		report.MappingID, report.AtomsMapped, report.AtomsInSet, report.ChecksBound, report.AtomSetSha256[:19], *out)
 	return 0
 }

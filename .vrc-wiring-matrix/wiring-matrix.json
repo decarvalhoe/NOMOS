@@ -2738,6 +2738,55 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "praxis_atom_mapping_fixture",
+      "title": "Fixture de mapping atomes Nomos → checks Praxis, vérifiée contre le jeu d'atomes (NRT-017 #661) — jeu d'atomes RÉEL (`nomos atomize units` sur la source golden GxP, reproductible octet pour octet, testé), mapping typé `#PraxisAtomMapping` (contrat #660) : uniquement les champs exposés par praxis-atom-mapping.md, struct fermée (block_id/parent_id/depth refusés au chargement), `authority: nomos` seule valeur acceptée. Moteur Go `compliance.VerifyPraxisMapping` + `nomos evidence praxis-mapping-verify --mapping --atoms` : feed_ref.sha256 = hash du jeu d'atomes, chaque atome mappé existe, approuvé DES DEUX CÔTÉS (le mapping ne peut pas certifier un atome pending), même content_hash, même canonical_ref/type/domaine/fichier/ligne, au moins un check Praxis. Fixtures négatives vettées en CI (CUE) : autorité inversée, champ interne fuité, atome non approuvé. 15 refus nommés testés côté moteur, mutations tuées. NON revendiqué : assurance runtime, conformité, activation de Praxis (NRT-018 #662).",
+      "pillar": "P1",
+      "claim_level": "fixture (flux d'evidence démontré et vérifié sur fixture ; aucune assurance runtime, aucune activation)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/compliance/praxis_mapping.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/evidence_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/compliance/praxis_mapping_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_praxis_evidence_contract.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2775,9 +2824,9 @@
     }
   ],
   "summary": {
-    "capabilities": 50,
+    "capabilities": 51,
     "computed": {
-      "real": 39,
+      "real": 40,
       "partial": 0,
       "sidecar": 10,
       "stub": 0,
