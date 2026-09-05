@@ -108,7 +108,7 @@ Nomos remains split into clear responsibility layers:
 | Adapters | Stack-specific detection and extraction capabilities with declared limits. |
 | Evidence | Reports, attestations, proof files, release bundles, and ALCOA+ metadata. |
 | Regulated docs | Quality, validation, supplier, control, approval, retention, and claim-governance records. |
-| Control plane | Optional portfolio-level registry and dashboard, not required for the alpha proof. |
+| Portfolio views | `nomos portfolio status` (computed status of committed evidence) and `nomos portfolio projects` (multi-project view of manifests and exceptions); no hosted control plane exists (ADR-0007). |
 
 ## Active Product Risks
 

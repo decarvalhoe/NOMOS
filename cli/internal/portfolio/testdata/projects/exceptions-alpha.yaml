@@ -2,12 +2,22 @@ exceptions:
   - id: EXC-ALPHA-001
     summary: "Allow deploy without full coverage"
     owner: alice@example.com
+    approver: quality@example.com
     severity: medium
     status: active
+    created_at: "2026-01-15"
     expires_at: "2026-12-31"
+    reason: "coverage tooling migration"
+    scope: api
+    decision_ref: "DEC-2026-001"
   - id: EXC-ALPHA-002
     summary: "Legacy bypass expired"
     owner: alice@example.com
+    approver: quality@example.com
     severity: high
     status: active
+    created_at: "2024-06-01"
     expires_at: "2025-01-01"
+    reason: "legacy path"
+    scope: ui
+    decision_ref: "DEC-2024-009"

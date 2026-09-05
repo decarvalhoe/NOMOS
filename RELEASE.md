@@ -63,7 +63,7 @@ python -m unittest discover -s tests -v
 
 GitHub Actions gates:
 
-- Go vet and test for CLI and control-plane packages;
+- Go vet and test for the CLI (the multi-project view lives in `cli/internal/portfolio`, ADR-0007);
 - CUE vet;
 - YAML lint;
 - corpus tests on Linux, macOS, and Windows;

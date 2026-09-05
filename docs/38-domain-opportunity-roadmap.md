@@ -414,7 +414,7 @@ The domain opportunities above share the same technical substrate.
 | GitHub workflow productization | Makes NOMOS deployable on customer corpora. | NGW shipped. | Need domain profiles inside workflow config and risk-based publish policy. |
 | ALM/QMS interop | Lets NOMOS integrate instead of replacing enterprise systems. | ADR exists for ReqIF/ALM boundaries. | Need export adapters and evidence mapping. |
 | Verifiable evidence | Lets reviewers reconstruct and verify without trust in narrative. | Attestations and hashes exist. | Need signing, transparency log, and verification CLI. |
-| Control plane | Needed for multi-corpus, multi-client, and periodic review. | `control-plane/` exists. | Need portfolio registry and dashboard scope. |
+| Control plane | Needed for multi-corpus, multi-client, and periodic review. | `nomos portfolio` views exists. | Need portfolio registry and dashboard scope. |
 
 ## Release Train Recommendation
 

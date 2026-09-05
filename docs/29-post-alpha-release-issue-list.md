@@ -39,7 +39,6 @@ operating controls, or claim-boundary clarity only.
 | Product queue | DevOps queue |
 |---|---|
 | #668 — Findings and periodic-review index, queryable (NRT-020) | — |
-| #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan

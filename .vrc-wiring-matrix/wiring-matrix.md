@@ -62,6 +62,8 @@
 | `praxis_activation_gate` | P1 | real | real | ✅ | — | — |
 | `portfolio_status_engine` | P1 | real | real | ✅ | — | — |
 | `review_record_index` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `portfolio_multi_project_view` | P1 | real | real | ✅ | — | — |
+| `control_plane_archive` | P1 | absent | absent | ✅ | — | — |
 
 ## Generic checks
 
@@ -69,7 +71,7 @@
 
 ## Summary
 
-- capabilities: 54 (real=42, partial=0, sidecar=11, stub=0, absent=1)
+- capabilities: 56 (real=43, partial=0, sidecar=11, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

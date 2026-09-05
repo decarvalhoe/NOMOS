@@ -32,10 +32,6 @@ surfaces:
     type: docs
     path: specs/
     critical: true
-  - name: control-plane
-    type: api
-    path: control-plane/
-    stack: go
 toolchain:
   test:
     - go test ./...

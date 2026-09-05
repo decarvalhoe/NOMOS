@@ -40,7 +40,6 @@ Product (or the reverse).
 | Product queue | DevOps queue |
 |---|---|
 | #668 — Findings and periodic-review index, queryable (NRT-020) | — |
-| #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
