@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: [612, 637, 643]
-    devops: [644, 639, 645]
+    devops: [639, 645]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -187,19 +187,25 @@ items:
       itself stays #194.
   - issue: 644
     title: Process real public references and retain evidence
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: verified
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 196
     regulated_tool:
       intended_use: capture and process public reference sources with retained provenance evidence
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
+    delivered_by: "fix/644-real-public-references"
+    note: >-
+      Register-driven; processed = matching local capture + six stages green;
+      artifacts retained content-addressed outside the repo, receipts committed;
+      measured 2026-09-05: 23 classified, 20 hash-only captures, 3 blocked named,
+      0 processed end to end. Licensed artifacts stay #196.
   - issue: 642
     title: Bind rule-execution request and persisted result integrity
     state: closed

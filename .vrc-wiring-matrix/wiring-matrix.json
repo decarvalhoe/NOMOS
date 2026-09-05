@@ -2341,6 +2341,55 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "public_reference_processing",
+      "title": "Traitement des vraies références publiques (#644) — le pilote est conduit par le registre canonique (classifieur du gate de licence, jamais une liste codée), et une référence ne compte comme TRAITÉE que si un snapshot daté (URL officielle, date, sha256, taille, licence, identité de version) existe, qu’une capture locale HORS dépôt porte exactement ce sha256, et que scan, manifest, feed, body ledger, attestation ET strict gate sortent tous à 0. Tout le reste est `blocked` avec sa raison, jamais une ligne manquante. Artefacts retenus content-adressés hors dépôt (feed et ledger portent du texte tiers dérivé) ; receipts commités qui les adressent. Un octet changé = hash différent = `capture_hash_mismatch` + receipt périmé nommé. Mesure du 2026-09-05 : 23 classées, 20 capturées hash-only, 3 bloquées nommées (dont un 404 = URL du registre périmée), 0 traitées bout en bout ; la fixture in-repo passe six étapes et n’est jamais comptée comme externe. Sidecar : guard Python, aucun moteur Go.",
+      "pillar": "P1",
+      "claim_level": "evidence-count only (dit ce qui a été capturé et traité ; aucun claim sur le contenu des références)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/process_public_bibles.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/reference-basis/public-source-snapshots.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/reference-basis/public-bibles-processing/README.md",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_public_bibles_processing.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2377,11 +2426,11 @@
     }
   ],
   "summary": {
-    "capabilities": 43,
+    "capabilities": 44,
     "computed": {
       "real": 34,
       "partial": 0,
-      "sidecar": 8,
+      "sidecar": 9,
       "stub": 0,
       "absent": 1
     },

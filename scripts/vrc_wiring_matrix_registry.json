@@ -930,6 +930,23 @@
         {"path": "cli/internal/corpus/testdata/external-snapshot/snapshot.json", "contains": ["nomos.external-snapshot.v1", "content_hash_root"]},
         {"path": "docs/02-source-registry.md", "contains": ["Snapshots Externes Immuables (#611)", "SNAPSHOT_ROOT_MISMATCH"]}
       ]
+    },
+{
+      "id": "public_reference_processing",
+      "title": "Traitement des vraies références publiques (#644) — le pilote est conduit par le registre canonique (classifieur du gate de licence, jamais une liste codée), et une référence ne compte comme TRAITÉE que si un snapshot daté (URL officielle, date, sha256, taille, licence, identité de version) existe, qu\u2019une capture locale HORS dépôt porte exactement ce sha256, et que scan, manifest, feed, body ledger, attestation ET strict gate sortent tous à 0. Tout le reste est `blocked` avec sa raison, jamais une ligne manquante. Artefacts retenus content-adressés hors dépôt (feed et ledger portent du texte tiers dérivé) ; receipts commités qui les adressent. Un octet changé = hash différent = `capture_hash_mismatch` + receipt périmé nommé. Mesure du 2026-09-05 : 23 classées, 20 capturées hash-only, 3 bloquées nommées (dont un 404 = URL du registre périmée), 0 traitées bout en bout ; la fixture in-repo passe six étapes et n\u2019est jamais comptée comme externe. Sidecar : guard Python, aucun moteur Go.",
+      "pillar": "P1",
+      "claim_level": "evidence-count only (dit ce qui a été capturé et traité ; aucun claim sur le contenu des références)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover -s tests"]}
+      ],
+      "sidecar": [
+        {"path": "scripts/process_public_bibles.py", "contains": ["def process_public_source(", "def capture_live(", "def retain(", "capture_hash_mismatch", "stale_receipts", "counted_as_external", "external_public_sources_processed"]},
+        {"path": "docs/regulated/reference-basis/public-source-snapshots.yaml", "contains": ["nomos-public-source-snapshots-v1", "captured_hash_only", "hash_only_no_full_text"]},
+        {"path": "docs/regulated/reference-basis/public-bibles-processing/README.md", "contains": ["Processed end to end", "counted_as_external: false", "capture_hash_mismatch"]},
+        {"path": "tests/test_public_bibles_processing.py", "contains": ["test_matching_capture_completes_the_chain_and_is_retained", "test_one_changed_byte_is_a_named_mismatch_and_the_old_receipt_is_stale", "test_hash_only_capture_without_content_is_not_processed", "test_acceptance_refuses_a_processed_source_without_a_receipt"]}
+      ]
     }
   ]
 }

@@ -1,0 +1,231 @@
+schema_version: nomos-public-source-snapshots-v1
+sources:
+- reference_id: EU-EUDRALEX-V4-ANNEX11
+  official_url: https://health.ec.europa.eu/medicinal-products/eudralex/eudralex-volume-4_en
+  version_identity: Annex 11 revision January 2011 listed by European Commission
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:3bd19a597e91c93b87e0189eaa1389a1ea746a3c3ac37a336c0ce88f4bd4cb96
+  size_bytes: 92510
+  content_type: text/html; charset=UTF-8
+- reference_id: FDA-21CFR11-11.10
+  official_url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11/subpart-B/section-11.10
+  version_identity: current as of 2026-04-30 eCFR
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:e2323060da952ad3456924dfad8b7e3da4c632313b61368edbfd33d6589cccea
+  size_bytes: 10596
+  content_type: text/html; charset=utf-8
+- reference_id: FDA-21CFR820-QMSR
+  official_url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-820
+  version_identity: current as of 2026-04-30 eCFR
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:eb25b051145a2a37d443248350e2be6b8b0384e0073c2788197041b416fda9d2
+  size_bytes: 10596
+  content_type: text/html; charset=utf-8
+- reference_id: FDA-CSA-2025
+  official_url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/computer-software-assurance-production-and-quality-system-software
+  version_identity: Final guidance, September 2025
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: blocked
+  blocked_reason: 'fetch_failed: HTTPError: HTTP Error 404: Not Found'
+  checked_on: '2026-09-05'
+- reference_id: FDA-DATA-INTEGRITY-CGMP-2018
+  official_url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/data-integrity-and-compliance-drug-cgmp-questions-and-answers
+  version_identity: Final guidance, December 2018
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:605a1f617a79b627024edf699b3fd40ba92421b069157c887605c41191810044
+  size_bytes: 36146
+  content_type: text/html; charset=UTF-8
+- reference_id: FDA-GPSV-2002
+  official_url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/general-principles-software-validation
+  version_identity: Final guidance, January 2002
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:6d031d3a2a1c9f998feb6f5b40f603eaac247860175f807ae53d11ea93123815
+  size_bytes: 34924
+  content_type: text/html; charset=UTF-8
+- reference_id: GITHUB-ARTIFACT-ATTESTATIONS
+  official_url: https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:21ce94ad96ab511a3dd70d2a1d04db64d86d90cd6bba8e3db60c90252b6dce8a
+  size_bytes: 378402
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-AUDIT-LOG
+  official_url: https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:29aa6648fddca560f7dee79548947c4ee1cdf0dba12199fed82fe821d4af0159
+  size_bytes: 331365
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-BRANCH-PROTECTION
+  official_url: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:9fb9fbeacbc02752b67d6c26041eefe18a698b95cbe586f05562d4b0dce8ec7c
+  size_bytes: 178362
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-CODE-SCANNING
+  official_url: https://docs.github.com/en/code-security/concepts/code-scanning/about-code-scanning
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:b0cbd007792e56839b36bfd186ec2dfeab0cb3d981a3f235042920ac8baa2227
+  size_bytes: 562531
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-CODEOWNERS
+  official_url: https://docs.github.com/articles/about-code-owners
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:38015c0a3b6a22f1c08025bd48649d9e42d0d8c894e1e0ded98ce9dbb435f2f8
+  size_bytes: 250175
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-ENVIRONMENTS
+  official_url: https://docs.github.com/en/actions/reference/deployments-and-environments
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:06e7111aa9877067d7b4256a40e33f87a90c5ee2437badf54de1cc344585b012
+  size_bytes: 332003
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-ISSUE-FORMS
+  official_url: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:6a23ec041bc27266249672421e70be85ef929537711d06b98a8f3c7f533a0a28
+  size_bytes: 270424
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-RULESETS
+  official_url: https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:1b368765297569809db6ead2495fbda8b6ccdb76846429feeeae2b0cb3531605
+  size_bytes: 224278
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-SECRET-SCANNING
+  official_url: https://docs.github.com/en/code-security/concepts/secret-security/about-secret-scanning
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:4c93116c6e64af5e9b26ad9e496dec540fdadba5a54e8983b05c8e9b0c39603d
+  size_bytes: 581066
+  content_type: text/html; charset=utf-8
+- reference_id: GITHUB-WORKFLOW-ARTIFACTS
+  official_url: https://docs.github.com/actions/guides/storing-workflow-data-as-artifacts
+  version_identity: GitHub Docs checked 2026-05-02
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:bbc875d0ca2e09c849814d570ea4646ba4eb62ddbb74ed8127a3a3d696dae4f0
+  size_bytes: 389257
+  content_type: text/html; charset=utf-8
+- reference_id: ICH-Q10
+  official_url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/q10-pharmaceutical-quality-system
+  version_identity: Final guidance, April 2009
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:3eba52c437639d72b0935c7c5510897c70685f3cd2dc0b4a8b6dc78151a3e3ec
+  size_bytes: 34307
+  content_type: text/html; charset=UTF-8
+- reference_id: ICH-Q9R1
+  official_url: https://www.hhs.gov/guidance/document/q9r1-quality-risk-management
+  version_identity: FDA issue date 2023-05-03
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: blocked
+  blocked_reason: 'fetch_failed: HTTPError: HTTP Error 403: Forbidden'
+  checked_on: '2026-09-05'
+- reference_id: MHRA-GXP-DATA-INTEGRITY-2018
+  official_url: https://www.gov.uk/government/publications/guidance-on-gxp-data-integrity
+  version_identity: Published 2018-03-09; updated 2021-09-27
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:16cfec2b89730428cee0648d6a6a2ea3c8af6bddc9f72478f1af70ac07ccc83f
+  size_bytes: 76313
+  content_type: text/html; charset=utf-8
+- reference_id: NASA-NPR-7150-2D
+  official_url: https://nodis3.gsfc.nasa.gov/displayAll.cfm?Internal_ID=N_PR_7150_0002_&page_name=all
+  version_identity: NPR 7150.2D
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:d11cc25b487d89eb3694ec9e9359b4724ea185ad55a4a8ab555e8c2e43d8f3b4
+  size_bytes: 127872
+  content_type: text/html;charset=UTF-8
+- reference_id: NIST-AI-RMF-1
+  official_url: https://www.nist.gov/itl/ai-risk-management-framework
+  version_identity: AI RMF 1.0 released 2023-01-26; Generative AI Profile released
+    2024-07-26
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:7ed427a5729e8940056652ed63fa124902de6169ae7feb3f49f0e460e0d458a0
+  size_bytes: 93781
+  content_type: text/html; charset=UTF-8
+- reference_id: NIST-SP-800-218
+  official_url: https://csrc.nist.gov/pubs/sp/800/218/final
+  version_identity: Final, February 2022
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: blocked
+  blocked_reason: 'fetch_failed: URLError: <urlopen error [Errno -3] Temporary failure
+    in name resolution>'
+  checked_on: '2026-09-05'
+- reference_id: NIST-SP-800-53R5
+  official_url: https://csrc.nist.gov/Pubs/sp/800/53/r5/upd1/Final
+  version_identity: Rev. 5 with updates as of 2020-12-10 and later release data
+  licence_or_policy: public official source; hash only, no full text committed
+  storage_policy: hash_only_no_full_text
+  status: captured_hash_only
+  captured_on: '2026-09-05'
+  sha256: sha256:f714a7fa2832ba61dbbc80f61b70dcd810b8b401a508813944fe52c4e72d5a51
+  size_bytes: 57249
+  content_type: text/html; charset=utf-8
+claim_boundary: Hash-only captures of public official sources, dated. A hash proves
+  what the URL served that day; it is not a copy and it is not a statement about the
+  content.
