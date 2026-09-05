@@ -100,26 +100,6 @@ jobs:
           go test ./internal/compliance/...
           go test ./internal/guard/...
 
-  # VRC-38 (#575, D6): the core/pack coupling guard. Runs ONLY on PRs labeled
-  # `pack` — a pack PR touching core paths is blocking unless the same PR
-  # touches an ADR (docs/adr/*.md) that justifies the core change.
-  pack-coupling:
-    name: Pack core-coupling guard (VRC-38)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'pack')
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install --quiet pyyaml
-      - name: Compute coupling metric on the PR diff
-        run: |
-          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
-          python scripts/pack_core_coupling_check.py --changed-files /tmp/changed.txt
-
   cue-vet:
     name: CUE vet
     runs-on: ubuntu-latest

@@ -1383,9 +1383,9 @@
     },
     {
       "id": "pack_core_coupling_guard",
-      "title": "Core/pack coupling metric + CI guard — « changements core requis par nouveau pack », cible 0, ADR as the only escape hatch (VRC-38 #575, D6)",
+      "title": "Core/pack coupling metric + always-reporting CI guard — « changements core requis par nouveau pack », cible 0; pack-tree changes require the exact `pack` label, then an ADR is the only escape hatch for core changes. The dedicated workflow reacts to label addition/removal instead of silently skipping (#632, VRC-38 #575, D6)",
       "pillar": "D6",
-      "claim_level": "measured (manifest mode) + enforced on pack-labeled PRs (diff mode)",
+      "claim_level": "measured (manifest mode) + always evaluated on relevant PR events (diff mode)",
       "promotion_issue": "",
       "expected": "sidecar",
       "computed": "sidecar",
@@ -1400,7 +1400,7 @@
         "adversarial_tests": [],
         "ci_gates": [
           {
-            "path": ".github/workflows/ci.yml",
+            "path": ".github/workflows/pack-coupling.yml",
             "ok": true,
             "missing": []
           }

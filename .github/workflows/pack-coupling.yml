@@ -1,0 +1,41 @@
+name: Pack Core-Coupling Guard
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pack-coupling-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pack-coupling:
+    name: Pack core-coupling guard (VRC-38)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: python -m pip install --quiet pyyaml
+
+      - name: Enforce pack label and compute coupling metric
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PACK_LABEL_PRESENT: "${{ contains(github.event.pull_request.labels.*.name, 'pack') }}"
+        run: |
+          git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA" -- \
+            > "$RUNNER_TEMP/pack-coupling-changed.txt"
+          python scripts/pack_core_coupling_check.py \
+            --changed-files "$RUNNER_TEMP/pack-coupling-changed.txt" \
+            --pack-label-present "$PACK_LABEL_PRESENT"
