@@ -217,3 +217,5 @@ cue vet specs/nomos-trace-manifest.cue \
 # expected: non-zero exit; output.commit_sha flagged as required by
 # the publish_mode=pull_request conditional.
 ```
+- `nomos-praxis-evidence.valid.yaml` : échange d'evidence Nomos/Praxis valide (NRT-016 #660), reliance `not_qualified_external_input` ;
+- `nomos-praxis-evidence.invalid-*.yaml` : fixtures négatives (reliance régulée forgée, autorité inversée) qui doivent échouer avec `cue vet specs/nomos-praxis-evidence.cue <fixture> -d '#PraxisEvidenceExchange'`, avec le miroir `specs/nomos-praxis-evidence.schema.json` et avec `nomos evidence praxis-verify`.

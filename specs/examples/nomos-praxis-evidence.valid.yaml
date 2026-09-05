@@ -1,0 +1,65 @@
+# NRT-016 (#660) — a well-formed exchange at the ONLY reliance level a
+# not-yet-verified Nomos allows: not_qualified_external_input. Artifact hashes
+# below are those of the referenced repository files; `nomos evidence
+# praxis-verify --repo-root .` recomputes them.
+schema_version: nomos-praxis-evidence-exchange-v1
+exchange_id: PRAXIS-EXCHANGE-FIXTURE-2026-09-05
+generated_at: 2026-09-05T12:00:00Z
+producer:
+  product: nomos
+  version: 0.1.0-ALPHA
+consumer:
+  product: praxis
+  version: fixture-0.0.0
+nomos_artifacts:
+  - artifact_id: NOMOS-CONTROL-MATRIX
+    kind: control_matrix
+    path: docs/regulated/control-matrix/nomos-control-matrix.yaml
+    sha256: sha256:5e3fee91aa600cbc84dc578ea77526d5eeb735b20ef73588b12a3953a33eb9cf
+    verification:
+      state: unverified
+    claim_ids: [CTL-DI-001, CTL-VAL-001]
+  - artifact_id: NOMOS-EVIDENCE-LEDGER
+    kind: evidence_ledger
+    path: docs/regulated/evidence-index/evidence-ledger.yaml
+    sha256: sha256:7a3695a49135a25e86f687e0009fdf17bd51b5cd29830b14a0290a1e699a4268
+    verification:
+      state: unverified
+praxis_scenarios:
+  - scenario_id: PRX-SCN-001
+    test_id: praxis.schema-validation
+    nomos_claim_ids: [CTL-DI-001]
+    nomos_atom_ids: []
+    result: pass
+    evidence_sha256: sha256:0000000000000000000000000000000000000000000000000000000000000001
+    evidence_ref: praxis://fixture/runs/001
+    executed_at: 2026-09-05T11:59:00Z
+    praxis_version: fixture-0.0.0
+  - scenario_id: PRX-SCN-002
+    test_id: praxis.compliance-gate
+    nomos_claim_ids: [CTL-VAL-001]
+    nomos_atom_ids: []
+    result: fail
+    evidence_sha256: sha256:0000000000000000000000000000000000000000000000000000000000000002
+    evidence_ref: praxis://fixture/runs/002
+    executed_at: 2026-09-05T11:59:30Z
+    praxis_version: fixture-0.0.0
+runtime_findings:
+  - finding_id: PRX-FND-001
+    scenario_id: PRX-SCN-002
+    severity: major
+    status: open
+    summary: Fixture finding raised by the failing scenario; illustrates the CAPA path only.
+    capa_id: PRX-CAPA-001
+capa:
+  - capa_id: PRX-CAPA-001
+    finding_ids: [PRX-FND-001]
+    control_ids: [CTL-VAL-001]
+    status: open
+    owner: fixture-quality-owner
+    opened_at: 2026-09-05T12:00:00Z
+reliance: not_qualified_external_input
+claim_boundary: >-
+  Fixture exchange. Nomos artifacts are referenced by hash but are NOT verified,
+  so Praxis may use this only as not-qualified external input: schema drift
+  checks, dry runs, fixture design. No regulated evidence, no activation.
