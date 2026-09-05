@@ -25,6 +25,7 @@ v0.2 Fidelity Closure
   -> v0.4 Reference tooling and public provenance
   -> v0.5 Evidence and release-support tooling
   -> v0.6 Nomos/Praxis Contract
+  -> v0.9 Portfolio Governance (machine-readable status, no narrative)
 ```
 
 No issue below may be used to claim certification, formal validation,
@@ -37,7 +38,9 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #667 — Portfolio status contract and engine (NRT-019) | #669 — Periodic review record index and guard (NRT-021) |
+| #668 — Findings and periodic-review index, queryable (NRT-020) | — |
+| #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
@@ -78,6 +81,14 @@ NRT-016 #660 Nomos/Praxis evidence schema
   -> NRT-018 #662 Praxis activation gate
   -> #320 closed technical boundary; regulated reliance remains plan 28
   -> v0.6 release decision
+
+NRT-019 #667 portfolio status contract + engine (`nomos portfolio status`)
+  -> NRT-020 #668 findings and periodic-review index, queryable
+  -> NRT-022 #670 control-plane decision under ADR-0006 (wire or remove)
+  -> v0.9 product decision
+
+NRT-021 #669 periodic-review record index + guard (DevOps, independent sidecar)
+  -> nonblocking input to NRT-020
 ```
 
 Recursio is an independent, fixture-first product sequence:
@@ -571,6 +582,158 @@ python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evid
 
 Claim impact: allows scoped Nomos/Praxis compatibility claims without
 turning Praxis into unverified regulated evidence.
+
+## v0.9.0 - Portfolio Governance
+
+Goal: make the portfolio state — capabilities, roadmap lanes, open findings,
+claim levels, evidence bundles and periodic review records — **queryable from
+machine sources only**, so that a management review, an audit or a customer
+question is answered from computed status, never from narrative memory. This
+wave is also the moment ADR-0006 named for deciding the archived control-plane
+code: it now has a candidate production caller.
+
+Boundary: portfolio status is a computed *view* of committed evidence. It does
+not create evidence, approve anything, or lift a claim; a green view of an
+unvalidated tool is still an unvalidated tool.
+
+### NRT-019 - Portfolio Status Contract And Engine
+
+GitHub mapping: `#667` (product, autonomous). Capability-claim (VRC-03):
+production caller `nomos portfolio status`, registered in `app.go`.
+
+Deliverables:
+
+- `specs/portfolio-status.cue` (`#PortfolioStatus` v1, closed structs): every
+  section derives from a named machine source with `path`, `sha256` and
+  `as_of`; sections: capabilities (wiring registry + generated matrix),
+  roadmap lanes and queues, evidence-ledger gaps, CAPA records, periodic
+  review records, latest release-candidate manifest, Praxis activation
+  verdict, repeated-CI measure, competence status, domain packs,
+  public-source snapshots.
+- Go engine `cli/internal/portfolio` + `nomos portfolio status --repo-root
+  [--out] [--format json|md]`: numbers are computed from files, never read
+  from prose; an unavailable source yields a section `unavailable` with its
+  reason, never a silent omission; a dated source older than the freshness
+  policy is flagged `stale`, not hidden.
+- CI step publishing `portfolio-status.json` as a workflow artifact and
+  asserting that the capabilities section equals the committed wiring matrix.
+
+Definition of done:
+
+- Editing any source moves its `sha256` and the derived numbers; removing a
+  source turns its section `unavailable`; a free-text field in the status is
+  refused by the contract (closed structs, `cue vet` negative fixture).
+- Adversarial tests and mutation-test on every rule; registry entry
+  `portfolio_status_engine` (`real`).
+
+Verification:
+
+```bash
+cd cli && go test ./internal/portfolio/... -run Portfolio -v
+cue vet specs/portfolio-status.cue specs/examples/portfolio-status.valid.json -d '#PortfolioStatus'
+```
+
+Claim impact: allows "portfolio status is computed from committed evidence".
+It lifts no regulated claim.
+
+### NRT-020 - Findings And Periodic-Review Index, Queryable
+
+GitHub mapping: `#668` (product, autonomous; depends on NRT-019).
+Production caller `nomos portfolio findings` / `nomos portfolio reviews`.
+
+Deliverables:
+
+- Normalise every open finding across sources into `findings[]` with a stable
+  id (`<source>:<id>`), severity, status, opened date, owner when recorded,
+  blocked claims and lane: evidence-ledger gaps, CAPA, unmet activation-gate
+  requirements, blocked public-source captures, wiring-matrix mismatches,
+  registry/GitHub state divergence.
+- Index periodic review records (management review, internal audit, role
+  assignment) into `reviews[]`: record id, type, date, decisions, actions with
+  status, and the artifacts each input cites, verified to exist.
+- Query surface: `--severity`, `--status`, `--source`, `--lane`, `--format`.
+- Consistency findings: a CAPA closed on an effectiveness artifact that no
+  longer exists, a review decision citing a missing artifact, a gap closed in
+  the ledger but still open in a review action → each becomes a finding.
+
+Definition of done:
+
+- Every finding is traceable to its source file and hash; a fabricated
+  finding (no source) is refused; adversarial tests for each consistency
+  rule; registry entry `portfolio_findings_index` (`real`).
+
+Verification:
+
+```bash
+cd cli && go test ./internal/portfolio/... -run Findings -v
+```
+
+Claim impact: "open findings are queryable" — it does not close, waive or
+prioritise any of them.
+
+### NRT-021 - Periodic Review Record Index And Guard
+
+GitHub mapping: `#669` (DevOps, autonomous, independent sidecar).
+Production caller: `scripts/portfolio_review_index.py` in CI.
+
+Deliverables:
+
+- Python sidecar generating `docs/regulated/operations/records/index.json`
+  (`nomos-review-record-index-v1`) from the committed review, audit, role and
+  CAPA records: ids, types, dates, decision and action counts, cited
+  artifacts.
+- Guard: every cited artifact path exists; every decision has an id; every
+  action has an owner and a status; records are dated; the committed index
+  equals a fresh build (`git diff --exit-code`, CI).
+
+Definition of done:
+
+- A cited artifact removed, an action without owner, or a stale index turn
+  CI red; adversarial tests; registry entry `review_record_index` (`sidecar`).
+
+Verification:
+
+```bash
+python scripts/portfolio_review_index.py --root . --check
+```
+
+Claim impact: none on regulated claims; it makes the QMS records countable.
+
+### NRT-022 - Control-Plane Decision Under ADR-0006
+
+GitHub mapping: `#670` (product, autonomous; depends on NRT-019).
+
+ADR-0006 archived `control-plane/` (registry, dashboard, storage) until a
+capability-claim issue declared a production caller at the v0.9.x milestone.
+NRT-019 provides that caller for portfolio status; the archived code's own
+purpose is the **multi-project** view (project manifests + exceptions).
+
+Deliverables:
+
+- ADR-0007 recording the decision, one of:
+  - **wire**: `nomos portfolio projects --project <nomos.project.yaml>...
+    [--exceptions ...]` calls `dashboard.BuildPortfolio` for the multi-project
+    view; the packages move under the CLI module (or are imported), CI gating
+    is restored in the same PR, and every rule gains adversarial tests
+    (expired exception → visible, unknown verdict → counted, filter → exact);
+  - **remove**: `control-plane/` is deleted, the root repository map and
+    docs/14 architecture row are updated, and a `must_be_absent` probe keeps
+    it out.
+- Either way, no archived-but-untested code remains in the tree.
+
+Definition of done:
+
+- Registry: `portfolio_multi_project_view` (`real`) or `control_plane`
+  (`absent` with probe); ADR-0006 marked superseded/closed by ADR-0007.
+
+Verification:
+
+```bash
+cd cli && go test ./... && uv run --with pyyaml python scripts/vrc_wiring_matrix.py --root .
+```
+
+Claim impact: "the repository map has no grey zone" (docs/45 E7) becomes
+true again at v0.9; no regulated claim.
 
 ## Release-Level Verification
 

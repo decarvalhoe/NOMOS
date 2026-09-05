@@ -93,7 +93,7 @@ Nomos can convert any source into legally defensible product law without custome
 | `v0.6.x` | Publish the Nomos-to-Praxis evidence contract. | Praxis can consume verified Nomos artifacts without weakening the Nomos claim boundary. |
 | `v0.7.x` | Add regulated domain profile packs for selected verticals. | Domain profile schema, claim ladder, reference policy, and multi-domain fixtures are green before any vertical pack is advertised. |
 | `v0.8.x` | Add verifiable evidence capabilities. | Evidence bundles can be hashed, signed or prepared for signing, verified, and optionally recorded through a transparency mechanism. |
-| `v0.9.x` | Mature control-plane and portfolio governance. | Multi-corpus/domain portfolio status, open findings, claim level, evidence bundles, and periodic review records are queryable without relying on narrative. |
+| `v0.9.x` | Mature control-plane and portfolio governance (planned as NRT-019..022 in [29](29-post-alpha-release-issue-list.md#v090---portfolio-governance)). | Multi-corpus/domain portfolio status, open findings, claim level, evidence bundles, and periodic review records are queryable without relying on narrative. |
 | `v1.0` | Stable product release candidate. | Support model, compatibility policy, security process, stable contracts and customer integration guide are complete. A `v1.0` product version does not by itself establish validation for a regulated intended use; that status comes from roadmap 28. |
 
 ## Architecture Direction

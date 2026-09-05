@@ -17,8 +17,8 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: []
-    devops: []
+    product: [667, 668, 670]
+    devops: [669]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -317,6 +317,62 @@ items:
       impact: decision
       validation_state: technically_verified
       reliance: manual_verification_required
+  - issue: 667
+    title: Portfolio status contract and engine (NRT-019)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: compute the portfolio status from committed machine sources as an input to management review, never as evidence of validation
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 668
+    title: Findings and periodic-review index, queryable (NRT-020)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [667]
+    regulated_tool:
+      intended_use: index and query open findings and periodic review records from committed sources without closing, waiving or prioritising any of them
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 670
+    title: Control-plane decision under ADR-0006, wire or remove (NRT-022)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [667]
+    regulated_tool:
+      intended_use: either expose the archived multi-project view behind a real CLI caller with restored CI gating, or remove the archived code; leave no untested archived code
+      impact: support
+      validation_state: planned
+      reliance: manual_review
+  - issue: 669
+    title: Periodic review record index and guard (NRT-021)
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: index committed review, audit, role and CAPA records and verify their cited artifacts exist; the records themselves stay human acts
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
   - issue: 192
     title: Acquire ISO 13485
     state: open

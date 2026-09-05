@@ -51,7 +51,9 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #667 — Portfolio status contract and engine (NRT-019) | #669 — Periodic review record index and guard (NRT-021) |
+| #668 — Findings and periodic-review index, queryable (NRT-020) | — |
+| #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is
@@ -274,6 +276,35 @@ Domain packs may be advertised only as scoped evidence-support packages.
 They do not create compliance, certification, legal advice, medical
 validation, financial regulatory approval, or high-assurance
 qualification claims.
+
+### EPIC G - Portfolio Governance
+
+Goal: answer "where does the portfolio stand" from computed status, never from
+narrative (roadmap v0.9.x). Planned as NRT-019 to NRT-022 in
+[29](29-post-alpha-release-issue-list.md#v090---portfolio-governance).
+
+Work:
+
+- Portfolio status contract and engine over machine sources only (registry,
+  matrix, lanes, ledger gaps, CAPA, reviews, release candidate, Praxis gate,
+  repeated CI, competence, packs, public sources).
+- Findings and periodic-review index with a query surface and consistency
+  findings.
+- Review-record index and guard (DevOps sidecar).
+- Control-plane decision under ADR-0006: wire the multi-project view behind a
+  real caller or remove the archived code.
+
+Exit gate:
+
+```text
+Every number in a management review input is reproducible from committed files
+by one command, and stale or unavailable sources are visible, not hidden.
+```
+
+Claim impact:
+
+A computed view lifts no claim. Regulated validation, approvals and records
+remain on roadmap 28.
 
 ## SFI Wave Status
 
