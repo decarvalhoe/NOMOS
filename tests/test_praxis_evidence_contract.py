@@ -27,6 +27,9 @@ SCHEMA = ROOT / "specs" / "nomos-praxis-evidence.schema.json"
 CUE = ROOT / "specs" / "nomos-praxis-evidence.cue"
 VALID = EXAMPLES / "nomos-praxis-evidence.valid.yaml"
 INVALID = sorted(EXAMPLES.glob("nomos-praxis-evidence.invalid-*.yaml"))
+MAPPING_VALID = EXAMPLES / "nomos-praxis-mapping.valid.json"
+MAPPING_INVALID = sorted(EXAMPLES.glob("nomos-praxis-mapping.invalid-*.json"))
+ATOMS = ROOT / "tests" / "fixtures" / "praxis" / "gxp-atoms.json"
 HAVE_JSONSCHEMA = importlib.util.find_spec("jsonschema") is not None
 HAVE_CUE = shutil.which("cue") is not None
 HAVE_GO = shutil.which("go") is not None
@@ -94,6 +97,12 @@ class CueContract(unittest.TestCase):
         for p in INVALID:
             self.assertNotEqual(self.vet(p), 0, p.name)
 
+    def test_mapping_fixtures(self) -> None:
+        vet = lambda p: subprocess.run(["cue", "vet", str(CUE), str(p), "-d", "#PraxisAtomMapping"], capture_output=True, text=True).returncode
+        self.assertEqual(vet(MAPPING_VALID), 0)
+        for p in MAPPING_INVALID:
+            self.assertNotEqual(vet(p), 0, p.name)
+
 
 @unittest.skipUnless(HAVE_GO, "go not installed")
 class GoEngine(unittest.TestCase):
@@ -128,6 +137,29 @@ class GoEngine(unittest.TestCase):
             r = self.run_verify(p)
             self.assertEqual(r.returncode, 1, p.name)
             self.assertIn(want[p.name], r.stderr, p.name)
+
+    def test_mapping_fixture_verifies_and_negatives_are_named(self) -> None:
+        r = subprocess.run([self.bin, "evidence", "praxis-mapping-verify", "--mapping", str(MAPPING_VALID), "--atoms", str(ATOMS)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        rep = json.loads(r.stdout)
+        self.assertEqual(rep["atoms_mapped"], 3)
+        self.assertIn("atoms_approved_both_sides", rep["checks"])
+        want = {
+            "nomos-praxis-mapping.invalid-praxis-authority.json": "PRAXIS_MAP_AUTHORITY_INVERTED",
+            "nomos-praxis-mapping.invalid-internal-field.json": "PRAXIS_MAP_SHAPE_INVALID",
+            "nomos-praxis-mapping.invalid-unapproved.json": "PRAXIS_MAP_ATOM_NOT_APPROVED",
+        }
+        for p in MAPPING_INVALID:
+            r = subprocess.run([self.bin, "evidence", "praxis-mapping-verify", "--mapping", str(p), "--atoms", str(ATOMS)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1, p.name)
+            self.assertIn(want[p.name], r.stderr, p.name)
+
+    def test_atom_set_fixture_is_the_real_atomizer_output(self) -> None:
+        # Regenerating the atom set from the golden source must reproduce the committed bytes.
+        r = subprocess.run([self.bin, "atomize", "units", "--doc-ref", "gxp-csv-fixture", "--domain", "gxp", "--state", "approved",
+                            "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md"], capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.stdout, ATOMS.read_text(encoding="utf-8"), "committed atom set drifted from the atomizer output")
 
     def test_tampered_referenced_artifact_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

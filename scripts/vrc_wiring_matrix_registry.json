@@ -3215,6 +3215,94 @@
           ]
         }
       ]
+    },
+    {
+      "id": "praxis_atom_mapping_fixture",
+      "title": "Fixture de mapping atomes Nomos → checks Praxis, vérifiée contre le jeu d'atomes (NRT-017 #661) — jeu d'atomes RÉEL (`nomos atomize units` sur la source golden GxP, reproductible octet pour octet, testé), mapping typé `#PraxisAtomMapping` (contrat #660) : uniquement les champs exposés par praxis-atom-mapping.md, struct fermée (block_id/parent_id/depth refusés au chargement), `authority: nomos` seule valeur acceptée. Moteur Go `compliance.VerifyPraxisMapping` + `nomos evidence praxis-mapping-verify --mapping --atoms` : feed_ref.sha256 = hash du jeu d'atomes, chaque atome mappé existe, approuvé DES DEUX CÔTÉS (le mapping ne peut pas certifier un atome pending), même content_hash, même canonical_ref/type/domaine/fichier/ligne, au moins un check Praxis. Fixtures négatives vettées en CI (CUE) : autorité inversée, champ interne fuité, atome non approuvé. 15 refus nommés testés côté moteur, mutations tuées. NON revendiqué : assurance runtime, conformité, activation de Praxis (NRT-018 #662).",
+      "pillar": "P1",
+      "claim_level": "fixture (flux d'evidence démontré et vérifié sur fixture ; aucune assurance runtime, aucune activation)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Nomos/Praxis atom mapping contract (NRT-017 #661)",
+            "-d '#PraxisAtomMapping'"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/compliance/praxis_mapping.go",
+          "contains": [
+            "func VerifyPraxisMapping(",
+            "PRAXIS_MAP_AUTHORITY_INVERTED",
+            "PRAXIS_MAP_ATOM_NOT_APPROVED",
+            "PRAXIS_MAP_ATOM_HASH_MISMATCH",
+            "PRAXIS_MAP_EXPOSED_FIELD_DRIFT",
+            "dec.KnownFields(true)"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/evidence_cmd.go",
+          "contains": [
+            "case \"praxis-mapping-verify\":",
+            "compliance.VerifyPraxisMapping("
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/compliance/praxis_mapping_test.go",
+          "contains": [
+            "TestPraxisMappingRules",
+            "TestPraxisMappingNegativeFixtures",
+            "mapping approved but atom set says pending",
+            "atom content changed after mapping"
+          ]
+        },
+        {
+          "path": "tests/test_praxis_evidence_contract.py",
+          "contains": [
+            "test_mapping_fixture_verifies_and_negatives_are_named",
+            "test_atom_set_fixture_is_the_real_atomizer_output"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/nomos-praxis-evidence.cue",
+          "contains": [
+            "#PraxisAtomMapping",
+            "authority:  \"nomos\"",
+            "certification_state: \"approved\""
+          ]
+        },
+        {
+          "path": "specs/examples/nomos-praxis-mapping.valid.json",
+          "contains": [
+            "nomos-praxis-atom-mapping-v1",
+            "\"authority\": \"nomos\""
+          ]
+        },
+        {
+          "path": "tests/fixtures/praxis/gxp-atoms.json",
+          "contains": [
+            "\"document_ref\": \"gxp-csv-fixture\""
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "docs/regulated/customer-integration/praxis-atom-mapping.md",
+          "contains": [
+            "## Verified Fixture (NRT-017 #661)"
+          ]
+        }
+      ]
     }
   ]
 }
