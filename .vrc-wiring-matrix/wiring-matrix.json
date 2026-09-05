@@ -2614,6 +2614,81 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "sigstore_keyless_injected_issuance",
+      "title": "Émission keyless contre des services Fulcio/Rekor INJECTÉS, NON-PRODUCTION (#645) — `nomos attest sign-sigstore` émet un bundle via la même frontière de process que la vérification (ADR-0005), avec une identité OIDC de fixture fournie (NOMOS n'en obtient jamais). Politique d'endpoints appliquée AVANT toute requête, des deux côtés de la frontière : toute instance publique Sigstore (`*.sigstore.dev`, `*.sigstage.dev`) est refusée sans aucun flag pour l'autoriser (#638) ; seuls loopback, domaines de test réservés ou hôtes explicitement déclarés sont contactés. Le moteur vérifie la parole de l'émetteur (issued:true avec sortie 0, non_production:true, digest égal au sien, identité exigée, bundle présent) puis VÉRIFIE lui-même le bundle produit par le chemin de vérification contre le matériel de confiance fourni ; le token est expurgé du record. Services de fixture localhost (`nomos-sigstore-fixture-services`) : CA générée, Fulcio factice lisant un JWT NON signé, Rekor v1 factice (SET, preuve d'inclusion, checkpoint via la CA virtuelle de sigstore-go), trusted_root.json écrit pour eux — aucun CT log, donc SCT=0 uniquement par décision explicite `no_ct_log`, enregistrée. Prouvé : émission → bundle → vérification indépendante (deuxième passe hors ligne) ; production, staging, hôte non listé, identité/issuer faux, bundle falsifié → rouge ; services arrêtés → aucun bundle partiel ; binaire absent → aucun verdict. Ce que cela N'EST PAS : une émission production, une identité publique, une écriture Rekor publique — `sigstore_keyless` reste `absent` et la sonde `github.com/sigstore` sur cli/ reste verte.",
+      "pillar": "P1",
+      "claim_level": "capability bornée (émission contre environnement injecté/non-production, vérifiée indépendamment ; aucune production)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/attestation/sigstore_issue.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tools/sigstore-verifier/issue.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tools/sigstore-verifier/fixtureservices/services.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/attest_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/sigstore-issue-gate.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/attestation/sigstore_issue_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tools/sigstore-verifier/issue_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_claim_boundary_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/claim_boundary_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2651,9 +2726,9 @@
     }
   ],
   "summary": {
-    "capabilities": 48,
+    "capabilities": 49,
     "computed": {
-      "real": 37,
+      "real": 38,
       "partial": 0,
       "sidecar": 10,
       "stub": 0,

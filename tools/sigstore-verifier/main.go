@@ -46,6 +46,9 @@ type Require struct {
 	TlogEntries                 int `json:"tlog_entries"`
 	SignedCertificateTimestamps int `json:"signed_certificate_timestamps"`
 	ObserverTimestamps          int `json:"observer_timestamps"`
+	// NoCTLog must be true for signed_certificate_timestamps == 0 to be honoured;
+	// an omitted field is a JSON zero, not a decision.
+	NoCTLog bool `json:"no_ct_log,omitempty"`
 }
 
 type Request struct {
@@ -144,26 +147,50 @@ func run(stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%s: read request: %v\n", VerifierName, err)
 		return 2
 	}
-	var req Request
-	if err := json.Unmarshal(raw, &req); err != nil {
+	var probe struct {
+		SchemaVersion string `json:"schema_version"`
+	}
+	if err := json.Unmarshal(raw, &probe); err != nil {
 		fmt.Fprintf(stderr, "%s: request is not JSON: %v\n", VerifierName, err)
 		return 2
 	}
-	if req.SchemaVersion != RequestSchema {
-		fmt.Fprintf(stderr, "%s: request schema_version %q, want %q\n", VerifierName, req.SchemaVersion, RequestSchema)
-		return 2
-	}
-	resp := verifyRequest(req)
 	enc := json.NewEncoder(stdout)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(resp); err != nil {
-		fmt.Fprintf(stderr, "%s: write response: %v\n", VerifierName, err)
+	switch probe.SchemaVersion {
+	case RequestSchema:
+		var req Request
+		if err := json.Unmarshal(raw, &req); err != nil {
+			fmt.Fprintf(stderr, "%s: request: %v\n", VerifierName, err)
+			return 2
+		}
+		resp := verifyRequest(req)
+		if err := enc.Encode(resp); err != nil {
+			fmt.Fprintf(stderr, "%s: write response: %v\n", VerifierName, err)
+			return 2
+		}
+		if resp.Verified {
+			return 0
+		}
+		return 1
+	case IssueRequestSchema:
+		var req IssueRequest
+		if err := json.Unmarshal(raw, &req); err != nil {
+			fmt.Fprintf(stderr, "%s: request: %v\n", VerifierName, err)
+			return 2
+		}
+		resp := issueRequest(req)
+		if err := enc.Encode(resp); err != nil {
+			fmt.Fprintf(stderr, "%s: write response: %v\n", VerifierName, err)
+			return 2
+		}
+		if resp.Issued {
+			return 0
+		}
+		return 1
+	default:
+		fmt.Fprintf(stderr, "%s: request schema_version %q, want %q or %q\n", VerifierName, probe.SchemaVersion, RequestSchema, IssueRequestSchema)
 		return 2
 	}
-	if resp.Verified {
-		return 0
-	}
-	return 1
 }
 
 func verifyRequest(req Request) Response {
@@ -202,17 +229,19 @@ func verifyRequest(req Request) Response {
 	if tlogN <= 0 {
 		tlogN = 1
 	}
-	if sctN <= 0 {
+	if sctN <= 0 && !req.Require.NoCTLog {
 		sctN = 1
 	}
 	if obsN <= 0 {
 		obsN = 1
 	}
-	verifier, err := verify.NewVerifier(trusted,
-		verify.WithTransparencyLog(tlogN),
-		verify.WithSignedCertificateTimestamps(sctN),
-		verify.WithObserverTimestamps(obsN),
-	)
+	// sctN == 0 is an explicit choice for an injected environment without a CT
+	// log; the caller's request records it, the default stays 1.
+	verifierOpts := []verify.VerifierOption{verify.WithTransparencyLog(tlogN), verify.WithObserverTimestamps(obsN)}
+	if sctN > 0 {
+		verifierOpts = append(verifierOpts, verify.WithSignedCertificateTimestamps(sctN))
+	}
+	verifier, err := verify.NewVerifier(trusted, verifierOpts...)
 	if err != nil {
 		refuse(&resp, "VERIFIER_CONFIG", "%v", err)
 		return resp

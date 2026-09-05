@@ -80,6 +80,9 @@ type SigstoreRequire struct {
 	TlogEntries                 int `json:"tlog_entries"`
 	SignedCertificateTimestamps int `json:"signed_certificate_timestamps"`
 	ObserverTimestamps          int `json:"observer_timestamps"`
+	// NoCTLog is the explicit decision that lets SignedCertificateTimestamps be 0
+	// (an injected environment running no CT log). It is recorded, never implied.
+	NoCTLog bool `json:"no_ct_log,omitempty"`
 }
 
 // SigstoreRequest is what crosses the boundary.
@@ -163,20 +166,35 @@ func ResolveSigstoreVerifier(explicit string) ([]string, error) {
 
 // Verify implements SigstoreVerifier.
 func (e ExternalSigstoreVerifier) Verify(req SigstoreRequest) (SigstoreResponse, []byte, int, error) {
-	if len(e.Command) == 0 || strings.TrimSpace(e.Command[0]) == "" {
-		return SigstoreResponse{}, nil, -1, sigstoreErr(CodeSigstoreVerifierUnavailable, "empty verifier command")
+	raw, exit, err := runBoundary(e.Command, e.Timeout, req)
+	if err != nil {
+		return SigstoreResponse{}, raw, exit, err
+	}
+	var resp SigstoreResponse
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return SigstoreResponse{}, raw, exit, sigstoreErr(CodeSigstoreBadResponse, "verifier %q wrote something that is not %s JSON: %v", e.Command[0], SigstoreResponseSchema, err)
+	}
+	return resp, raw, exit, nil
+}
+
+// runBoundary runs one request through the external process: JSON on stdin,
+// JSON on stdout. Silence, a timeout or an unrunnable command yield an error
+// (no verdict); a non-zero exit WITH a response is returned to the caller,
+// which decides whether the response is a verdict or a contradiction.
+func runBoundary(command []string, timeout time.Duration, req any) ([]byte, int, error) {
+	if len(command) == 0 || strings.TrimSpace(command[0]) == "" {
+		return nil, -1, sigstoreErr(CodeSigstoreVerifierUnavailable, "empty verifier command")
 	}
 	payload, err := json.Marshal(req)
 	if err != nil {
-		return SigstoreResponse{}, nil, -1, sigstoreErr(CodeSigstoreVerifierFailed, "encode request: %v", err)
+		return nil, -1, sigstoreErr(CodeSigstoreVerifierFailed, "encode request: %v", err)
 	}
-	timeout := e.Timeout
 	if timeout <= 0 {
 		timeout = SigstoreDefaultTimeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, e.Command[0], e.Command[1:]...)
+	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
 	cmd.Stdin = bytes.NewReader(payload)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -187,22 +205,18 @@ func (e ExternalSigstoreVerifier) Verify(req SigstoreRequest) (SigstoreResponse,
 		var ee *exec.ExitError
 		switch {
 		case ctx.Err() == context.DeadlineExceeded:
-			return SigstoreResponse{}, nil, -1, sigstoreErr(CodeSigstoreVerifierFailed, "verifier %q timed out after %s; no verdict", e.Command[0], timeout)
+			return nil, -1, sigstoreErr(CodeSigstoreVerifierFailed, "verifier %q timed out after %s; no verdict", command[0], timeout)
 		case errors.As(runErr, &ee):
 			exit = ee.ExitCode()
 		default:
-			return SigstoreResponse{}, nil, -1, sigstoreErr(CodeSigstoreVerifierUnavailable, "verifier %q could not run: %v; no verdict", e.Command[0], runErr)
+			return nil, -1, sigstoreErr(CodeSigstoreVerifierUnavailable, "verifier %q could not run: %v; no verdict", command[0], runErr)
 		}
 	}
 	raw := bytes.TrimSpace(stdout.Bytes())
 	if len(raw) == 0 {
-		return SigstoreResponse{}, nil, exit, sigstoreErr(CodeSigstoreVerifierFailed, "verifier %q exited %d without a response%s; no verdict", e.Command[0], exit, tail(stderr.String()))
+		return nil, exit, sigstoreErr(CodeSigstoreVerifierFailed, "verifier %q exited %d without a response%s; no verdict", command[0], exit, tail(stderr.String()))
 	}
-	var resp SigstoreResponse
-	if err := json.Unmarshal(raw, &resp); err != nil {
-		return SigstoreResponse{}, raw, exit, sigstoreErr(CodeSigstoreBadResponse, "verifier %q wrote something that is not %s JSON: %v%s", e.Command[0], SigstoreResponseSchema, err, tail(stderr.String()))
-	}
-	return resp, raw, exit, nil
+	return raw, exit, nil
 }
 
 // SigstoreVerificationRecord is what NOMOS writes: the request, the verifier's

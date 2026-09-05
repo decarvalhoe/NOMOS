@@ -39,7 +39,7 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | #645 — Keyless issuance against injected non-production services |
+| — | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item

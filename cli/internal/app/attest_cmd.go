@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/RBOKproject/Nomos/cli/internal/attestation"
@@ -34,6 +35,8 @@ func attestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return attestVerify(args[1:], stdout, stderr)
 	case "verify-sigstore":
 		return attestVerifySigstore(args[1:], stdout, stderr)
+	case "sign-sigstore":
+		return attestSignSigstore(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		attestUsage(stdout)
 		return 0
@@ -55,6 +58,8 @@ func attestUsage(w io.Writer) {
 	fmt.Fprintln(w, "  nomos attest verify --envelope <envelope.json> --pub <pub.pem>")
 	fmt.Fprintln(w, "  nomos attest verify-sigstore --bundle <bundle.sigstore.json> --trusted-root <trusted_root.json> (--artifact <file> | --artifact-digest <alg:hex>) --identity <san> --issuer <iss> [--identity-regex <re>] [--issuer-regex <re>] [--verifier <cmd>] [--out <record.json>]")
 	fmt.Fprintln(w, "      Verify a SUPPLIED Sigstore bundle OFFLINE through the external verifier (tools/sigstore-verifier). Never signs, never issues, never publishes.")
+	fmt.Fprintln(w, "  nomos attest sign-sigstore --artifact <file> --fulcio-url <url> --rekor-url <url> --id-token-file <f> --trusted-root <f> --identity <san> --issuer <iss> --out-bundle <f> [--allow-host <h>]... [--verifier <cmd>] [--out <record.json>]")
+	fmt.Fprintln(w, "      Keyless issuance against INJECTED, NON-PRODUCTION Fulcio/Rekor endpoints (#645), then independent verification. Sigstore public instances are refused; there is no flag to allow them (#638).")
 }
 
 func attestKeygen(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -281,6 +286,7 @@ func attestVerifySigstore(args []string, stdout io.Writer, stderr io.Writer) int
 	issuer := flags.String("issuer", "", "required OIDC issuer of the signing certificate, exact")
 	issuerRegex := flags.String("issuer-regex", "", "required issuer as a regular expression")
 	tlogN := flags.Int("require-tlog-entries", 1, "minimum transparency-log entries the verifier must verify")
+	sctN := flags.Int("require-sct", 1, "minimum signed certificate timestamps (0 only for an injected environment that runs no CT log; recorded in the record)")
 	verifierCmd := flags.String("verifier", "", "external verifier command (default: $"+attestation.SigstoreVerifierEnv+", then "+attestation.SigstoreVerifierBinary+" on PATH)")
 	out := flags.String("out", "", "write the verification record here (default: stdout)")
 	if err := flags.Parse(args); err != nil {
@@ -310,7 +316,7 @@ func attestVerifySigstore(args []string, stdout io.Writer, stderr io.Writer) int
 	req := attestation.SigstoreRequest{
 		BundlePath: *bundlePath, TrustedRootPath: *trustedRoot, ArtifactPath: *artifact, ArtifactDigest: *artifactDigest,
 		CertificateIdentity: attestation.SigstoreIdentity{SAN: *identity, SANRegex: *identityRegex, Issuer: *issuer, IssuerRegex: *issuerRegex},
-		Require:             attestation.SigstoreRequire{TlogEntries: *tlogN, SignedCertificateTimestamps: 1, ObserverTimestamps: 1},
+		Require:             attestation.SigstoreRequire{TlogEntries: *tlogN, SignedCertificateTimestamps: *sctN, ObserverTimestamps: 1, NoCTLog: *sctN == 0},
 	}
 	record, _, err := attestation.VerifySigstoreBundle(attestation.ExternalSigstoreVerifier{Command: command}, req, time.Now().UTC())
 	if err != nil {
@@ -336,5 +342,87 @@ func attestVerifySigstore(args []string, stdout io.Writer, stderr io.Writer) int
 	fmt.Fprintf(stdout, "attest verify-sigstore: OK — %s signed by %s (issuer %s), %d tlog entr(ies), verifier %s %s via %s %s → %s\n",
 		record.ArtifactDigest, record.SignerSAN, record.SignerIssuer, record.TlogEntries,
 		record.Verifier, record.VerifierVersion, record.Library, record.LibraryVersion, *out)
+	return 0
+}
+
+// attestSignSigstore is `nomos attest sign-sigstore` (#645): keyless issuance
+// against injected, non-production endpoints through the external process,
+// then NOMOS's own independent verification of the produced bundle.
+func attestSignSigstore(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("attest sign-sigstore", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	artifact := flags.String("artifact", "", "artifact file to sign (required)")
+	fulcioURL := flags.String("fulcio-url", "", "INJECTED Fulcio endpoint (required; production instances are refused)")
+	rekorURL := flags.String("rekor-url", "", "INJECTED Rekor v1 endpoint (required; production instances are refused)")
+	tokenFile := flags.String("id-token-file", "", "file holding the fixture/injected OIDC id token (required; NOMOS never obtains one)")
+	trustedRoot := flags.String("trusted-root", "", "trust material of the injected environment, used for the independent verification (required)")
+	identity := flags.String("identity", "", "signer identity the certificate must carry (SAN), exact")
+	identityRegex := flags.String("identity-regex", "", "signer identity as a regular expression")
+	issuer := flags.String("issuer", "", "OIDC issuer the certificate must carry, exact")
+	issuerRegex := flags.String("issuer-regex", "", "issuer as a regular expression")
+	outBundle := flags.String("out-bundle", "", "where to write the issued bundle (required)")
+	verifierCmd := flags.String("verifier", "", "external verifier/issuer command (default: $"+attestation.SigstoreVerifierEnv+", then "+attestation.SigstoreVerifierBinary+" on PATH)")
+	out := flags.String("out", "", "write the issuance record here (default: stdout)")
+	var allowHosts multiFlag
+	flags.Var(&allowHosts, "allow-host", "additional controlled hostname to accept (repeatable); never a Sigstore public instance")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *artifact == "" || *fulcioURL == "" || *rekorURL == "" || *tokenFile == "" || *trustedRoot == "" || *outBundle == "" {
+		fmt.Fprintln(stderr, "attest sign-sigstore: --artifact, --fulcio-url, --rekor-url, --id-token-file, --trusted-root and --out-bundle are required")
+		return 2
+	}
+	if (*identity == "" && *identityRegex == "") || (*issuer == "" && *issuerRegex == "") {
+		fmt.Fprintln(stderr, "attest sign-sigstore: --identity/--identity-regex and --issuer/--issuer-regex are required")
+		return 2
+	}
+	// Policy first, before any token is read or any process runs.
+	for _, u := range []string{*fulcioURL, *rekorURL} {
+		if err := attestation.CheckEndpointPolicy(u, allowHosts); err != nil {
+			fmt.Fprintf(stderr, "attest sign-sigstore: REFUSED before any request — %v\n", err)
+			return 1
+		}
+	}
+	token, err := os.ReadFile(*tokenFile)
+	if err != nil {
+		fmt.Fprintf(stderr, "attest sign-sigstore: id token: %v\n", err)
+		return 1
+	}
+	command, err := attestation.ResolveSigstoreVerifier(*verifierCmd)
+	if err != nil {
+		fmt.Fprintf(stderr, "attest sign-sigstore: %v\n", err)
+		return 1
+	}
+	req := attestation.SigstoreIssueRequest{
+		ArtifactPath: *artifact, OutBundlePath: *outBundle, FulcioURL: *fulcioURL, RekorURL: *rekorURL,
+		IDToken: strings.TrimSpace(string(token)), TrustedRootPath: *trustedRoot,
+		Identity:   attestation.SigstoreIdentity{SAN: *identity, SANRegex: *identityRegex, Issuer: *issuer, IssuerRegex: *issuerRegex},
+		AllowHosts: allowHosts,
+	}
+	record, err := attestation.IssueSigstoreBundle(
+		attestation.ExternalSigstoreIssuer{Command: command},
+		attestation.ExternalSigstoreVerifier{Command: command},
+		req, time.Now().UTC())
+	if err != nil {
+		fmt.Fprintf(stderr, "attest sign-sigstore: REFUSED, no bundle kept, no record written — %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(record)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, write); err != nil {
+		fmt.Fprintf(stderr, "attest sign-sigstore: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "attest sign-sigstore: OK (NON-PRODUCTION) — %s signed by %s (issuer %s) via injected fulcio=%s rekor=%s; bundle %s; independently verified → %s\n",
+		record.ArtifactDigest, record.SignerSAN, record.SignerIssuer, record.Endpoints["fulcio"], record.Endpoints["rekor"], record.BundlePath, *out)
 	return 0
 }

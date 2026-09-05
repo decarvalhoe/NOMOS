@@ -56,6 +56,7 @@
 | `release_candidate_bundle` | P1 | real | real | ✅ | — | — |
 | `sigstore_offline_verification` | P1 | real | real | ✅ | — | — |
 | `skos_static_distribution` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `sigstore_keyless_injected_issuance` | P1 | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -63,7 +64,7 @@
 
 ## Summary
 
-- capabilities: 48 (real=37, partial=0, sidecar=10, stub=0, absent=1)
+- capabilities: 49 (real=38, partial=0, sidecar=10, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

@@ -170,6 +170,31 @@ class ClaimBoundaryGuardTests(unittest.TestCase):
         # The real tree carries both markers.
         self.assertTrue(guard.sigstore_verification_present(ROOT))
 
+    def test_bounded_sigstore_issuance_marker(self) -> None:
+        # #645: issuance wording passes only with the markers AND an explicit
+        # injected/non-production bound in the same sentence; production stays red.
+        ok = (
+            "NOMOS issues a keyless Sigstore bundle against injected, non-production Fulcio/Rekor endpoints.",
+            "NOMOS signs keyless with Sigstore only against a localhost fixture; production endpoints are refused.",
+        )
+        for line in ok:
+            self.assertIsNone(guard.classify_line(line, signing_present=True, verify_present=True, issue_present=True), line)
+            self.assertIsNotNone(
+                guard.classify_line(line, signing_present=True, verify_present=True, issue_present=False),
+                f"without the issuance markers the bounded phrasing is unbacked: {line}",
+            )
+        for red in (
+            "NOMOS signs keyless with Sigstore.",
+            "NOMOS issues keyless Sigstore bundles in production.",
+            "NOMOS attestations are signed by the Sigstore public-good instance.",
+            "NOMOS supports keyless signing with Fulcio and Rekor at fulcio.sigstore.dev alongside the injected fixture.",
+        ):
+            self.assertIsNotNone(
+                guard.classify_line(red, signing_present=True, verify_present=True, issue_present=True),
+                f"production/unbounded issuance wording must keep failing: {red}",
+            )
+        self.assertTrue(guard.sigstore_issuance_present(ROOT))
+
     def test_forged_maturity_claim_turns_guard_red(self) -> None:
         # VRC-01 (#547) adversarial proof: the doc-40 class of overclaim —
         # asserting multi-environment / customer-production integration without

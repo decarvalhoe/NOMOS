@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: []
-    devops: [645]
+    devops: []
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -115,11 +115,11 @@ items:
     blocks_claims: [sigstore_keyless_issuance]
   - issue: 645
     title: Keyless issuance against injected non-production services
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 576
@@ -127,7 +127,7 @@ items:
     regulated_tool:
       intended_use: issue a keyless bundle against injected or controlled non-production Fulcio/Rekor endpoints
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 639
     title: Prepare and verify a v0.2.0-ALPHA candidate bundle
