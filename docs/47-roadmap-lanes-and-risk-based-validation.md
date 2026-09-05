@@ -35,13 +35,16 @@ dead end.
 Each lane has its own order in `dispatch_queues`; DevOps never sits in front of
 Product (or the reverse).
 
+<!-- roadmap-queues:begin -->
+<!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #642 — bind rule-execution persisted integrity | #640 — align competence template/gate with test-only data |
-| #610 → #611 → #612 — Recursio contract, immutable snapshot, offline E2E | #641 — restore licence/no-full-text gates |
-| #637 — offline Sigstore bundle verification | #644 — actual public-reference processing + retained evidence |
-| #643 — static SKOS authoring/distribution | #639 — candidate release-bundle preparation/rehearsal |
-| — | #645 — keyless issuance against injected non-production services |
+| #610 — Define the Recursio web-source contract | #641 — Restore licence-review and no-full-text gates |
+| #611 — Verify immutable external corpus snapshots | #644 — Process real public references and retain evidence |
+| #612 — Recursio to Nomos offline E2E fixture | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
+| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
+| #643 — Static SKOS authoring and distribution | — |
+<!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
 whose same-lane autonomous dependencies are not complete, and continues to the

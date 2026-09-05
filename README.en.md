@@ -38,7 +38,7 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 | Capability registry | 40 capabilities declared in `scripts/vrc_wiring_matrix_registry.json`; their status is COMPUTED from the tree on every CI run (32 real, 7 sidecar, 1 absent, 0 mismatch) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
 | Roadmaps | Product, DevOps and regulated assurance advance independently (ADR-VRC-0004). Only `dispatch:autonomous` issues enter the dispatcher; calendar evidence, signatures, procurement and public writes block their claim, never development — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
 | Known limit | The alpha proves a bounded source-to-feed POC; it does not yet claim universal fidelity or customer regulatory validation. The public bench measures the gate on nine items, not a product. |
-| Next hardening | Independent autonomous queues: product (#642, Recursio #610→#612, #637, #643); DevOps (#640, #641, #644, #639, #645). The only `absent` capability is keyless Sigstore issuance: offline verify #637, non-production issuance #645, production/Rekor activation #638 separate. |
+| Next hardening | Independent product and DevOps autonomous queues, ordered by `docs/roadmap-lanes.yaml` (table generated into `docs/47`, drift-checked in CI). The only `absent` capability is keyless Sigstore issuance: offline verify #637, non-production issuance #645, production/Rekor activation #638 separate. |
 | Claim boundary | Not a certified eQMS, not a validated GxP system, not a regulatory certification. |
 
 ## Why Nomos Exists

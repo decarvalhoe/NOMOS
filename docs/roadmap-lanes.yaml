@@ -17,9 +17,19 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [642, 610, 611, 612, 637, 643]
-    devops: [640, 641, 644, 639, 645]
+    product: [610, 611, 612, 637, 643]
+    devops: [641, 644, 639, 645]
     regulated: []
+
+# Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
+# lane and no dispatch state, and the dispatcher never selects them. Declaring
+# them here keeps them from being the one open issue the registry cannot see.
+umbrella_issues:
+  - issue: 545
+    role: epic
+    note: >-
+      VRC epic. Tracks the whole closure; closes when its children close, is
+      never worked on directly.
 
 lanes:
   product:
@@ -137,18 +147,21 @@ items:
       reliance: supporting_use_until_validated
   - issue: 640
     title: Align competence template and gate
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: verified
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 562
+    delivered_by: "PR #648, main de77f38"
     regulated_tool:
       intended_use: validate the structure and declared status of competence records without asserting human competence
       impact: decision
-      validation_state: planned
+      # Technically verified only. Moving to validated_for_intended_use is a
+      # regulated act owned by #562, not something delivery can grant itself.
+      validation_state: technically_verified
       reliance: manual_verification_required
   - issue: 641
     title: Restore licence-review and no-full-text gates
@@ -182,14 +195,20 @@ items:
       reliance: supporting_use_until_validated
   - issue: 642
     title: Bind rule-execution request and persisted result integrity
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: verified
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 578
+    delivered_by: "PR #647, main be9d784"
+    note: >-
+      request_digest and results_digest are recomputed by VerifyRecord;
+      response_digest binds the substrate's raw output and is evidence for a
+      reader who retained it, not a self-check. None of the three is a
+      signature, and the record says so in its own claim boundary.
   - issue: 610
     title: Define the Recursio web-source contract
     state: open

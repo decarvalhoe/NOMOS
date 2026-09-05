@@ -33,13 +33,16 @@ operating controls, or claim-boundary clarity only.
 
 ## Current Autonomous Issues
 
+<!-- roadmap-queues:begin -->
+<!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| `#642` — persisted rule-execution integrity | `#640` — competence template/gate contract |
-| `#610` → `#611` → `#612` — Recursio contract, immutable snapshot, E2E | `#641` — licence/no-full-text gates |
-| `#637` — offline Sigstore verification | `#644` — actual public-source processing |
-| `#643` — static SKOS authoring/distribution | `#639` — candidate release-bundle rehearsal |
-| — | `#645` — non-production keyless issuance |
+| #610 — Define the Recursio web-source contract | #641 — Restore licence-review and no-full-text gates |
+| #611 — Verify immutable external corpus snapshots | #644 — Process real public references and retain evidence |
+| #612 — Recursio to Nomos offline E2E fixture | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
+| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
+| #643 — Static SKOS authoring and distribution | — |
+<!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
 28 as passive, human or external. They block only their named evidence/use or
