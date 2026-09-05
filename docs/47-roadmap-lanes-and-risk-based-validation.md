@@ -39,7 +39,9 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #667 — Portfolio status contract and engine (NRT-019) | #669 — Periodic review record index and guard (NRT-021) |
+| #668 — Findings and periodic-review index, queryable (NRT-020) | — |
+| #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
