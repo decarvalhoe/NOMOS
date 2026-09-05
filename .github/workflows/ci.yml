@@ -67,11 +67,21 @@ jobs:
           jq -e --argjson n "$(jq '.summary.capabilities' ../.vrc-wiring-matrix/wiring-matrix.json)" '.capabilities.total == $n' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
           jq -e '([.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length) == .sections_unavailable' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
           go run . portfolio status --repo-root .. --format md | head -20
+          # NRT-020 (#668): findings and review records are computed alongside; the
+          # Praxis gate's unmet requirements MUST appear as findings while the gate is blocked.
+          go run . portfolio findings --repo-root .. --out "$RUNNER_TEMP/portfolio-findings.json"
+          jq -e '.schema_version == "nomos-portfolio-findings-v1" and (.sources_unavailable | length) == 0 and (.findings | map(select(.kind == "praxis_requirement_unmet")) | length) > 0 and (.findings | all(.source.sha256 | startswith("sha256:")))' "$RUNNER_TEMP/portfolio-findings.json" > /dev/null
+          go run . portfolio reviews --repo-root .. --out "$RUNNER_TEMP/portfolio-reviews.json"
+          jq -e '.schema_version == "nomos-portfolio-reviews-v1" and .total >= 3' "$RUNNER_TEMP/portfolio-reviews.json" > /dev/null
+          go run . portfolio findings --repo-root .. --format md | head -12
       - name: Upload portfolio status
         uses: actions/upload-artifact@v4
         with:
           name: portfolio-status-${{ github.sha }}
-          path: ${{ runner.temp }}/portfolio-status.json
+          path: |
+            ${{ runner.temp }}/portfolio-status.json
+            ${{ runner.temp }}/portfolio-findings.json
+            ${{ runner.temp }}/portfolio-reviews.json
           retention-days: 90
       # NRT-018 (#662): the Praxis activation gate is computed on the REAL
       # repository. Today it MUST be blocked, with every unmet requirement named

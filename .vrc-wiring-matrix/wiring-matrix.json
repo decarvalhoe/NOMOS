@@ -3009,6 +3009,55 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "portfolio_findings_index",
+      "title": "Findings et records de revue interrogeables (NRT-020 #668) — `nomos portfolio findings` normalise chaque item ouvert LU dans les sources commitées sous un id stable `<source>:<id>` avec chemin + sha256, sévérité, statut, voie : gaps du ledger non fermés, CAPA non fermés, findings d'audit sans disposition, actions de revue en retard (échéance passée sans clôture), prochaine revue en retard, exigences non satisfaites du gate Praxis (recalculées), captures publiques bloquées, lignes de matrice en écart. Findings de COHÉRENCE calculés : CAPA fermé sans vérification d'efficacité ou dont l'evidence cite un artefact disparu, record de revue citant un artefact absent, disposition d'audit nommant un CAPA inexistant ou encore ouvert, index #669 en désaccord avec les records. Filtres exacts (severity/status/kind/lane), compteurs recalculés ; sources illisibles listées `unavailable`. `nomos portfolio reviews` indexe les records périodiques (décisions, actions avec état d'échéance calculé à l'horloge, findings, artefacts cités et leur existence). Prouvé sur mini-dépôt et dépôt réel (11 exigences Praxis + gaps + 3 captures bloquées présents ; 0 écart de matrice). NON revendiqué : rien n'est fermé, waivé, priorisé ni résolu.",
+      "pillar": "P1",
+      "claim_level": "view (findings ouverts interrogeables ; aucun n'est fermé, waivé ni priorisé)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/portfolio/findings.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/portfolio_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/portfolio/findings_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_portfolio_status.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3047,9 +3096,9 @@
     }
   ],
   "summary": {
-    "capabilities": 56,
+    "capabilities": 57,
     "computed": {
-      "real": 43,
+      "real": 44,
       "partial": 0,
       "sidecar": 11,
       "stub": 0,

@@ -58,6 +58,32 @@ class Engine(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(r.stdout, VALID.read_text(encoding="utf-8"), "committed fixture drifted from the engine output")
 
+    def test_findings_and_reviews_on_the_real_repository(self) -> None:
+        # NRT-020 (#668): while the Praxis gate is blocked its unmet requirements are findings;
+        # every finding names a source hash; filters are exact; the review index is non-empty.
+        r = subprocess.run([self.bin, "portfolio", "findings", "--repo-root", str(ROOT)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        rep = json.loads(r.stdout)
+        self.assertEqual(rep["schema_version"], "nomos-portfolio-findings-v1")
+        self.assertEqual(rep["sources_unavailable"], [])
+        kinds = {f["kind"] for f in rep["findings"]}
+        self.assertIn("praxis_requirement_unmet", kinds)
+        self.assertIn("evidence_gap", kinds)
+        for f in rep["findings"]:
+            self.assertTrue(f["source"]["sha256"].startswith("sha256:"), f)
+            self.assertTrue(f["id"].split(":")[0], f)
+        self.assertEqual(rep["total"], len(rep["findings"]))
+        self.assertEqual(rep["consistency_findings"], sum(1 for f in rep["findings"] if f["consistency"]))
+        r = subprocess.run([self.bin, "portfolio", "findings", "--repo-root", str(ROOT), "--kind", "evidence_gap", "--lane", "regulated"], capture_output=True, text=True)
+        sub = json.loads(r.stdout)
+        self.assertTrue(all(f["kind"] == "evidence_gap" for f in sub["findings"]))
+        self.assertEqual(sub["total"], len(sub["findings"]))
+        r = subprocess.run([self.bin, "portfolio", "reviews", "--repo-root", str(ROOT)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        reviews = json.loads(r.stdout)
+        self.assertGreaterEqual(reviews["total"], 3)
+        self.assertTrue(all(r_["cited_artifacts"] is not None for r_ in reviews["records"]))
+
     def test_real_repository_status_is_self_consistent(self) -> None:
         st = self.status("--repo-root", ".")
         self.assertEqual(st["schema_version"], "nomos-portfolio-status-v1")

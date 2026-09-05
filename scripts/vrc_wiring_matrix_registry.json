@@ -3619,6 +3619,68 @@
           ]
         }
       ]
+    },
+    {
+      "id": "portfolio_findings_index",
+      "title": "Findings et records de revue interrogeables (NRT-020 #668) — `nomos portfolio findings` normalise chaque item ouvert LU dans les sources commitées sous un id stable `<source>:<id>` avec chemin + sha256, sévérité, statut, voie : gaps du ledger non fermés, CAPA non fermés, findings d'audit sans disposition, actions de revue en retard (échéance passée sans clôture), prochaine revue en retard, exigences non satisfaites du gate Praxis (recalculées), captures publiques bloquées, lignes de matrice en écart. Findings de COHÉRENCE calculés : CAPA fermé sans vérification d'efficacité ou dont l'evidence cite un artefact disparu, record de revue citant un artefact absent, disposition d'audit nommant un CAPA inexistant ou encore ouvert, index #669 en désaccord avec les records. Filtres exacts (severity/status/kind/lane), compteurs recalculés ; sources illisibles listées `unavailable`. `nomos portfolio reviews` indexe les records périodiques (décisions, actions avec état d'échéance calculé à l'horloge, findings, artefacts cités et leur existence). Prouvé sur mini-dépôt et dépôt réel (11 exigences Praxis + gaps + 3 captures bloquées présents ; 0 écart de matrice). NON revendiqué : rien n'est fermé, waivé, priorisé ni résolu.",
+      "pillar": "P1",
+      "claim_level": "view (findings ouverts interrogeables ; aucun n'est fermé, waivé ni priorisé)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "portfolio findings --repo-root .. --out",
+            "nomos-portfolio-findings-v1",
+            "nomos-portfolio-reviews-v1"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/portfolio/findings.go",
+          "contains": [
+            "func CollectFindings(",
+            "func IndexReviews(",
+            "func FilterFindings(",
+            "Consistency: true",
+            "praxis_requirement_unmet",
+            "action_overdue",
+            "index:records:total"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/portfolio_cmd.go",
+          "contains": [
+            "case \"findings\":",
+            "case \"reviews\":",
+            "portfolio.CollectFindings(",
+            "portfolio.IndexReviews("
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/portfolio/findings_test.go",
+          "contains": [
+            "TestFindingsOnMinirepo",
+            "TestFindingsFiltersAreExact",
+            "TestFindingsSourcesUnavailableAreListed",
+            "TestRecordsIndexDisagreementIsAFinding",
+            "TestReviewsIndexOnMinirepo",
+            "TestFindingsOnTheRealRepository"
+          ]
+        },
+        {
+          "path": "tests/test_portfolio_status.py",
+          "contains": [
+            "test_findings_and_reviews_on_the_real_repository"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -2,4 +2,8 @@ record_id: AUD-1
 record_type: internal_audit
 date: 2026-06-11
 findings:
-  - {id: F1, severity: major, finding: f}
+  - {id: F1, severity: major, finding: "Open finding with no disposition yet."}
+  - {id: F2, severity: minor, finding: "Finding said corrected.", disposition: "CAPA-2026-002; corrected"}
+  - {id: F3, severity: minor, finding: "Finding pointing at a ghost CAPA.", disposition: "CAPA-2026-009"}
+references:
+  - docs/regulated/evidence-index/evidence-ledger.yaml
