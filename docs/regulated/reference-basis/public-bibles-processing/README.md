@@ -1,67 +1,90 @@
-# Public Reference Processing Fixture (RCP-010 / #196)
+# Public Reference Processing (RCP-010 / #196 — public slice #644)
 
 [RCP-010 (#196)](https://github.com/RBOKproject/NOMOS/issues/196) asks to process
-public and licensed canonical bibles. This directory currently proves only the
-**pipeline mechanics on two public in-repo policy documents**. It does not prove
-that the 23 references classified `public` in the register were fetched or
-atomized.
+public and licensed canonical bibles. This directory says **exactly** what has
+been done with the public half, and counts nothing it did not do.
 
-Actual registry-driven public-source processing and retained evidence is the
-autonomous issue #644. The licensed half (ISO 13485, ISO/IEC/IEEE 12207,
-ISO/IEC 25010, ISPE GAMP 5) remains on the independent regulated roadmap
-(#192/#193/#194/#196) and blocks only its named clause-level use.
+## What "processed" means
 
-## Measured Split
+A registered public reference counts as **processed** only when all of these
+hold — anything short of it is reported as `blocked` with its reason, never as a
+missing row:
 
-`scripts/regulated_reference_canon.py` classifies the reference register;
-`scripts/process_public_bibles.py` currently selects two repository documents
-as its test corpus. These are different counts:
+1. the register classifies it public (`scripts/regulated_reference_canon.py`,
+   the same classifier the licence gate uses — never a hardcoded list);
+2. [`public-source-snapshots.yaml`](../public-source-snapshots.yaml) carries a
+   dated capture entry: official URL, capture date, sha256, size,
+   licence/policy note, version identity;
+3. a local capture whose sha256 **equals** the recorded one is present in
+   `--captures-dir`, outside the repository;
+4. scan, manifest, feed, body ledger, attestation **and** the strict gate all
+   exit 0 over that capture.
 
-| Class / corpus | Registered | Actually processed by this fixture | Claim |
-|---|---:|---:|---|
-| Public references (FDA, NIST, NASA, ICH, MHRA, EU, GitHub…) | 23 | 0 external source snapshots | classified only |
-| In-repo reference-policy documents | — | 2 | pipeline mechanics exercised |
-| Licensed references (ISO ×3, ISPE GAMP 5) | 4 | 0 | explicitly blocked |
+## Measured — 2026-09-05
 
-The two processed files are `docs/regulated/reference-basis/README.md` and
-`docs/regulated/reference-basis/nomos-bible-corpus-policy.md`.
+`scripts/process_public_bibles.py --capture-live` fetched every public URL of
+the register and recorded a **hash only** — nothing stored, nothing quoted:
 
-## What The Fixture Produces
+| State | Count | Meaning |
+|---|---:|---|
+| Registered as public | 23 | register classification, nothing more |
+| Captured hash-only (2026-09-05) | 20 | the URL served bytes with this sha256 that day |
+| Blocked at fetch | 3 | reason recorded, see below |
+| **Processed end to end** | **0** | no local capture exists; nothing traversed the chain |
+| Licensed (ISO ×3, ISPE GAMP 5) | 4 | explicitly blocked, independent regulated roadmap |
 
-`scripts/process_public_bibles.py` copies those two files into a dedicated,
-push-free checkout and runs the read-only Nomos pipeline. During the run it
-creates a source manifest, feed and attestation in a temporary artifact
-directory; only [`processing-summary.json`](processing-summary.json) is retained
-today. The receipt records `read_only_guard: pass`, `source_mutation: none` and
-`licensed_leak: []`.
+Blocked at fetch, by name — a network refusal is a fact about that day, not a
+reason to invent a hash:
 
-Because the full artifacts are not retained and no registered external public
-source is snapshotted, the honest claim is:
+| Reference | Reason |
+|---|---|
+| `FDA-CSA-2025` | `HTTPError: HTTP Error 404: Not Found` |
+| `ICH-Q9R1` | `HTTPError: HTTP Error 403: Forbidden` |
+| `NIST-SP-800-218` | `URLError: <urlopen error [Errno -3] Temporary failure in nam` |
 
-> Two public in-repo policy documents exercised the read-only pipeline without
-> licensed leakage or source mutation.
+`FDA-CSA-2025` returning 404 is a finding about the **register**: its URL is
+stale. Recorded here, not silently corrected.
 
-It is not “23 public bibles processed.” #644 must retain/content-address every
-stage and count only a registered source that completes scan, manifest, feed,
-body ledger, attestation and strict gate.
+## The fixture corpus, named as such
+
+Two in-repo policy documents (`README.md`, `nomos-bible-corpus-policy.md`) still
+exercise the pipeline offline — all **six** stages now, body ledger and strict
+gate included. They are reported under `fixture_documents` with
+`counted_as_external: false`, and they never enter any external count.
+
+## What is retained
+
+Every stage's artifact is written to `--retain-dir` (default
+`.nomos/retained-public-sources/<ref_id>/<sha256[:16]>/`, git-ignored) and
+**content-addressed**: a receipt under [`receipts/`](receipts/) records the
+sha256 of each artifact, the capture's sha256, the version identity and every
+stage's exit code. The receipts are committed; the artifacts are not, because a
+feed and a body ledger carry the atomised text of a third-party document and
+the licence register forbids committing third-party full text. A receipt lets
+anyone re-run the chain over the same capture and compare digests byte for
+byte.
+
+Change one byte of a capture and its sha256 changes: it no longer matches the
+recorded one (`blocked: capture_hash_mismatch`) and any receipt keyed by the
+old digest is reported **stale**, never reused.
 
 ## Reproduce
 
 ```bash
 ( cd cli && go build -o /tmp/nomos . )
-python scripts/process_public_bibles.py --nomos-bin /tmp/nomos \
-  --out docs/regulated/reference-basis/public-bibles-processing/processing-summary.json
+# honest state of the tree (no local captures): fixture chain + blocked counts
+python scripts/process_public_bibles.py --nomos-bin /tmp/nomos --out docs/regulated/reference-basis/public-bibles-processing/processing-summary.json
+# refresh dated hash-only captures (network)
+python scripts/process_public_bibles.py --nomos-bin /tmp/nomos --capture-live
+# process a real capture kept OUTSIDE the repository
+python scripts/process_public_bibles.py --nomos-bin /tmp/nomos --captures-dir ~/nomos-captures --retain-dir ~/nomos-retained
 ```
 
-The current test `tests/test_public_bibles_processing.py` proves the bounded
-fixture behavior. It must not be used as evidence for external-source coverage.
+## Claim
 
-## Current Acceptance Mapping
+> 20 public references have a dated hash-only capture; 0 have been processed
+> end to end; 2 in-repo policy documents exercise all six stages. Nothing else.
 
-| Bounded criterion | Evidence |
-|---|---|
-| Two policy documents selected | `processing-summary.json:corpus.documents` |
-| Temporary manifest/feed created during the run | `artifacts_present` receipt fields |
-| No source mutation | `read_only_guard: pass`, `source_mutation: none` |
-| No licensed bible processed | `licensed_leak: []` |
-| Actual public sources retained end-to-end | **open: #644** |
+It is not "23 public bibles processed". `tests/test_public_bibles_processing.py`
+drives a synthetic capture through the full chain offline and proves that one
+changed byte becomes a named mismatch with a stale receipt.

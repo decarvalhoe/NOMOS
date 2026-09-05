@@ -1,12 +1,8 @@
 {
-  "artifacts_present": {
-    "atomization_feed": true,
-    "attestation": true,
-    "manifest": true,
-    "snapshot": true
-  },
   "bible_split": {
     "canon_status": "requires_evidence",
+    "external_public_sources_blocked": 23,
+    "external_public_sources_captured_hash_only": 20,
     "external_public_sources_processed": 0,
     "licensed_blocked": [
       {
@@ -28,22 +24,161 @@
     ],
     "public_classified_count": 23
   },
-  "claim_boundary": "Two in-repo public policy documents exercise the pipeline; public_classified_count is registry classification, not the number of external public bibles processed. Licensed bibles are excluded.",
-  "licensed_leak": [],
-  "pipeline_steps": {
-    "attest": 0,
-    "feed": 0,
-    "manifest": 0,
-    "scan": 0
-  },
-  "processed_corpus": {
-    "file_count": 2,
+  "claim_boundary": "external_public_sources_processed counts registered public references whose local capture matches the recorded sha256 and completed scan, manifest, feed, body ledger, attestation and the strict gate. public_classified_count is register classification. fixture_documents are two in-repo policy documents and are never counted as external. Retained artifacts live outside the repository; committed receipts content-address them.",
+  "fixture_documents": {
+    "counted_as_external": false,
     "files": [
       "README.md",
       "nomos-bible-corpus-policy.md"
-    ]
+    ],
+    "pipeline_steps": {
+      "attest": 0,
+      "body_ledger": 0,
+      "feed": 0,
+      "manifest": 0,
+      "scan": 0,
+      "strict": 0
+    },
+    "source_mutation": "none"
   },
-  "read_only_guard": "pass",
-  "schema_version": "nomos-public-policy-fixture-v2",
-  "source_mutation": "none"
+  "licensed_leak": [],
+  "public_sources": [
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "FDA-21CFR11-11.10",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "FDA-21CFR820-QMSR",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "fetch_failed: HTTPError: HTTP Error 404: Not Found",
+      "reference_id": "FDA-CSA-2025",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "FDA-GPSV-2002",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "FDA-DATA-INTEGRITY-CGMP-2018",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "MHRA-GXP-DATA-INTEGRITY-2018",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "EU-EUDRALEX-V4-ANNEX11",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "NASA-NPR-7150-2D",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "fetch_failed: URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "reference_id": "NIST-SP-800-218",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "NIST-SP-800-53R5",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "NIST-AI-RMF-1",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "fetch_failed: HTTPError: HTTP Error 403: Forbidden",
+      "reference_id": "ICH-Q9R1",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "ICH-Q10",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-ISSUE-FORMS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-BRANCH-PROTECTION",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-RULESETS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-CODEOWNERS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-ENVIRONMENTS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-WORKFLOW-ARTIFACTS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-ARTIFACT-ATTESTATIONS",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-AUDIT-LOG",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-CODE-SCANNING",
+      "status": "blocked"
+    },
+    {
+      "blocked_reason": "no_local_capture: --captures-dir holds no file for this reference (hash-only capture recorded, content not present)",
+      "captured_hash_only": true,
+      "reference_id": "GITHUB-SECRET-SCANNING",
+      "status": "blocked"
+    }
+  ],
+  "retain_dir": "/home/eric/dev/NOMOS/.nomos/retained-public-sources",
+  "schema_version": "nomos-public-source-processing-v3"
 }

@@ -17,3 +17,6 @@ tmp/
 .tools/
 .regulated-doc-gate/
 .regulated-evidence-pack/
+
+# #644 — retained public-source artifacts (feed/ledger carry third-party derived text); receipts are committed, artifacts are not
+.nomos/
