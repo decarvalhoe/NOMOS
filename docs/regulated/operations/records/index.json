@@ -1,0 +1,217 @@
+{
+  "schema_version": "nomos-review-record-index-v1",
+  "generated_by": "scripts/portfolio_review_index.py",
+  "records_dir": "docs/regulated/operations/records",
+  "total": 6,
+  "by_type": {
+    "deviation_capa": 3,
+    "internal_audit": 1,
+    "management_review": 1,
+    "role_assignment": 1
+  },
+  "open_capa": 0,
+  "actions_status_unrecorded": 3,
+  "cited_artifacts_missing": 0,
+  "records": [
+    {
+      "record_id": "NOMOS-REC-AUD-2026-001",
+      "record_type": "internal_audit",
+      "path": "docs/regulated/operations/records/2026-06-11-internal-audit-record.yaml",
+      "sha256": "sha256:d9f43a91e9cc070ffcbce0cbcea4c7ad9d590c0621c218e5975914b1b7e16139",
+      "date": "2026-06-11",
+      "decisions": 0,
+      "actions": 0,
+      "action_statuses": {},
+      "findings": 6,
+      "assignments": 0,
+      "next_review_due": null,
+      "cited_artifacts": [
+        {
+          "path": ".vrc-wiring-matrix/wiring-matrix.md",
+          "exists": true
+        },
+        {
+          "path": "docs/45-vision-reality-closure-plan.md",
+          "exists": true
+        },
+        {
+          "path": "docs/46-vrc-epic-issue-list.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "record_id": "NOMOS-REC-MR-2026-001",
+      "record_type": "management_review",
+      "path": "docs/regulated/operations/records/2026-06-11-management-review-record.yaml",
+      "sha256": "sha256:fdef406cdc75fd91e7d146839784b9781f7cfcbd3ba918c8a733ff4a0a75294a",
+      "date": "2026-06-11",
+      "decisions": 5,
+      "actions": 3,
+      "action_statuses": {
+        "status_unrecorded": 3
+      },
+      "findings": 0,
+      "assignments": 0,
+      "next_review_due": "2026-12-11",
+      "cited_artifacts": [
+        {
+          "path": ".vrc-wiring-matrix/wiring-matrix.md",
+          "exists": true
+        },
+        {
+          "path": "docs/45-vision-reality-closure-plan.md",
+          "exists": true
+        },
+        {
+          "path": "docs/46-vrc-epic-issue-list.md",
+          "exists": true
+        },
+        {
+          "path": "docs/decisions/0006-control-plane-archive.md",
+          "exists": true
+        },
+        {
+          "path": "docs/public-claim-boundary.md",
+          "exists": true
+        },
+        {
+          "path": "docs/regulated/lifecycle/validation-master-plan.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "record_id": "NOMOS-REC-ROLE-2026-001",
+      "record_type": "role_assignment",
+      "path": "docs/regulated/operations/records/2026-06-11-role-assignment-record.yaml",
+      "sha256": "sha256:7f372c76f1adac09a6d1c6ef4307ac24d6e78f37b236699c17f3c6729733674a",
+      "date": "2026-06-11",
+      "decisions": 0,
+      "actions": 0,
+      "action_statuses": {},
+      "findings": 0,
+      "assignments": 7,
+      "next_review_due": null,
+      "cited_artifacts": [
+        {
+          "path": "docs/45-vision-reality-closure-plan.md",
+          "exists": true
+        },
+        {
+          "path": "docs/46-vrc-epic-issue-list.md",
+          "exists": true
+        },
+        {
+          "path": "docs/regulated/quality-system/quality-manual.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "record_id": "CAPA-2026-001",
+      "record_type": "deviation_capa",
+      "path": "docs/regulated/operations/records/capa/CAPA-2026-001-empty-signature-path.yaml",
+      "sha256": "sha256:8e2763179a3e5ba1ba56fe559e7e1b909133da0a0981fecc598e293f98377fae",
+      "date": "2026-06-11",
+      "status": "closed",
+      "severity": "major",
+      "closed": "2026-06-11",
+      "retro_documented": true,
+      "effectiveness_verified": true,
+      "corrective_actions": 3,
+      "preventive_actions": 2,
+      "cited_artifacts": [
+        {
+          "path": "cli/internal/attestation/attestation.go",
+          "exists": true
+        },
+        {
+          "path": "cli/internal/attestation/signing.go",
+          "exists": true
+        },
+        {
+          "path": "docs/43-development-doctrine.md",
+          "exists": true
+        },
+        {
+          "path": "scripts/claim_boundary_guard.py",
+          "exists": true
+        },
+        {
+          "path": "scripts/vrc_wiring_matrix.py",
+          "exists": true
+        },
+        {
+          "path": "tests/test_claim_boundary_guard.py",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "record_id": "CAPA-2026-002",
+      "record_type": "deviation_capa",
+      "path": "docs/regulated/operations/records/capa/CAPA-2026-002-orphan-commands.yaml",
+      "sha256": "sha256:ed398a57dd88b70b352cea39e451ab4f5e987accddf87b296dd95b2a4debf6ca",
+      "date": "2026-06-11",
+      "status": "closed",
+      "severity": "major",
+      "closed": "2026-06-11",
+      "retro_documented": false,
+      "effectiveness_verified": true,
+      "corrective_actions": 1,
+      "preventive_actions": 2,
+      "cited_artifacts": [
+        {
+          "path": ".github/ISSUE_TEMPLATE/capability-claim.yml",
+          "exists": true
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "exists": true
+        },
+        {
+          "path": "scripts/vrc_wiring_matrix.py",
+          "exists": true
+        },
+        {
+          "path": "tests/test_vrc_wiring_matrix.py",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "record_id": "CAPA-2026-003",
+      "record_type": "deviation_capa",
+      "path": "docs/regulated/operations/records/capa/CAPA-2026-003-unwired-attestation-capabilities.yaml",
+      "sha256": "sha256:59e21baa1536ba1e4bd189e743d0c38233ba92f3e611b7f596931c9ecbfa2b6e",
+      "date": "2026-06-11",
+      "status": "closed",
+      "severity": "major",
+      "closed": "2026-06-11",
+      "retro_documented": false,
+      "effectiveness_verified": true,
+      "corrective_actions": 3,
+      "preventive_actions": 1,
+      "cited_artifacts": [
+        {
+          "path": "cli/internal/app/attest_supply_chain.go",
+          "exists": true
+        },
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "exists": true
+        },
+        {
+          "path": "cli/internal/corpus/body_ledger_verify.go",
+          "exists": true
+        },
+        {
+          "path": "scripts/vrc_wiring_matrix_registry.json",
+          "exists": true
+        }
+      ]
+    }
+  ],
+  "claim_boundary": "An index of committed QMS records: counts, dates, hashes, cited artifacts and their existence. It is not a record, performs no review, closes no CAPA and approves nothing."
+}

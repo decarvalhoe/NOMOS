@@ -65,7 +65,6 @@ jobs:
           go run . portfolio status --repo-root .. --out "$RUNNER_TEMP/portfolio-status.json"
           jq -e '.schema_version == "nomos-portfolio-status-v1" and .capabilities.available == true and .capabilities.expected_vs_computed_agree == true and .capabilities.mismatches == 0' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
           jq -e --argjson n "$(jq '.summary.capabilities' ../.vrc-wiring-matrix/wiring-matrix.json)" '.capabilities.total == $n' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
-          jq -e '[.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length == .[0:0]|length or true' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
           jq -e '([.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length) == .sections_unavailable' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
           go run . portfolio status --repo-root .. --format md | head -20
       - name: Upload portfolio status
@@ -281,6 +280,10 @@ jobs:
       # YAML in lockstep with facets.cue; pack ontology/vocabulary YAML), and it
       # round-trips: parsed back, isomorphic to the validated graph, pack graphs
       # conforming to the shapes, every concept mapped, index hashes intact.
+      # NRT-021 (#669): the QMS review-record index is a fresh build and its
+      # guard holds (cited artifacts exist, decisions have ids, actions have owners).
+      - name: "Review-record index — fresh build + guard (NRT-021 #669)"
+        run: python scripts/portfolio_review_index.py --root . --check
       - name: "SKOS static distribution — deterministic build + round-trip (#643)"
         run: python scripts/skos_distribution.py --root . --check --verify
       - name: Attestation claim-boundary guard
