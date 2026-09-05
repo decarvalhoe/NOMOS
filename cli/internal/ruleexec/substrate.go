@@ -123,23 +123,103 @@ type TracedResult struct {
 }
 
 // ExecutionRecord is the emitted evidence.
+//
+// Three digests bind it (VRC-42 hardening, #642):
+//
+//   - RequestDigest covers what was ASKED — every expression and source trace.
+//     VerifyRecord recomputes it from the formulas, so a record whose questions
+//     were edited after the fact does not survive.
+//   - ResultsDigest covers what was RECORDED — every atom id, status, value,
+//     unit and reason, in a canonical form NOMOS computes itself. VerifyRecord
+//     recomputes it from the record's own results, so a value edited after
+//     emission does not survive either.
+//   - ResponseDigest covers what the substrate ACTUALLY WROTE, over its raw
+//     bytes. It cannot be recomputed from the record — the raw output is not
+//     kept — so it is evidence for a reader who retained that output, not a
+//     self-check.
+//
+// What this is NOT: a signature. The digests bind the record to itself and to
+// the formulas; they do not prove the substrate produced it, because anyone
+// rewriting a value can rewrite the digest beside it. For authenticity, sign
+// the record through the existing DSSE path. Saying so here is cheaper than
+// letting a reader assume otherwise.
 type ExecutionRecord struct {
 	SchemaVersion  string         `json:"schema_version"`
 	ClaimBoundary  string         `json:"claim_boundary"`
 	Substrate      string         `json:"substrate"`
 	SubstrateCmd   string         `json:"substrate_cmd"`
 	RequestDigest  string         `json:"request_digest"`
+	ResultsDigest  string         `json:"results_digest"`
+	ResponseDigest string         `json:"response_digest"`
 	FormulaCount   int            `json:"formula_count"`
 	ComputedCount  int            `json:"computed_count"`
 	UnsupportedNum int            `json:"unsupported_count"`
 	Results        []TracedResult `json:"results"`
 }
 
+// integrityNote is carried in the record so the limit travels with the artifact
+// rather than living only in this file.
+const integrityNote = "request_digest and results_digest are recomputable from the formulas and " +
+	"the record itself; response_digest covers the substrate's raw output, which this record does " +
+	"not retain. None of the three is a signature: they detect a record that no longer agrees with " +
+	"itself, not a record someone rewrote consistently."
+
+// ComputeRequestDigest hashes what was asked. Deterministic: the request is
+// marshalled in declaration order, exactly as it was sent.
+func ComputeRequestDigest(formulas []Formula) (string, error) {
+	payload, err := json.Marshal(Request{SchemaVersion: RequestSchema, Formulas: formulas})
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(payload)
+	return "sha256:" + hex.EncodeToString(sum[:]), nil
+}
+
+// canonicalResult is the stable shape hashed into ResultsDigest. It is a
+// separate type on purpose: adding a display-only field to TracedResult must
+// not silently change every previously published digest.
+type canonicalResult struct {
+	AtomID     string          `json:"atom_id"`
+	Expression string          `json:"expression"`
+	Trace      SourceTrace     `json:"source_trace"`
+	Status     string          `json:"status"`
+	Value      json.RawMessage `json:"value,omitempty"`
+	Unit       string          `json:"unit,omitempty"`
+	Reason     string          `json:"reason,omitempty"`
+}
+
+// ComputeResultsDigest hashes what was recorded, over a canonical ordering by
+// atom id so the digest does not depend on the substrate's response order.
+func ComputeResultsDigest(results []TracedResult) (string, error) {
+	canon := make([]canonicalResult, 0, len(results))
+	for _, r := range results {
+		canon = append(canon, canonicalResult{
+			AtomID:     r.AtomID,
+			Expression: r.Expression,
+			Trace:      r.Trace,
+			Value:      r.Value,
+			Status:     r.Status,
+			Unit:       r.Unit,
+			Reason:     r.Reason,
+		})
+	}
+	sort.SliceStable(canon, func(i, j int) bool { return canon[i].AtomID < canon[j].AtomID })
+	payload, err := json.Marshal(canon)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(payload)
+	return "sha256:" + hex.EncodeToString(sum[:]), nil
+}
+
 // Substrate is the borrowed engine. The interface exists so tests can drive the
 // protocol without a process; the only shipped implementation is the external
 // one below.
+// Run returns the parsed response AND the raw bytes it was parsed from, so the
+// record can bind what the substrate actually wrote rather than only NOMOS's
+// reading of it.
 type Substrate interface {
-	Run(req Request) (Response, error)
+	Run(req Request) (Response, []byte, error)
 }
 
 // External runs a command per batch: request JSON on stdin, response JSON on
@@ -151,15 +231,15 @@ type External struct {
 }
 
 // Run implements Substrate.
-func (e External) Run(req Request) (Response, error) {
+func (e External) Run(req Request) (Response, []byte, error) {
 	if len(e.Command) == 0 || strings.TrimSpace(e.Command[0]) == "" {
-		return Response{}, errors.New("rule substrate: empty command")
+		return Response{}, nil, errors.New("rule substrate: empty command")
 	}
 	name := e.Command[0]
 
 	payload, err := json.Marshal(req)
 	if err != nil {
-		return Response{}, fmt.Errorf("rule substrate %q: encode request: %w", name, err)
+		return Response{}, nil, fmt.Errorf("rule substrate %q: encode request: %w", name, err)
 	}
 
 	timeout := e.Timeout
@@ -178,17 +258,18 @@ func (e External) Run(req Request) (Response, error) {
 
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return Response{}, fmt.Errorf("rule substrate %q timed out after %s", name, timeout)
+			return Response{}, nil, fmt.Errorf("rule substrate %q timed out after %s", name, timeout)
 		}
-		return Response{}, fmt.Errorf("rule substrate %q failed: %v%s", name, err, stderrTail(stderr.String()))
+		return Response{}, nil, fmt.Errorf("rule substrate %q failed: %v%s", name, err, stderrTail(stderr.String()))
 	}
 
+	raw := bytes.TrimSpace(stdout.Bytes())
 	var resp Response
-	if err := json.Unmarshal(bytes.TrimSpace(stdout.Bytes()), &resp); err != nil {
-		return Response{}, fmt.Errorf("rule substrate %q: response is not %s JSON: %v%s",
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return Response{}, nil, fmt.Errorf("rule substrate %q: response is not %s JSON: %v%s",
 			name, ResponseSchema, err, stderrTail(stderr.String()))
 	}
-	return resp, nil
+	return resp, raw, nil
 }
 
 func stderrTail(s string) string {
@@ -228,13 +309,12 @@ func Execute(sub Substrate, cmd []string, formulas []Formula) (ExecutionRecord, 
 	}
 
 	req := Request{SchemaVersion: RequestSchema, Formulas: formulas}
-	payload, err := json.Marshal(req)
+	requestDigest, err := ComputeRequestDigest(formulas)
 	if err != nil {
 		return ExecutionRecord{}, fmt.Errorf("%s: encode request: %v", FindingSubstrateFailed, err)
 	}
-	digest := sha256.Sum256(payload)
 
-	resp, err := sub.Run(req)
+	resp, raw, err := sub.Run(req)
 	if err != nil {
 		return ExecutionRecord{}, fmt.Errorf("%s: %v", FindingSubstrateFailed, err)
 	}
@@ -262,12 +342,16 @@ func Execute(sub Substrate, cmd []string, formulas []Formula) (ExecutionRecord, 
 
 	record := ExecutionRecord{
 		SchemaVersion: RecordSchema,
-		ClaimBoundary: claimBoundary,
+		ClaimBoundary: claimBoundary + " " + integrityNote,
 		Substrate:     resp.Substrate,
 		SubstrateCmd:  strings.Join(cmd, " "),
-		RequestDigest: "sha256:" + hex.EncodeToString(digest[:]),
+		RequestDigest: requestDigest,
 		FormulaCount:  len(formulas),
 		Results:       make([]TracedResult, 0, len(formulas)),
+	}
+	if len(raw) > 0 {
+		sum := sha256.Sum256(raw)
+		record.ResponseDigest = "sha256:" + hex.EncodeToString(sum[:])
 	}
 
 	for _, f := range formulas {
@@ -312,6 +396,12 @@ func Execute(sub Substrate, cmd []string, formulas []Formula) (ExecutionRecord, 
 	sort.SliceStable(record.Results, func(i, j int) bool {
 		return record.Results[i].AtomID < record.Results[j].AtomID
 	})
+
+	resultsDigest, err := ComputeResultsDigest(record.Results)
+	if err != nil {
+		return ExecutionRecord{}, fmt.Errorf("%s: digest results: %v", FindingSubstrateFailed, err)
+	}
+	record.ResultsDigest = resultsDigest
 	return record, nil
 }
 
@@ -360,6 +450,61 @@ func VerifyRecord(record ExecutionRecord, formulas []Formula) error {
 	if computed != record.ComputedCount || unsupported != record.UnsupportedNum {
 		return fmt.Errorf("record counts (%d computed, %d unsupported) disagree with its results (%d, %d)",
 			record.ComputedCount, record.UnsupportedNum, computed, unsupported)
+	}
+
+	// #642 — the digests are recomputed, not merely read back. Without this a
+	// value edited after emission survives every check above: the expression,
+	// trace and status stay coherent while the number changes.
+	requestDigest, err := ComputeRequestDigest(formulas)
+	if err != nil {
+		return fmt.Errorf("recompute request digest: %w", err)
+	}
+	if record.RequestDigest == "" {
+		return errors.New("record carries no request_digest")
+	}
+	if record.RequestDigest != requestDigest {
+		return fmt.Errorf("request_digest is %s but the formulas hash to %s — "+
+			"what was asked is not what the record says was asked",
+			record.RequestDigest, requestDigest)
+	}
+
+	resultsDigest, err := ComputeResultsDigest(record.Results)
+	if err != nil {
+		return fmt.Errorf("recompute results digest: %w", err)
+	}
+	if record.ResultsDigest == "" {
+		return errors.New("record carries no results_digest")
+	}
+	if record.ResultsDigest != resultsDigest {
+		return fmt.Errorf("results_digest is %s but the recorded results hash to %s — "+
+			"a status, value, unit or reason changed after emission",
+			record.ResultsDigest, resultsDigest)
+	}
+
+	// response_digest cannot be recomputed here (the raw output is not kept), so
+	// only its presence and shape are checked. It is evidence for a reader who
+	// retained the substrate's output, not a self-check.
+	if record.ResponseDigest == "" {
+		return errors.New("record carries no response_digest — the substrate's own output is unbound")
+	}
+	if !strings.HasPrefix(record.ResponseDigest, "sha256:") || len(record.ResponseDigest) != len("sha256:")+64 {
+		return fmt.Errorf("response_digest %q is not a sha256 digest", record.ResponseDigest)
+	}
+	return nil
+}
+
+// VerifyResponseBytes checks a record against the substrate's retained raw
+// output. This is the one check VerifyRecord cannot make on its own, and it is
+// separate because it needs evidence the record does not carry.
+func VerifyResponseBytes(record ExecutionRecord, raw []byte) error {
+	if record.ResponseDigest == "" {
+		return errors.New("record carries no response_digest")
+	}
+	sum := sha256.Sum256(bytes.TrimSpace(raw))
+	got := "sha256:" + hex.EncodeToString(sum[:])
+	if got != record.ResponseDigest {
+		return fmt.Errorf("response_digest is %s but the retained output hashes to %s",
+			record.ResponseDigest, got)
 	}
 	return nil
 }
