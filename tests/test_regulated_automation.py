@@ -1781,11 +1781,17 @@ source_integrity:
                 cwd=repo,
             )
 
+            # #641 — a matching hash is integrity, not permission. With no review
+            # block the artifact is verified and processing is still blocked; that
+            # is an honest requires_evidence, green without --strict.
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             report = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual(report["status"], "ready_for_processing")
-            self.assertEqual(report["summary"]["licensed_reference_gaps"], 0)
-            self.assertEqual(report["bibles"][0]["licensed_artifact_status"], "verified")
+            self.assertEqual(report["status"], "requires_evidence")
+            bible = report["bibles"][0]
+            self.assertEqual(bible["licensed_artifact_status"], "verified_license_review_required")
+            self.assertTrue(bible["artifact_hash_verified"])
+            self.assertFalse(bible["license_use_approved"])
+            self.assertTrue(any(g["id"] == "GAP-LICENSE-REVIEW-ISPE-GAMP5-2E-2022" for g in report["gaps"]))
 
     def test_reference_canon_reports_machine_readable_access_classes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -2188,6 +2194,238 @@ approval_records:
                 any(finding["message"].find("APPROVED_WITHOUT_EVIDENCE") >= 0 for finding in report["findings"]),
                 report["findings"],
             )
+
+
+    # ------------------------------------------------------------------ #641
+
+    def _licensed_repo(self, tmp: Path, intake_extra: str, *, register_extra: str = "") -> tuple[Path, Path, bytes]:
+        """A registry with one licensed reference and a verified artifact."""
+        repo = Path(tmp) / "repo"
+        licensed_root = Path(tmp) / "licensed"
+        payload = b"licensed reference content that must never be committed anywhere public"
+        digest = hashlib.sha256(payload).hexdigest().upper()
+        write_bytes(licensed_root / "ISPE-GAMP5-2E-2022/source.pdf", payload)
+        write(
+            repo / "docs/regulated/reference-basis/external-reference-register.yaml",
+            f"""
+schema_version: "0.1.0"
+nomos_bible_policy:
+  all_registered_references_are_canonical: true
+references:
+  - id: ISPE-GAMP5-2E-2022
+    title: ISPE GAMP 5 Guide Second Edition
+    publisher: ISPE
+    url: https://ispe.org/publications/guidance-documents/gamp-5
+    content_access_policy: licensed_content_required
+    evidence_status: local_artifact_registered_license_review_required_before_clause_mapping
+{register_extra}""".lstrip(),
+        )
+        write(
+            repo / "docs/regulated/reference-basis/licensed-intakes/ISPE-GAMP5-2E-2022.yaml",
+            f"""
+schema_version: "0.1.0"
+record_type: licensed_reference_intake
+reference_id: ISPE-GAMP5-2E-2022
+storage:
+  licensed_root_env: NOMOS_LICENSED_REFERENCE_ROOT
+  local_relative_path: ISPE-GAMP5-2E-2022/source.pdf
+source_integrity:
+  sha256: {digest}
+{intake_extra}""".lstrip(),
+        )
+        return repo, licensed_root, payload
+
+    def _run_canon(self, repo: Path, licensed_root: Path, *extra: str) -> tuple[subprocess.CompletedProcess[str], dict]:
+        output = repo / "out/reference-canon.json"
+        result = run_script(
+            "regulated_reference_canon.py",
+            "--root", str(repo), "--licensed-root", str(licensed_root), "--report", str(output), *extra,
+            cwd=repo,
+        )
+        # A missing report means the script crashed: surface its stderr instead
+        # of a bare KeyError three lines later.
+        self.assertTrue(output.exists(), f"reference canon wrote no report:\n{result.stderr}\n{result.stdout}")
+        report = json.loads(output.read_text(encoding="utf-8"))
+        return result, report
+
+    APPROVED_INTAKE = """
+allowed_use:
+  internal_processing_by_nomos: approved_for_internal_nomos_processing
+  commit_full_text_to_git: false
+  customer_redistribution: false
+review:
+  reviewer: quality-owner@example.invalid
+  approval_status: approved
+"""
+
+    def test_reference_canon_hash_verified_is_not_use_approved(self) -> None:
+        # The heart of #641: draft + no reviewer, hash perfect. Verified, blocked,
+        # honest — and the two facts are reported separately.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, _ = self._licensed_repo(Path(tmp), """
+review:
+  reviewer: not_assigned
+  approval_status: draft
+""")
+            result, report = self._run_canon(repo, root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(report["status"], "requires_evidence")
+            bible = report["bibles"][0]
+            self.assertTrue(bible["artifact_hash_verified"])
+            self.assertFalse(bible["license_use_approved"])
+            self.assertEqual(report["summary"]["licensed_hash_verified_only"], 1)
+            self.assertEqual(report["summary"]["licensed_use_approved"], 0)
+            self.assertTrue(any(g["id"].startswith("GAP-LICENSE-REVIEW-") for g in report["gaps"]))
+            # --strict turns the blocked state red, without inventing a finding.
+            strict, strict_report = self._run_canon(repo, root, "--strict")
+            self.assertEqual(strict.returncode, 1)
+            self.assertEqual(strict_report["findings"], [])
+
+    def test_reference_canon_each_review_invariant_is_its_own_gap(self) -> None:
+        cases = {
+            "GAP-LICENSE-REVIEW-": """
+allowed_use:
+  internal_processing_by_nomos: approved
+  commit_full_text_to_git: false
+  customer_redistribution: false
+review:
+  reviewer: not_assigned
+  approval_status: approved
+""",
+            "GAP-LICENSE-USE-": """
+allowed_use:
+  internal_processing_by_nomos: requires_license_review
+  commit_full_text_to_git: false
+  customer_redistribution: false
+review:
+  reviewer: someone@example.invalid
+  approval_status: approved
+""",
+            "GAP-LICENSE-SAFETY-": """
+allowed_use:
+  internal_processing_by_nomos: approved
+  commit_full_text_to_git: false
+review:
+  reviewer: someone@example.invalid
+  approval_status: approved
+""",
+        }
+        for gap_prefix, intake in cases.items():
+            with self.subTest(gap=gap_prefix), tempfile.TemporaryDirectory() as tmp:
+                repo, root, _ = self._licensed_repo(Path(tmp), intake)
+                _, report = self._run_canon(repo, root)
+                ids = [g["id"] for g in report["gaps"]]
+                self.assertTrue(any(i.startswith(gap_prefix) for i in ids), (gap_prefix, ids))
+                self.assertFalse(report["bibles"][0]["license_use_approved"])
+
+    def test_reference_canon_approved_review_unlocks_processing_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, _ = self._licensed_repo(Path(tmp), self.APPROVED_INTAKE)
+            result, report = self._run_canon(repo, root, "--strict")
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertEqual(report["status"], "ready_for_processing")
+            bible = report["bibles"][0]
+            self.assertTrue(bible["artifact_hash_verified"])
+            self.assertTrue(bible["license_use_approved"])
+            self.assertTrue(bible["license_review_verified"])
+
+    def _policy(self, repo: Path, sentinels: list[str]) -> None:
+        # A block sequence needs its own line; a single item joined alone has no
+        # leading newline, which is what produced "sequence entries are not
+        # allowed here" the first time round.
+        sentinel_yaml = ("\n" + "\n".join(f"      - {s}" for s in sentinels)) if sentinels else " []"
+        write(
+            repo / "docs/regulated/reference-basis/no-full-text-policy.yaml",
+            f"""
+schema_version: nomos-no-full-text-policy-v1
+policy_id: test
+public_trees: [docs/, README.md]
+text_suffixes: [".md", ".yaml"]
+min_sentence_chars: 40
+references:
+  - reference_id: ISPE-GAMP5-2E-2022
+    sentinel_status: {'registered' if sentinels else 'requires_licensed_copy'}
+    sentinels:{sentinel_yaml if sentinels else ' []'}
+""".lstrip(),
+        )
+
+    def test_reference_canon_committed_licensed_artifact_is_an_error(self) -> None:
+        # ADVERSARIAL: the licensed PDF lands in a public tree. Same bytes, same
+        # hash as the intake sidecar — that IS the artifact, committed.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, payload = self._licensed_repo(Path(tmp), self.APPROVED_INTAKE)
+            self._policy(repo, [])
+            write_bytes(repo / "docs/leaked/gamp5.pdf", payload)
+            result, report = self._run_canon(repo, root)
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(report["status"], "failed")
+            hit = [f for f in report["findings"] if f["id"] == "LICENSED_FULL_TEXT_COMMITTED"]
+            self.assertEqual(len(hit), 1, report["findings"])
+            self.assertEqual(hit[0]["path"], "docs/leaked/gamp5.pdf")
+            self.assertEqual(hit[0]["reference_id"], "ISPE-GAMP5-2E-2022")
+
+    def test_reference_canon_sentinel_sentence_present_is_an_error(self) -> None:
+        # ADVERSARIAL: a distinctive sentence is copied into a public doc, with
+        # different casing and punctuation. Only its normalised digest is in the
+        # policy; the sentence never is.
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("canon", ROOT / "scripts/regulated_reference_canon.py")
+        canon = importlib.util.module_from_spec(spec); spec.loader.exec_module(canon)  # type: ignore[union-attr]
+        sentence = "The supplier shall establish a quality management system appropriate to the risk of the regulated computerised system."
+        digest = canon.sentinel_digest(sentence)
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, _ = self._licensed_repo(Path(tmp), self.APPROVED_INTAKE)
+            self._policy(repo, [digest])
+            write(repo / "docs/notes.md", "# Notes\n\nIntro.  THE SUPPLIER SHALL ESTABLISH A QUALITY MANAGEMENT SYSTEM, APPROPRIATE TO THE RISK OF THE REGULATED COMPUTERISED SYSTEM!! Then more.\n")
+            result, report = self._run_canon(repo, root)
+            self.assertEqual(result.returncode, 1)
+            hit = [f for f in report["findings"] if f["id"] == "LICENSED_TEXT_PRESENT"]
+            self.assertEqual(len(hit), 1, report["findings"])
+            self.assertEqual(hit[0]["path"], "docs/notes.md")
+            self.assertEqual(report["no_full_text"]["sentinels_registered"], 1)
+
+    def test_reference_canon_no_sentinels_is_reported_uncovered_not_clean(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, _ = self._licensed_repo(Path(tmp), self.APPROVED_INTAKE)
+            self._policy(repo, [])
+            write(repo / "docs/notes.md", "# Notes\n\nAnything at all is written here, and nothing can be checked against it.\n")
+            _, report = self._run_canon(repo, root)
+            nft = report["no_full_text"]
+            self.assertEqual(nft["coverage"], "uncovered_no_sentinels_registered")
+            self.assertEqual(nft["references_without_sentinels"], ["ISPE-GAMP5-2E-2022"])
+            self.assertEqual([f for f in report["findings"] if f["id"] == "LICENSED_TEXT_PRESENT"], [])
+
+    def test_reference_canon_staged_leak_is_caught_outside_public_trees(self) -> None:
+        # ADVERSARIAL: the artifact is staged under a path no public tree covers.
+        # --staged scans whatever is about to be committed, anywhere.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, payload = self._licensed_repo(Path(tmp), self.APPROVED_INTAKE)
+            self._policy(repo, [])
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            write_bytes(repo / "tools/private/gamp5.pdf", payload)
+            subprocess.run(["git", "add", "tools/private/gamp5.pdf"], cwd=repo, check=True)
+            unstaged, unstaged_report = self._run_canon(repo, root)
+            self.assertEqual(unstaged.returncode, 0, "public-tree scan should not see tools/")
+            staged, staged_report = self._run_canon(repo, root, "--staged")
+            self.assertEqual(staged.returncode, 1)
+            self.assertTrue(any(f["id"] == "LICENSED_FULL_TEXT_COMMITTED" and f["path"] == "tools/private/gamp5.pdf" for f in staged_report["findings"]))
+            self.assertTrue(staged_report["no_full_text"]["staged_included"])
+
+    def test_reference_canon_honest_blocked_state_is_green_without_claim(self) -> None:
+        # The state the real tree is in: verified hash, draft review, no leak.
+        # Green without --strict, zero findings, zero approvals claimed.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, root, _ = self._licensed_repo(Path(tmp), """
+review:
+  reviewer: not_assigned
+  approval_status: draft
+""")
+            self._policy(repo, [])
+            result, report = self._run_canon(repo, root)
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(report["findings"], [])
+            self.assertEqual(report["summary"]["licensed_use_approved"], 0)
+            self.assertEqual(report["status"], "requires_evidence")
 
 
 if __name__ == "__main__":

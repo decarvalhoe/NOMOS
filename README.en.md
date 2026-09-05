@@ -205,7 +205,7 @@ Beyond the recorded POC, two proofs are recomputed on every CI run and fail on a
 | Proof | Current result | How it is held |
 |---|---|---|
 | Wiring matrix (VRC-00) | 40 capabilities, 0 mismatch between registry and tree, 0 phantom command | `scripts/vrc_wiring_matrix.py`; the generated file is compared with the commit |
-| Public cite-or-abstain bench (VRC-46, result of 2026-09-04, lexical proxy) | 9 items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — the single false cite is the negation, the documented blind spot of the proxy | `scripts/cite_or_abstain_bench.py`: sources verbatim and unmoved, references verified and dated, two byte-identical runs, versioned bounds, measurement identical to the published result |
+| Public cite-or-abstain bench (VRC-46, result of 2026-09-05, lexical proxy) | 9 items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — the single false cite is the negation, the documented blind spot of the proxy | `scripts/cite_or_abstain_bench.py`: sources verbatim and unmoved, references verified and dated, two byte-identical runs, versioned bounds, measurement identical to the published result |
 
 Methodology, corpus, bounds and dated results: [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
 

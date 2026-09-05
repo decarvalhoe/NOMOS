@@ -2217,6 +2217,55 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "licensed_reference_review_gate",
+      "title": "Revue de licence et no-full-text réel (#641) — un hash d’artefact vérifié prouve ce qui est sur disque, pas la permission de le traiter : le gate sépare `artifact_hash_verified` de `license_use_approved` et rend `verified_license_review_required` avec GAP-LICENSE-REVIEW / USE / SAFETY tant qu’un reviewer ASSIGNÉ n’a pas enregistré une approbation, que l’usage interne n’est pas autorisé et que commit du texte intégral et redistribution ne sont pas explicitement `false` (invariants restaurés de 570ed58, jamais mergé). Le no-full-text cesse d’être un contrôle de champs : `no-full-text-policy.yaml` versionné pilote un scan des arbres publics et des fichiers stagés — copie intégrale détectée par hash de l’artefact enregistré, copie partielle par digest de phrases sentinelles normalisées ; la politique ne stocke que des digests, jamais le texte, et zéro sentinelle est rendu `uncovered`, jamais propre. La décision de licence elle-même reste #194 (humain). Sidecar : guard Python, aucun moteur Go.",
+      "pillar": "P1",
+      "claim_level": "gate-status only (refuse un traitement sans revue ; n’accorde aucune licence et ne détecte pas la paraphrase)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/regulated-documentation-gate.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/regulated_reference_canon.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/reference-basis/no-full-text-policy.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "templates/regulated/licensed-reference-intake.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_regulated_automation.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2253,11 +2302,11 @@
     }
   ],
   "summary": {
-    "capabilities": 41,
+    "capabilities": 42,
     "computed": {
       "real": 33,
       "partial": 0,
-      "sidecar": 7,
+      "sidecar": 8,
       "stub": 0,
       "absent": 1
     },

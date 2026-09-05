@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: [611, 612, 637, 643]
-    devops: [641, 644, 639, 645]
+    devops: [644, 639, 645]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -165,19 +165,26 @@ items:
       reliance: manual_verification_required
   - issue: 641
     title: Restore licence-review and no-full-text gates
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: verified
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parents: [194, 196]
     regulated_tool:
       intended_use: refuse licensed-reference processing when review or permitted-use evidence is absent
       impact: decision
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_verification_required
+    delivered_by: "fix/641-licence-review-no-full-text"
+    note: >-
+      Hash verified is not use approved: GAP-LICENSE-REVIEW/USE/SAFETY until an
+      assigned reviewer approves. no-full-text-policy.yaml scans public trees
+      and staged files for real licensed text (full copy by hash, partial by
+      sentinel digest); zero sentinels reads as uncovered. The licence decision
+      itself stays #194.
   - issue: 644
     title: Process real public references and retain evidence
     state: open

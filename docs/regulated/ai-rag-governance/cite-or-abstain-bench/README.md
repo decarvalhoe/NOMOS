@@ -89,9 +89,10 @@ tree is never published.
 
 | Date | Engine | Configuration | Items | must_cite_recall | must_abstain_recall | false_cite_rate | Missed cites | File |
 |---|---|---|---|---|---|---|---|---|
+| 2026-09-05 | nomos 0.1.0-ALPHA | lexical proxy, no scorer | 9 | 1.0 (3/3) | 0.8333 (5/6) | 0.1667 (1/6) | 0 | `results-2026-09-04.json` |
 | 2026-09-04 | nomos 0.1.0-ALPHA | lexical proxy, no scorer | 9 | 1.0 (3/3) | 0.8333 (5/6) | 0.1667 (1/6) | 0 | `results-2026-09-04.json` |
 
-Per category (2026-09-04): `grounded` 3/3 cited; `forged_citation`,
+Per category (2026-09-05, identical to 2026-09-04): `grounded` 3/3 cited; `forged_citation`,
 `no_span_text`, `over_verbosity`, `prompt_injection`, `unsupported_question`
 1/1 blocked each; `negation` 0/1 blocked — the single false cite.
 
@@ -140,5 +141,6 @@ follows the practice of publishing a reproducible protocol with dated results
 
 ## Change Log
 
+- 0.1.1 (2026-09-05): re-publication after `nomos-bible-corpus-policy.md` gained two policy steps (#641); the quoted spans are intact, only the source digest moved; every number identical to 0.1.0.
 - 0.1.0 (2026-09-04): first publication — corpus of 9 items, lexical result,
   replay gate in CI (#582).

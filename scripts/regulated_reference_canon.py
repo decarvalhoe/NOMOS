@@ -11,7 +11,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import os
+import subprocess
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -92,6 +94,24 @@ COMMIT_FULL_TEXT_KEYS = {
     "full_text_commit_allowed",
 }
 ALLOWED_VALUES = {"allow", "allowed", "permitted", "true", "yes"}
+
+# #641 — licence review. A verified artifact hash proves WHAT is on disk; it
+# says nothing about whether NOMOS may process it. These values are the ones an
+# assigned reviewer may record to say that it may. Restored from 570ed58, which
+# never reached main.
+APPROVED_LICENSE_REVIEW_STATUSES = ("approved", "approved_for_internal_nomos_processing")
+APPROVED_INTERNAL_PROCESSING_VALUES = (
+    "approved",
+    "approved_internal_only",
+    "approved_for_internal_nomos_processing",
+    "allowed_internal_processing",
+    "allowed_with_restrictions",
+)
+NO_FULL_TEXT_POLICY_PATH = Path("docs/regulated/reference-basis/no-full-text-policy.yaml")
+NO_FULL_TEXT_POLICY_SCHEMA = "nomos-no-full-text-policy-v1"
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_NON_WORD = re.compile(r"[^a-z0-9\s]")
+_WS = re.compile(r"\s+")
 
 
 def utc_now() -> str:
@@ -407,15 +427,204 @@ def verify_licensed_artifact(
             },
         )
 
-    return (
-        {
-            "licensed_artifact_status": "verified",
-            "intake_sidecar": sidecar.as_posix(),
-            "artifact_relative_path": local_relative_path,
-            "sha256": actual_hash,
-        },
-        None,
-    )
+    verification: dict[str, Any] = {
+        "licensed_artifact_status": "verified",
+        "intake_sidecar": sidecar.as_posix(),
+        "artifact_relative_path": local_relative_path,
+        "sha256": actual_hash,
+        # #641 — the two facts are kept apart on purpose. A matching hash is
+        # integrity; permission to process is a human decision recorded below.
+        "artifact_hash_verified": True,
+        "license_use_approved": False,
+    }
+    review_status, review_gap = verify_license_review(intake, ref_id, sidecar)
+    verification.update(review_status)
+    if review_gap is not None:
+        verification["licensed_artifact_status"] = "verified_license_review_required"
+        return verification, review_gap
+    verification["license_use_approved"] = True
+    return verification, None
+
+
+def verify_license_review(
+    intake: dict[str, Any],
+    ref_id: str,
+    sidecar: Path,
+) -> tuple[dict[str, Any], dict[str, str] | None]:
+    """The review invariants that a verified hash alone never satisfies.
+
+    Order matters and is the order a reviewer works in: someone must be
+    assigned and approve; the approval must authorise internal processing; and
+    the sidecar must explicitly forbid the two things that would make
+    processing unsafe regardless of approval. The gate records the decision; it
+    does not make it (#194 is a human act).
+    """
+    review = intake.get("review") or {}
+    allowed_use = intake.get("allowed_use") or {}
+    reviewer = str(review.get("reviewer") or "").strip()
+    approval_status = str(review.get("approval_status") or "").strip()
+    internal_processing = str(allowed_use.get("internal_processing_by_nomos") or "").strip()
+    commit_full_text = allowed_use.get("commit_full_text_to_git")
+    customer_redistribution = allowed_use.get("customer_redistribution")
+
+    status: dict[str, Any] = {
+        "license_review_status": approval_status or "missing",
+        "license_reviewer": reviewer or "missing",
+        "licensed_internal_processing": internal_processing or "missing",
+        "commit_full_text_to_git": commit_full_text,
+        "customer_redistribution": customer_redistribution,
+        "license_review_verified": False,
+    }
+
+    if reviewer in ("", "not_assigned") or approval_status not in APPROVED_LICENSE_REVIEW_STATUSES:
+        return status, {
+            "id": f"GAP-LICENSE-REVIEW-{ref_id}",
+            "severity": "major",
+            "status": "open",
+            "reference_id": ref_id,
+            "message": "Licensed artifact hash is verified, but the license review is not approved by an assigned reviewer.",
+            "sidecar": sidecar.as_posix(),
+        }
+    if internal_processing not in APPROVED_INTERNAL_PROCESSING_VALUES:
+        return status, {
+            "id": f"GAP-LICENSE-USE-{ref_id}",
+            "severity": "major",
+            "status": "open",
+            "reference_id": ref_id,
+            "message": "Licensed artifact hash is verified, but allowed_use.internal_processing_by_nomos does not authorize internal Nomos processing.",
+            "sidecar": sidecar.as_posix(),
+        }
+    if commit_full_text is not False or customer_redistribution is not False:
+        return status, {
+            "id": f"GAP-LICENSE-SAFETY-{ref_id}",
+            "severity": "critical",
+            "status": "open",
+            "reference_id": ref_id,
+            "message": "Licensed sidecar must explicitly forbid committing full text to Git and customer redistribution before Nomos processing is allowed.",
+            "sidecar": sidecar.as_posix(),
+        }
+    return {**status, "license_review_verified": True}, None
+
+
+# --- #641: protected text actually present ---------------------------------
+
+def load_no_full_text_policy(root: Path) -> dict[str, Any] | None:
+    path = root / NO_FULL_TEXT_POLICY_PATH
+    if not path.exists():
+        return None
+    policy = load_yaml(path)
+    if policy.get("schema_version") != NO_FULL_TEXT_POLICY_SCHEMA:
+        return None
+    return policy
+
+
+def normalize_sentence(text: str) -> str:
+    return _WS.sub(" ", _NON_WORD.sub(" ", text.lower())).strip()
+
+
+def sentinel_digest(sentence: str) -> str:
+    return "sha256:" + hashlib.sha256(normalize_sentence(sentence).encode("utf-8")).hexdigest()
+
+
+def staged_paths(root: Path) -> list[Path]:
+    """Files staged for commit, anywhere in the repo. Empty when not a git tree."""
+    try:
+        out = subprocess.run(
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=AM"],
+            cwd=root, capture_output=True, text=True, check=True, timeout=60,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [root / line.strip() for line in out.splitlines() if line.strip()]
+
+
+def scan_committed_full_text(
+    root: Path,
+    policy: dict[str, Any],
+    licensed_hashes: dict[str, str],
+    include_staged: bool = False,
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    """Look for licensed text that is REALLY in public trees (or staged).
+
+    Returns findings (errors) and a coverage summary. The summary says how many
+    sentinels are registered, because zero sentinels means the sentence check
+    covered nothing — and that must read as uncovered, never as clean.
+    """
+    findings: list[dict[str, str]] = []
+    sentinels: dict[str, str] = {}
+    uncovered: list[str] = []
+    for ref in policy.get("references") or []:
+        ref_id = str(ref.get("reference_id", "unknown"))
+        digests = [str(d).lower() for d in (ref.get("sentinels") or [])]
+        if not digests:
+            uncovered.append(ref_id)
+        for d in digests:
+            sentinels[d] = ref_id
+
+    suffixes = tuple(policy.get("text_suffixes") or [])
+    min_chars = int(policy.get("min_sentence_chars") or 60)
+    policy_file = (root / NO_FULL_TEXT_POLICY_PATH).resolve()
+
+    candidates: list[Path] = []
+    for tree in policy.get("public_trees") or []:
+        base = root / str(tree)
+        if base.is_file():
+            candidates.append(base)
+        elif base.is_dir():
+            candidates.extend(p for p in base.rglob("*") if p.is_file())
+    if include_staged:
+        candidates.extend(p for p in staged_paths(root) if p.is_file())
+
+    scanned = 0
+    seen: set[Path] = set()
+    for path in candidates:
+        rp = path.resolve()
+        if rp in seen or rp == policy_file or ".git" in rp.parts:
+            continue
+        seen.add(rp)
+        scanned += 1
+        rel = rp.relative_to(root.resolve()).as_posix() if rp.is_relative_to(root.resolve()) else rp.as_posix()
+
+        # 1. full copy of a registered licensed artifact
+        digest = sha256_file(rp).upper()
+        if digest in licensed_hashes:
+            findings.append({
+                "id": "LICENSED_FULL_TEXT_COMMITTED",
+                "severity": "error",
+                "reference_id": licensed_hashes[digest],
+                "path": rel,
+                "message": "A registered licensed artifact is present byte-for-byte in a public tree.",
+            })
+            continue
+
+        # 2. sentinel sentences
+        if not sentinels or rp.suffix.lower() not in suffixes:
+            continue
+        try:
+            text = rp.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for sentence in _SENTENCE_SPLIT.split(text):
+            if len(sentence) < min_chars:
+                continue
+            d = sentinel_digest(sentence)
+            if d in sentinels:
+                findings.append({
+                    "id": "LICENSED_TEXT_PRESENT",
+                    "severity": "error",
+                    "reference_id": sentinels[d],
+                    "path": rel,
+                    "message": "A registered sentinel sentence of a licensed reference is present in a public tree.",
+                })
+                break
+
+    return findings, {
+        "files_scanned": scanned,
+        "sentinels_registered": len(sentinels),
+        "references_without_sentinels": sorted(uncovered),
+        "coverage": "sentinels_registered" if sentinels else "uncovered_no_sentinels_registered",
+        "staged_included": include_staged,
+    }
 
 
 def gap_for(
@@ -457,6 +666,7 @@ def build_report(
     root: Path,
     licensed_root: Path | None,
     allow_public_surrogates: bool = False,
+    include_staged: bool = False,
 ) -> dict[str, Any]:
     register_path = root / REGISTER_PATH
     if not register_path.exists():
@@ -490,6 +700,15 @@ def build_report(
 
     bibles = [classify_reference(reference) for reference in references]
     gaps = []
+    # #641 — hashes of every registered licensed artifact, for full-copy detection.
+    licensed_hashes: dict[str, str] = {}
+    for reference in references:
+        ref_id = str(reference.get("id", "unknown"))
+        sidecar = intake_path(root, ref_id)
+        if sidecar.exists():
+            h = str((load_yaml(sidecar).get("source_integrity") or {}).get("sha256") or "").upper().strip()
+            if h:
+                licensed_hashes[h] = ref_id
     for reference, bible in zip(references, bibles, strict=False):
         ref_id = str(reference.get("id", "unknown"))
         findings.extend(validate_reference_policy(reference, bible))
@@ -499,6 +718,12 @@ def build_report(
             gaps.append(gap)
         if finding is not None:
             findings.append(finding)
+    no_full_text: dict[str, Any] = {"coverage": "policy_missing"}
+    policy = load_no_full_text_policy(root)
+    if policy is not None:
+        text_findings, no_full_text = scan_committed_full_text(root, policy, licensed_hashes, include_staged)
+        findings.extend(text_findings)
+
     policy_counts = Counter(str(bible["content_access_policy"]) for bible in bibles)
     source_class_counts = Counter(str(bible["source_class"]) for bible in bibles)
     surrogate_mitigations = sum(1 for gap in gaps if gap.get("status") == "temporarily_mitigated")
@@ -527,7 +752,12 @@ def build_report(
             "licensed_reference_gaps": len(gaps),
             "surrogate_mitigations": surrogate_mitigations,
             "unmitigated_licensed_reference_gaps": unmitigated_gaps,
+            "licensed_use_approved": sum(1 for b in bibles if b.get("license_use_approved") is True),
+            "licensed_hash_verified_only": sum(
+                1 for b in bibles if b.get("artifact_hash_verified") is True and not b.get("license_use_approved")
+            ),
         },
+        "no_full_text": no_full_text,
         "bibles": bibles,
         "gaps": gaps,
         "findings": findings,
@@ -553,6 +783,11 @@ def main() -> int:
         help="Allow valid public surrogate annexes to temporarily unblock non-clause-level processing.",
     )
     parser.add_argument("--strict", action="store_true", help="Return non-zero unless ready for processing.")
+    parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="Also scan files staged for commit (anywhere) for licensed text.",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -562,7 +797,7 @@ def main() -> int:
         report_path = root / report_path
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    report = build_report(root, licensed_root, allow_public_surrogates=args.allow_public_surrogates)
+    report = build_report(root, licensed_root, allow_public_surrogates=args.allow_public_surrogates, include_staged=args.staged)
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": report["status"], "summary": report.get("summary", {})}, indent=2, sort_keys=True))
     if report["status"] == "failed":

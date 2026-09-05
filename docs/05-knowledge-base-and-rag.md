@@ -384,7 +384,7 @@ mesure ; une borne (`max_false_cite_rate`, `min_must_abstain_recall`,
 `min_must_cite_recall`) ne peut être posée que sur un côté de la matrice de
 confusion effectivement mesuré (fail-closed, même règle que le harnais).
 
-Résultat publié du 2026-09-04 (proxy lexical, aucun scorer) : 9 items,
+Résultat publié du 2026-09-05 (proxy lexical, aucun scorer ; republication à l'identique après extension du document source cité, première publication 2026-09-04) : 9 items,
 `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6),
 `false_cite_rate` 0.1667. Le seul faux « cite » est la catégorie `negation`,
 l'angle mort documenté du proxy lexical ; le test Go du bench prouve qu'un
