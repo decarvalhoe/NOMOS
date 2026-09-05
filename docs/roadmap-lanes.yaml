@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [668, 670]
+    product: [668]
     devops: []
     regulated: []
 
@@ -347,17 +347,17 @@ items:
       reliance: supporting_use_until_validated
   - issue: 670
     title: Control-plane decision under ADR-0006, wire or remove (NRT-022)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [667]
     regulated_tool:
       intended_use: either expose the archived multi-project view behind a real CLI caller with restored CI gating, or remove the archived code; leave no untested archived code
       impact: support
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_review
   - issue: 669
     title: Periodic review record index and guard (NRT-021)

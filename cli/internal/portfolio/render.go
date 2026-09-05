@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // WriteJSON writes the status as indented JSON.
-func WriteJSON(w io.Writer, st Status) error {
+func WriteJSON(w io.Writer, st any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(st)
@@ -62,4 +63,22 @@ func WriteMarkdown(w io.Writer, st Status) error {
 	row("release_candidate", st.ReleaseCandidate)
 	fmt.Fprintf(w, "\n%s\n", st.ClaimBoundary)
 	return nil
+}
+
+// WriteProjectsMarkdown renders the multi-project view from its computed values.
+func WriteProjectsMarkdown(w io.Writer, v ProjectsView) {
+	s := v.Summary
+	fmt.Fprintf(w, "# Portfolio projects — %s\n\n%d project(s): in_scope %d, partial %d, blocked %d, out_of_scope %d, unknown %d · %d exception(s), %d expired.\n\n", v.GeneratedAt, s.Total, s.InScope, s.Partial, s.Blocked, s.OutOfScope, s.Unknown, s.Exceptions, s.ExpiredExceptions)
+	fmt.Fprintln(w, "| Project | Verdict | Risk | Lifecycle | Owners | Stacks | Critical surfaces | Exceptions (expired) | Source |")
+	fmt.Fprintln(w, "|---|---|---|---|---|---|---|---|---|")
+	for _, p := range v.Projects {
+		expired := 0
+		for _, x := range p.Exceptions {
+			if x.Expired {
+				expired++
+			}
+		}
+		fmt.Fprintf(w, "| %s (%s) | %s | %s | %s | %s | %s | %d | %d (%d) | %s |\n", p.ID, p.Name, p.Verdict, p.RiskLevel, p.Lifecycle, strings.Join(p.Owners, ", "), strings.Join(p.Stacks, ", "), p.CriticalSurfaces, len(p.Exceptions), expired, p.Source.Sha256[:19])
+	}
+	fmt.Fprintf(w, "\n%s\n", v.ClaimBoundary)
 }

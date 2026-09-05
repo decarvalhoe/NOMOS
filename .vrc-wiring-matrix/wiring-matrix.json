@@ -2940,6 +2940,75 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "portfolio_multi_project_view",
+      "title": "Vue multi-projets (NRT-022 #670, ADR-0007) — le seul usage réel du dashboard archivé, porté dans cli/internal/portfolio et exposé par `nomos portfolio projects --project <nomos.project.yaml> [--exceptions <f>] ...` avec filtres exacts (verdict, stack, risque, owner insensible à la casse). Lit le VRAI schéma d'exceptions du strict gate ; expiration calculée à l'instant de la vue et comptée dans le résumé ; exception sans expiration marquée `undated` (jamais valide pour toujours) ; date inanalysable, exception sans id, manifeste absent ou sans id → erreur ; verdict absent compté `unknown`, jamais omis ; hash de chaque manifeste nommé ; tri déterministe. 13 tests dont 8 cas de filtre, 1 test CLI d'appariement --exceptions/--project. NON revendiqué : validation d'un projet, octroi d'une exception, control plane hébergé.",
+      "pillar": "P1",
+      "claim_level": "view (vue calculée de manifestes déclarés ; ne valide ni n'accorde rien)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/portfolio/projects.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/portfolio_cmd.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/portfolio/projects_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/portfolio_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
+    },
+    {
+      "id": "control_plane_archive",
+      "title": "Code control-plane archivé (registry, storage, dashboard d'origine) — RETIRÉ par ADR-0007 (#670) : le dashboard est porté dans cli/internal/portfolio, registry et storage n'avaient aucun consommateur (exécutions = runs CI et artefacts commités). La sonde ci-dessous rougit si un fichier Go réapparaît sous control-plane/. Aucun control plane hébergé n'existe ni n'est promis (docs/regulated/control-plane/multi-corpus-roadmap.yaml reste la direction, la CLI reste la source de vérité).",
+      "pillar": "P1",
+      "claim_level": "absent (ADR-0007 ; la carte du dépôt n'a plus de zone grise)",
+      "promotion_issue": "",
+      "expected": "absent",
+      "computed": "absent",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2978,13 +3047,13 @@
     }
   ],
   "summary": {
-    "capabilities": 54,
+    "capabilities": 56,
     "computed": {
-      "real": 42,
+      "real": 43,
       "partial": 0,
       "sidecar": 11,
       "stub": 0,
-      "absent": 1
+      "absent": 2
     },
     "mismatches": 0,
     "generic_check_failures": 0,

@@ -356,7 +356,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Exemples de domaines appliquant la méthode canonical-first. |
 | `adapters/` | Contrats adapter et profils de référence Node/TypeScript, Python et JVM : specs et fixtures, sans implémentation exécutable à ce stade. |
 | `ci/` | Documentation d'intégration CI réutilisable. |
-| `control-plane/` | Packages Go exploratoires archivés (dashboard, registry, storage) : zéro caller de production, gel acté par ADR-0006, réexamen au jalon portfolio v0.9.x. |
 | `policies/` | Répertoire placeholder pour un futur cadre de policies ; non opérationnel à ce stade. |
 | `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation ; registre de capacités (`vrc_wiring_matrix_registry.json`), guards (matrice de câblage, claim boundary, couplage core/pack), gates RAG et bench, sidecars (evidence RAG, scorer HHEM, kits de référence). |
 | `.vrc-wiring-matrix/` | Matrice de câblage GÉNÉRÉE (JSON + Markdown) : statut de chaque capacité calculé depuis l'arbre ; toute édition manuelle ou dérive est rouge en CI. |

@@ -725,3 +725,8 @@ func normaliseDateOpt(v string) string {
 	}
 	return normaliseDate(v)
 }
+
+func sha256Of(raw []byte) string {
+	sum := sha256.Sum256(raw)
+	return "sha256:" + hex.EncodeToString(sum[:])
+}

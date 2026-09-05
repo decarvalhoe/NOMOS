@@ -1,6 +1,6 @@
 # ADR-0006: Archivage du code control-plane (gel + retrait du gating CI dédié)
 
-Status: accepted
+Status: superseded by [ADR-0007](0007-control-plane-decision-portfolio-view.md) (2026-09-06) — condition de réveil remplie par NRT-019 (#667) ; dashboard porté dans `cli/internal/portfolio`, registry et storage retirés.
 Date: 2026-06-11
 Owner: Nomos core team
 Issue: VRC-04 (#550) · Étend: [ADR-0004](0004-no-control-plane-v01.md)
