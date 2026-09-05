@@ -96,6 +96,8 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	integrityRAGPath := flags.String("corpus-integrity-rag", "", "path to a JSON []ChunkMetadata; combined with --corpus-integrity-source to compute the feed quality report")
 	bodyLedgerPath := flags.String("corpus-body-ledger", "", "path to a JSON CorpusBodyLedger (FSQ-05 #368); when supplied, uncovered text bytes for admitted+atomized sources fail the integrity check")
 	semanticProfilePath := flags.String("corpus-semantic-quality-profile", "", "path to a JSON SemanticQualityProfile (FSQ-06 #369); defaults to corpus.DefaultRBOKProfile() when absent")
+	snapshotEnvelope := flags.String("external-snapshot", "", "path to an external snapshot envelope (#611); the root is recomputed from its records and an incomplete or mutable snapshot fails the gate")
+	snapshotRecords := flags.String("external-snapshot-records", "", "records JSONL for --external-snapshot (default: beside the envelope)")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -106,7 +108,7 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		*integrityRAGPath != "" ||
 		*bodyLedgerPath != ""
 
-	if *projectPath == "" && *sourcesPath == "" && *matrixPath == "" && !integrityRequested {
+	if *projectPath == "" && *sourcesPath == "" && *matrixPath == "" && !integrityRequested && *snapshotEnvelope == "" {
 		fmt.Fprintln(stderr, "strict: at least one of --project, --sources, --matrix, or --corpus-integrity-* is required")
 		return 2
 	}
@@ -130,11 +132,43 @@ func StrictGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		}
 	}
 
+	if *snapshotEnvelope != "" {
+		section := runExternalSnapshotCheck(*snapshotEnvelope, *snapshotRecords)
+		result.Sections = append(result.Sections, section)
+		if !section.Valid {
+			result.Valid = false
+		}
+	}
+
 	writeGateResult(result, *format, stdout)
 	if result.Valid {
 		return 0
 	}
 	return 1
+}
+
+// runExternalSnapshotCheck (#611) makes the strict gate refuse an incomplete or
+// non-immutable snapshot: the root is recomputed from the records, never read
+// back from the envelope. The problem code is the engine's stable SNAPSHOT_*
+// code so downstream audits can key off it.
+func runExternalSnapshotCheck(envelopePath, recordsPath string) GateSection {
+	section := GateSection{Name: "external-snapshot", Valid: true}
+	env, records, err := corpus.LoadExternalSnapshot(envelopePath, recordsPath)
+	if err != nil {
+		section.Valid = false
+		section.Errors = append(section.Errors, GateError{Code: "SNAPSHOT_UNREADABLE", ID: envelopePath, Message: err.Error()})
+		return section
+	}
+	if _, verr := corpus.VerifyExternalSnapshot(env, records); verr != nil {
+		section.Valid = false
+		code := "SNAPSHOT_REFUSED"
+		msg := verr.Error()
+		if i := strings.Index(msg, ":"); i > 0 && strings.HasPrefix(msg, "SNAPSHOT_") {
+			code, msg = msg[:i], strings.TrimSpace(msg[i+1:])
+		}
+		section.Errors = append(section.Errors, GateError{Code: code, ID: env.SnapshotID, Message: msg})
+	}
+	return section
 }
 
 func runGate(projectPath, sourcesPath, matrixPath, exceptionsPath, baseDir string) GateResult {

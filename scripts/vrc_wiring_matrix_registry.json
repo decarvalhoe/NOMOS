@@ -902,6 +902,34 @@
         {"path": "templates/regulated/licensed-reference-intake.yaml", "contains": ["required_for_processing", "approved_status_values"]},
         {"path": "tests/test_regulated_automation.py", "contains": ["test_reference_canon_hash_verified_is_not_use_approved", "test_reference_canon_committed_licensed_artifact_is_an_error", "test_reference_canon_sentinel_sentence_present_is_an_error", "test_reference_canon_honest_blocked_state_is_green_without_claim"]}
       ]
+    },
+{
+      "id": "external_snapshot_input",
+      "title": "Snapshots externes immuables en entrée (#611) — la base opérationnelle (PostgreSQL, crawler) reste externe et mutable, NOMOS ne la lit jamais : il consomme une enveloppe `nomos.external-snapshot.v1` + un JSONL d\u2019enregistrements, et RECALCULE la racine de Merkle (machinerie du body ledger, déjà éprouvée) au lieu de la relire. Un octet changé, un enregistrement ajouté ou retiré → SNAPSHOT_ROOT_MISMATCH ; `immutable: false` → refusé ; compteurs vérifiés, jamais crus. `nomos corpus snapshot seal|verify|import` et section `external-snapshot` du strict gate. L\u2019import ne perd rien — source_id, version_id, locator, hash, captured_at traversent, une page web garde sa provenance #610 et est importée exclue avec sa raison si inadmissible — et un snapshot refusé ne produit AUCUN manifeste. Fixture commitée scellée par le vrai CLI. Claim : la racine prouve que ces enregistrements sont ceux exportés, pas que l\u2019export était complet ni que leur contenu est correct.",
+      "pillar": "P2",
+      "claim_level": "artifact-generated (intégrité d\u2019un export scellé ; aucun claim de complétude vis-à-vis de la base)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/corpus/external_snapshot.go", "contains": ["func VerifyExternalSnapshot(", "func SealExternalSnapshot(", "func ImportSnapshotToManifest(", "SNAPSHOT_ROOT_MISMATCH", "SNAPSHOT_NOT_IMMUTABLE", "buildMerkleProofs(leaves)"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["func corpusSnapshotCommand(", "corpus.VerifyExternalSnapshot(", "corpus.ImportSnapshotToManifest(", "corpus.SealExternalSnapshot("]},
+        {"path": "cli/internal/app/strict_gate.go", "contains": ["func runExternalSnapshotCheck(", "\"external-snapshot\""]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"corpus\":", "\"strict\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/corpus/external_snapshot_test.go", "contains": ["TestSnapshot_OneChangedByteBreaksTheRoot", "TestSnapshot_AddedOrDroppedRecordIsCaught", "TestSnapshot_ImportLosesNothing", "TestSnapshot_CommittedFixtureVerifiesAndOneByteBreaksIt"]},
+        {"path": "cli/internal/app/corpus_snapshot_cmd_test.go", "contains": ["TestSnapshotCLI_ImportWritesNothingWhenRefused", "TestStrictGate_ExternalSnapshotSectionBlocksAMutatedSnapshot"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ],
+      "sidecar": [
+        {"path": "specs/external-snapshot.cue", "contains": ["#ExternalSnapshot", "#SnapshotRecord", "immutable: true"]},
+        {"path": "cli/internal/corpus/testdata/external-snapshot/snapshot.json", "contains": ["nomos.external-snapshot.v1", "content_hash_root"]},
+        {"path": "docs/02-source-registry.md", "contains": ["Snapshots Externes Immuables (#611)", "SNAPSHOT_ROOT_MISMATCH"]}
+      ]
     }
   ]
 }

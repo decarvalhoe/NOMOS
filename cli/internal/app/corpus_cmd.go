@@ -59,6 +59,8 @@ func corpusCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return corpusDiagnoseCommand(args[1:], stdout, stderr)
 	case "profiles":
 		return corpusProfilesCommand(args[1:], stdout, stderr)
+	case "snapshot":
+		return corpusSnapshotCommand(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown corpus command %q\n\n", args[0])
 		corpusHelp(stderr)
@@ -81,7 +83,170 @@ func corpusHelp(stdout io.Writer) int {
 	fmt.Fprintln(stdout, "  nomos corpus feed --profile rbok-lawbook --root <corpus> [--outputs index,governance] [--format json|text]")
 	fmt.Fprintln(stdout, "  nomos corpus diagnose --profile rbok-lawbook --root <corpus> [--format json|text]")
 	fmt.Fprintln(stdout, "  nomos corpus profiles")
+	fmt.Fprintln(stdout, "  nomos corpus snapshot verify --envelope <snapshot.json> [--records <sources.jsonl>] [--out <verification.json>]")
+	fmt.Fprintln(stdout, "  nomos corpus snapshot import --envelope <snapshot.json> [--records <sources.jsonl>] --out <source-manifest.yaml> [--domain d --owner o --license l --confidentiality c]")
+	fmt.Fprintln(stdout, "  nomos corpus snapshot seal --records <sources.jsonl> --snapshot-id <id> --producer <name/version> [--db-schema <v>] --out <snapshot.json>")
 	return 0
+}
+
+// --- snapshot: external immutable snapshots (#611) ---------------------------
+
+func corpusSnapshotCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "usage: nomos corpus snapshot verify|import|seal ...")
+		return 2
+	}
+	switch args[0] {
+	case "verify":
+		return corpusSnapshotVerify(args[1:], stdout, stderr)
+	case "import":
+		return corpusSnapshotImport(args[1:], stdout, stderr)
+	case "seal":
+		return corpusSnapshotSeal(args[1:], stdout, stderr)
+	default:
+		fmt.Fprintf(stderr, "unknown snapshot command %q (verify|import|seal)\n", args[0])
+		return 2
+	}
+}
+
+// corpusSnapshotVerify recomputes the root and fails closed. The verification
+// is written even on failure, with the problem named: evidence of a refused
+// snapshot is still evidence.
+func corpusSnapshotVerify(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("corpus snapshot verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	envelope := flags.String("envelope", "", "snapshot envelope JSON (required)")
+	records := flags.String("records", "", "records JSONL (default: envelope's records_file or sources.jsonl beside it)")
+	out := flags.String("out", "", "write the verification JSON here (default: stdout)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *envelope == "" {
+		fmt.Fprintln(stderr, "snapshot verify: --envelope is required")
+		return 2
+	}
+	env, recs, err := corpus.LoadExternalSnapshot(*envelope, *records)
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot verify: %v\n", err)
+		return 1
+	}
+	verification, verr := corpus.VerifyExternalSnapshot(env, recs)
+	verification.Proofs = nil // proofs are for the ledger path, not the human verdict
+	if err := writeSnapshotJSON(*out, stdout, verification); err != nil {
+		fmt.Fprintf(stderr, "snapshot verify: %v\n", err)
+		return 1
+	}
+	if verr != nil {
+		fmt.Fprintf(stderr, "snapshot verify: REFUSED — %v\n", verr)
+		return 1
+	}
+	return 0
+}
+
+// corpusSnapshotImport verifies FIRST and imports only a passing snapshot.
+// A snapshot that does not verify produces no manifest at all.
+func corpusSnapshotImport(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("corpus snapshot import", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	envelope := flags.String("envelope", "", "snapshot envelope JSON (required)")
+	records := flags.String("records", "", "records JSONL (default: beside the envelope)")
+	out := flags.String("out", "", "source-manifest YAML to write (required)")
+	domain := flags.String("domain", "external-snapshot", "manifest domain")
+	owner := flags.String("owner", "not_assigned", "manifest owner")
+	license := flags.String("license", "unknown", "manifest license")
+	confidentiality := flags.String("confidentiality", "internal", "manifest confidentiality")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *envelope == "" || *out == "" {
+		fmt.Fprintln(stderr, "snapshot import: --envelope and --out are required")
+		return 2
+	}
+	env, recs, err := corpus.LoadExternalSnapshot(*envelope, *records)
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot import: %v\n", err)
+		return 1
+	}
+	if _, verr := corpus.VerifyExternalSnapshot(env, recs); verr != nil {
+		fmt.Fprintf(stderr, "snapshot import: REFUSED, nothing written — %v\n", verr)
+		return 1
+	}
+	manifest := corpus.ImportSnapshotToManifest(env, recs, corpus.SnapshotImportOptions{
+		Domain: *domain, Owner: *owner, License: *license, Confidentiality: *confidentiality,
+	})
+	f, err := os.Create(*out)
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot import: %v\n", err)
+		return 1
+	}
+	defer f.Close()
+	if err := corpus.WriteManifestYAML(f, manifest); err != nil {
+		fmt.Fprintf(stderr, "snapshot import: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "snapshot import: %d source(s) written to %s from %s (root %s)\n",
+		len(manifest.Sources), *out, env.SnapshotID, env.ContentHashRoot)
+	return 0
+}
+
+// corpusSnapshotSeal is the PRODUCER side: compute counts and root over the
+// records about to be exported and write the envelope.
+func corpusSnapshotSeal(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("corpus snapshot seal", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	records := flags.String("records", "", "records JSONL (required)")
+	snapshotID := flags.String("snapshot-id", "", "snapshot id (required)")
+	producer := flags.String("producer", "", "producer name/version (required)")
+	dbSchema := flags.String("db-schema", "", "producer schema version")
+	generatedAt := flags.String("generated-at", "", "RFC 3339 (default: now, UTC)")
+	out := flags.String("out", "", "envelope JSON to write (required)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *records == "" || *snapshotID == "" || *producer == "" || *out == "" {
+		fmt.Fprintln(stderr, "snapshot seal: --records, --snapshot-id, --producer and --out are required")
+		return 2
+	}
+	f, err := os.Open(*records)
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot seal: %v\n", err)
+		return 1
+	}
+	recs, err := corpus.ReadSnapshotRecords(f)
+	f.Close()
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot seal: %v\n", err)
+		return 1
+	}
+	when := *generatedAt
+	if when == "" {
+		when = time.Now().UTC().Format(time.RFC3339)
+	}
+	env, err := corpus.SealExternalSnapshot(*snapshotID, *producer, *dbSchema, when, filepath.Base(*records), recs)
+	if err != nil {
+		fmt.Fprintf(stderr, "snapshot seal: REFUSED — %v\n", err)
+		return 1
+	}
+	if err := writeSnapshotJSON(*out, stdout, env); err != nil {
+		fmt.Fprintf(stderr, "snapshot seal: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "snapshot seal: %s sealed — %d source(s), %d version(s), root %s\n",
+		env.SnapshotID, env.SourceCount, env.VersionCount, env.ContentHashRoot)
+	return 0
+}
+
+func writeSnapshotJSON(path string, stdout io.Writer, v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	if path == "" {
+		_, err = stdout.Write(data)
+		return err
+	}
+	return os.WriteFile(path, data, 0o644)
 }
 
 func corpusScanCommand(args []string, stdout io.Writer, stderr io.Writer) int {

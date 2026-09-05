@@ -1,0 +1,13 @@
+{
+  "format": "nomos.external-snapshot.v1",
+  "snapshot_id": "fixture-external-snapshot-001",
+  "generated_at": "2026-09-05T09:00:00Z",
+  "producer": "synthetic-pg-export/0.1 (test fixture, no database)",
+  "db_schema_version": "fixture-1",
+  "immutable": true,
+  "source_count": 2,
+  "version_count": 3,
+  "content_hash_root": "965e986d82c76c22286e1fcb7eefa0bae369aa50a7f9fb9266626d5f6b7f6299",
+  "records_file": "sources.jsonl",
+  "claim_boundary": "An immutable export consumed as-is; NOMOS never reads the operational store. The root proves these records are the ones exported, not that the export was complete relative to the store, nor that any record's content is correct."
+}

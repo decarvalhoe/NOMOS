@@ -39,10 +39,9 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #611 — Verify immutable external corpus snapshots | #644 — Process real public references and retain evidence |
-| #612 — Recursio to Nomos offline E2E fixture | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
-| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
-| #643 — Static SKOS authoring and distribution | — |
+| #612 — Recursio to Nomos offline E2E fixture | #644 — Process real public references and retain evidence |
+| #637 — Offline Sigstore bundle verification | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
+| #643 — Static SKOS authoring and distribution | #645 — Keyless issuance against injected non-production services |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
