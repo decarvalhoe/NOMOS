@@ -116,6 +116,43 @@ Limite de revendication : « source web capturée à l'instant T par le crawler
 nommé ». Les décisions robots/licence sont **enregistrées telles que prises**,
 jamais adjugées par NOMOS ; celles d'un site réel restent hors fixture.
 
+## Snapshots Externes Immuables (#611)
+
+La base opérationnelle — PostgreSQL, la base d'un crawler — reste **externe et
+mutable**. NOMOS ne la lit jamais. Il consomme un **snapshot** : une enveloppe
+(`nomos.external-snapshot.v1`) qui nomme ce qui a été exporté, quand, par quoi,
+et une **racine de Merkle** sur chaque enregistrement ; plus les enregistrements
+eux-mêmes, un objet JSON par ligne (`sources.jsonl`).
+
+Rejouer le hash des enregistrements doit reproduire la racine. Un octet changé,
+un enregistrement ajouté ou retiré, et la racine ne correspond plus : le
+snapshot n'est pas celui que l'enveloppe décrit, et il est **refusé**
+(`SNAPSHOT_ROOT_MISMATCH`). Une enveloppe qui n'est pas `immutable: true` est une
+vue, pas un snapshot : refusée aussi (`SNAPSHOT_NOT_IMMUTABLE`). Les compteurs
+sont **vérifiés, pas crus** — trop, c'est du rembourrage ; trop peu, c'est
+incomplet (`SNAPSHOT_COUNT_MISMATCH`).
+
+```bash
+nomos corpus snapshot seal   --records sources.jsonl --snapshot-id S --producer pg-export/1.2 --out snapshot.json   # côté producteur
+nomos corpus snapshot verify --envelope snapshot.json                                                                # rejeu de la racine
+nomos corpus snapshot import --envelope snapshot.json --out source-manifest.yaml                                      # vérifie PUIS importe
+```
+
+L'import ne perd rien : `source_id`, `version_id`, locator, hash et
+`captured_at` traversent vers le manifeste ; deux versions d'une même source
+donnent deux entrées distinctes ; un enregistrement web garde sa provenance
+`web_source` (#610) intacte, et s'il n'est pas admissible il est importé
+**exclu avec sa raison**, jamais supprimé. Un snapshot qui ne se vérifie pas ne
+produit **aucun** manifeste.
+
+La machinerie de Merkle est celle du body ledger, déjà éprouvée
+(`VerifyMerkleProof`) : l'inclusion d'un enregistrement dans le snapshot se
+prouve comme celle d'un segment dans un ledger.
+
+Limite de revendication : la racine prouve que **ces** enregistrements sont ceux
+exportés — pas que l'export était complet par rapport à la base, ni que le
+contenu d'un enregistrement est correct.
+
 ## Procédure D'inventaire
 
 1. Scanner les dossiers de documentation, code legacy, exports, scraps, assets et dumps.

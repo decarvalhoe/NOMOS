@@ -81,6 +81,11 @@ type ManifestSource struct {
 	FormatSupport     string `yaml:"format_support,omitempty"`
 	DerivativeOf      string `yaml:"derivative_of,omitempty"`
 
+	// Notes mirrors `notes?` in specs/source-manifest.cue; the Go type lacked
+	// it. #611 uses it to carry snapshot id, version id and capture time
+	// through an import, so a later re-hash stays comparable.
+	Notes string `yaml:"notes,omitempty"`
+
 	// #610 web-source provenance. Optional; validated fail-closed when present.
 	WebSource *WebSource `yaml:"web_source,omitempty"`
 }

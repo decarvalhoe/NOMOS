@@ -2266,6 +2266,81 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "external_snapshot_input",
+      "title": "Snapshots externes immuables en entrée (#611) — la base opérationnelle (PostgreSQL, crawler) reste externe et mutable, NOMOS ne la lit jamais : il consomme une enveloppe `nomos.external-snapshot.v1` + un JSONL d’enregistrements, et RECALCULE la racine de Merkle (machinerie du body ledger, déjà éprouvée) au lieu de la relire. Un octet changé, un enregistrement ajouté ou retiré → SNAPSHOT_ROOT_MISMATCH ; `immutable: false` → refusé ; compteurs vérifiés, jamais crus. `nomos corpus snapshot seal|verify|import` et section `external-snapshot` du strict gate. L’import ne perd rien — source_id, version_id, locator, hash, captured_at traversent, une page web garde sa provenance #610 et est importée exclue avec sa raison si inadmissible — et un snapshot refusé ne produit AUCUN manifeste. Fixture commitée scellée par le vrai CLI. Claim : la racine prouve que ces enregistrements sont ceux exportés, pas que l’export était complet ni que leur contenu est correct.",
+      "pillar": "P2",
+      "claim_level": "artifact-generated (intégrité d’un export scellé ; aucun claim de complétude vis-à-vis de la base)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/external_snapshot.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/corpus_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/strict_gate.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/corpus/external_snapshot_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/corpus_snapshot_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "specs/external-snapshot.cue",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/corpus/testdata/external-snapshot/snapshot.json",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/02-source-registry.md",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2302,9 +2377,9 @@
     }
   ],
   "summary": {
-    "capabilities": 42,
+    "capabilities": 43,
     "computed": {
-      "real": 33,
+      "real": 34,
       "partial": 0,
       "sidecar": 8,
       "stub": 0,
