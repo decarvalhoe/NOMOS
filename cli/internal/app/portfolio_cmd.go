@@ -23,6 +23,10 @@ func portfolioCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return runPortfolioStatus(args[1:], stdout, stderr)
 	case "projects":
 		return runPortfolioProjects(args[1:], stdout, stderr)
+	case "findings":
+		return runPortfolioFindings(args[1:], stdout, stderr)
+	case "reviews":
+		return runPortfolioReviews(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		fmt.Fprintln(stdout, portfolioUsage)
 		return 0
@@ -41,7 +45,13 @@ const portfolioUsage = `usage:
   nomos portfolio projects --project <nomos.project.yaml> [--exceptions <exceptions.yaml>] ... [--verdict v]... [--stack s]... [--risk r]... [--owner o]... [--format json|md] [--now RFC3339]
       Multi-project view (NRT-022 #670) over real project and exceptions manifests: verdict counts, critical
       surfaces, stacks, owners, exceptions with expiry computed at view time. Repeat --project for each
-      project; an --exceptions applies to the --project that precedes it. Neither validates nor grants anything.`
+      project; an --exceptions applies to the --project that precedes it. Neither validates nor grants anything.
+  nomos portfolio findings --repo-root <dir> [--severity s]... [--status s]... [--kind k]... [--lane l]... [--format json|md] [--out f] [--now RFC3339]
+      Every open finding across committed sources (ledger gaps, CAPA, audit findings, review actions, Praxis gate
+      requirements, blocked public captures, wiring mismatches) plus consistency findings where two sources
+      disagree (NRT-020 #668). Traceable to path + hash. Closes, waives or prioritises nothing.
+  nomos portfolio reviews --repo-root <dir> [--format json|md] [--out f] [--now RFC3339]
+      The periodic review records indexed: decisions, actions with due state, findings, cited artifacts and their existence.`
 
 func runPortfolioStatus(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("portfolio status", flag.ContinueOnError)
@@ -180,4 +190,110 @@ func pairProjectsAndExceptions(args []string) []portfolio.ProjectInput {
 		}
 	}
 	return out
+}
+
+func parseNow(flagValue string, stderr io.Writer) (time.Time, bool) {
+	if flagValue == "" {
+		return time.Now().UTC(), true
+	}
+	t, err := time.Parse(time.RFC3339, flagValue)
+	if err != nil {
+		fmt.Fprintf(stderr, "--now: %v\n", err)
+		return time.Time{}, false
+	}
+	return t.UTC(), true
+}
+
+// runPortfolioFindings is `nomos portfolio findings` (NRT-020 #668).
+func runPortfolioFindings(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("portfolio findings", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	repoRoot := flags.String("repo-root", ".", "repository root")
+	var severities, statuses, kinds, lanes multiFlag
+	flags.Var(&severities, "severity", "keep findings with this severity (repeatable)")
+	flags.Var(&statuses, "status", "keep findings with this status (repeatable)")
+	flags.Var(&kinds, "kind", "keep findings of this kind (repeatable)")
+	flags.Var(&lanes, "lane", "keep findings of this lane (repeatable)")
+	format := flags.String("format", "json", "json or md")
+	out := flags.String("out", "", "write here (default: stdout)")
+	nowFlag := flags.String("now", "", "evaluation time (RFC3339, default now)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	now, ok := parseNow(*nowFlag, stderr)
+	if !ok {
+		return 2
+	}
+	rep, err := portfolio.CollectFindings(*repoRoot, now)
+	if err != nil {
+		fmt.Fprintf(stderr, "portfolio findings: %v\n", err)
+		return 1
+	}
+	rep = portfolio.FilterFindings(rep, portfolio.FindingsFilter{Severities: severities, Statuses: statuses, Kinds: kinds, Lanes: lanes})
+	var render func(io.Writer) error
+	switch *format {
+	case "json":
+		render = func(w io.Writer) error { return portfolio.WriteJSON(w, rep) }
+	case "md":
+		render = func(w io.Writer) error { portfolio.WriteFindingsMarkdown(w, rep); return nil }
+	default:
+		fmt.Fprintln(stderr, "portfolio findings: --format must be json or md")
+		return 2
+	}
+	if *out == "" {
+		if err := render(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, render); err != nil {
+		fmt.Fprintf(stderr, "portfolio findings: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "portfolio findings: %d finding(s), %d consistency, %d source(s) unavailable → %s\n", rep.Total, rep.Consistency, len(rep.Unavailable), *out)
+	return 0
+}
+
+// runPortfolioReviews is `nomos portfolio reviews` (NRT-020 #668).
+func runPortfolioReviews(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("portfolio reviews", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	repoRoot := flags.String("repo-root", ".", "repository root")
+	format := flags.String("format", "json", "json or md")
+	out := flags.String("out", "", "write here (default: stdout)")
+	nowFlag := flags.String("now", "", "evaluation time (RFC3339, default now)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	now, ok := parseNow(*nowFlag, stderr)
+	if !ok {
+		return 2
+	}
+	rep, err := portfolio.IndexReviews(*repoRoot, now)
+	if err != nil {
+		fmt.Fprintf(stderr, "portfolio reviews: %v\n", err)
+		return 1
+	}
+	var render func(io.Writer) error
+	switch *format {
+	case "json":
+		render = func(w io.Writer) error { return portfolio.WriteJSON(w, rep) }
+	case "md":
+		render = func(w io.Writer) error { portfolio.WriteReviewsMarkdown(w, rep); return nil }
+	default:
+		fmt.Fprintln(stderr, "portfolio reviews: --format must be json or md")
+		return 2
+	}
+	if *out == "" {
+		if err := render(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, render); err != nil {
+		fmt.Fprintf(stderr, "portfolio reviews: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "portfolio reviews: %d record(s), %d overdue action(s) → %s\n", rep.Total, rep.OverdueActions, *out)
+	return 0
 }

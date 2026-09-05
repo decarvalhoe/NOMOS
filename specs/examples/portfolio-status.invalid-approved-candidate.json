@@ -109,7 +109,7 @@
   "capa": {
     "available": true,
     "directory": "docs/regulated/operations/records/capa",
-    "total": 2,
+    "total": 3,
     "open": 1,
     "records": [
       {
@@ -122,7 +122,7 @@
         "retro_documented": true,
         "source": {
           "path": "docs/regulated/operations/records/capa/CAPA-2026-001-x.yaml",
-          "sha256": "sha256:ac12426b02c410d63d78b03d71488d90038c27160cfb0bc09e3054d4e6f5fa0e",
+          "sha256": "sha256:0b867de7959ed18ddec31e58018d7d2361a724e253dc1a1b33d69de45823724e",
           "as_of": "2026-06-11",
           "freshness": "fresh"
         }
@@ -140,6 +140,21 @@
           "as_of": "2026-08-01",
           "freshness": "fresh"
         }
+      },
+      {
+        "record_id": "CAPA-2026-003",
+        "status": "closed",
+        "severity": "minor",
+        "opened": "2026-07-01",
+        "closed": "2026-07-02",
+        "effectiveness_verified": false,
+        "retro_documented": false,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-003-z.yaml",
+          "sha256": "sha256:1cb3ce045da5574df014e9cb3ed9aa130cb59da9b9114714bff66e76aabf89fb",
+          "as_of": "2026-07-02",
+          "freshness": "fresh"
+        }
       }
     ]
   },
@@ -154,10 +169,10 @@
         "date": "2026-06-11",
         "decisions": 0,
         "actions": 0,
-        "findings": 1,
+        "findings": 3,
         "source": {
           "path": "docs/regulated/operations/records/2026-06-11-internal-audit-record.yaml",
-          "sha256": "sha256:30d442c8adca0f530852b7e17a84fc90bffb3308451aeeaf4fa641ce791b9b4c",
+          "sha256": "sha256:b94cb51b26fa7d6e89c9a3b884a450c008391b11c3d866009afc404daed749f1",
           "as_of": "2026-06-11",
           "freshness": "fresh"
         }
@@ -167,11 +182,11 @@
         "record_type": "management_review",
         "date": "2026-06-11",
         "decisions": 2,
-        "actions": 1,
+        "actions": 3,
         "findings": 0,
         "source": {
           "path": "docs/regulated/operations/records/2026-06-11-management-review-record.yaml",
-          "sha256": "sha256:b0f0abce2610ae49e2ac8d2a47c15e5bf6b2c2b0119a3e21984b6a910177bd4e",
+          "sha256": "sha256:89be4af8b31ac2323804e3787073f767380fd7112d06e4721998e32d082cc82e",
           "as_of": "2026-06-11",
           "freshness": "fresh"
         }
@@ -266,6 +281,6 @@
   },
   "sections_unavailable": 0,
   "sections_stale": 1,
-  "status_digest": "sha256:28d06e7a4d66e8bce7f6da7cc33976793c4b655de27c030360ef0268888991ef",
+  "status_digest": "sha256:508865185abee986529f05d0c79d11c02d5ff5118f9b94f630531501342da0f5",
   "claim_boundary": "A computed view of committed machine sources: registry and generated matrix, roadmap lanes, evidence-ledger gaps, CAPA and review records, repeated-CI index, Praxis gate verdict, competence files, domain packs, public-source snapshots, optional release candidate. It creates no evidence, approves nothing and lifts no claim; an unavailable or stale source is shown as such, never hidden."
 }

@@ -82,3 +82,46 @@ func WriteProjectsMarkdown(w io.Writer, v ProjectsView) {
 	}
 	fmt.Fprintf(w, "\n%s\n", v.ClaimBoundary)
 }
+
+// WriteFindingsMarkdown renders the findings from their computed fields.
+func WriteFindingsMarkdown(w io.Writer, rep FindingsReport) {
+	fmt.Fprintf(w, "# Portfolio findings — %s\n\n%d finding(s) · %d consistency · by severity %v · by lane %v · %d source(s) unavailable.\n\n", rep.GeneratedAt, rep.Total, rep.Consistency, rep.BySeverity, rep.ByLane, len(rep.Unavailable))
+	for _, u := range rep.Unavailable {
+		fmt.Fprintf(w, "- unavailable: %s\n", u.Reason)
+	}
+	if len(rep.Unavailable) > 0 {
+		fmt.Fprintln(w)
+	}
+	fmt.Fprintln(w, "| ID | Kind | Severity | Status | Lane | Title | Source |")
+	fmt.Fprintln(w, "|---|---|---|---|---|---|---|")
+	for _, f := range rep.Findings {
+		fmt.Fprintf(w, "| `%s` | %s | %s | %s | %s | %s | `%s` (%s) |\n", f.ID, f.Kind, f.Severity, f.Status, f.Lane, strings.ReplaceAll(f.Title, "|", "\\|"), f.Source.Path, f.Source.Sha256[:19])
+	}
+	fmt.Fprintf(w, "\n%s\n", rep.ClaimBoundary)
+}
+
+// WriteReviewsMarkdown renders the review index from its computed fields.
+func WriteReviewsMarkdown(w io.Writer, rep ReviewsReport) {
+	fmt.Fprintf(w, "# Portfolio reviews — %s\n\n%d record(s) by type %v · %d overdue action(s).\n\n", rep.GeneratedAt, rep.Total, rep.ByType, rep.OverdueActions)
+	fmt.Fprintln(w, "| Record | Type | Date | Decisions | Actions (overdue) | Findings | Cited artifacts (missing) | Next review |")
+	fmt.Fprintln(w, "|---|---|---|---|---|---|---|---|")
+	for _, r := range rep.Records {
+		overdue, missing := 0, 0
+		for _, a := range r.Actions {
+			if a.Overdue {
+				overdue++
+			}
+		}
+		for _, c := range r.CitedArtifacts {
+			if !c.Exists {
+				missing++
+			}
+		}
+		next := r.NextReviewDue
+		if r.NextReviewOverdue {
+			next += " (overdue)"
+		}
+		fmt.Fprintf(w, "| %s | %s | %s | %d | %d (%d) | %d | %d (%d) | %s |\n", r.RecordID, r.RecordType, r.Date, r.Decisions, len(r.Actions), overdue, r.Findings, len(r.CitedArtifacts), missing, next)
+	}
+	fmt.Fprintf(w, "\n%s\n", rep.ClaimBoundary)
+}

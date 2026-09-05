@@ -64,6 +64,7 @@
 | `review_record_index` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `portfolio_multi_project_view` | P1 | real | real | ✅ | — | — |
 | `control_plane_archive` | P1 | absent | absent | ✅ | — | — |
+| `portfolio_findings_index` | P1 | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -71,7 +72,7 @@
 
 ## Summary
 
-- capabilities: 56 (real=43, partial=0, sidecar=11, stub=0, absent=2)
+- capabilities: 57 (real=44, partial=0, sidecar=11, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

@@ -70,11 +70,11 @@ func TestMinirepoStatusIsComputedFromFiles(t *testing.T) {
 		t.Fatalf("gaps must count and flag the 2026-05-02 ledger as stale: %+v", g)
 	}
 	capa := st.Capa.(CapaSection)
-	if capa.Total != 2 || capa.Open != 1 || !capa.Records[0].EffectivenessVerified || capa.Records[0].Closed != "2026-06-11" {
+	if capa.Total != 3 || capa.Open != 1 || !capa.Records[0].EffectivenessVerified || capa.Records[0].Closed != "2026-06-11" || capa.Records[2].EffectivenessVerified {
 		t.Fatalf("capa: %+v", capa)
 	}
 	rv := st.Reviews.(Reviews)
-	if rv.Total != 2 || rv.Records[0].RecordID != "AUD-1" || rv.Records[0].Findings != 1 || rv.Records[1].Decisions != 2 || rv.Records[1].Actions != 1 {
+	if rv.Total != 2 || rv.Records[0].RecordID != "AUD-1" || rv.Records[0].Findings != 3 || rv.Records[1].Decisions != 2 || rv.Records[1].Actions != 3 {
 		t.Fatalf("reviews: %+v", rv)
 	}
 	ci := st.RepeatedCI.(RepeatedCI)

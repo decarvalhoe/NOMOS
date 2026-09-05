@@ -1,8 +1,13 @@
 record_id: MR-1
 record_type: management_review
 date: 2026-06-11
+inputs:
+  - {topic: t, evidence: "docs/regulated/evidence-index/evidence-ledger.yaml and docs/missing/ghost.md"}
 decisions:
   - {id: D1, decision: x}
   - {id: D2, decision: y}
 actions:
-  - {id: A1, action: z, owner: q, due: 2026-07-31}
+  - {id: A1, action: z, owner: q, due: 2026-07-31, tracking: "ISSUE-1"}
+  - {id: A2, action: w, owner: q, due: 2027-01-31}
+  - {id: A3, action: v, owner: q, due: 2026-01-01, status: closed}
+next_review_due: 2026-12-11
