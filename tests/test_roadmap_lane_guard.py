@@ -24,6 +24,13 @@ def registry() -> dict:
     return yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
 
 
+def nonempty_lane(data) -> str:
+    """The first lane whose autonomous queue is not exhausted. Tests must not
+    assume a particular lane still has work: queues empty as items close."""
+    queues = data["selection_policy"]["dispatch_queues"]
+    return next(lane for lane in ("product", "devops") if queues[lane])
+
+
 class RoadmapLaneGuardTests(unittest.TestCase):
     def test_real_registry_is_autonomously_dispatchable(self) -> None:
         self.assertEqual(guard.validate(registry()), [])
@@ -52,7 +59,7 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         # Drop whichever item currently heads the product queue; the guard must
         # name it. Not a literal issue number — those drift with every closure.
         data = registry()
-        queue = data["selection_policy"]["dispatch_queues"]["product"]
+        queue = data["selection_policy"]["dispatch_queues"][nonempty_lane(data)]
         head = queue[0]
         queue.remove(head)
         failures = guard.validate(data)
@@ -114,7 +121,12 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         by_issue = {item["issue"]: item for item in data["items"]}
         self.assertEqual(set(queues), {"product", "devops", "regulated"})
         for lane in ("product", "devops"):
-            self.assertTrue(queues[lane], f"{lane} queue is empty")
+            open_autonomous = [
+                item["issue"] for item in data["items"]
+                if item["lane"] == lane and item["dispatch"] == "autonomous" and item["state"] == "open"
+            ]
+            # An empty queue is only honest when the lane has nothing autonomous left open.
+            self.assertEqual(sorted(queues[lane]), sorted(open_autonomous), lane)
             for issue in queues[lane]:
                 self.assertEqual(by_issue[issue]["lane"], lane, issue)
                 self.assertEqual(by_issue[issue]["state"], "open", issue)
@@ -195,11 +207,16 @@ class RegistryTruthTests(unittest.TestCase):
 
     def test_queue_table_pads_the_shorter_lane(self) -> None:
         data = registry()
-        data["selection_policy"]["dispatch_queues"]["devops"] = []
+        kept = nonempty_lane(data)
+        other = "devops" if kept == "product" else "product"
+        data["selection_policy"]["dispatch_queues"][other] = []
         table = guard.render_queue_table(data)
-        rows = [line for line in table.splitlines() if line.startswith("| #")]
+        rows = [line for line in table.splitlines() if line.startswith("|") and "#" in line]
         self.assertTrue(rows)
-        self.assertTrue(all(line.endswith("| — |") for line in rows), rows)
+        # every row shows the exhausted lane as an em dash, on the side it occupies
+        for line in rows:
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            self.assertEqual(cells[0 if other == "product" else 1], "—", line)
 
     def test_queue_table_names_an_undeclared_issue_instead_of_crashing(self) -> None:
         data = registry()
@@ -225,7 +242,8 @@ class RegistryTruthTests(unittest.TestCase):
             self.assertIn("hand-written prose that must survive", text)
             self.assertIn("more prose after", text)
             self.assertNotIn("| stale | table |", text)
-            head = registry()["selection_policy"]["dispatch_queues"]["product"][0]
+            data = registry()
+            head = data["selection_policy"]["dispatch_queues"][nonempty_lane(data)][0]
             self.assertIn(f"#{head} —", text)
             # Idempotent: a second run changes nothing.
             before = text

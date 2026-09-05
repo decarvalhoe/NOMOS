@@ -1,0 +1,1784 @@
+[
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability/applicable"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability/blocked"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability/not_applicable"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability/partially_applicable"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability/unknown"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Applicability",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "applicability",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability/applicable",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "applicable",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability/blocked",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "blocked",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "blocked",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "blocked",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability/not_applicable",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "not_applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "not applicable",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "not_applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability/partially_applicable",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "partially_applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "partially applicable",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "partially_applicable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/applicability/unknown",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "unknown",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "unknown",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/applicability"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "unknown",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/customer_confidential"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/internal"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/public"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/restricted"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality/secret"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Confidentiality",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "confidentiality",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/customer_confidential",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "customer_confidential",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "customer confidential",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "customer_confidential",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/internal",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "internal",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "internal",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "internal",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "licensed_restricted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "licensed restricted",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "licensed_restricted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/public",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "public",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "public",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "public",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/restricted",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "restricted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "restricted",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "restricted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/confidentiality/secret",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "secret",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "secret",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/confidentiality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "secret",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/calculation"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/condition"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/context"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/definition"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/evidence"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/exception"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/governance"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/metier"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/obligation"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/permission"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/prohibition"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature/rule"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Nature",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "nature",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/calculation",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "calculation",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "calculation",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "calculation",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/condition",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "condition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "condition",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "condition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/context",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "context",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "context",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "context",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/definition",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "definition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "definition",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "definition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/evidence",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "evidence",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "evidence",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "evidence",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/exception",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "exception",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "exception",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "exception",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/governance",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "governance",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "governance",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "governance",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/metier",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "metier",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "metier",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "metier",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/obligation",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "obligation",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "obligation",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "obligation",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/permission",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "permission",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "permission",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "permission",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/prohibition",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "prohibition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "prohibition",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "prohibition",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/nature/rule",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "rule",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "rule",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/nature"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "rule",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance/derived"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance/external_attested"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance/inferred"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance/source_backed"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance/user_promoted"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Provenance",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "provenance",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance/derived",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "derived",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "derived",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "derived",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance/external_attested",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "external_attested",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "external attested",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "external_attested",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance/inferred",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "inferred",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "inferred",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "inferred",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance/source_backed",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "source_backed",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "source backed",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "source_backed",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/provenance/user_promoted",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "user_promoted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "user promoted",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/provenance"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "user_promoted",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scheme",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+    ],
+    "http://www.w3.org/2004/02/skos/core#definition": [
+      {
+        "@value": "Controlled values of the closed facet axes of the NOMOS canonical knowledge model, one skos:Collection per axis.",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "NOMOS core facet vocabulary",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/atom"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/chunk"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/domain"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/product"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/release"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/source"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level/structure"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Scope level",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "scope_level",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/atom",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "atom",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "atom",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "atom",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/chunk",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "chunk",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "chunk",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "chunk",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/domain",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "domain",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "domain",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "domain",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/product",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "product",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "product",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "product",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/release",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "release",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "release",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "release",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/source",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "source",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "source",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "source",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/scope_level/structure",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "structure",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "structure",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scope_level"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "structure",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/trust_tier",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Collection"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#member": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier/certified"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier/indicative"
+      },
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier/unverified"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Trust tier",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#axisId": [
+      {
+        "@value": "trust_tier",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/trust_tier/certified",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#definition": [
+      {
+        "@value": "Evidence satisfies the configured deterministic gate for the declared scope.",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "certified",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "certified",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "certified",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/trust_tier/indicative",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#definition": [
+      {
+        "@value": "Evidence is usable for orientation but insufficient for a certified claim.",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "indicative",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "indicative",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "indicative",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/facets/core/trust_tier/unverified",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#definition": [
+      {
+        "@value": "Evidence is absent, incomplete, or blocked by a finding.",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#notation": [
+      {
+        "@value": "unverified",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "unverified",
+        "@language": "en"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#topConceptOf": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/scheme"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/facets/core/trust_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "unverified",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  }
+]

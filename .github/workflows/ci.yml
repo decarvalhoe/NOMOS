@@ -205,6 +205,13 @@ jobs:
       # cross-engine equivalence is claimed. A disjoint-axis term turns red.
       - name: Facet SKOS/SHACL gate (VRC-44)
         run: python scripts/facet_shacl_gate.py --root .
+      # #643: the SKOS distribution under specs/generated/skos is a fresh,
+      # byte-identical build of the versioned authoring sources (core authoring
+      # YAML in lockstep with facets.cue; pack ontology/vocabulary YAML), and it
+      # round-trips: parsed back, isomorphic to the validated graph, pack graphs
+      # conforming to the shapes, every concept mapped, index hashes intact.
+      - name: "SKOS static distribution — deterministic build + round-trip (#643)"
+        run: python scripts/skos_distribution.py --root . --check --verify
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
       - name: Independent roadmap lane guard (ADR-VRC-0004)
