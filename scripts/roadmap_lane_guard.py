@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ import yaml
 DEFAULT_REGISTRY = Path("docs/roadmap-lanes.yaml")
 LANES = {"product", "devops", "regulated"}
 DISPATCH = {"autonomous", "passive", "human", "external"}
+UMBRELLA_ROLES = {"epic", "parent"}
 ITEM_STATES = {"open", "closed"}
 DELIVERY_STATES = {"planned", "partial", "implemented", "verified", "blocked", "split"}
 EVIDENCE_STATES = {"none", "accumulating", "requires_human", "requires_external", "present"}
@@ -225,6 +227,25 @@ def validate(registry: dict[str, Any]) -> list[str]:
         for input_issue in item.get("inputs", []):
             if input_issue not in by_issue:
                 failures.append(f"issue #{issue}: nonblocking input #{input_issue} is not declared")
+    # Umbrella issues: visible, declared, never dispatched, never double-declared.
+    umbrellas = registry.get("umbrella_issues") or []
+    if not isinstance(umbrellas, list):
+        failures.append("umbrella_issues must be a list")
+        umbrellas = []
+    for index, umbrella in enumerate(umbrellas):
+        if not isinstance(umbrella, dict) or not isinstance(umbrella.get("issue"), int):
+            failures.append(f"umbrella_issues[{index}]: integer issue is required")
+            continue
+        issue = umbrella["issue"]
+        if issue in by_issue:
+            failures.append(f"umbrella issue #{issue} is also declared as a roadmap item")
+        if umbrella.get("role") not in UMBRELLA_ROLES:
+            failures.append(f"umbrella issue #{issue}: unknown role {umbrella.get('role')!r}")
+        if not str(umbrella.get("note", "")).strip():
+            failures.append(f"umbrella issue #{issue}: a note is required")
+        if issue in ordered:
+            failures.append(f"umbrella issue #{issue} appears in a dispatch queue")
+
     open_autonomous = {
         issue
         for issue, item in by_issue.items()
@@ -239,10 +260,126 @@ def validate(registry: dict[str, Any]) -> list[str]:
     return failures
 
 
+# --- generated queue tables -------------------------------------------------
+#
+# The queue composition used to be retyped by hand in several documents, each
+# with its own wording, and nothing compared them to the registry. The first two
+# closures after the registry landed left the delivered items at the head of the
+# published queues. So the tables are now GENERATED here, between markers, and
+# CI regenerates them and fails on any diff — the same pattern the wiring matrix
+# already uses.
+QUEUE_DOCS = (
+    Path("docs/47-roadmap-lanes-and-risk-based-validation.md"),
+    Path("docs/29-post-alpha-release-issue-list.md"),
+    Path("docs/15-product-backlog.md"),
+)
+QUEUE_BEGIN = "<!-- roadmap-queues:begin -->"
+QUEUE_END = "<!-- roadmap-queues:end -->"
+
+
+def render_queue_table(registry: dict[str, Any]) -> str:
+    """Render the Product/DevOps queues as one Markdown table, from the registry."""
+    by_issue = {
+        int(item["issue"]): item
+        for item in registry.get("items") or []
+        if isinstance(item, dict) and isinstance(item.get("issue"), int)
+    }
+    queues = (registry.get("selection_policy") or {}).get("dispatch_queues") or {}
+    product = [int(i) for i in queues.get("product") or []]
+    devops = [int(i) for i in queues.get("devops") or []]
+
+    def cell(issue: int | None) -> str:
+        if issue is None:
+            return "—"
+        item = by_issue.get(issue)
+        title = str(item.get("title", "")).strip() if item else "(not declared)"
+        return f"#{issue} — {title}"
+
+    rows = []
+    for index in range(max(len(product), len(devops), 1)):
+        left = product[index] if index < len(product) else None
+        right = devops[index] if index < len(devops) else None
+        rows.append(f"| {cell(left)} | {cell(right)} |")
+
+    lines = [
+        QUEUE_BEGIN,
+        "<!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs;"
+        " do not edit by hand, CI fails on drift -->",
+        "| Product queue | DevOps queue |",
+        "|---|---|",
+        *rows,
+        QUEUE_END,
+    ]
+    return "\n".join(lines)
+
+
+def emit_docs(root: Path, registry: dict[str, Any]) -> list[str]:
+    """Rewrite the marked block of every queue doc. Returns problems, if any."""
+    problems: list[str] = []
+    table = render_queue_table(registry)
+    for rel in QUEUE_DOCS:
+        path = root / rel
+        if not path.is_file():
+            problems.append(f"{rel.as_posix()}: missing")
+            continue
+        text = path.read_text(encoding="utf-8")
+        begin = text.find(QUEUE_BEGIN)
+        end = text.find(QUEUE_END)
+        if begin < 0 or end < 0 or end < begin:
+            problems.append(f"{rel.as_posix()}: no {QUEUE_BEGIN} … {QUEUE_END} block")
+            continue
+        end += len(QUEUE_END)
+        updated = text[:begin] + table + text[end:]
+        if updated != text:
+            path.write_text(updated, encoding="utf-8")
+    return problems
+
+
+def verify_github(registry: dict[str, Any]) -> list[str]:
+    """Compare each item's declared state with GitHub. Network; not for CI.
+
+    The guard above validates the registry's internal consistency and nothing
+    else, so it stayed green while two closed issues sat at the head of their
+    queues. This is the check that would have noticed.
+    """
+    problems: list[str] = []
+    for item in registry.get("items") or []:
+        if not isinstance(item, dict) or not isinstance(item.get("issue"), int):
+            continue
+        issue = item["issue"]
+        try:
+            out = subprocess.run(
+                ["gh", "issue", "view", str(issue), "--json", "state", "--jq", ".state"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=60,
+            ).stdout.strip().lower()
+        except (OSError, subprocess.SubprocessError) as exc:
+            problems.append(f"issue #{issue}: GitHub unreachable ({exc})")
+            continue
+        declared = str(item.get("state", "")).lower()
+        if out != declared:
+            problems.append(
+                f"issue #{issue}: registry says {declared!r}, GitHub says {out!r}"
+            )
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=".", help="Repository root")
     parser.add_argument("--registry", default=str(DEFAULT_REGISTRY), help="Roadmap lane registry")
+    parser.add_argument(
+        "--emit-docs",
+        action="store_true",
+        help="Regenerate the queue tables in the roadmap docs from the registry.",
+    )
+    parser.add_argument(
+        "--verify-github",
+        action="store_true",
+        help="Compare declared item states with GitHub (network; not for CI).",
+    )
     args = parser.parse_args()
     root = Path(args.root).resolve()
     path = Path(args.registry)
@@ -254,6 +391,10 @@ def main() -> int:
         print(json.dumps({"status": "error", "registry": str(path), "failures": [str(exc)]}, indent=2))
         return 2
     failures = validate(registry)
+    if args.emit_docs:
+        failures.extend(emit_docs(root, registry))
+    if args.verify_github:
+        failures.extend(verify_github(registry))
     try:
         registry_path = path.resolve().relative_to(root).as_posix()
     except ValueError:

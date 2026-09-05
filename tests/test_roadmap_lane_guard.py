@@ -96,12 +96,18 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         self.assertTrue(any("cannot carry an unlocked claim" in failure for failure in failures), failures)
 
     def test_each_lane_has_its_own_queue(self) -> None:
+        # Structural, not literal: hardcoding issue numbers here is how the
+        # published queues drifted from reality in the first place.
         data = registry()
         queues = data["selection_policy"]["dispatch_queues"]
+        by_issue = {item["issue"]: item for item in data["items"]}
         self.assertEqual(set(queues), {"product", "devops", "regulated"})
-        self.assertIn(640, queues["devops"])
-        self.assertIn(642, queues["product"])
-        self.assertNotIn(640, queues["product"])
+        for lane in ("product", "devops"):
+            self.assertTrue(queues[lane], f"{lane} queue is empty")
+            for issue in queues[lane]:
+                self.assertEqual(by_issue[issue]["lane"], lane, issue)
+                self.assertEqual(by_issue[issue]["state"], "open", issue)
+        self.assertFalse(set(queues["product"]) & set(queues["devops"]))
 
     def test_unknown_dispatch_queue_is_refused(self) -> None:
         data = registry()
@@ -131,3 +137,160 @@ class RoadmapLaneGuardTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RegistryTruthTests(unittest.TestCase):
+    """Step 0 of the roadmap run: the registry must tell the truth, and the docs
+    must repeat it mechanically rather than by hand.
+
+    The two first closures after the registry landed (#642, #640) were closed on
+    GitHub while still sitting `state: open` at the head of their queues. The
+    guard stayed green because it validates internal consistency only. These
+    tests pin the three answers: generated tables, an umbrella section for the
+    epic, and a network check that compares with GitHub.
+    """
+
+    def test_delivered_items_are_closed_and_out_of_the_queues(self) -> None:
+        data = registry()
+        by_issue = {item["issue"]: item for item in data["items"]}
+        queues = data["selection_policy"]["dispatch_queues"]
+        for issue in (640, 642):
+            self.assertEqual(by_issue[issue]["state"], "closed", issue)
+            self.assertNotIn(issue, queues["product"] + queues["devops"], issue)
+            self.assertIn(by_issue[issue]["delivery_state"], {"implemented", "verified"})
+
+    def test_a_delivered_tool_is_technically_verified_never_validated_by_delivery(self) -> None:
+        # Moving to validated_for_intended_use is a regulated act (#562), not
+        # something a merge can grant itself.
+        item = next(i for i in registry()["items"] if i["issue"] == 640)
+        self.assertEqual(item["regulated_tool"]["validation_state"], "technically_verified")
+
+    def test_queue_table_is_rendered_from_the_registry(self) -> None:
+        table = guard.render_queue_table(registry())
+        self.assertIn(guard.QUEUE_BEGIN, table)
+        self.assertIn(guard.QUEUE_END, table)
+        self.assertIn("| Product queue | DevOps queue |", table)
+        # Heads are the real heads, and the delivered items are gone.
+        self.assertIn("#610 —", table)
+        self.assertIn("#641 —", table)
+        self.assertNotIn("#642", table)
+        self.assertNotIn("#640", table)
+
+    def test_queue_table_pads_the_shorter_lane(self) -> None:
+        data = registry()
+        data["selection_policy"]["dispatch_queues"]["devops"] = []
+        table = guard.render_queue_table(data)
+        rows = [line for line in table.splitlines() if line.startswith("| #")]
+        self.assertTrue(rows)
+        self.assertTrue(all(line.endswith("| — |") for line in rows), rows)
+
+    def test_queue_table_names_an_undeclared_issue_instead_of_crashing(self) -> None:
+        data = registry()
+        data["selection_policy"]["dispatch_queues"]["product"] = [999999]
+        self.assertIn("#999999 — (not declared)", guard.render_queue_table(data))
+
+    def test_emit_docs_regenerates_only_the_marked_block(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in guard.QUEUE_DOCS:
+                path = root / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    "# Doc\n\nhand-written prose that must survive\n\n"
+                    f"{guard.QUEUE_BEGIN}\n| stale | table |\n{guard.QUEUE_END}\n\n"
+                    "more prose after\n",
+                    encoding="utf-8",
+                )
+            self.assertEqual(guard.emit_docs(root, registry()), [])
+            text = (root / guard.QUEUE_DOCS[0]).read_text(encoding="utf-8")
+            self.assertIn("hand-written prose that must survive", text)
+            self.assertIn("more prose after", text)
+            self.assertNotIn("| stale | table |", text)
+            self.assertIn("#610 —", text)
+            # Idempotent: a second run changes nothing.
+            before = text
+            guard.emit_docs(root, registry())
+            self.assertEqual((root / guard.QUEUE_DOCS[0]).read_text(encoding="utf-8"), before)
+
+    def test_emit_docs_refuses_a_doc_without_markers(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in guard.QUEUE_DOCS:
+                path = root / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("# Doc with no markers\n", encoding="utf-8")
+            problems = guard.emit_docs(root, registry())
+            self.assertEqual(len(problems), len(guard.QUEUE_DOCS))
+            self.assertTrue(all("no " in p and "block" in p for p in problems), problems)
+
+    def test_shipped_docs_carry_the_generated_block_and_no_drift(self) -> None:
+        # What CI enforces: regenerating into the committed docs is a no-op.
+        import shutil
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in guard.QUEUE_DOCS:
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(ROOT / rel, root / rel)
+            self.assertEqual(guard.emit_docs(root, registry()), [])
+            for rel in guard.QUEUE_DOCS:
+                self.assertEqual(
+                    (root / rel).read_bytes(),
+                    (ROOT / rel).read_bytes(),
+                    f"{rel} drifts from the registry",
+                )
+
+    def test_umbrella_epic_is_declared_and_never_dispatched(self) -> None:
+        data = registry()
+        umbrellas = {u["issue"]: u for u in data["umbrella_issues"]}
+        self.assertIn(545, umbrellas)
+        self.assertEqual(umbrellas[545]["role"], "epic")
+        self.assertEqual(guard.validate(data), [])
+
+    def test_umbrella_cannot_also_be_an_item_or_be_queued(self) -> None:
+        data = registry()
+        data["items"].append(
+            {
+                "issue": 545, "title": "epic as item", "state": "open", "lane": "product",
+                "dispatch": "autonomous", "delivery_state": "planned", "evidence_state": "none",
+                "claim_state": "bounded", "depends_on": [],
+            }
+        )
+        data["selection_policy"]["dispatch_queues"]["product"].append(545)
+        failures = guard.validate(data)
+        self.assertTrue(any("also declared as a roadmap item" in f for f in failures), failures)
+        self.assertTrue(any("appears in a dispatch queue" in f for f in failures), failures)
+
+    def test_umbrella_needs_a_known_role_and_a_note(self) -> None:
+        data = registry()
+        data["umbrella_issues"] = [{"issue": 545, "role": "whatever", "note": ""}]
+        failures = guard.validate(data)
+        self.assertTrue(any("unknown role" in f for f in failures), failures)
+        self.assertTrue(any("a note is required" in f for f in failures), failures)
+
+    def test_verify_github_reports_unreachable_rather_than_passing(self) -> None:
+        # Without network the check must FAIL loudly, never silently pass: the
+        # absence of an answer is not agreement.
+        import os
+        from unittest import mock
+
+        data = {"items": [{"issue": 1, "state": "open"}]}
+        env = {**os.environ, "PATH": ""}
+        with mock.patch.dict(os.environ, env, clear=True):
+            problems = guard.verify_github(data)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("GitHub unreachable", problems[0])
+
+    def test_verify_github_names_a_state_mismatch(self) -> None:
+        from unittest import mock
+
+        fake = mock.Mock()
+        fake.stdout = "CLOSED\n"
+        with mock.patch.object(guard.subprocess, "run", return_value=fake):
+            problems = guard.verify_github({"items": [{"issue": 7, "state": "open"}]})
+        self.assertEqual(problems, ["issue #7: registry says 'open', GitHub says 'closed'"])

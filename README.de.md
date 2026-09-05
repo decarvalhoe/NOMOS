@@ -38,7 +38,7 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Faehigkeitsregister | 40 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (32 real, 7 sidecar, 1 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
 | Roadmaps | Produkt, DevOps und regulierte Assurance laufen unabhaengig (ADR-VRC-0004). Nur `dispatch:autonomous` Issues gehen in den Dispatcher; Kalendernachweis, Signaturen, Beschaffung und oeffentliche Writes blockieren ihren Claim, nie die Entwicklung — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
 | Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. Der oeffentliche Bench misst das Gate auf neun Items, kein Produkt. |
-| Naechste Haertung | Unabhaengige autonome Queues: Produkt (#642, Recursio #610→#612, #637, #643); DevOps (#640, #641, #644, #639, #645). Die einzige `absent` Faehigkeit ist keyless Sigstore-Issuance: Offline-Verify #637, Non-Production-Issuance #645, Production/Rekor-Aktivierung #638 separat. |
+| Naechste Haertung | Unabhaengige autonome Produkt- und DevOps-Queues, geordnet durch `docs/roadmap-lanes.yaml` (Tabelle generiert in `docs/47`, Drift in CI geprueft). Die einzige `absent` Faehigkeit ist keyless Sigstore-Issuance: Offline-Verify #637, Non-Production-Issuance #645, Production/Rekor-Aktivierung #638 separat. |
 | Claim Boundary | Kein zertifiziertes eQMS, kein validiertes GxP-System, keine regulatorische Zertifizierung. |
 
 ## Warum Nomos Existiert

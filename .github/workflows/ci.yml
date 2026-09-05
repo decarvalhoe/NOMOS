@@ -179,6 +179,14 @@ jobs:
         run: python scripts/claim_boundary_guard.py --root .
       - name: Independent roadmap lane guard (ADR-VRC-0004)
         run: python scripts/roadmap_lane_guard.py --root .
+      # The queue tables in the roadmap docs are GENERATED from the registry.
+      # Regenerate and fail on any diff: the first two closures after the
+      # registry landed left delivered items at the head of the published queues,
+      # and the guard alone could not see it.
+      - name: Roadmap queue docs have no drift
+        run: |
+          python scripts/roadmap_lane_guard.py --root . --emit-docs
+          git diff --exit-code docs/47-roadmap-lanes-and-risk-based-validation.md docs/29-post-alpha-release-issue-list.md docs/15-product-backlog.md
       # VRC-14 (#560): the published repeated-evidence index must replay exactly
       # from the runs it records, the workflow must still carry the schedule and
       # the retention the chain relies on, and the ledger and the claim boundary

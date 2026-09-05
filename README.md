@@ -45,7 +45,7 @@ and auditable product evidence before software or AI consumes them.
 | Registre de capacités | 40 capacités déclarées dans `scripts/vrc_wiring_matrix_registry.json` ; leur statut est CALCULÉ depuis l'arbre à chaque CI (32 réelles, 7 sidecar, 1 absente, 0 écart) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
 | Roadmaps | Produit, DevOps et assurance régulée avancent indépendamment (ADR-VRC-0004). Seules les issues `dispatch:autonomous` entrent dans le dispatcher ; calendrier, signatures, achats et écritures publiques bloquent leur claim, jamais le développement — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
 | Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. Le bench public mesure le gate sur neuf items, pas un produit. |
-| Prochain durcissement | Files autonomes indépendantes : produit (#642, Recursio #610→#612, #637, #643) ; DevOps (#640, #641, #644, #639, #645). La seule capacité `absent` est l'émission Sigstore keyless : verify offline #637, émission non-prod #645, activation production/Rekor #638 séparée. |
+| Prochain durcissement | Files autonomes indépendantes produit et DevOps, ordonnées par `docs/roadmap-lanes.yaml` (tableau généré dans `docs/47`, vérifié en CI). La seule capacité `absent` est l'émission Sigstore keyless : verify offline #637, émission non-prod #645, activation production/Rekor #638 séparée. |
 | Claim boundary | Pas un eQMS certifié, pas un système GxP validé, pas une certification réglementaire. |
 
 ## Documentation Et Integration

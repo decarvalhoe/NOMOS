@@ -44,16 +44,19 @@ Each active backlog item must have:
 
 ## Current Autonomous Queues
 
-As checked on 2026-09-05, `docs/roadmap-lanes.yaml` orders Product and DevOps
-independently:
+`docs/roadmap-lanes.yaml` orders Product and DevOps independently; the table
+below is generated from it and checked for drift in CI:
 
+<!-- roadmap-queues:begin -->
+<!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| `#642` — rule-execution persisted integrity | `#640` — competence template/gate contract |
-| `#610` → `#611` → `#612` — Recursio contract, snapshot, E2E | `#641` — licence/no-full-text gates |
-| `#637` — offline Sigstore verification | `#644` — actual public-source processing |
-| `#643` — static SKOS authoring/distribution | `#639` — candidate release-bundle rehearsal |
-| — | `#645` — keyless issuance against injected non-production services |
+| #610 — Define the Recursio web-source contract | #641 — Restore licence-review and no-full-text gates |
+| #611 — Verify immutable external corpus snapshots | #644 — Process real public references and retain evidence |
+| #612 — Recursio to Nomos offline E2E fixture | #639 — Prepare and verify a v0.2.0-ALPHA candidate bundle |
+| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
+| #643 — Static SKOS authoring and distribution | — |
+<!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is
 passive evidence accumulation; #561/#562/#194 require authentic human acts;

@@ -108,7 +108,7 @@ Roadmap state as of 2026-09-05:
 | `#408`, `#409`, `#410`, `#411` | Qualification/CAPA foundations — closed; their records remain regulated evidence, not product dependencies. |
 | `#320` | Nomos/Praxis compatibility foundation — closed; regulated reliance remains separately bounded. |
 | `#192`, `#193`, `#194`, `#196` | Open regulated acquisition/licence/processing claim gates; no domain-development dependency. |
-| `#610`-`#612`, `#637`, `#642`, `#643` | Current autonomous product work — ordered by `docs/roadmap-lanes.yaml`. |
+| product queue of `docs/roadmap-lanes.yaml` | Current autonomous product work — see the generated table in `docs/47`. |
 
 Strategic conclusion:
 
