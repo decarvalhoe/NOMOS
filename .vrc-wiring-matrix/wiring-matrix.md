@@ -59,6 +59,7 @@
 | `sigstore_keyless_injected_issuance` | P1 | real | real | ✅ | — | — |
 | `praxis_evidence_contract` | P1 | real | real | ✅ | — | — |
 | `praxis_atom_mapping_fixture` | P1 | real | real | ✅ | — | — |
+| `praxis_activation_gate` | P1 | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -66,7 +67,7 @@
 
 ## Summary
 
-- capabilities: 51 (real=40, partial=0, sidecar=10, stub=0, absent=1)
+- capabilities: 52 (real=41, partial=0, sidecar=10, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

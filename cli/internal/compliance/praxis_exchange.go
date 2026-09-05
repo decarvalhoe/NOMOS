@@ -332,10 +332,20 @@ func VerifyPraxisExchange(ex PraxisEvidenceExchange, repoRoot string) (PraxisExc
 			}
 		}
 		if ex.Reliance == "regulated_evidence" {
-			got, err := sha256File(filepath.Join(repoRoot, filepath.FromSlash(ex.ActivationVerdictPath)))
+			verdictPath := filepath.Join(repoRoot, filepath.FromSlash(ex.ActivationVerdictPath))
+			got, err := sha256File(verdictPath)
 			if err != nil || got != ex.ActivationVerdictSha256 {
 				return rep, praxisErr(CodePraxisRelianceUnsupported, "activation verdict %s does not match its bound sha256 (%v)", ex.ActivationVerdictPath, err)
 			}
+			// The bound verdict must be a real, self-consistent verdict that says activatable (#662).
+			verdict, err := VerifyPraxisActivationVerdict(verdictPath, repoRoot)
+			if err != nil {
+				return rep, praxisErr(CodePraxisRelianceUnsupported, "bound activation verdict is not valid: %v", err)
+			}
+			if verdict.Status != PraxisGateStatusActivatable {
+				return rep, praxisErr(CodePraxisRelianceUnsupported, "bound activation verdict says %q; regulated reliance needs activatable", verdict.Status)
+			}
+			rep.Checks = append(rep.Checks, "activation_verdict")
 		}
 		rep.HashesChecked = true
 		rep.Checks = append(rep.Checks, "artifact_hashes")

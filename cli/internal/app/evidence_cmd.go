@@ -83,6 +83,8 @@ func evidenceCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return evidencePraxisVerifyCommand(args[1:], stdout, stderr)
 	case "praxis-mapping-verify":
 		return evidencePraxisMappingVerifyCommand(args[1:], stdout, stderr)
+	case "praxis-gate":
+		return evidencePraxisGateCommand(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		printEvidenceUsage(stdout)
 		return 0
@@ -102,6 +104,8 @@ func printEvidenceUsage(w io.Writer) {
 	fmt.Fprintln(w, "      Verify a Nomos/Praxis evidence exchange (NRT-016 #660): shape, authority, references, reliance rule, artifact hashes. Never activates Praxis.")
 	fmt.Fprintln(w, "  nomos evidence praxis-mapping-verify --mapping <mapping.json|yaml> --atoms <atom-set.json> [--out <report.json>]")
 	fmt.Fprintln(w, "      Verify an atom → Praxis check mapping against the Nomos atom set (NRT-017 #661): atoms exist, approved on both sides, same hash and exposed fields; Nomos stays the authority.")
+	fmt.Fprintln(w, "  nomos evidence praxis-gate [--record docs/regulated/qualification/praxis-activation-gate.yaml] [--repo-root <dir>] [--out <verdict.json>] [--require-activatable]")
+	fmt.Fprintln(w, "      Compute the Praxis activation verdict from the record and the tree (NRT-018 #662): blocked with named reasons, or activatable. Never 'activated' — that is a human decision (docs/28).")
 }
 
 func evidenceHashCommand(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -388,5 +392,45 @@ func evidencePraxisMappingVerifyCommand(args []string, stdout io.Writer, stderr 
 	}
 	fmt.Fprintf(stdout, "evidence praxis-mapping-verify: OK — %s: %d/%d atom(s) mapped, %d check(s) bound, atom set %s → %s\n",
 		report.MappingID, report.AtomsMapped, report.AtomsInSet, report.ChecksBound, report.AtomSetSha256[:19], *out)
+	return 0
+}
+
+// evidencePraxisGateCommand is `nomos evidence praxis-gate` (NRT-018 #662).
+func evidencePraxisGateCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("evidence praxis-gate", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	record := flags.String("record", "docs/regulated/qualification/praxis-activation-gate.yaml", "activation gate record")
+	repoRoot := flags.String("repo-root", ".", "repository root the record's artifact paths resolve against")
+	out := flags.String("out", "", "write the verdict here (default: stdout)")
+	requireActivatable := flags.Bool("require-activatable", false, "exit 1 unless the verdict is activatable (for consumers that need the gate open)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	verdict, err := compliance.EvaluatePraxisActivation(*record, *repoRoot, time.Now().UTC())
+	if err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-gate: REFUSED, no verdict written — %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(verdict)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			return 1
+		}
+	} else {
+		if err := writeFile(*out, write); err != nil {
+			fmt.Fprintf(stderr, "evidence praxis-gate: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "evidence praxis-gate: %s — %d/%d requirement(s) unmet (record %s) → %s\n",
+			verdict.Status, verdict.UnmetCount, len(verdict.Checks), verdict.RecordStatus, *out)
+	}
+	if *requireActivatable && verdict.Status != compliance.PraxisGateStatusActivatable {
+		fmt.Fprintf(stderr, "evidence praxis-gate: gate is %s; %d requirement(s) unmet\n", verdict.Status, verdict.UnmetCount)
+		return 1
+	}
 	return 0
 }

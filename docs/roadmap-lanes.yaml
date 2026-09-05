@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [662]
+    product: []
     devops: []
     regulated: []
 
@@ -305,17 +305,17 @@ items:
       reliance: supporting_use_until_validated
   - issue: 662
     title: Praxis activation gate blocked until Nomos proof is verified (NRT-018)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [660, 661]
     regulated_tool:
       intended_use: compute whether Praxis regulated reliance may be activated from verified Nomos artifacts and human review records, never activating it
       impact: decision
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_verification_required
   - issue: 192
     title: Acquire ISO 13485

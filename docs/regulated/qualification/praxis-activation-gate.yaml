@@ -101,3 +101,21 @@ verification:
     - "python -m unittest tests.test_regulated_automation.RegulatedAutomationTests.test_praxis_activation_gate_keeps_unverified_nomos_atoms_blocked -v"
     - "python scripts/regulated_docs_gate.py --report .regulated-doc-gate/regulated-doc-gate-report.json"
     - "python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json"
+
+# NRT-018 (#662): the verdict on this record is COMPUTED, never declared.
+verdict_engine:
+  command: "nomos evidence praxis-gate --record docs/regulated/qualification/praxis-activation-gate.yaml --repo-root ."
+  verdict_schema: nomos-praxis-activation-verdict-v1
+  statuses: [blocked, activatable]   # never "activated": that is a human decision under docs/28
+  resolvers:
+    aq_status: "docs/regulated/qualification/decisions/*.yaml with record_type acceptance_qualification_decision, signed (decided_by, decided_at)"
+    reconstruction_verdict: "decisions/*.yaml with record_type reconstruction_verdict, signed"
+    strict_gate_status: "decisions/*.yaml with record_type qualified_corpus_strict_gate_verdict, signed"
+    installation_baseline: "acceptance block (status, accepted_by, accepted_at) in the IQ record"
+    operational_gate_protocol: "acceptance block in the OQ record"
+    production_journey_evidence: "overall_result of the PQ pack"
+    validation_inventory: "no high/critical validation without last_verified and without waiver"
+    evidence_contract: "the 'Status:' line of praxis-atom-mapping.md"
+    required_reviews: "docs/regulated/qualification/reviews/<id>.yaml, status completed, signed (reviewed_by, reviewed_at)"
+  rule: "any unknown, unsigned or missing input is NOT met; a record whose current_status claims more than the checks support is refused as forged"
+  ci: "the CI asserts the verdict is blocked today with its reasons named; flipping that assertion requires the human records above"

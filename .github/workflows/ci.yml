@@ -57,6 +57,19 @@ jobs:
         run: |
           go build -o "$RUNNER_TEMP/nomos-bench" .
           python3 ../scripts/cite_or_abstain_bench.py --root .. --nomos-bin "$RUNNER_TEMP/nomos-bench"
+      # NRT-018 (#662): the Praxis activation gate is computed on the REAL
+      # repository. Today it MUST be blocked, with every unmet requirement named
+      # (human reviews and decision records cannot be generated). If it ever
+      # reads activatable, this assertion is the tripwire that makes someone
+      # look — flip it consciously, with the human records that justify it.
+      - name: "Praxis activation gate — blocked today, reasons named (NRT-018 #662)"
+        run: |
+          go run . evidence praxis-gate --repo-root .. --record ../docs/regulated/qualification/praxis-activation-gate.yaml --out "$RUNNER_TEMP/praxis-verdict.json"
+          jq -e '.status == "blocked" and .unmet_count > 0 and (.reasons | length) == .unmet_count and .status != "activated"' "$RUNNER_TEMP/praxis-verdict.json" > /dev/null
+          jq -r '.reasons[]' "$RUNNER_TEMP/praxis-verdict.json"
+          if go run . evidence praxis-gate --repo-root .. --record ../docs/regulated/qualification/praxis-activation-gate.yaml --require-activatable > /dev/null 2>&1; then
+            echo "::error::--require-activatable passed on a blocked gate"; exit 1
+          fi
       # #612: the Recursio → NOMOS web-source chain runs OFFLINE on the synthetic
       # fixture — export byte-identical to a fresh normalisation of the site,
       # sealed snapshot verified and imported, scan → feed → body-ledger →
