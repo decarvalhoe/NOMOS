@@ -19,14 +19,21 @@ type fakeSubstrate struct {
 	resp Response
 	err  error
 	seen Request
+	// raw is what the substrate "wrote". Empty means: marshal resp, so a test
+	// that does not care about raw bytes still produces a coherent record.
+	raw []byte
 }
 
-func (f *fakeSubstrate) Run(req Request) (Response, error) {
+func (f *fakeSubstrate) Run(req Request) (Response, []byte, error) {
 	f.seen = req
 	if f.err != nil {
-		return Response{}, f.err
+		return Response{}, nil, f.err
 	}
-	return f.resp, nil
+	raw := f.raw
+	if raw == nil {
+		raw, _ = json.Marshal(f.resp)
+	}
+	return f.resp, raw, nil
 }
 
 func formulas() []Formula {
@@ -289,21 +296,218 @@ func TestVerifyRecord_RefusesATamperedRecord(t *testing.T) {
 // --- the process boundary ------------------------------------------------
 
 func TestExternal_EmptyCommandIsAFailureNotADefault(t *testing.T) {
-	if _, err := (External{}).Run(Request{SchemaVersion: RequestSchema}); err == nil {
+	if _, _, err := (External{}).Run(Request{SchemaVersion: RequestSchema}); err == nil {
 		t.Fatal("an empty command was accepted")
 	}
 }
 
 func TestExternal_NonZeroExitIsAFailure(t *testing.T) {
 	sub := External{Command: []string{"false"}, Timeout: 10 * time.Second}
-	if _, err := sub.Run(Request{SchemaVersion: RequestSchema}); err == nil {
+	if _, _, err := sub.Run(Request{SchemaVersion: RequestSchema}); err == nil {
 		t.Fatal("a failing process was accepted")
 	}
 }
 
 func TestExternal_NonJSONOutputIsAFailure(t *testing.T) {
 	sub := External{Command: []string{"echo", "not json"}, Timeout: 10 * time.Second}
-	if _, err := sub.Run(Request{SchemaVersion: RequestSchema}); err == nil {
+	if _, _, err := sub.Run(Request{SchemaVersion: RequestSchema}); err == nil {
 		t.Fatal("non-JSON output was accepted")
+	}
+}
+
+// --- #642: record integrity, byte by byte -------------------------------
+//
+// The digests exist so that a record edited after emission stops agreeing with
+// itself. Each case below flips one thing and proves VerifyRecord notices.
+
+func TestVerifyRecord_RecomputesTheRequestDigest(t *testing.T) {
+	record, err := run(t, goodResponse(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The record verifies against the formulas it was built from…
+	if err := VerifyRecord(record, formulas()); err != nil {
+		t.Fatalf("fresh record does not verify: %v", err)
+	}
+	// …and stops verifying when the question changes by one byte.
+	edited := formulas()
+	edited[0].Expression = "base + supplements"
+	if err := VerifyRecord(record, edited); err == nil {
+		t.Fatal("a record verified against a formula it never answered")
+	}
+	// A hand-written digest is refused too.
+	forged := record
+	forged.RequestDigest = "sha256:" + strings.Repeat("0", 64)
+	if err := VerifyRecord(forged, formulas()); err == nil {
+		t.Fatal("a forged request_digest verified")
+	}
+	if err := VerifyRecord(ExecutionRecord{
+		SchemaVersion: RecordSchema, Substrate: "x", Results: record.Results,
+		ComputedCount: record.ComputedCount, UnsupportedNum: record.UnsupportedNum,
+	}, formulas()); err == nil {
+		t.Fatal("a record with no request_digest verified")
+	}
+}
+
+func TestVerifyRecord_ADigestlessRecordIsRefused(t *testing.T) {
+	record, err := run(t, goodResponse(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The expected diagnosis matters as much as the refusal: an absent digest
+	// and a malformed one are different defects, and the message says which.
+	for name, tc := range map[string]struct {
+		strip func(*ExecutionRecord)
+		want  string
+	}{
+		"no results_digest": {
+			func(r *ExecutionRecord) { r.ResultsDigest = "" },
+			"carries no results_digest",
+		},
+		"no response_digest": {
+			func(r *ExecutionRecord) { r.ResponseDigest = "" },
+			"the substrate's own output is unbound",
+		},
+		"malformed response_digest": {
+			func(r *ExecutionRecord) { r.ResponseDigest = "md5:whatever" },
+			"is not a sha256 digest",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			forged := record
+			tc.strip(&forged)
+			err := VerifyRecord(forged, formulas())
+			if err == nil {
+				t.Fatal("an unbound record verified")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("expected the diagnosis to say %q, got: %v", tc.want, err)
+			}
+		})
+	}
+}
+
+func TestVerifyRecord_OneEditedByteInAnyRecordedFieldIsCaught(t *testing.T) {
+	// The requirement of #642, field by field. Each mutation leaves the record
+	// internally plausible — the expression still matches the formula, the
+	// status is still legal — and is caught only because the digest is
+	// recomputed.
+	base, err := run(t, goodResponse(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]func(*ExecutionRecord){
+		"value edited": func(r *ExecutionRecord) {
+			for i := range r.Results {
+				if r.Results[i].Status == StatusComputed {
+					r.Results[i].Value = json.RawMessage(`106`)
+				}
+			}
+		},
+		"unit edited": func(r *ExecutionRecord) { r.Results[0].Unit = "CHF" },
+		"reason edited": func(r *ExecutionRecord) {
+			for i := range r.Results {
+				if r.Results[i].Status == StatusUnsupported {
+					r.Results[i].Reason = "a different reason"
+				}
+			}
+		},
+		"status swapped": func(r *ExecutionRecord) {
+			// computed -> unsupported, kept legal by supplying a reason and
+			// dropping the value: only the digest can catch this one.
+			for i := range r.Results {
+				if r.Results[i].Status == StatusComputed {
+					r.Results[i].Status = StatusUnsupported
+					r.Results[i].Reason = "reclassified after the fact"
+					r.Results[i].Value = nil
+					r.ComputedCount--
+					r.UnsupportedNum++
+				}
+			}
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			forged := base
+			forged.Results = append([]TracedResult{}, base.Results...)
+			mutate(&forged)
+			if err := VerifyRecord(forged, formulas()); err == nil {
+				t.Fatalf("%s survived verification", name)
+			}
+		})
+	}
+}
+
+func TestComputeResultsDigest_IsOrderIndependentAndValueSensitive(t *testing.T) {
+	base, err := run(t, goodResponse(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	forward, err := ComputeResultsDigest(base.Results)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reversed := append([]TracedResult{}, base.Results...)
+	for i, j := 0, len(reversed)-1; i < j; i, j = i+1, j-1 {
+		reversed[i], reversed[j] = reversed[j], reversed[i]
+	}
+	shuffled, err := ComputeResultsDigest(reversed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if forward != shuffled {
+		t.Fatal("the digest depends on result order; it must not")
+	}
+
+	changed := append([]TracedResult{}, base.Results...)
+	changed[0].Value = json.RawMessage(`999`)
+	altered, err := ComputeResultsDigest(changed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if altered == forward {
+		t.Fatal("the digest ignored a changed value")
+	}
+}
+
+func TestVerifyResponseBytes_BindsTheSubstratesOwnOutput(t *testing.T) {
+	// The one check the record cannot make alone: against retained raw output.
+	raw := []byte(`{"schema_version":"nomos-rule-substrate-response-v1","substrate":"borrowed-engine/1.2","results":[]}`)
+	sub := &fakeSubstrate{resp: goodResponse(), raw: raw}
+	record, err := Execute(sub, []string{"borrowed"}, formulas())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifyResponseBytes(record, raw); err != nil {
+		t.Fatalf("the retained output should match: %v", err)
+	}
+	if err := VerifyResponseBytes(record, append(raw, ' ')); err != nil {
+		t.Fatalf("trailing whitespace should be tolerated: %v", err)
+	}
+	tampered := []byte(strings.Replace(string(raw), "1.2", "9.9", 1))
+	if err := VerifyResponseBytes(record, tampered); err == nil {
+		t.Fatal("tampered raw output verified against the record")
+	}
+	if err := VerifyResponseBytes(ExecutionRecord{}, raw); err == nil {
+		t.Fatal("a record with no response_digest verified")
+	}
+}
+
+func TestExecute_RecordCarriesAllThreeDigests(t *testing.T) {
+	record, err := run(t, goodResponse(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, got := range map[string]string{
+		"request_digest":  record.RequestDigest,
+		"results_digest":  record.ResultsDigest,
+		"response_digest": record.ResponseDigest,
+	} {
+		if !strings.HasPrefix(got, "sha256:") || len(got) != len("sha256:")+64 {
+			t.Fatalf("%s is not a sha256 digest: %q", name, got)
+		}
+	}
+	if record.RequestDigest == record.ResultsDigest {
+		t.Fatal("the request and results digests collide; they cover different things")
 	}
 }
