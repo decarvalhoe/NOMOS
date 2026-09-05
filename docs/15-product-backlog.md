@@ -51,8 +51,7 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
-| #643 — Static SKOS authoring and distribution | — |
+| #643 — Static SKOS authoring and distribution | #645 — Keyless issuance against injected non-production services |
 <!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is

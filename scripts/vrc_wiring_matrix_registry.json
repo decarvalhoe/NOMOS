@@ -2805,6 +2805,118 @@
           ]
         }
       ]
+    },
+    {
+      "id": "sigstore_offline_verification",
+      "title": "Vérification Sigstore hors ligne d'un bundle FOURNI (#637) — `nomos attest verify-sigstore` parle à un vérificateur externe versionné (`tools/sigstore-verifier`, module séparé avec sigstore-go, ADR-0005) : le moteur garde ses trois dépendances directes et la sonde `github.com/sigstore` sur cli/ reste verte. Le moteur ne croit pas le vérificateur sur parole : il recalcule le digest de l'artefact, re-vérifie l'identité exigée (SAN, issuer, regex) dans la réponse, refuse `verified: true` avec sortie non nulle, refuse tout mode autre que `offline`, et lie les octets exacts de la réponse par digest dans le record. Fixtures RÉELLES (v0.1 public-good avec promesse d'inclusion + SCT ; v0.3 avec preuve d'inclusion + checkpoint signé) : digest faux, identité fausse, issuer faux, octet de signature, promesse d'inclusion, certificat, hash de preuve, checkpoint, matériel de confiance ne couvrant pas le log → refusés, aucun record. Vérificateur absent → sortie non nulle, aucun record, « No verdict ». Un vérificateur menteur (verified:true pour un autre artefact) est attrapé côté NOMOS. Ce que cela N'EST PAS : NOMOS ne signe pas keyless, n'obtient aucune identité, n'écrit dans aucun journal ; `sigstore_keyless` reste `absent`.",
+      "pillar": "P1",
+      "claim_level": "capability bornée (vérifie des bundles fournis hors ligne ; aucune émission, aucune publication)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Offline Sigstore verification gate (#637)",
+            "scripts/sigstore-verify-gate.sh",
+            "go-version-file: tools/sigstore-verifier/go.mod"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/attestation/sigstore_external.go",
+          "contains": [
+            "func VerifySigstoreBundle(",
+            "func ResolveSigstoreVerifier(",
+            "SIGSTORE_DIGEST_DISAGREEMENT",
+            "SIGSTORE_IDENTITY_DISAGREEMENT",
+            "only offline verification is accepted",
+            "func VerifySigstoreRecordResponse("
+          ]
+        },
+        {
+          "path": "tools/sigstore-verifier/main.go",
+          "contains": [
+            "verify.NewVerifier(",
+            "verify.WithCertificateIdentity(",
+            "nomos.sigstore-verify.response.v1",
+            "Nothing was signed, issued or published"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/attest_cmd.go",
+          "contains": [
+            "case \"verify-sigstore\":",
+            "attestation.VerifySigstoreBundle(",
+            "REFUSED, no record written"
+          ]
+        },
+        {
+          "path": "scripts/sigstore-verify-gate.sh",
+          "contains": [
+            "attest verify-sigstore",
+            "must_refuse",
+            "no verifier available"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/attestation/sigstore_external_test.go",
+          "contains": [
+            "TestSigstoreBoundaryFailsClosed",
+            "verifier binary absent",
+            "verified=true but for another artifact",
+            "verified=true but another signer",
+            "TestSigstoreRequestShapeIsEnforcedBeforeAnyProcess"
+          ]
+        },
+        {
+          "path": "tools/sigstore-verifier/main_test.go",
+          "contains": [
+            "TestRealBundleVerifiesOffline",
+            "TestTamperIsRefused",
+            "TestInclusionProofAndCheckpointTamperIsRefused",
+            "inclusion proof hash flipped",
+            "checkpoint envelope edited"
+          ]
+        },
+        {
+          "path": "tests/test_claim_boundary_guard.py",
+          "contains": [
+            "test_bounded_sigstore_verification_marker",
+            "issuance wording must keep failing"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/claim_boundary_guard.py",
+          "contains": [
+            "def sigstore_verification_present(",
+            "_SIGSTORE_VERIFY_BOUNDED",
+            "_SIGSTORE_ISSUANCE_WORDS"
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "docs/adr/0005-sigstore-verifier-process-boundary.md",
+          "contains": [
+            "Why not import it into the engine",
+            "sigstore_keyless"
+          ]
+        },
+        {
+          "path": "tools/sigstore-verifier/testdata/NOTICE.md",
+          "contains": [
+            "Apache License 2.0"
+          ]
+        }
+      ]
     }
   ]
 }
