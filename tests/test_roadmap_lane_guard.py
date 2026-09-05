@@ -92,8 +92,13 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         self.assertTrue(any("sole reliance requires" in failure for failure in failures), failures)
 
     def test_critical_decision_and_unlocked_claim_require_validation(self) -> None:
+        # Structural: any still-planned regulated tool, not a hardcoded issue —
+        # the item that used to be named here has since been delivered.
         data = registry()
-        item = next(item for item in data["items"] if item["issue"] == 637)
+        item = next(
+            item for item in data["items"]
+            if item.get("regulated_tool") and item.get("delivery_state") == "planned"
+        )
         item["regulated_tool"]["impact"] = "critical_decision"
         item["claim_state"] = "unlocked"
         failures = guard.validate(data)

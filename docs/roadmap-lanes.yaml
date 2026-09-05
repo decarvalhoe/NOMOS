@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [637, 643]
+    product: [643]
     devops: [645]
     regulated: []
 
@@ -88,18 +88,18 @@ items:
     blocks_claims: [sigstore_keyless_issuance]
   - issue: 637
     title: Offline Sigstore bundle verification
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 576
     regulated_tool:
       intended_use: verify a supplied Sigstore bundle without issuing identity or writing a public log
       impact: decision
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 638
     title: Production keyless issuance and Rekor publication

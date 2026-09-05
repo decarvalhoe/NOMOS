@@ -70,6 +70,29 @@ jobs:
   # them in CI signalled a product status they do not have. Revival condition:
   # a capability-claim issue with a declared production caller (v0.9.x lane).
 
+  # #637: offline Sigstore verification through the versioned process boundary.
+  # The verifier is its own module (tools/sigstore-verifier) so the engine keeps
+  # its three direct dependencies and the `github.com/sigstore` probe on cli/
+  # stays green. The gate proves the REAL fixture bundles verify offline and
+  # that every tamper (digest, identity, signature, inclusion promise,
+  # inclusion proof, checkpoint, trust material) is refused with no record —
+  # and that with no verifier available NOMOS invents no verdict.
+  sigstore-verifier:
+    name: Offline Sigstore verification gate (#637)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/sigstore-verifier/go.mod
+          cache-dependency-path: |
+            tools/sigstore-verifier/go.sum
+            cli/go.sum
+      - name: Verifier module tests (real fixtures, tamper matrix)
+        run: cd tools/sigstore-verifier && go vet ./... && go test ./...
+      - name: Offline verification gate through the CLI
+        run: WORK_DIR="$RUNNER_TEMP/sigstore-gate" bash scripts/sigstore-verify-gate.sh
+
   corpus-cross-platform:
     name: Corpus tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

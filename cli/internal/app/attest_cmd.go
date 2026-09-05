@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/RBOKproject/Nomos/cli/internal/attestation"
 )
@@ -31,6 +32,8 @@ func attestCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return attestSupplyChainCommand(args[1:], stdout, stderr)
 	case "verify":
 		return attestVerify(args[1:], stdout, stderr)
+	case "verify-sigstore":
+		return attestVerifySigstore(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		attestUsage(stdout)
 		return 0
@@ -50,6 +53,8 @@ func attestUsage(w io.Writer) {
 	fmt.Fprintln(w, "  nomos attest supply-chain --project-id <id> --corpus-id <id> --snapshot <f> --manifest <f> --feed <f> [--rag <f>] [--sign] [--out <f>]")
 	fmt.Fprintln(w, "  nomos attest supply-chain --verify <statement.json> [--artifact <name>=<path>]...")
 	fmt.Fprintln(w, "  nomos attest verify --envelope <envelope.json> --pub <pub.pem>")
+	fmt.Fprintln(w, "  nomos attest verify-sigstore --bundle <bundle.sigstore.json> --trusted-root <trusted_root.json> (--artifact <file> | --artifact-digest <alg:hex>) --identity <san> --issuer <iss> [--identity-regex <re>] [--issuer-regex <re>] [--verifier <cmd>] [--out <record.json>]")
+	fmt.Fprintln(w, "      Verify a SUPPLIED Sigstore bundle OFFLINE through the external verifier (tools/sigstore-verifier). Never signs, never issues, never publishes.")
 }
 
 func attestKeygen(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -259,4 +264,77 @@ func attestLoadSigner(keyPath string, stderr io.Writer) (*attestation.Signer, bo
 		return nil, false, 1
 	}
 	return signer, false, 0
+}
+
+// attestVerifySigstore is `nomos attest verify-sigstore` (#637): verify a
+// supplied Sigstore bundle offline through the versioned external verifier.
+// No verifier → non-zero exit and no verdict. A refusal writes no record.
+func attestVerifySigstore(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("attest verify-sigstore", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	bundlePath := flags.String("bundle", "", "Sigstore bundle JSON (required)")
+	trustedRoot := flags.String("trusted-root", "", "trusted root JSON the bundle is verified against (required; supplied, never fetched)")
+	artifact := flags.String("artifact", "", "artifact file whose sha256 the bundle must cover")
+	artifactDigest := flags.String("artifact-digest", "", "artifact digest the bundle must cover, as sha256|sha384|sha512:<hex> (alternative to --artifact)")
+	identity := flags.String("identity", "", "required signer identity (certificate SAN), exact")
+	identityRegex := flags.String("identity-regex", "", "required signer identity as a regular expression")
+	issuer := flags.String("issuer", "", "required OIDC issuer of the signing certificate, exact")
+	issuerRegex := flags.String("issuer-regex", "", "required issuer as a regular expression")
+	tlogN := flags.Int("require-tlog-entries", 1, "minimum transparency-log entries the verifier must verify")
+	verifierCmd := flags.String("verifier", "", "external verifier command (default: $"+attestation.SigstoreVerifierEnv+", then "+attestation.SigstoreVerifierBinary+" on PATH)")
+	out := flags.String("out", "", "write the verification record here (default: stdout)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *bundlePath == "" || *trustedRoot == "" {
+		fmt.Fprintln(stderr, "attest verify-sigstore: --bundle and --trusted-root are required")
+		return 2
+	}
+	if (*artifact == "") == (*artifactDigest == "") {
+		fmt.Fprintln(stderr, "attest verify-sigstore: exactly one of --artifact or --artifact-digest is required")
+		return 2
+	}
+	if *identity == "" && *identityRegex == "" {
+		fmt.Fprintln(stderr, "attest verify-sigstore: --identity or --identity-regex is required — an unnamed signer is not a verification")
+		return 2
+	}
+	if *issuer == "" && *issuerRegex == "" {
+		fmt.Fprintln(stderr, "attest verify-sigstore: --issuer or --issuer-regex is required")
+		return 2
+	}
+	command, err := attestation.ResolveSigstoreVerifier(*verifierCmd)
+	if err != nil {
+		fmt.Fprintf(stderr, "attest verify-sigstore: %v\n", err)
+		return 1
+	}
+	req := attestation.SigstoreRequest{
+		BundlePath: *bundlePath, TrustedRootPath: *trustedRoot, ArtifactPath: *artifact, ArtifactDigest: *artifactDigest,
+		CertificateIdentity: attestation.SigstoreIdentity{SAN: *identity, SANRegex: *identityRegex, Issuer: *issuer, IssuerRegex: *issuerRegex},
+		Require:             attestation.SigstoreRequire{TlogEntries: *tlogN, SignedCertificateTimestamps: 1, ObserverTimestamps: 1},
+	}
+	record, _, err := attestation.VerifySigstoreBundle(attestation.ExternalSigstoreVerifier{Command: command}, req, time.Now().UTC())
+	if err != nil {
+		fmt.Fprintf(stderr, "attest verify-sigstore: REFUSED, no record written — %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(record)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			fmt.Fprintf(stderr, "attest verify-sigstore: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, write); err != nil {
+		fmt.Fprintf(stderr, "attest verify-sigstore: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "attest verify-sigstore: OK — %s signed by %s (issuer %s), %d tlog entr(ies), verifier %s %s via %s %s → %s\n",
+		record.ArtifactDigest, record.SignerSAN, record.SignerIssuer, record.TlogEntries,
+		record.Verifier, record.VerifierVersion, record.Library, record.LibraryVersion, *out)
+	return 0
 }

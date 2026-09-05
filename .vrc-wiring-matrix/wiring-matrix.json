@@ -2504,6 +2504,76 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "sigstore_offline_verification",
+      "title": "Vérification Sigstore hors ligne d'un bundle FOURNI (#637) — `nomos attest verify-sigstore` parle à un vérificateur externe versionné (`tools/sigstore-verifier`, module séparé avec sigstore-go, ADR-0005) : le moteur garde ses trois dépendances directes et la sonde `github.com/sigstore` sur cli/ reste verte. Le moteur ne croit pas le vérificateur sur parole : il recalcule le digest de l'artefact, re-vérifie l'identité exigée (SAN, issuer, regex) dans la réponse, refuse `verified: true` avec sortie non nulle, refuse tout mode autre que `offline`, et lie les octets exacts de la réponse par digest dans le record. Fixtures RÉELLES (v0.1 public-good avec promesse d'inclusion + SCT ; v0.3 avec preuve d'inclusion + checkpoint signé) : digest faux, identité fausse, issuer faux, octet de signature, promesse d'inclusion, certificat, hash de preuve, checkpoint, matériel de confiance ne couvrant pas le log → refusés, aucun record. Vérificateur absent → sortie non nulle, aucun record, « No verdict ». Un vérificateur menteur (verified:true pour un autre artefact) est attrapé côté NOMOS. Ce que cela N'EST PAS : NOMOS ne signe pas keyless, n'obtient aucune identité, n'écrit dans aucun journal ; `sigstore_keyless` reste `absent`.",
+      "pillar": "P1",
+      "claim_level": "capability bornée (vérifie des bundles fournis hors ligne ; aucune émission, aucune publication)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/attestation/sigstore_external.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tools/sigstore-verifier/main.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/attest_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/sigstore-verify-gate.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/attestation/sigstore_external_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tools/sigstore-verifier/main_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_claim_boundary_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/claim_boundary_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2541,9 +2611,9 @@
     }
   ],
   "summary": {
-    "capabilities": 46,
+    "capabilities": 47,
     "computed": {
-      "real": 36,
+      "real": 37,
       "partial": 0,
       "sidecar": 9,
       "stub": 0,

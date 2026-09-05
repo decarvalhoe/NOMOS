@@ -147,6 +147,29 @@ class ClaimBoundaryGuardTests(unittest.TestCase):
                 f"false positive on: {line}",
             )
 
+    def test_bounded_sigstore_verification_marker(self) -> None:
+        # #637: "verifies supplied bundles" is backed by the real verification
+        # capability; any issuance wording in the same sentence still fails, and
+        # without the capability markers the bounded phrasing is not backed.
+        verify_ok = "NOMOS verifies a supplied Sigstore bundle offline, including its transparency-log inclusion proof."
+        self.assertIsNone(guard.classify_line(verify_ok, signing_present=True, verify_present=True))
+        self.assertIsNotNone(
+            guard.classify_line(verify_ok, signing_present=True, verify_present=False),
+            "without the verification markers the bounded phrasing is an unbacked Sigstore claim",
+        )
+        for issuance in (
+            "NOMOS verifies supplied Sigstore bundles and signs its attestations keyless with Fulcio.",
+            "NOMOS attestations are Sigstore-signed; it also verifies supplied bundles.",
+            "NOMOS issues Sigstore bundles for its predicates and verifies the supplied ones.",
+            "NOMOS publishes its attestations to Rekor and verifies supplied bundles offline.",
+        ):
+            self.assertIsNotNone(
+                guard.classify_line(issuance, signing_present=True, verify_present=True),
+                f"issuance wording must keep failing: {issuance}",
+            )
+        # The real tree carries both markers.
+        self.assertTrue(guard.sigstore_verification_present(ROOT))
+
     def test_forged_maturity_claim_turns_guard_red(self) -> None:
         # VRC-01 (#547) adversarial proof: the doc-40 class of overclaim —
         # asserting multi-environment / customer-production integration without

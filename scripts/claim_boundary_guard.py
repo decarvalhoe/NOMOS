@@ -61,6 +61,16 @@ from pathlib import Path
 SIGNING_MARKER = Path("cli/internal/attestation/signing.go")
 SIGNING_MARKER_TOKENS = ("ecdsa", "dsse", "SignASN1", "VerifyASN1")
 
+# #637: offline VERIFICATION of a supplied Sigstore bundle is a real, bounded
+# capability — the engine side of the process boundary plus the external
+# verifier module. A sentence that says NOMOS *verifies supplied bundles* is
+# backed iff both markers are present; any sentence that says NOMOS signs,
+# issues or publishes with Sigstore keeps failing regardless.
+SIGSTORE_VERIFY_MARKERS = (
+    (Path("cli/internal/attestation/sigstore_external.go"), ("VerifySigstoreBundle", "SIGSTORE_DIGEST_DISAGREEMENT", "no verdict")),
+    (Path("tools/sigstore-verifier/main.go"), ("verify.NewVerifier", "WithCertificateIdentity", "nomos.sigstore-verify.response.v1")),
+)
+
 # Files in scope: documentation/prose surfaces only. Code and CUE schemas carry
 # the field vocabulary ("signed", "sigstore-keyless") legitimately and are out of
 # scope by extension.
@@ -101,8 +111,8 @@ _SIGSTORE_ADJ_CLAIM = re.compile(
 )
 # A looser Sigstore-as-live-signing phrasing (prose, not table landscape).
 _SIGSTORE_PROSE_CLAIM = re.compile(
-    r"\b(sigstore|fulcio|rekor)\b[^.|]{0,40}?\b(sign|signed|signing|keyless|transparency)\b"
-    r"|\b(sign|signed|signing|keyless)\b[^.|]{0,40}?\b(sigstore|fulcio|rekor)\b",
+    r"\b(sigstore|fulcio|rekor)\b[^.|]{0,40}?\b(sign|signed|signing|keyless|transparency|issue[sd]?|issuing|publish\w*|emit\w*)\b"
+    r"|\b(sign|signed|signing|keyless|issue[sd]?|issuing|publish\w*|emit\w*)\b[^.|]{0,40}?\b(sigstore|fulcio|rekor)\b",
     re.IGNORECASE,
 )
 _CERTIFIED_CLAIM = re.compile(
@@ -156,6 +166,34 @@ _SAFE_CONTEXT = re.compile(
 _QUOTED_SPAN = re.compile(r"`[^`]*`|\"[^\"]*\"|'[^']*'|«[^»]*»")
 
 
+def sigstore_verification_present(root: Path) -> bool:
+    """True iff the offline Sigstore VERIFICATION capability (#637) is in the tree."""
+    for marker, tokens in SIGSTORE_VERIFY_MARKERS:
+        path = root / marker
+        if not path.is_file():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return False
+        if not all(token in text for token in tokens):
+            return False
+    return True
+
+
+# Bounded verification phrasing: "verif… supplied/provided … bundle(s)". It is
+# honest only when nothing in the same sentence claims issuance.
+_SIGSTORE_VERIFY_BOUNDED = re.compile(
+    r"\bverif\w*\b[^.|]{0,80}?\b(supplied|provided|given|fourni\w*)\b[^.|]{0,60}?\bbundles?\b"
+    r"|\bbundles?\b[^.|]{0,40}?\b(supplied|provided|given|fourni\w*)\b[^.|]{0,60}?\bverif\w*\b",
+    re.IGNORECASE,
+)
+_SIGSTORE_ISSUANCE_WORDS = re.compile(
+    r"\b(signs?|signed|signing|signe\w*|issue[sd]?|issuing|émet\w*|emit\w*|publish\w*|publie\w*|keyless|writes?\s+to\s+rekor)\b",
+    re.IGNORECASE,
+)
+
+
 def signing_capability_present(root: Path) -> bool:
     """True iff the real key-based signing implementation is present in the tree."""
     marker = root / SIGNING_MARKER
@@ -195,7 +233,9 @@ def _strip_quoted(line: str) -> str:
     return _QUOTED_SPAN.sub(" ", line)
 
 
-def classify_line(line: str, signing_present: bool, section_deferred: bool = False) -> str | None:
+def classify_line(
+    line: str, signing_present: bool, section_deferred: bool = False, verify_present: bool = False
+) -> str | None:
     """Return a violation reason for a line, or None if the line is clean.
 
     A line violates when it makes an affirmative present-tense capability claim
@@ -215,6 +255,12 @@ def classify_line(line: str, signing_present: bool, section_deferred: bool = Fal
         return None
 
     is_table_row = bare.lstrip().startswith("|")
+
+    # #637 bounded marker: "verifies supplied bundles" is backed by the real
+    # verification capability — but only when the same sentence claims no
+    # issuance. "verifies supplied bundles and signs them keyless" still fails.
+    if verify_present and _SIGSTORE_VERIFY_BOUNDED.search(bare) and not _SIGSTORE_ISSUANCE_WORDS.search(bare):
+        return None
 
     # Affirmative "<subject> are Sigstore-signed" adjective claim — the precise
     # adversarial target. Fires anywhere (incl. a forged table row), because it
@@ -354,6 +400,7 @@ def find_duplicate_claims(root: Path) -> list[tuple[Path, int, str, str]]:
 
 def scan(root: Path) -> list[tuple[Path, int, str, str]]:
     signing_present = signing_capability_present(root)
+    verify_present = sigstore_verification_present(root)
     violations: list[tuple[Path, int, str, str]] = []
     for path in iter_scoped_files(root):
         try:
@@ -364,7 +411,7 @@ def scan(root: Path) -> list[tuple[Path, int, str, str]]:
         for lineno, line in enumerate(lines, start=1):
             if line.lstrip().startswith("#"):
                 section_deferred = bool(_DEFERRED_HEADING.search(line))
-            reason = classify_line(line, signing_present, section_deferred)
+            reason = classify_line(line, signing_present, section_deferred, verify_present)
             if reason is not None:
                 violations.append((path, lineno, line.strip(), reason))
     return violations

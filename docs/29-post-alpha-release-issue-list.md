@@ -37,8 +37,7 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #637 — Offline Sigstore bundle verification | #645 — Keyless issuance against injected non-production services |
-| #643 — Static SKOS authoring and distribution | — |
+| #643 — Static SKOS authoring and distribution | #645 — Keyless issuance against injected non-production services |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
