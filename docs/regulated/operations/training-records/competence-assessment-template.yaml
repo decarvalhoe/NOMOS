@@ -1,60 +1,83 @@
-schema_version: "0.1.0"
-template_id: RCP-014-COMPETENCE-ASSESSMENT
-title: Competence Assessment Record Template
-status: draft
-owner: not_assigned
+# Competence assessment record — TEMPLATE (schema nomos-competence-assessment-v1)
+#
+# VRC-16 tooling fix (#640). The previous template nested every field under a
+# `record:` key and carried no `record_id`, while
+# scripts/training_competence_gate.py reads those fields at the root and
+# requires an id. A human following the template produced a record the gate
+# refused. Template and gate now share ONE versioned schema, and the gate
+# refuses any attestation whose schema_version it does not know — a silent
+# reinterpretation of an old record would be worse than a refusal.
+#
+# MIGRATION from the unversioned nested form:
+#   1. lift every key under `record:` to the root;
+#   2. add `schema_version: nomos-competence-assessment-v1`;
+#   3. add `record_id` (unique across the attestations directory);
+#   4. add `decision.signature_evidence` pointing at where the signature lives.
+#
+# WHAT THE GATE CHECKS, AND WHAT IT DOES NOT
+# ------------------------------------------
+# The gate validates a signature DECLARATION and the evidence it references. It
+# does NOT authenticate a human identity, and no tool in this repository does.
+# `signed_by_assessor: true` is an assertion by whoever wrote the file; the gate
+# checks that the assertion is present, dated, and points at something a human
+# auditor can go and look at. Believing the assertion remains a human act.
+#
+# Copy this file into ./attestations/<record_id>.yaml and fill it in. Do not
+# generate it: a competence attestation states that a named person was assessed
+# and found competent, and only the people involved can state that.
 
-instructions: >
-  Complete one record per person per competence. The assessor must be
-  different from the assessee. Retain signed records as controlled
-  quality evidence.
+schema_version: nomos-competence-assessment-v1
+record_id: ""            # e.g. NOMOS-REC-COMP-2026-001, unique in attestations/
 
-record:
-  # --- Identification ---
-  assessee:
-    name: ""
-    role_id: ""
-    employee_id: ""
-  assessor:
-    name: ""
-    role_id: ""
-    employee_id: ""
+# --- Identification ---
+assessee:
+  name: ""               # must match an assignee in the role assignment record
+  role_id: ""
+  employee_id: ""
+assessor:
+  name: ""               # different from the assessee, unless a waiver covers this record
+  role_id: ""
+  employee_id: ""
 
-  # --- Competence ---
-  competence:
-    id: ""
-    name: ""
-    required_level: ""  # awareness | proficient | expert
+# --- Competence ---
+competence:
+  id: ""                 # must resolve to a competence in training-matrix.yaml
+  name: ""
+  required_level: ""     # awareness | proficient | expert
 
-  # --- Assessment ---
-  assessment:
-    date: ""  # YYYY-MM-DD
-    method: ""  # written_assessment | practical_assessment | scenario_assessment | certification
-    description: ""
-    pass_criteria: ""
-    result: ""  # pass | fail | conditional
-    score: null  # optional numeric score
-    evidence_artifact: ""  # path or reference to evidence file
-    notes: ""
+# --- Assessment ---
+assessment:
+  date: ""               # YYYY-MM-DD
+  method: ""             # written_assessment | practical_assessment | scenario_assessment | certification
+  description: ""
+  pass_criteria: ""
+  result: ""             # pass | fail | conditional — only `pass` is evidence of competence
+  score: null
+  evidence_artifact: ""  # path or reference to the assessment evidence
+  notes: ""
 
-  # --- Decision ---
-  decision:
-    competent: null  # true | false
-    conditions: ""  # conditions for conditional pass
-    reassessment_date: ""  # YYYY-MM-DD if conditional or fail
-    signed_by_assessor: false
-    signed_by_assessee: false
-    signed_at: ""  # RFC3339 timestamp
+# --- Decision ---
+decision:
+  competent: null        # true | false
+  conditions: ""
+  reassessment_date: ""
+  signed_by_assessor: false
+  signed_by_assessee: false
+  signed_at: ""          # RFC3339
+  # Where the signature actually lives: a signed PDF, a commit, a countersigned
+  # record. A declared signature pointing at nothing is refused — that is the
+  # difference between a record and a claim.
+  signature_evidence: ""
 
-  # --- Approval ---
-  approval:
-    approved_by: ""
-    approved_at: ""
-    approval_role: ""  # quality_unit | approver
-    approval_hash: ""  # sha256 chain hash for Part 11
+# --- Approval ---
+approval:
+  approved_by: ""
+  approved_at: ""
+  approval_role: ""      # quality_unit | approver
+  approval_hash: ""
 
-  # --- Validity ---
-  validity:
-    effective_from: ""
-    expires_at: ""  # YYYY-MM-DD, null if no expiry
-    retraining_trigger: ""  # event or schedule that triggers retraining
+# --- Validity ---
+validity:
+  effective_from: ""
+  expires_at: ""         # YYYY-MM-DD, or null for no expiry
+  retraining_trigger: ""

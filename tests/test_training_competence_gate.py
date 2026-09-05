@@ -82,6 +82,7 @@ SOP = (
 def _attestation(record_id: str, competence_id: str, **overrides) -> dict:
     """A fully valid, independently assessed attestation."""
     record = {
+        "schema_version": "nomos-competence-assessment-v1",
         "record_id": record_id,
         "assessee": {"name": PERSON, "role_id": "quality_owner"},
         "assessor": {"name": OTHER, "role_id": "quality_unit"},
@@ -96,6 +97,7 @@ def _attestation(record_id: str, competence_id: str, **overrides) -> dict:
             "signed_by_assessor": True,
             "signed_by_assessee": True,
             "signed_at": "2026-08-01T10:00:00Z",
+            "signature_evidence": "countersigned record, synthetic fixture",
         },
         "approval": {"approved_by": OTHER, "approved_at": "2026-08-02T09:00:00Z"},
         "validity": {"effective_from": "2026-08-01", "expires_at": None},
@@ -138,6 +140,7 @@ class GateTests(unittest.TestCase):
             self.training / "independence-waiver.yaml",
             {"schema_version": "nomos-independence-waiver-v1", "waived_records": []},
         )
+        self._write_template()
 
     @staticmethod
     def _dump(path: Path, data) -> None:
@@ -147,6 +150,28 @@ class GateTests(unittest.TestCase):
         path = self.attestations / f"{record['record_id']}.yaml"
         self._dump(path, record)
         return path
+
+    def _write_template(self, **overrides) -> None:
+        """A minimal template instance; overrides break one thing at a time."""
+        template = {
+            "schema_version": tcg.ATTESTATION_SCHEMA_VERSION,
+            "record_id": "",
+            "assessee": {"name": ""},
+            "assessor": {"name": ""},
+            "competence": {"id": ""},
+            "assessment": {"date": "", "result": ""},
+            "decision": {
+                "competent": None,
+                "signed_by_assessor": False,
+                "signed_by_assessee": False,
+                "signed_at": "",
+                "signature_evidence": "",
+            },
+            "approval": {"approved_by": "", "approved_at": ""},
+            "validity": {"effective_from": "", "expires_at": ""},
+        }
+        template.update(overrides)
+        self._dump(self.training / "competence-assessment-template.yaml", template)
 
     def _evaluate(self):
         return tcg.evaluate(self.root, AS_OF)
@@ -437,6 +462,103 @@ class GateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
 
 
+    # --- #640: template and gate share one versioned schema ----------------
+
+    def test_a_record_written_from_the_template_is_accepted(self) -> None:
+        # The defect #640 names: a human following the template produced a record
+        # the gate refused. This is the test that would have caught it.
+        template = yaml.safe_load(
+            (self.training / "competence-assessment-template.yaml").read_text(encoding="utf-8")
+        )
+        filled = copy.deepcopy(template)
+        filled["record_id"] = "FROM-TEMPLATE-1"
+        filled["assessee"] = {"name": PERSON, "role_id": "quality_owner"}
+        filled["assessor"] = {"name": OTHER, "role_id": "quality_unit"}
+        filled["competence"] = {"id": "comp-qo-001"}
+        filled["assessment"] = {"date": "2026-08-01", "result": "pass"}
+        filled["decision"] = {
+            "competent": True,
+            "signed_by_assessor": True,
+            "signed_by_assessee": True,
+            "signed_at": "2026-08-01T10:00:00Z",
+            "signature_evidence": "countersigned PDF in the QMS archive",
+        }
+        filled["approval"] = {"approved_by": OTHER, "approved_at": "2026-08-02T09:00:00Z"}
+        filled["validity"] = {"effective_from": "2026-08-01", "expires_at": None}
+
+        self._dump(self.attestations / "FROM-TEMPLATE-1.yaml", filled)
+        checks, _ = self._evaluate()
+        problems = next(c for c in checks if c["check"] == "attestation_records")["problems"]
+        self.assertEqual(problems, [], f"a record written from the template was refused: {problems}")
+
+    def test_the_shipped_synthetic_example_conforms(self) -> None:
+        # The committed example is the worked answer; if it stops conforming the
+        # example is lying to whoever copies it.
+        example = yaml.safe_load(
+            (TRAINING_DIR / "examples" / "EXAMPLE-synthetic-attestation.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        example["assessee"]["name"] = PERSON  # the fixture's assigned human
+        example["record_id"] = "EXAMPLE-COPY-1"
+        self._dump(self.attestations / "EXAMPLE-COPY-1.yaml", example)
+        checks, _ = self._evaluate()
+        problems = next(c for c in checks if c["check"] == "attestation_records")["problems"]
+        self.assertEqual(problems, [], f"the shipped example does not conform: {problems}")
+
+    def test_unknown_schema_version_is_refused_not_reinterpreted(self) -> None:
+        # ADVERSARIAL: the pre-#640 nested shape. Reading it as if it were the
+        # current schema would turn a migration slip into a wrong status.
+        for name, version in (("absent", None), ("old", "0.1.0")):
+            with self.subTest(version=name):
+                for stale in self.attestations.glob("*.yaml"):
+                    stale.unlink()
+                record = _attestation("REC-OLD", "comp-qo-001")
+                if version is None:
+                    record.pop("schema_version")
+                else:
+                    record["schema_version"] = version
+                self._write_attestation(record)
+                checks, _ = self._evaluate()
+                problems = next(
+                    c for c in checks if c["check"] == "attestation_records"
+                )["problems"]
+                self.assertTrue(
+                    any("schema_version" in p and "migration" in p for p in problems),
+                    problems,
+                )
+
+    def test_declared_signature_without_evidence_is_refused(self) -> None:
+        # ADVERSARIAL: `signed_by_assessor: true` pointing at nothing. The gate
+        # cannot authenticate a human, so it insists the assertion names where an
+        # auditor should look.
+        record = _attestation("REC-1", "comp-qo-001")
+        record["decision"]["signature_evidence"] = ""
+        self._write_attestation(record)
+        checks, _ = self._evaluate()
+        problems = next(c for c in checks if c["check"] == "attestation_records")["problems"]
+        self.assertTrue(
+            any("signature_evidence" in p for p in problems),
+            problems,
+        )
+
+    def test_template_drifting_from_the_gate_is_caught(self) -> None:
+        # ADVERSARIAL: re-introduce the exact drift #640 fixed.
+        self._write_template(record={"assessee": {}}, schema_version="0.1.0")
+        self.assertIn("template_schema", self._failures())
+        checks, _ = self._evaluate()
+        problems = next(c for c in checks if c["check"] == "template_schema")["problems"]
+        self.assertTrue(any("nests fields under 'record:'" in p for p in problems), problems)
+
+    def test_template_missing_a_required_block_is_caught(self) -> None:
+        template = {
+            "schema_version": tcg.ATTESTATION_SCHEMA_VERSION,
+            "record_id": "",
+            "assessee": {"name": ""},
+        }
+        self._dump(self.training / "competence-assessment-template.yaml", template)
+        self.assertIn("template_schema", self._failures())
+
 class ShippedTreeTests(unittest.TestCase):
     def test_real_tree_is_consistent(self) -> None:
         checks, _ = tcg.evaluate(ROOT, AS_OF)
@@ -450,6 +572,17 @@ class ShippedTreeTests(unittest.TestCase):
         self.assertEqual(summary["attestations_valid"], 0)
         self.assertEqual(summary["established_roles"], [])
         self.assertGreater(summary["held_roles"], 0)
+
+    def test_the_examples_directory_is_never_read_as_evidence(self) -> None:
+        # #640 ships a synthetic worked example. It lives OUTSIDE attestations/,
+        # and the gate must never pick it up: an example counted as evidence
+        # would be a forged competence record with extra steps.
+        example = TRAINING_DIR / "examples" / "EXAMPLE-synthetic-attestation.yaml"
+        self.assertTrue(example.is_file(), "the worked example is missing")
+        scanned = [path.name for path, _ in tcg.load_attestations(TRAINING_DIR / "attestations")]
+        self.assertNotIn(example.name, scanned)
+        _, summary = tcg.evaluate(ROOT, AS_OF)
+        self.assertEqual(summary["attestations_valid"], 0)
 
     def test_attestations_directory_holds_no_generated_record(self) -> None:
         # A guard against the one failure mode that would matter most here: a

@@ -64,11 +64,17 @@ DEFAULT_MATRIX = TRAINING_DIR / "training-matrix.yaml"
 DEFAULT_CROSSWALK = TRAINING_DIR / "role-crosswalk.yaml"
 DEFAULT_ATTESTATIONS = TRAINING_DIR / "attestations"
 DEFAULT_WAIVER = TRAINING_DIR / "independence-waiver.yaml"
+DEFAULT_TEMPLATE = TRAINING_DIR / "competence-assessment-template.yaml"
 DEFAULT_ASSIGNMENTS = Path("docs/regulated/operations/records/2026-06-11-role-assignment-record.yaml")
 DEFAULT_SOP = Path("docs/regulated/quality-system/training-and-competence-sop.md")
 DEFAULT_CONTROL_MATRIX = Path("docs/regulated/control-matrix/nomos-control-matrix.yaml")
 
 CROSSWALK_SCHEMA_VERSION = "nomos-role-crosswalk-v1"
+# #640 — template and gate share ONE versioned schema. An attestation in an
+# unknown version is refused rather than reinterpreted: silently reading an old
+# nested record as if it were this shape would turn a migration slip into a
+# wrong competence status.
+ATTESTATION_SCHEMA_VERSION = "nomos-competence-assessment-v1"
 TRAINING_CONTROL_ID = "CTL-QS-004"
 
 STATUS_ESTABLISHED = "established"
@@ -262,6 +268,16 @@ def check_attestations(
 
     for path, doc in records:
         label = path.name
+
+        version = str(doc.get("schema_version", "")).strip()
+        if version != ATTESTATION_SCHEMA_VERSION:
+            problems.append(
+                f"{label}: schema_version is {version or 'absent'!r}, expected "
+                f"{ATTESTATION_SCHEMA_VERSION!r} — see the migration note in "
+                f"{DEFAULT_TEMPLATE.name}; an unknown version is refused, never reinterpreted"
+            )
+            continue
+
         record_id = str(doc.get("record_id", "")).strip()
         if not record_id:
             problems.append(f"{label}: no record_id")
@@ -309,6 +325,15 @@ def check_attestations(
             record_problems.append("not signed by the assessee")
         if not str(decision.get("signed_at", "")).strip():
             record_problems.append("no signature timestamp")
+        # A declared signature that points at nothing is a claim, not a record.
+        # The gate cannot authenticate a human; it can insist the assertion names
+        # where a human auditor should go and look.
+        if not str(decision.get("signature_evidence", "")).strip():
+            record_problems.append(
+                "signature declared with no signature_evidence — the gate validates a "
+                "signature DECLARATION and the evidence it references, it does not "
+                "authenticate anyone"
+            )
 
         approval = doc.get("approval") or {}
         if not str(approval.get("approved_by", "")).strip():
@@ -431,6 +456,46 @@ def compute_status(
     return computed
 
 
+def check_template(root: Path) -> dict[str, Any]:
+    """The template must be an instance of the schema the gate enforces.
+
+    This is the check that would have caught #640: the template and the gate
+    drifted apart, and nothing compared them, so a human following the template
+    produced a record the gate refused.
+    """
+    problems: list[str] = []
+    path = resolve(root, DEFAULT_TEMPLATE)
+    if not path.is_file():
+        return check("template_schema", [f"template not found: {DEFAULT_TEMPLATE}"])
+
+    template = load_yaml(path)
+    if not isinstance(template, dict):
+        return check("template_schema", ["template is not a YAML mapping"])
+
+    if str(template.get("schema_version", "")).strip() != ATTESTATION_SCHEMA_VERSION:
+        problems.append(
+            f"template schema_version is {template.get('schema_version')!r}, expected "
+            f"{ATTESTATION_SCHEMA_VERSION!r}"
+        )
+    if "record" in template:
+        problems.append(
+            "template still nests fields under 'record:' — the gate reads them at the "
+            "root, which is the drift #640 fixed"
+        )
+    for field in ("record_id", "assessee", "assessor", "competence", "assessment",
+                  "decision", "approval", "validity"):
+        if field not in template:
+            problems.append(f"template has no top-level {field!r}, which the gate requires")
+    decision = template.get("decision")
+    if isinstance(decision, dict):
+        for field in ("signed_by_assessor", "signed_by_assessee", "signed_at",
+                      "signature_evidence"):
+            if field not in decision:
+                problems.append(f"template's decision block has no {field!r}")
+
+    return check("template_schema", problems, {"template": DEFAULT_TEMPLATE.name})
+
+
 def check_published_status(
     root: Path,
     computed: dict[str, dict[str, Any]],
@@ -550,6 +615,8 @@ def evaluate(root: Path, as_of: date) -> tuple[list[dict[str, Any]], dict[str, A
     checks: list[dict[str, Any]] = []
     crosswalk_check, entries = check_crosswalk(crosswalk, matrix, held)
     checks.append(crosswalk_check)
+
+    checks.append(check_template(root))
 
     attestation_check, valid = check_attestations(records, matrix, held, waived, as_of)
     checks.append(attestation_check)
