@@ -161,6 +161,32 @@ class GoEngine(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(r.stdout, ATOMS.read_text(encoding="utf-8"), "committed atom set drifted from the atomizer output")
 
+    def test_activation_gate_is_blocked_today_with_reasons(self) -> None:
+        # NRT-018 (#662): the real record on the real tree. Today: blocked, every
+        # unmet requirement named, and never "activated". If this ever flips,
+        # the human records that justify it must exist — check them, then update.
+        r = subprocess.run([self.bin, "evidence", "praxis-gate", "--repo-root", str(ROOT),
+                            "--record", str(ROOT / "docs/regulated/qualification/praxis-activation-gate.yaml")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        v = json.loads(r.stdout)
+        self.assertEqual(v["status"], "blocked")
+        self.assertNotEqual(v["status"], "activated")
+        self.assertGreater(v["unmet_count"], 0)
+        self.assertEqual(len(v["reasons"]), v["unmet_count"])
+        self.assertTrue(any("cannot be generated" in x for x in v["reasons"]), v["reasons"])
+        r = subprocess.run([self.bin, "evidence", "praxis-gate", "--repo-root", str(ROOT), "--require-activatable"], capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(r.returncode, 1)
+        # A forged record claiming readiness is refused, no verdict written.
+        with tempfile.TemporaryDirectory() as tmp:
+            forged = Path(tmp) / "gate.yaml"
+            forged.write_text((ROOT / "docs/regulated/qualification/praxis-activation-gate.yaml").read_text(encoding="utf-8")
+                              .replace("current_status: blocked_until_nomos_verified", "current_status: ready_for_activation"), encoding="utf-8")
+            out = Path(tmp) / "verdict.json"
+            r = subprocess.run([self.bin, "evidence", "praxis-gate", "--repo-root", str(ROOT), "--record", str(forged), "--out", str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("PRAXIS_GATE_RECORD_INCONSISTENT", r.stderr)
+            self.assertFalse(out.exists())
+
     def test_tampered_referenced_artifact_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

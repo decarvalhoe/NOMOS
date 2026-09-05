@@ -74,6 +74,13 @@ Until Praxis independently completes:
 ...all Praxis processing of Nomos artifacts is classified as
 **informational only** and carries no regulated weight.
 
+The gate that computes whether regulated reliance could be activated is
+`nomos evidence praxis-gate` (NRT-018 #662); it resolves every requirement of
+`docs/regulated/qualification/praxis-activation-gate.yaml` against the actual
+records and answers `blocked` (reasons named) or `activatable` — never
+`activated`. An exchange may claim `reliance: regulated_evidence` only when it
+binds an `activatable` verdict (`specs/nomos-praxis-evidence.cue`).
+
 ### Rule 4: Evidence Handoff Protocol
 
 For **authoritative regulated** downstream consumption:

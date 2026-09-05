@@ -3303,6 +3303,93 @@
           ]
         }
       ]
+    },
+    {
+      "id": "praxis_activation_gate",
+      "title": "Gate d'activation Praxis calculé, jamais déclaré (NRT-018 #662) — `nomos evidence praxis-gate` lit praxis-activation-gate.yaml et résout CHAQUE exigence contre l'état réel du dépôt : records de décision signés (AQ, reconstruction, strict gate sur corpus qualifié), blocs d'acceptation signés des records IQ/OQ, overall_result du pack PQ, inventaire de validation sans validation high/critical non vérifiée ni waivée, statut du document de contrat, records de revue humaine signés. Tout inconnu, non signé ou absent = non satisfait, nommé. Verdict `blocked` (raisons nommées) ou `activatable` — jamais `activated` (décision humaine, docs/28) ; un record dont current_status revendique plus que les checks → refusé comme forgé ; consumer_guard doit rester false. `VerifyPraxisActivationVerdict` refuse un verdict `activated`, un `activatable` avec exigences non satisfaites, un compte incohérent, un record modifié après verdict. L'échange #660 en reliance régulée doit lier un verdict `activatable` valide. Sur le dépôt réel aujourd'hui : blocked, 11/11 exigences non satisfaites (asserté en CI comme tripwire) ; sur une preuve synthétique complète : activatable ; une revue retirée ou non signée → blocked. NON revendiqué : une activation, une qualification de Praxis, un claim conjoint.",
+      "pillar": "P1",
+      "claim_level": "decision-support (verdict calculé sur les records ; l'activation reste une décision humaine)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Praxis activation gate — blocked today, reasons named (NRT-018 #662)",
+            "--require-activatable passed on a blocked gate"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/compliance/praxis_gate.go",
+          "contains": [
+            "func EvaluatePraxisActivation(",
+            "func VerifyPraxisActivationVerdict(",
+            "PRAXIS_GATE_RECORD_INCONSISTENT",
+            "claims more than the proof supports",
+            "never a gate record state",
+            "cannot be generated"
+          ]
+        },
+        {
+          "path": "cli/internal/compliance/praxis_exchange.go",
+          "contains": [
+            "regulated reliance needs activatable"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/evidence_cmd.go",
+          "contains": [
+            "case \"praxis-gate\":",
+            "compliance.EvaluatePraxisActivation(",
+            "require-activatable"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/compliance/praxis_gate_test.go",
+          "contains": [
+            "TestPraxisGateIsBlockedOnTheRealRepositoryForNamedReasons",
+            "TestPraxisGateOpensOnlyOnCompleteProof",
+            "TestPraxisGateRefusesForgedRecords",
+            "TestPraxisVerdictVerification",
+            "TestExchangeRegulatedRelianceNeedsAnActivatableVerdict"
+          ]
+        },
+        {
+          "path": "tests/test_praxis_evidence_contract.py",
+          "contains": [
+            "test_activation_gate_is_blocked_today_with_reasons"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/regulated/qualification/praxis-activation-gate.yaml",
+          "contains": [
+            "verdict_engine:",
+            "statuses: [blocked, activatable]"
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "docs/regulated/customer-integration/praxis-boundary-policy.md",
+          "contains": [
+            "nomos evidence praxis-gate"
+          ]
+        },
+        {
+          "path": "docs/regulated/product-profiles/praxis.yaml",
+          "contains": [
+            "activation_verdict_command"
+          ]
+        }
+      ]
     }
   ]
 }
