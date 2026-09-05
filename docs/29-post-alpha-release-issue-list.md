@@ -37,7 +37,9 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #660 — Nomos/Praxis evidence contract (NRT-016) | — |
+| #661 — Praxis atom mapping fixture verified against the feed (NRT-017) | — |
+| #662 — Praxis activation gate blocked until Nomos proof is verified (NRT-018) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
@@ -73,9 +75,9 @@ NRT-013 candidate release evidence bundle (no tag/publication)
   -> NRT-014 attestation claim_coverage CLI wiring
   -> v0.5 product-tooling decision
 
-NRT-016 Nomos/Praxis evidence schema
-  -> NRT-017 atom mapping fixture
-  -> NRT-018 Praxis activation gate
+NRT-016 #660 Nomos/Praxis evidence schema
+  -> NRT-017 #661 atom mapping fixture
+  -> NRT-018 #662 Praxis activation gate
   -> #320 closed technical boundary; regulated reliance remains plan 28
   -> v0.6 release decision
 ```
@@ -503,7 +505,7 @@ to weaken the claim boundary.
 
 ### NRT-016 - Nomos/Praxis Evidence Schema
 
-GitHub mapping: follow-up to the technical boundary delivered by closed issue `#320`.
+GitHub mapping: `#660` (product, autonomous); follow-up to the technical boundary delivered by closed issue `#320`.
 
 Deliverables:
 
@@ -525,7 +527,7 @@ Claim impact: creates the shared contract; does not activate Praxis yet.
 
 ### NRT-017 - Atom Mapping Fixture
 
-GitHub mapping: autonomous fixture work after closed issue `#320`.
+GitHub mapping: `#661` (product, autonomous); fixture work after closed issue `#320`.
 
 Deliverables:
 
@@ -548,7 +550,7 @@ runtime assurance.
 
 ### NRT-018 - Praxis Activation Gate
 
-GitHub mapping: gates regulated Praxis reliance; it does not reopen or close `#320`.
+GitHub mapping: `#662` (product, autonomous); gates regulated Praxis reliance; it does not reopen or close `#320`.
 
 Deliverables:
 

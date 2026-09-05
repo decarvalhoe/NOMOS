@@ -39,7 +39,9 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #660 — Nomos/Praxis evidence contract (NRT-016) | — |
+| #661 — Praxis atom mapping fixture verified against the feed (NRT-017) | — |
+| #662 — Praxis activation gate blocked until Nomos proof is verified (NRT-018) | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
