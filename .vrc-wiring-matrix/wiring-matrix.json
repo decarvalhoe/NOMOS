@@ -2900,6 +2900,46 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "review_record_index",
+      "title": "Index et garde des records de revue périodique (NRT-021 #669) — `scripts/portfolio_review_index.py` indexe les records QMS commités (revue de direction, audit interne, attribution de rôles, CAPA) en `docs/regulated/operations/records/index.json` (`nomos-review-record-index-v1`) : type, date, sha256, décisions/actions/findings/attributions comptés, statuts d'action (les statuts non enregistrés sont COMPTÉS, pas cachés), artefacts cités extraits (chemins avec extension, un numéro de document n'est pas un chemin) et leur existence. Garde : record sans id/type/date, décision sans id, action sans id ou owner, CAPA sans statut/sévérité/ouverture ou fermé sans date, artefact cité absent, record_id dupliqué → exit 1 nommé ; `--check` : index commité ≠ recalcul → exit 4. En CI. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : un record — rien n'est revu, fermé ni approuvé ici.",
+      "pillar": "P1",
+      "claim_level": "index (records QMS comptables et vérifiables ; aucun claim régulé)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "tests/test_portfolio_review_index.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/portfolio_review_index.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2938,11 +2978,11 @@
     }
   ],
   "summary": {
-    "capabilities": 53,
+    "capabilities": 54,
     "computed": {
       "real": 42,
       "partial": 0,
-      "sidecar": 10,
+      "sidecar": 11,
       "stub": 0,
       "absent": 1
     },

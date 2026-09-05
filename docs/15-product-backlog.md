@@ -51,7 +51,7 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #668 — Findings and periodic-review index, queryable (NRT-020) | #669 — Periodic review record index and guard (NRT-021) |
+| #668 — Findings and periodic-review index, queryable (NRT-020) | — |
 | #670 — Control-plane decision under ADR-0006, wire or remove (NRT-022) | — |
 <!-- roadmap-queues:end -->
 

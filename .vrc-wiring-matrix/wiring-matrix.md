@@ -61,6 +61,7 @@
 | `praxis_atom_mapping_fixture` | P1 | real | real | ✅ | — | — |
 | `praxis_activation_gate` | P1 | real | real | ✅ | — | — |
 | `portfolio_status_engine` | P1 | real | real | ✅ | — | — |
+| `review_record_index` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -68,7 +69,7 @@
 
 ## Summary
 
-- capabilities: 53 (real=42, partial=0, sidecar=10, stub=0, absent=1)
+- capabilities: 54 (real=42, partial=0, sidecar=11, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

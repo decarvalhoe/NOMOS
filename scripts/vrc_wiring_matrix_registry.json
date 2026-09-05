@@ -3477,6 +3477,57 @@
           ]
         }
       ]
+    },
+    {
+      "id": "review_record_index",
+      "title": "Index et garde des records de revue périodique (NRT-021 #669) — `scripts/portfolio_review_index.py` indexe les records QMS commités (revue de direction, audit interne, attribution de rôles, CAPA) en `docs/regulated/operations/records/index.json` (`nomos-review-record-index-v1`) : type, date, sha256, décisions/actions/findings/attributions comptés, statuts d'action (les statuts non enregistrés sont COMPTÉS, pas cachés), artefacts cités extraits (chemins avec extension, un numéro de document n'est pas un chemin) et leur existence. Garde : record sans id/type/date, décision sans id, action sans id ou owner, CAPA sans statut/sévérité/ouverture ou fermé sans date, artefact cité absent, record_id dupliqué → exit 1 nommé ; `--check` : index commité ≠ recalcul → exit 4. En CI. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : un record — rien n'est revu, fermé ni approuvé ici.",
+      "pillar": "P1",
+      "claim_level": "index (records QMS comptables et vérifiables ; aucun claim régulé)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Review-record index — fresh build + guard (NRT-021 #669)",
+            "portfolio_review_index.py --root . --check"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/portfolio_review_index.py",
+          "contains": [
+            "def build_index(",
+            "def cited_paths(",
+            "does not exist in the tree",
+            "has no owner",
+            "status_unrecorded",
+            "return 4"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/regulated/operations/records/index.json",
+          "contains": [
+            "nomos-review-record-index-v1",
+            "cited_artifacts_missing"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "tests/test_portfolio_review_index.py",
+          "contains": [
+            "test_removed_cited_artifact_is_red",
+            "test_action_without_owner_is_red",
+            "test_document_numbers_are_not_paths",
+            "test_stale_index_is_drift",
+            "test_duplicate_record_id_is_red"
+          ]
+        }
+      ]
     }
   ]
 }
