@@ -73,11 +73,13 @@ body:
     attributes:
       label: Registre wiring-matrix
       description: >
-        The scripts/vrc_wiring_matrix_registry.json entry this PR must flip or
-        add (expected status + anchors) — in the SAME PR. The matrix fails when
-        registry and reality diverge in either direction.
+        The scripts/vrc_wiring_matrix_registry.json entry this PR must update or
+        add (current -> target topology + anchors) — in the SAME PR. `real` is
+        for a Go-engine capability; an intentionally out-of-core delivery may
+        target `sidecar`. Delivery, validation and claim state are separate.
+        The matrix fails when registry and reality diverge in either direction.
       value: |
         Entry: <capability_id>
-        Expected: <sidecar|stub|absent|partial> -> <real>
+        Expected topology: <current> -> <real|sidecar|stub|absent|partial>
     validations:
       required: true

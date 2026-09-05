@@ -58,9 +58,12 @@ not by populating the embedded field with a placeholder string.
 The CKM predicate type is `https://nomos.dev/ckm/supply-chain/v1`. It records
 each transformation stage (`ingestion`, `canon`, `embedding`) with material and
 product digests. Unsigned mode is still allowed for local or offline runs, but it
-is explicitly marked `trust_tier: unverified`. A signed claim must use
-`sigstore-keyless` mode and carry a Rekor UUID; local verification checks recorded
-artifact hashes and refuses changed artifacts.
+is explicitly marked `trust_tier: unverified`. Local ECDSA P-256 DSSE signing
+does not require Rekor. A **keyless/public-log claim** must use
+`sigstore-keyless` mode and carry a verified Rekor record; that issuance path is
+not currently implemented (#645/#638). Local verification checks recorded
+artifact hashes and refuses changed artifacts; #637 separately adds offline
+verification of supplied Sigstore bundles.
 
 ## Claim Boundary
 

@@ -5,12 +5,16 @@
 > [01-method-overview](01-method-overview.md) · [39-pivot CKM](39-canonical-knowledge-mesh-pivot.md) ·
 > [40-architecture mesh](40-knowledge-mesh-architecture.md) · [41-état de l'art](41-state-of-the-art-positioning.md) ·
 > [42-capitalisation](42-capitalization-and-improvement-plan.md) · [43-doctrine](43-development-doctrine.md) ·
-> [public-claim-boundary](public-claim-boundary.md).
+> [public-claim-boundary](public-claim-boundary.md) ·
+> [47-roadmap lanes](47-roadmap-lanes-and-risk-based-validation.md).
 > Origine : audit écart documentation / intention / réalité du 2026-06-11 (post-#543).
 > Objet : faire de NOMOS le logiciel décrit par ses ADR et sa vision — **la supply-chain
 > du savoir certifié, reproductible pour n'importe quel domaine, corpus ou métier** —
 > en fermant chaque écart constaté, sous le tamis de la doctrine (« done = preuve
-> adversariale », « sidecar Python = PARTIAL »).
+> adversariale », « sidecar Python = PARTIAL quand la mécanique attendue est au core »).
+> **Périmètre depuis ADR-VRC-0004 (2026-09-05)** : clôture produit et DevOps.
+> Le QMS, les records, validations, acquisitions et claims réglementés suivent
+> la roadmap régulée indépendante [28](28-regulated-compliance-closure-plan.md).
 
 ---
 
@@ -20,8 +24,8 @@
    avance » (doc 41 §0) — supply-chain du savoir signée (P1+P7), cite-or-abstain +
    trust tiers (P2), maillage réglementaire+métier — passent intégralement le tamis
    doctrine : moteur Go + caller de production + test adversarial + artefact signé.
-   Aujourd'hui, la mécanique la plus différenciante (cite-or-abstain) vit dans un
-   sidecar Python : par notre propre standard, le drapeau n'est pas planté.
+   Ce point de départ est désormais fermé : cite-or-abstain vit dans le moteur
+   Go, son sidecar Python consomme le verdict, et le bench public le mesure.
 2. **Se mettre à niveau par adoption, jamais par réinvention.** Sur tout ce qui est
    commoditisé (retrieval, éval RAG, vocabulaires, exécution de règles), on adopte les
    tremplins du registre doc 42 (standards ouverts → adopter ; OSS permissif →
@@ -35,7 +39,11 @@
 
 Règle transverse : chaque chantier ci-dessous liste sa **preuve exigée** (tamis
 doctrine §2.3) et le **claim débloqué** (claim ladder du public-claim-boundary).
-Aucun claim n'avance avant sa preuve. CKM-00 (non-régression) reste vert en continu.
+Aucun claim n'avance avant sa preuve. CKM-00 (non-régression) reste vert en
+continu. **Une preuve calendaire, signature humaine, acquisition, approbation ou
+écriture publique ne devient jamais une dépendance d'implémentation** : elle
+bloque uniquement son claim dans la roadmap 28. Le dispatcher exécutable est
+`docs/roadmap-lanes.yaml`.
 
 ---
 
@@ -45,7 +53,7 @@ Aucun claim n'avance avant sa preuve. CKM-00 (non-régression) reste vert en con
 |---|---|---|
 | E1 | Code core réel mais **câblage tardif** : capacités livrées non enregistrées dans la CLI, zéro caller de production, fermées seulement en 2ᵉ passe (#539/#540/#543) | G3 (matrice de câblage générée), G4 (caller exigé à l'acceptation) |
 | E2 | **4 mécaniques CKM en sidecar Python** = PARTIAL par doctrine : cite-or-abstain/faithfulness, canon promotion, point-in-time, ontologie facettes | A1, A2, A3, D4 |
-| E3 | **QMS rédigé, exécuté à zéro** : 0/20 types de records, owners `not_assigned`, aucune release exécutée via SOP | F (entier) |
+| E3 | **QMS rédigé, exécuté à zéro** : 0/20 types de records, owners `not_assigned`, aucune release exécutée via SOP | Roadmap régulée indépendante doc 28 (interface F ci-dessous, jamais phase gate produit) |
 | E4 | **Contradiction doc-vs-doc** : doc 40 (« éprouvé multi-environnements ») vs claim boundary (« POC-scoped, single run ») | G1, G4 (guard étendu aux docs stratégiques) |
 | E5 | **1ᵉʳ vertical (AEC) dépendant de capacités absentes** : PDF = stub, retrieval prod = inexistant, seam Aedifica non prouvé bout-en-bout | C1-C2, B1, E (chantier consommation), D5 |
 | E6 | **Fenêtres datées vs roadmap non compressée** : moats 12–24 mois, EU AI Act août 2026, fidélité portable encore en v0.2 | H (séquencement), D3 (pack AI Act borné pilote) |
@@ -64,7 +72,7 @@ Aucun claim n'avance avant sa preuve. CKM-00 (non-régression) reste vert en con
 | A1 | **Cite-or-abstain dans le moteur Go.** Porter la logique de `scripts/regulated_rag_answer_evidence.py` + `tests/test_ckm_faithfulness_recompute.py` dans `cli/internal/answer/` : faithfulness **recalculée depuis les spans retrouvés** (recouvrement span↔claim, jamais déclarée), verdict cite/abstain, seuils configurables, commande `nomos answer gate`, intégration au strict gate, `trust_tier` exposé comme propriété de chaque réponse dans l'artefact rag-answer-evidence. Le sidecar Python devient un consommateur du verdict Go, pas la source. | ALCE (citation recall/precision, NLI) ; Trust-Align (refus appris, Trust-Score) ; Self-RAG `[IsSUP]` ; FActScore (decompose→verify) ; DeepEval + GitHub Actions (gate CI) ; HHEM (modèle ouvert, éval hallucination) — tous OSS permissif/ouvert | Test Go adversarial : citation falsifiée (span déplacé / hash altéré) → gate rouge ; réponse sans span → abstention forcée ; le bypass « no-text » (fermé côté script en #542) a son équivalent Go ; suppression du filtre → le test échoue | « Cite-or-abstain mesurable et bloquant, calculé depuis les spans, tiers exposés par réponse » — le wedge P2 |
 | A2 | **Canon promotion dans le moteur Go (CKM-03).** `nomos canon promote/revoke/verify` : droits → validation → facettage (`provenance=user_promoted`) → `#Certificate` signé DSSE → entrée corpus filtrable par lens ; silo de confidentialité ; révocation propagée au retrieval (chunk exclu avec raison tracée). `scripts/ckm_canon_promotion_validate.py` devient vérification de conformité, pas implémentation. | Wikidata ranks (preferred/normal/deprecated + raison) ; modèle Vault (CANONICAL/WORKING/…) ; patterns Guru Verified RAG et Copilot « Official Source » (concept/UX seulement) ; PKG API (access_rights + provenance) | Tamper-fail certificat (1 octet → verify rouge) ; un atome promu ne sort **jamais** `certified`/`official` (étendre les tests facets au flux promotion) ; certificat révoqué → chunk exclu (test) ; confidentiel jamais émis hors silo (test) | « Bring-your-own-authority gouverné, confidentialité préservée » — P5, sans précédent marché (doc 41 §2) |
 | A3 | **Point-in-time dans le moteur Go (CKM-11).** Modèle temporel d'atome (`valid_from`/`valid_to`, événements ; `supersedes` existe déjà) + résolveur `--as-of <date>` sur `atomize`/`bundle` ; identité FRBR/ELI pour les sources légales. `scripts/ckm_point_in_time_resolve.py` → conformité. | SAT-Graph RAG / LRMoo (Work→Expression versionnée, événements législatifs) ; FRBR + ELI ; legislation.gov.uk (référence d'archi point-in-time, code/données ouverts) | Requête as-of retourne la version en vigueur à la date ; une version remplacée n'est pas retrouvable à une date ultérieure sans flag historique explicite (test rouge sans le résolveur) | « Citer la bonne version à la bonne date » — précondition de tout `certified` temporellement honnête |
-| A4 | **Sigstore keyless en backend optionnel** (après A1-A3). Fulcio/Rekor à côté de l'ECDSA local ; tant que non livré, le guard claim-boundary continue de traiter « Sigstore » comme non-présent (#542). | sigstore-go, Rekor, in-toto (déjà adopté), Sigstore model-transparency — Apache | Entrée Rekor vérifiée en test d'intégration en ligne (skippable offline, pattern `connector_live_test.go`) ; tamper-fail | « Attestation keyless + transparency log » — P7 complet |
+| A4 | **Sigstore scindé par réversibilité.** #637 vérifie hors ligne des bundles fournis ; #645 implémente l'émission contre des services injectés/non-production ; #638 possède seul l'autorisation OIDC et la publication append-only production. Tant que #638 n'est pas exécutée, le guard traite « NOMOS signe keyless en production » comme non-présent. | sigstore/cosign, Rekor, in-toto — frontières externes et endpoints injectés d'abord | #637 : tamper verify rouge ; #645 : E2E émission→bundle→verify local, production interdite ; #638 : entrée Rekor production + autorisation authentique | #637 « vérifie offline » ; #645 « émet non-production » ; #638 seul « production + transparency log » |
 | A5 | **Packaging evidence inter-opérable.** Evidence packs émis aussi en BOM (CycloneDX/SPDX) ; plus tard VC 2.0 / C2PA pour les documents humains promus. | CycloneDX ML-BOM, SPDX 3.0, W3C VC 2.0, C2PA — standards ouverts | BOM validé par schéma ; hashes recoupés avec le body-ledger (calculé, pas déclaré) | « Evidence pack lisible par l'outillage supply-chain standard » |
 
 **Sortie A :** les trois territoires « en avance » passent le tamis complet. Préparer
@@ -82,8 +90,8 @@ preuve externe du drapeau, à publier avant que la fenêtre concurrentielle se r
 |---|---|---|---|---|
 | B1 | **Harnais de retrieval de référence** (kit consommateur, hors core) : pgvector + RLS où la Lens devient le `WHERE` au niveau base ; reranker cross-encoder ; hybride BM25+vecteur. NOMOS reste le certificateur amont ; le harnais sert à prouver la conformité consommateur. | pgvector + RLS, Qdrant payload filters, reranker open ; littérature distracteurs (ACL 2025 : −6 à −11 pts) comme preuve empirique du besoin de Lens | Jeu de tests distracteurs sur golden corpus : accuracy avec Lens > sans Lens (mesuré) ; un chunk exclu par Lens n'est **jamais** retrouvé (test) | « Lens enforced avant génération, au niveau base » — la promesse anti-parasite devient mesurée |
 | B2 | **Harnais d'évaluation continue** en CI : d'abord non bloquant, puis bloquant (pattern fail-open → fail-closed de `ci/README.md`). | RAGAS, TruLens, ARES (généraliste) ; LegalBench-RAG, LRAGE, RAGChecker (orienté régulé) — OSS | Seuils versionnés ; une régression de citation recall sous le seuil bloque la PR (test du gate lui-même) | « Éval RAG non-régressive, orientée régulé » |
-| B3 | **Substrat d'exécution de règles emprunté, jamais construit.** Le calculable s'exécute via L4 (MCP/REST), OpenFisca (AGPL → frontière API process), Catala (fidélité texte). **Partiellement livré (VRC-42 #578)** : `nomos rule exec` fait passer un atome ```` ```formula ```` par un substrat externe (protocole JSON versionné sur process enfant). `cli/internal/ruleexec` ne calcule rien — aucun évaluateur, et sans substrat rien n'est produit. La frontière AGPL du registre de licences cesse d'être une intention et devient ce mécanisme. **Aucun moteur réel intégré** : seuls la frontière et une fixture de conformité sont livrées, d'où `sidecar` au registre. | L4, OpenFisca, Catala — licences mixtes, AGPL isolé | Démo bornée : un atome `formula` exécuté via le substrat avec trace source ; registre licences à jour | « Le déterministe certifié sans moteur de règles maison » |
-| B4 | **Outillage vocabulaires.** Authoring/serving SKOS via VocBench/Skosmos ; validation SHACL des facettes en complément du `cue vet` et du lockstep Go. **Partiellement livré (VRC-44 #580)** : `scripts/facet_shacl_gate.py` émet les vocabulaires en graphe SKOS/OWL réel et les valide par des shapes SHACL standard (`specs/shacl/facet-ontology.shapes.ttl`), en CI sur les deux packs. Contrainte d'orthogonalité en SPARQL : un terme sur deux axes disjoints rougit, en nommant le terme et les axes. **Authoring/serving (VocBench, Skosmos) non livré** — le registre garde donc `sidecar`, pas `real`. | SKOS, SHACL, OWL `disjointUnionOf`, ISO 25964, VocBench, Skosmos | Vocabulaire non orthogonal (valeur dans 2 axes) → validation rouge (test) | « Facettes authored, servies, validées proprement » |
+| B3 | **Substrat d'exécution emprunté, jamais construit — slice protocole livrée (#578).** `nomos rule exec` passe les atomes `formula` à un process externe par protocole JSON versionné, avec trace source ; aucun évaluateur dans NOMOS, aucun résultat sans substrat. La démo et la frontière AGPL exigées sont livrées. #642 durcit le digest de requête et l'intégrité des valeurs persistées. Un adapter vers un moteur nommé sera une issue distincte après revue de sa licence ; son absence ne rouvre pas #578. | L4, OpenFisca, Catala comme adapters futurs ; licences évaluées par adapter | Démo bornée livrée ; #642 : chaque mutation expression/source/digest/statut/valeur/reason → rouge | Claim borné : « frontière externe tracée et fail-closed », aucune compatibilité L4/OpenFisca/Catala ni correction métier |
+| B4 | **Validation SKOS/SHACL livrée (#580), authoring/serving séparé (#643).** `facet_shacl_gate.py` émet un graphe SKOS/RDF + prédicats NOMOS et le valide avec pySHACL ; un terme sur deux axes disjoints rougit. #643 ajoute une source d'authoring versionnée et un bundle statique distribuable ; VocBench/Skosmos restent des clients optionnels. ISO 25964 est un claim séparé après accès/licence. | SKOS, SHACL ; VocBench/Skosmos optionnels ; ISO 25964 hors claim courant | Validation négative livrée ; #643 : round-trip et build déterministe | Actuel : « graphe SKOS/RDF conforme aux shapes avec pySHACL » ; futur #643 : « authored et distribuable selon le profil NOMOS » |
 | B5 | **Graphe de renvois déterministe** (« sous réserve de l'art. X ») parsé par règles, jamais par LLM. **Livré (VRC-43 #579)** : `nomos atomize crossref` — sept locutions juridiquement distinctes, chaque arête portant son texte verbatim et ses offsets ; `VerifyCrossRefGraph` re-découpe l'atome et refuse toute arête qui ne se reconstruit pas. Locution sans cible parsable = `unsupported` explicite ; cible hors corpus = `unresolved_target` avec le locateur verbatim. | Concept BifrostRAG ; GraphRAG/LightRAG en option | Renvoi connu du golden corpus présent dans le graphe avec span source ; renvoi inventé impossible (parsé, pas généré) | « Cross-références traçables entre atomes » |
 
 ---
@@ -117,7 +125,7 @@ preuve externe du drapeau, à publier avant que la fenêtre concurrentielle se r
 | D1 | **Contrat de pack domaine (CUE)** : un pack = vocabulaires SKOS par axe (`discipline`, `activity`) + registre d'autorité des sources + connecteurs + lens-presets + golden corpus + instance de claim boundary + scorecard d'applicabilité. **Rien d'autre.** | SKOS ; pattern NFDIcore (core + modules) ; étude d'archi WK FAB / Palantir OSDK (concept seulement) | `cue vet` du contrat ; un pack contenant de la mécanique (code) est rejeté | « Le pack est déclaratif » |
 | D2 | **`nomos pack validate` en Go** : conformité du pack + exécution complète du golden corpus (scan → feed → ledger → gate → bundle) + résolution des lens-presets + présence claim boundary + alignement ontologique (D4). | — | Pack mutilé (vocab manquant / golden corpus rouge / preset cassé / claim boundary absent) → **fail closed**, chaque cas testé | « Conformité de pack vérifiable par gate » |
 | D3 | **2ᵉ vertical = pack « EU AI Act evidence »** (fenêtre août 2026 ; zone de confort documentaire de NOMOS, doc 41 §8). Tranche la décision ouverte n°2 du doc 40 §14. Portée pilote bornée : « evidence pack pilot-grade », jamais « conformité AI Act certifiée ». **Livré (VRC-22 #565)** : `docs/regulated/domain-packs/eu-ai-act/` — 3 axes / 14 termes alignés BFO→IOF, ancre EUR-Lex datée (CELEX 32024R1689), 3 presets, corpus doré synthétique 4 docs → 32 nœuds, `pack validate` en CI. Corpus synthétique par **fidélité**, pas par licence (la réutilisation EUR-Lex est autorisée) : le pack enregistre où le texte fait autorité, jamais ce qu'il dit. | Exigences doc technique/traçabilité AI Act (texte officiel = source d'autorité ingérée) ; ALCOA+/Part 11 comme vocabulaire d'evidence | Le pack AI Act passe `pack validate` ; son golden corpus tourne la chaîne complète ; claim boundary du pack relu par le guard | « La généralité cross-métier est prouvée par un 2ᵉ vertical réel » (exigence CKM-04) |
-| D4 | **Ontologie portée dans le gate.** L'alignement BFO → IOF Core → pack (CKM-12, aujourd'hui `scripts/ckm_facet_ontology_validate.py`) devient une vérification consommée par `pack validate` (Go ou sidecar appelé par le gate — mais le **verdict** est rendu par le gate). | BFO (ISO 21838), IOF Core, NFDIcore, ODP | Axe de facette non aligné → pack rejeté (test) | « La généralisation est défendable, pas une couche horizontale banale » (doc 41 §2 P3) |
+| D4 | **Ontologie portée dans le gate — livrée.** `pack validate` rend le verdict d'alignement BFO → IOF Core → pack ; un axe non aligné rejette le pack. `scripts/ckm_facet_ontology_validate.py` reste un exemple/non-régression hors moteur, pas la source du verdict. | BFO (ISO 21838), IOF Core, NFDIcore, ODP | Axe de facette non aligné → pack rejeté (test) | « La généralisation est défendable, pas une couche horizontale banale » (doc 41 §2 P3) |
 | D5 | **Pack AEC suisse (mince)** : vocabulaires SIA/disciplines/activités, connecteurs CH (C4), golden corpus VD/Lausanne, lens-presets archi (« archi-conception », « DT-chantier », « permis »). Dépend de C1/C2. | AEC3PO/ACCORD (juridiction + phase), IFC/buildingSMART (vocab) | Golden corpus AEC vert de bout en bout via `pack validate` ; preuve distracteurs B1 jouée sur les presets archi (conception vs DT) | « 1ᵉʳ vertical prouvé sur le terrain inoccupé » (doc 41 §5) |
 | D6 | **Métrique de reproductibilité** : « changements core requis par nouveau pack » — publiée par pack, cible **0**. **Première mesure réelle (VRC-22, pack AI Act) : 1 changement core, pas 0** — l'axe ouvert `risk_tier` ([ADR-0002](adr/0002-risk-tier-open-facet-axis.md)), parce que la classification par risque est le concept central de l'AI Act et qu'aucun des huit axes ne la porte. Le guard `pack_core_coupling_check.py` rend `core changes justified by ADR`. La cible reste 0 pour le pack N+2 : un dixième axe exigera une nouvelle ADR. | — | La PR du pack N+1 (AI Act, puis suivant) ne touche que les répertoires de pack ; tout diff core dans une PR de pack = revue bloquante avec justification ADR | « Reproductible pour n'importe quel domaine » devient une métrique, pas une promesse |
 
@@ -137,20 +145,24 @@ preuve externe du drapeau, à publier avant que la fenêtre concurrentielle se r
 
 ---
 
-## 7. Chantier F — QMS : de rédigé à exécuté
+## 7. Interface F — Roadmap Régulée Indépendante
 
-> Ancre : docs 21/23/28 (closure plan), audit : 0/20 records, owners `not_assigned`.
-> Sans F, la fenêtre AI Act (D3) est intenable : vendre des evidence packs exige un
-> QMS qui **tourne**. F est peu coûteux et débloque des claims entiers.
+> La roadmap QMS/evidence a été extraite vers le [plan 28](28-regulated-compliance-closure-plan.md)
+> par ADR-VRC-0004. Elle ne constitue plus une phase de livraison produit. Un outil
+> régulé peut être développé puis validé plus tard selon intended use et risque ;
+> le processus peut fonctionner manuellement avant cet outil.
 
-| # | Action | Preuve exigée |
+| Item régulé | État / lane | Effet exact |
 |---|---|---|
-| F1 | **Nommer les owners** (quality / technical / security / release) — même personne multi-casquettes acceptée si le cumul est enregistré avec note de conflit d'intérêts. | Records d'assignation datés/signés sous `docs/regulated/operations/records/` |
-| F2 | **Exécuter un premier cycle QMS réel** : 1 management review tenue et enregistrée ; 1 auto-audit interne avec findings ; 2-3 CAPA réelles ouvertes depuis le backlog durcissement — l'incident `Sig:""` (#542) est le cas d'école : le rétro-documenter en déviation → CAPA → vérification d'efficacité (le guard CI est l'action corrective déjà en place). | Records remplis depuis les templates existants ; CAPA fermées avec preuve d'efficacité |
-| F3 | **Câbler `claim_coverage` dans l'attestation** (gap nommé dans README, claim boundary et dossier RBOK). | Attestation portant `claim_coverage` calculé depuis le ledger ; test : couverture falsifiée → verify rouge |
-| F4 | **Répétabilité CI sur corpus privé** : runs d'evidence planifiés (hebdo), packs archivés et indexés dans l'evidence ledger. **Livré (VRC-14 #560) côté mesure** : `scripts/repeated_ci_evidence.py` compte la chaîne depuis l'API Actions et publie un index daté ; un run ne compte que vert **et** pack archivé non expiré, une occurrence hebdomadaire manquée casse la chaîne. Mesure du 2026-09-04 : **4 / 8**, claim verrouillé (`EV-CI-REPEAT-001` requires_evidence, `GAP-REPEATED-CI-EVIDENCE` ouvert). La cible se franchit par le temps, pas par du code. | ≥ 8 runs consécutifs verts archivés — transforme « single recorded run » en « repeated CI evidence » |
-| F5 | **Exécuter une release `v0.2.0-ALPHA` via la SOP release** : premier record de release réel, bundle d'evidence complet. Répond au risque « ALPHA-en-apparence » (doc 41 §6) : la maturité réelle devient lisible. | Release bundle conforme au template, approbations enregistrées, tag + notes publiés |
-| F6 | **Formation/compétence** : matrice remplie pour les humains nommés (l'outillage agent n'est pas un sujet de training record), 1-2 attestations par rôle. **Partiellement livré (VRC-16 #562)** : les trois vocabulaires de rôles (record d'assignation, matrice, SOP) ne partageaient qu'un seul rôle et quatre rôles tenus par un humain n'avaient aucune entrée de matrice — réconciliés par `role-crosswalk.yaml`, matrice étendue depuis la colonne « required training » de la SOP. `scripts/training_competence_gate.py` calcule le statut par rôle depuis les attestations signées, fail-closed. Calcul du 2026-09-04 : **0 attestation, 0/6 rôles `established`**, `product_owner` en `requires_definition`. **Les attestations restantes ne peuvent pas être produites par de l'outillage** : elles affirment qu'un humain nommé a été évalué compétent. | Records signés ; statut `requires_evidence` → `established` calculé |
+| F1-F3 — owners, cycle QMS, `claim_coverage` | Records et claims gérés par plan 28 ; la mécanique `claim_coverage` produit reste livrée | Bloque uniquement les claims QMS correspondants |
+| F4 / #560 — répétabilité privée | `lane:regulated`, `dispatch:passive`; mesure 4/8, collecteur livré | Bloque « repeated CI evidence », jamais le dispatcher ni #561 |
+| F5 / #561 — release réelle | `lane:regulated`, `dispatch:human`; préparation autonome déplacée en #639 | #639 peut produire/rejouer un candidat avec risques ouverts ; seuls approbation/tag/publication authentiques ferment #561 |
+| F6 / #562 — compétence | `lane:regulated`, `dispatch:human`; status tooling livré, correctif template en #640 | Les vraies attestations/waivers restent humaines ; leur absence ne bloque aucun développement |
+| Références #192-196 | `lane:regulated`, humain/externe ; tooling #641 et public #644 autonomes | L'acquisition bloque seulement l'usage/claim clause-level de la référence concernée |
+
+Les états régulés restent visibles et fail-closed pour leurs claims. Ils ne sont
+ni supprimés ni transformés en pass : ils cessent seulement d'être des
+dépendances techniques qu'ils n'ont jamais été.
 
 ---
 
@@ -175,14 +187,15 @@ preuve externe du drapeau, à publier avant que la fenêtre concurrentielle se r
 
 | Phase | Contenu | Exit gate (adversarial) | Claims débloqués |
 |---|---|---|---|
-| **P0 — Hygiène & déblocage** (S0-S2) | G1-G4 ; F1-F3 ; **décision ADR control-plane : câbler au reporting portfolio ou archiver** (du code mort testé contredit la sobriété — trancher, ne pas laisser pourrir) | Guard étendu vert ; matrice G3 publiée ; owners nommés ; `claim_coverage` câblé | Cohérence interne totale doc/code |
-| **P1 — Le drapeau réel** (S2-S8) | A1, A2, A3 (sidecar → Go) ; B2 (éval) ; F4-F5 (répétabilité + release exécutée) | Les 3 mécaniques passent le tamis complet ; 0 PARTIAL sur P1/P2/P7 dans la matrice G3 ; v0.2.0-ALPHA released via SOP | « Supply-chain du savoir certifié : mesurée, signée, shippable » ; bench publiable préparé |
-| **P2 — Fenêtre AI Act** (livraison ≤ août 2026) | D1, D2, D3 ; A5 (BOM) ; F6 | Pack AI Act passe `pack validate` ; claim boundary pilote relu par le guard ; D6 = 0 changement core | « Evidence pack EU AI Act pilot-grade » — 1ᵉʳ vertical de la généralité |
+| **P0 — Hygiène & déblocage** (S0-S2) | G1-G4 ; **décision ADR control-plane : câbler au reporting portfolio ou archiver** | Guard étendu vert ; matrice G3 publiée ; aucune commande fantôme | Cohérence interne totale doc/code |
+| **P1 — Le drapeau réel** (S2-S8) | A1, A2, A3 livrés dans Go ; B2 éval livrée | Les 3 mécaniques passent le tamis complet ; 0 PARTIAL sur P1/P2/P7 dans la matrice G3 | « Supply-chain du savoir : mesurée et traçable » ; aucun claim QMS induit |
+| **P2 — Fenêtre AI Act** (livraison ≤ août 2026) | D1, D2, D3 ; A5 (BOM) | Pack AI Act passe `pack validate` ; claim boundary pilote relu par le guard ; D6 mesuré | « Evidence pack EU AI Act pilot-grade » — 1ᵉʳ vertical de la généralité, jamais conformité |
 | **P3 — Ingestion & AEC** (T3-T4 2026) | C1, C2, C4 ; D5 ; B1 ; E-1, E-2 | Golden corpus AEC vert bout-en-bout ; CI Aedifica consomme le bundle flag-gated ; preuve distracteurs mesurée | « 1ᵉʳ vertical AEC prouvé » ; « un consommateur réel » |
-| **P4 — Consolidation** (v0.3+) | A4 (Sigstore) ; C3 ; B3, B5 ; publication du bench ; 3ᵉ pack (D6 re-mesuré) | Bench public reproductible ; 3ᵉ pack à 0 changement core | Trajectoire v1.0 (doc 14) réaligne ses exit gates sur la matrice G3 |
+| **P4 — Consolidation** (v0.3+) | A4 vérification offline (#637) ; C3 ; B3/B5 ; bench publication-ready/reproductible ; 3ᵉ pack (D6 re-mesuré) | Artefact de bench prêt à publier ; Sigstore fourni vérifié sans write public ; 3ᵉ pack à 0 changement core | Trajectoire v1.0 produit ; writes publics du bench/Rekor restent des activations externes |
 
 Chaque phase : CKM-00 vert en continu ; tout changement de contrat = `schema_version`
-bump + migration (doctrine §2.1) ; aucun claim avancé avant son niveau.
+bump + migration (doctrine §2.1) ; aucun claim avancé avant son niveau. Les
+sorties de la roadmap régulée ne figurent plus dans ces phases produit.
 
 ---
 
@@ -206,8 +219,8 @@ bump + migration (doctrine §2.1) ; aucun claim avancé avant son niveau.
 
 ## 11. Définition de « vision atteinte » (mesurable, calculée)
 
-La vision des ADR est considérée atteinte quand **toutes** ces lignes sont vertes
-dans la matrice G3 (générée, jamais déclarée) :
+La vision **produit** des ADR est considérée atteinte quand toutes ces lignes
+sont vertes dans la matrice G3 (générée, jamais déclarée) :
 
 1. **Mécaniques** : 100 % des mécaniques CKM core consommées par le moteur Go avec
    caller de production + test adversarial + gate — zéro état PARTIAL.
@@ -218,14 +231,14 @@ dans la matrice G3 (générée, jamais déclarée) :
    ladder par format ; tout le reste = unsupported **explicite**, jamais silencieux.
 4. **Runtime** : cite-or-abstain bloquant en CI consommateur, tiers exposés par
    réponse, bench public reproductible publié.
-5. **QMS** : ≥ 1 cycle complet exécuté (management review, audit, CAPA ouverte **et**
-   fermée, formation, release via SOP) avec records datés.
-6. **Répétabilité** : ≥ 8 runs CI d'evidence consécutifs verts sur corpus privé,
-   packs archivés.
-7. **Claims** : chaque claim public mappé selon la règle d'evidence, vérifié par le
+5. **Claims produit** : chaque claim public mappé selon la règle d'evidence, vérifié par le
    guard étendu — y compris dans les documents stratégiques.
-8. **Consommation** : au moins un consommateur externe réel (Aedifica) consomme un
+6. **Consommation** : au moins un consommateur externe réel (Aedifica) consomme un
    bundle facetté via le kit de conformité, en production flag-gated.
+
+La vision régulée (cycle QMS, formation, release via SOP, répétabilité,
+acquisition et validation par intended use) est mesurée séparément par le plan
+28. Son état ne modifie pas le statut des mécaniques produit et réciproquement.
 
 ---
 
@@ -237,6 +250,9 @@ dans la matrice G3 (générée, jamais déclarée) :
   (ADR/doc §), *écart* (E1-E7), *tremplin* (source + régime de licence), *preuve
   exigée* (tamis §2.3), *claim débloqué* (niveau du claim ladder).
 - **Vérité** : la matrice G3 fait foi de l'avancement — pas les checklists d'issues.
+- **Dispatch** : `docs/roadmap-lanes.yaml` fait foi de la prochaine tâche. Une
+  dépendance dure ne peut viser qu'un item autonome de la même lane ; les
+  autres relations sont des inputs non bloquants ou des claim gates.
 - **Rythme** : compatible avec le mode rafale agents constaté, **à condition** que
   chaque rafale soit suivie de sa passe d'audit *avant* tout claim (leçon des
   2 passes de l'epic CKM) ; idéalement, G3/G4 rendent la 2ᵉ passe inutile en

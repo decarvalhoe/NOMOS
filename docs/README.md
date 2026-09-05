@@ -10,6 +10,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 |---|---|
 | [Public claim boundary](public-claim-boundary.md) | What Nomos can and cannot claim at the current release. **Read this first.** |
 | [43 - Development doctrine](43-development-doctrine.md) | Formal cross-product development approach & principles (zero-regression, claim-boundary, no *done* without adversarial proof). NOMOS × Aedifica. |
+| [47 - Independent roadmaps and risk-based validation](47-roadmap-lanes-and-risk-based-validation.md) | Router for the independent product, DevOps and regulated-assurance roadmaps; autonomous dispatch rules and risk-based validation of regulated tooling. `active policy` |
 | [Release notes v0.1.0-ALPHA](release-v0.1.0-alpha.md) | Current release scope and the publication gate. |
 | [External assessment pack](external-assessment/) | Impartial inputs for an external assessment: evidence, maturity, and neutral valuation frameworks. |
 
@@ -35,7 +36,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | Document | Use |
 |---|---|
 | [11 - Generic roadmap and issue list](11-roadmap-and-issues.md) | Generic roadmap template. `roadmap` |
-| [14 - Product roadmap](14-product-roadmap.md) | Product architecture and version roadmap. `roadmap` |
+| [14 - Product roadmap](14-product-roadmap.md) | Independent product architecture/version roadmap; no QMS or human-record gates. `roadmap` |
 | [15 - Product backlog](15-product-backlog.md) | Implementation backlog and open issues. `backlog` |
 | [16 - Versioning policy](16-versioning-policy.md) | Versioning and compatibility policy. |
 | [29 - Post-alpha release issue list](29-post-alpha-release-issue-list.md) | Issues planned after the alpha. `issue list` |
@@ -49,6 +50,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | [44 - Facet trust-tier policy](44-facet-trust-tier-policy.md) | Trust-tier derivation policy: `certified` never auto-derived. |
 | [45 - Vision-reality closure plan](45-vision-reality-closure-plan.md) | Master execution plan closing every audited gap between vision/ADR and reality, with adversarial proof per item. `plan` |
 | [46 - VRC epic issue list](46-vrc-epic-issue-list.md) | Atomic issue decomposition of plan 45 (VRC-00..46), CKM-style, with the 5 mandatory governance lines per issue. `issue list` |
+| [Roadmap lane registry](roadmap-lanes.yaml) | Machine-readable lane, dispatch, dependency, evidence and claim states; guarded in CI. |
 
 ### Source-to-feed integrity engine
 | Document | Use |
@@ -66,7 +68,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | [24 - Regulated client compliance evidence](24-regulated-client-compliance-evidence.md) | Template and guidance for client-side compliance evidence. `template` |
 | [25 - Regulated by design structure](25-regulated-by-design-structure.md) | Shared readiness structure for Nomos and Praxis. |
 | [27 - AAA+ regulated IT document set](27-aaa-regulated-it-document-set.md) | Target document set and the non-invention rule. `target set` |
-| [28 - Regulated compliance closure plan](28-regulated-compliance-closure-plan.md) | Closure plan for regulated-readiness gaps. `plan` |
+| [28 - Regulated compliance closure plan](28-regulated-compliance-closure-plan.md) | Independent regulated-assurance roadmap; manual-first controls and risk-based validation of supporting tools. `plan` |
 | [regulated/](regulated/) | Regulated-readiness baseline records, templates, and domain packs. `baseline` / `roadmap` |
 
 ### GitHub workflow and app

@@ -4,9 +4,9 @@ Doctrine §2.3: the proof is the failure. The load-bearing test is the one the
 issue names — a NON-ORTHOGONAL vocabulary, a term sitting on two axes declared
 disjoint, must make the gate red and say which term and which axes.
 
-These shapes are standard SHACL over a standard SKOS graph, so the same verdict
-is reachable with any SHACL engine. That portability is the point: it is a check
-a third party can re-run without NOMOS.
+These shapes are standard SHACL over a SKOS/RDF graph, so a third party can
+inspect and re-run them without NOMOS. The recorded engine is pySHACL only;
+cross-engine equivalence is not asserted without a separate run.
 """
 
 from __future__ import annotations

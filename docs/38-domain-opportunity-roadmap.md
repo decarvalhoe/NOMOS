@@ -1,6 +1,6 @@
 # 38 - NOMOS Domain Opportunity Roadmap
 
-Date: 2026-05-08
+Date: 2026-09-05
 Status: actionable strategic backlog
 Scope: NOMOS only; Praxis is mentioned only as downstream evidence dependency
 
@@ -15,6 +15,13 @@ certified, or validated. The objective is to identify the strongest
 regulated and high-integrity markets where the NOMOS authority-to-product
 model can become valuable, then convert those opportunities into
 implementation issues with clear evidence gates.
+
+Per [ADR-VRC-0004](adr/0004-independent-roadmaps-risk-based-validation.md), this is
+a product/domain-planning roadmap. Public and synthetic fixtures, profiles,
+contracts and blocked-state tooling proceed without licensed acquisitions or
+human approvals. Those external facts live on roadmap 28 and block only a
+claim that uses the named source at clause level. A planning profile that
+honestly emits `blocked` is not waiting for the blocked evidence.
 
 ## Method
 
@@ -93,15 +100,15 @@ Verified project position:
   GitHub evidence, training records, licensed-reference closure, and
   independent reconstruction evidence remain incomplete.
 
-Open backlog already tracked:
+Roadmap state as of 2026-09-05:
 
-| Issue | Role |
+| Issue | Role / state |
 |---|---|
-| `#382` | Short critical atom reconciliation. |
-| `#314` | AQ epic for RBOK POC proof-level elevation. |
-| `#192`, `#193`, `#194`, `#196` | Licensed/public reference bible acquisition, license review, and processing. |
-| `#408`, `#409`, `#410`, `#411` | IQ/OQ/PQ/CAPA qualification lane for RBOK-NOMOS operational proof. |
-| `#320` | Nomos/Praxis compatibility, still blocked until NOMOS proof is strong enough. |
+| `#382`, `#314` | Fidelity/AQ foundations — closed, historical inputs. |
+| `#408`, `#409`, `#410`, `#411` | Qualification/CAPA foundations — closed; their records remain regulated evidence, not product dependencies. |
+| `#320` | Nomos/Praxis compatibility foundation — closed; regulated reliance remains separately bounded. |
+| `#192`, `#193`, `#194`, `#196` | Open regulated acquisition/licence/processing claim gates; no domain-development dependency. |
+| `#610`-`#612`, `#637`, `#642`, `#643` | Current autonomous product work — ordered by `docs/roadmap-lanes.yaml`. |
 
 Strategic conclusion:
 
@@ -413,11 +420,11 @@ The domain opportunities above share the same technical substrate.
 
 ### v0.2 - Fidelity Closure
 
-Dependencies:
+Historical inputs: `#382` and `#314` are closed; they are not live dispatch
+dependencies.
 
-- `#382`
-- `#314`
-- `#408`, `#409`, `#410`, `#411` for operational qualification evidence
+Nonblocking regulated evidence inputs: `#408`, `#409`, `#410`, `#411`.
+They affect qualification claims, not the product release.
 
 Outcome:
 
@@ -436,11 +443,10 @@ Outcome:
 - Each domain can produce mapped, blocked, not-applicable, or waived
   controls.
 
-### v0.4 - Regulated Evidence And Reference Bibles
+### v0.4 - Reference Tooling And Public Provenance
 
-Dependencies:
-
-- `#192`, `#193`, `#194`, `#196`
+No licensed-acquisition dependency. Issues `#192`, `#193`, `#194`, `#196`
+are regulated claim gates for their named clause-level use.
 
 Outcome:
 
@@ -615,7 +621,8 @@ Claim impact:
 
 ### DOR-003 - Reference Intake Policy For Public, Licensed, And Private Bibles
 
-Dependencies: `#192`, `#193`, `#194`, `#196`.
+Dependencies: none. Issues `#192`, `#193`, `#194`, `#196` are regulated inputs
+for actual licensed use, not prerequisites for the policy or its gates.
 
 Deliverables:
 
@@ -671,7 +678,8 @@ Claim impact:
 
 ### DOR-005 - GxP/CSV Control Crosswalk
 
-Dependencies: DOR-001, DOR-003, `#194`, `#196`.
+Dependencies: DOR-001, DOR-003. Issues `#194` and `#196` gate only a GAMP 5
+clause-level claim; `blocked` is the correct planning output before then.
 
 Deliverables:
 
@@ -748,7 +756,8 @@ Claim impact:
 
 ### DOR-008 - IQ/OQ/PQ Template Generator By Intended Use
 
-Dependencies: DOR-007, `#408`, `#409`, `#410`.
+Dependencies: DOR-007. Issues `#408`, `#409`, `#410` are nonblocking
+regulated evidence inputs for actual qualification.
 
 Deliverables:
 
@@ -772,7 +781,8 @@ Claim impact:
 
 ### DOR-009 - Medical/SaMD Evidence Profile
 
-Dependencies: DOR-001, DOR-003, `#192`, `#196`.
+Dependencies: DOR-001, DOR-003. Issues `#192` and `#196` gate only ISO 13485
+clause-level use; the profile and its explicit blocked placeholders proceed.
 
 Deliverables:
 
@@ -929,7 +939,8 @@ Claim impact:
 
 ### DOR-015 - Six Sigma And CAPA Analytics Profile
 
-Dependencies: DOR-001, `#411`.
+Dependencies: DOR-001. Issue `#411` is a nonblocking regulated CAPA record,
+not a prerequisite for the analytics profile.
 
 Deliverables:
 
@@ -1164,10 +1175,12 @@ Claim impact:
   -> DOR-002 claim ladder
   -> DOR-004 golden corpora
 
-#192 + #193 + #194 + #196
-  -> DOR-003 reference intake policy
-  -> DOR-005 GxP/CSV profile
-  -> DOR-009 medical/SaMD profile
+#192 + #193 + #194 + #196 (independent regulated roadmap)
+  -> named licensed-source uses and claims only
+
+DOR-003 policy + public/synthetic evidence
+  -> DOR-005 GxP/CSV planning profile
+  -> DOR-009 medical/SaMD planning profile
 
 DOR-005 + DOR-006
   -> DOR-007 CSA planner
@@ -1191,8 +1204,8 @@ DOR-001 + DOR-002 + domain profiles
 
 1. Do not start with market copy. Start with `DOR-001`, `DOR-002`, and
    `DOR-003`.
-2. Keep `#382` and `#314` moving because stronger fidelity is the
-   prerequisite for every serious domain claim.
+2. Follow the autonomous queue in `docs/roadmap-lanes.yaml`; closed historical
+   issues `#382` and `#314` are evidence inputs, not live dispatch targets.
 3. Build `DOR-004` before any domain pack is called portable.
 4. Implement GxP/CSV and AI governance first, because they are closest to
    the existing regulated and RAG documentation.

@@ -1,0 +1,276 @@
+schema_version: "1.0.0"
+decision_ref: docs/adr/0004-independent-roadmaps-risk-based-validation.md
+policy_ref: docs/47-roadmap-lanes-and-risk-based-validation.md
+claim_boundary: >-
+  Roadmap routing only. Delivery of product or tooling does not establish QMS
+  effectiveness, approve a licence, authenticate a human record, validate a
+  regulated intended use, or unlock a public regulated claim.
+
+selection_policy:
+  eligible_dispatch: autonomous
+  rule: >-
+    In each lane independently, select the first open autonomous item whose
+    same-lane autonomous dependencies are complete. Never wait on passive,
+    human, external, or another lane's work.
+  hard_dependencies:
+    same_lane_only: true
+    autonomous_only: true
+  cross_lane_relationship: inputs_are_nonblocking
+  dispatch_queues:
+    product: [642, 610, 611, 612, 637, 643]
+    devops: [640, 641, 644, 639, 645]
+    regulated: []
+
+lanes:
+  product:
+    owns: runtime, CLI, contracts, adapters and integrations
+    independent_from: regulated assurance and DevOps activation
+  devops:
+    owns: CI/CD, evidence collectors, release tooling and supporting controls
+    independent_from: the regulated decision or record a tool assists
+  regulated:
+    owns: intended use, risk, QMS records, training, approvals, acquisition, validation and claims
+    independent_from: product and DevOps implementation sequencing
+
+items:
+  - issue: 560
+    title: Repeated CI evidence on private corpus
+    state: open
+    lane: regulated
+    dispatch: passive
+    delivery_state: implemented
+    evidence_state: accumulating
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [repeated_ci_evidence_private_corpus]
+  - issue: 561
+    title: Execute v0.2.0-ALPHA release through SOP
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: planned
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [560, 639]
+    blocks_claims: [release_management_operated]
+  - issue: 562
+    title: Human training and competence records
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: partial
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [640]
+    blocks_claims: [training_records_effective]
+  - issue: 576
+    title: Sigstore keyless umbrella
+    state: open
+    lane: product
+    dispatch: external
+    delivery_state: split
+    evidence_state: requires_external
+    claim_state: prohibited
+    depends_on: []
+    inputs: [637, 645, 638]
+    blocks_claims: [sigstore_keyless_issuance]
+  - issue: 637
+    title: Offline Sigstore bundle verification
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 576
+    regulated_tool:
+      intended_use: verify a supplied Sigstore bundle without issuing identity or writing a public log
+      impact: decision
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 638
+    title: Production keyless issuance and Rekor publication
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: planned
+    evidence_state: requires_external
+    claim_state: prohibited
+    depends_on: []
+    parent: 576
+    inputs: [645]
+    blocks_claims: [sigstore_keyless_issuance]
+  - issue: 645
+    title: Keyless issuance against injected non-production services
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 576
+    inputs: [637]
+    regulated_tool:
+      intended_use: issue a keyless bundle against injected or controlled non-production Fulcio/Rekor endpoints
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 639
+    title: Prepare and verify a v0.2.0-ALPHA candidate bundle
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 561
+    inputs: [560]
+    regulated_tool:
+      intended_use: prepare and verify a release-candidate evidence bundle without approving or publishing a release
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 640
+    title: Align competence template and gate
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 562
+    regulated_tool:
+      intended_use: validate the structure and declared status of competence records without asserting human competence
+      impact: decision
+      validation_state: planned
+      reliance: manual_verification_required
+  - issue: 641
+    title: Restore licence-review and no-full-text gates
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parents: [194, 196]
+    regulated_tool:
+      intended_use: refuse licensed-reference processing when review or permitted-use evidence is absent
+      impact: decision
+      validation_state: planned
+      reliance: manual_verification_required
+  - issue: 644
+    title: Process real public references and retain evidence
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 196
+    regulated_tool:
+      intended_use: capture and process public reference sources with retained provenance evidence
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 642
+    title: Bind rule-execution request and persisted result integrity
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 578
+  - issue: 610
+    title: Define the Recursio web-source contract
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+  - issue: 611
+    title: Verify immutable external corpus snapshots
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [610]
+  - issue: 612
+    title: Recursio to Nomos offline E2E fixture
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [610, 611]
+  - issue: 643
+    title: Static SKOS authoring and distribution
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    parent: 580
+    regulated_tool:
+      intended_use: author and distribute deterministic SKOS vocabularies for validation and consumption
+      impact: support
+      validation_state: planned
+      reliance: manual_review
+  - issue: 192
+    title: Acquire ISO 13485
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [iso_13485_clause_level_use]
+  - issue: 193
+    title: Acquire ISO IEC IEEE 12207
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [iso_12207_clause_level_use]
+  - issue: 194
+    title: Approve GAMP 5 and ISO 25010 licence use
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: blocked
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [641]
+    blocks_claims: [gamp5_clause_level_use, iso_25010_clause_level_use]
+  - issue: 196
+    title: Process licensed reference bibles
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: split
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    inputs: [641, 644]
+    blocks_claims: [licensed_bible_processing]

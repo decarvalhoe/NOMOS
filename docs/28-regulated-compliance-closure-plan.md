@@ -1,13 +1,36 @@
 # 28 - Regulated Compliance Closure Plan
 
-Date: 2026-05-03
+Date: 2026-09-05
 Release context: `v0.1.0-ALPHA`
 
 ## Purpose
 
-This is the active plan for moving Nomos from alpha regulated-readiness to a defensible regulated-market posture.
+This is the active, **independent regulated-assurance roadmap** for moving Nomos
+from alpha regulated-readiness to a defensible regulated-market posture. It is
+not a phase of the product or DevOps roadmap.
 
 The objective is not to claim certification prematurely. The objective is to make every future public and customer-facing quality claim reconstructible from repository state, GitHub configuration evidence, licensed-reference sidecars, CI artifacts, validation records, and independent review evidence.
+
+## Independence And Operating Model
+
+[ADR-VRC-0004](adr/0004-independent-roadmaps-risk-based-validation.md) separates
+product, DevOps and regulated assurance:
+
+- product versions and integrations advance without waiting for calendar
+  evidence, signatures, approvals, acquisitions or public-log writes;
+- this roadmap may operate a control manually before automation exists;
+- a supporting tool may be developed and technically verified before this
+  roadmap validates it for a regulated intended use;
+- until that validation is complete, the tool is `supporting_use`: its output
+  is reconciled to source evidence and is not the sole authority for a
+  regulated decision;
+- missing evidence remains a real gap and locks only the named claim or use. It
+  is never turned into a fake pass and never freezes unrelated development.
+
+The machine-readable lane and dispatch state is
+[`docs/roadmap-lanes.yaml`](roadmap-lanes.yaml). `passive`, `human` and
+`external` items remain visible but never enter the autonomous engineering
+dispatcher.
 
 ## Verified Current State
 
@@ -52,11 +75,37 @@ Those claims remain blocked until the closure gates in this document pass.
 
 The immediate target after `v0.1.0-ALPHA` is `NQ-3`.
 
+## Independent Regulated Roadmap
+
+The waves below are sequenced by assurance risk, not by product version. Work
+may continue in another wave when one item awaits a human or external input;
+the dependent claim simply stays locked.
+
+| Wave | Scope | Manual-first rule | Exit affects |
+|---|---|---|---|
+| `R0 — scope` | intended uses, risk classification, owners, claim boundaries | documents and accountable review are sufficient | what regulated assurance is being attempted |
+| `R1 — operate` | reviews, CAPA, training, release decisions, retention | authentic records matter; tooling is optional | QMS/process-effectiveness claims |
+| `R2 — evidence` | scheduled evidence, reference acquisition/licence decisions, source provenance | collectors assist; unavailable evidence remains blocked | only the named evidence/reference claim |
+| `R3 — validate tools` | validate tools used by R0-R2 according to intended use and impact | manual verification remains until validation | whether a tool may become authoritative for that use |
+| `R4 — intended use` | customer/use-specific validation and independent reconstruction | consumes frozen product artifacts | scoped customer claim, never generic product truth |
+
+### Risk-Based Validation Of Supporting Tools
+
+| Impact | Examples | Before validation | Validation expectation before sole reliance |
+|---|---|---|---|
+| `support` | authoring, formatting, reminders | manual review of every output | intended use + representative functional checks |
+| `evidence` | evidence assembly, transformation, indexing | retained source/output reconciliation | traceability, positive/negative tests, version control, sampled reconstruction |
+| `decision` | blocking gate, disposition, release recommendation | accountable human verifies decision and source | approved intended use, risk assessment, requirements, adversarial tests, change control, validation summary |
+| `critical_decision` | autonomous legal/clinical/safety conclusion | prohibited | use-specific validation and accountable approval; outside generic Nomos claims |
+
+Development and validation are therefore decoupled, not confused: later
+validation is acceptable when reliance remains proportionately bounded in the
+meantime.
+
 ## Active Gap Register
 
 | Gap | Severity | Blocks | Closure condition |
 |---|---|---|---|
-| `GAP-QMS-OWNER` | Major | regulated-grade claim | Named quality, technical, and security owners recorded. |
 | `GAP-CODEOWNERS` | Major | controlled review | CODEOWNERS active with real users or teams. |
 | `GAP-TRAINING` | Major | SOP effectiveness | Role matrix and training records exist. |
 | `GAP-GITHUB-LIVE-CONFIG` | Major | GitHub operating model | Branch/ruleset/environment/security evidence exported and hashed. |
@@ -114,17 +163,20 @@ Goal: make regulatory and quality references controlled evidence, not decorative
 
 Steps:
 
-1. Acquire required licensed references through legitimate channels.
-2. Store full licensed text outside the public repository unless license permits otherwise.
-3. Create licensed intake sidecars with SHA-256, source, license holder, permitted use, reviewer, and decision.
-4. Snapshot public references from official sources.
-5. Process public and licensed references read-only with Nomos.
-6. Emit only license-permitted artifacts.
+1. Enforce the intake, review and no-full-text policy with synthetic fixtures
+   and explicit blocked states; tooling does not wait for acquisition.
+2. Snapshot and process public references from official sources, independently
+   of licensed references.
+3. Acquire required licensed references through legitimate channels.
+4. Store full licensed text outside the public repository unless license permits otherwise.
+5. Create licensed intake sidecars with SHA-256, source, license holder, permitted use, reviewer, and decision.
+6. Process licensed references read-only only after that decision.
+7. Emit only license-permitted artifacts.
 
 Done when:
 
-- required bibles have hash evidence;
-- license review is complete;
+- every available required bible has hash evidence and every unavailable one is explicitly blocked;
+- licence review is complete for each reference actually used at clause level;
 - public references have provenance;
 - clause-level or summary-level use is explicitly allowed or blocked.
 
@@ -149,6 +201,9 @@ Done when:
 ## Workstream E - Validation And Release Bundle
 
 Goal: create a scoped validation package a regulated customer can review.
+The bundle may first be prepared and rehearsed with pending approvals and open
+risks; that DevOps result is not an executed release. Authentic approvals, tag
+and publication remain regulated acts in this roadmap.
 
 Required bundle content:
 
@@ -178,30 +233,29 @@ Rules:
 - Praxis evidence remains advisory until independently validated.
 - Joint claims require both product claim boundaries to be updated.
 
-## Dependency Tree
+## Regulated Claim Relationships (Not Engineering Dependencies)
 
 ```text
-Governance owners
-  -> CODEOWNERS and approval semantics
-  -> GitHub evidence
-  -> release bundle
+Owners / authentic approvals / training records
+  -> process-effectiveness claims only
 
-Licensed and public references
-  -> reference-to-control matrix
-  -> validation inventory
-  -> release bundle
+Eight consecutive retained scheduled runs
+  -> repeated-CI-evidence claim only
 
-RBOK POC and strict gates
-  -> alpha claim boundary
-  -> NQ-3 readiness evidence
+Each licensed acquisition and licence decision
+  -> that reference's clause-level use and claim only
 
-Release bundle
-  -> independent reconstruction review
-  -> NQ-5/NQ-6 claim review
+Prepared candidate bundle (DevOps)
+  + authentic release decision (regulated)
+  -> release-executed-through-SOP claim
 
-Nomos evidence contract
-  -> Praxis compatibility
+Validated intended use + frozen product evidence
+  -> scoped customer reliance
 ```
+
+No arrow above blocks product or DevOps task selection. When an input is absent,
+the regulated claim remains `blocked` or `requires_evidence`, and this roadmap
+continues on its next eligible activity.
 
 ## Operating Gates
 
@@ -214,7 +268,7 @@ python scripts/regulated_reference_canon.py --report .regulated-doc-gate/referen
 python scripts/regulated_github_qms_audit.py --repo RBOKproject/NOMOS --output .regulated-evidence-pack/github-qms-audit.json
 ```
 
-Run product gates:
+Consume product gates (the product lane owns their implementation):
 
 ```bash
 cd cli
@@ -228,9 +282,16 @@ Run schema gates:
 cue vet specs/*.cue
 ```
 
+Passing these commands proves their documented software behavior. Before this
+roadmap relies on a supporting tool as the sole basis of an `evidence` or
+`decision` control, record its intended use, impact, validation state and
+reliance boundary in `docs/roadmap-lanes.yaml`, then execute the proportionate
+validation described above. A manual control can remain the authority until
+then.
+
 ## Completion Definition
 
-This closure plan is complete when:
+This regulated-assurance roadmap is complete for a named intended use when:
 
 - QMS owners and training records are active;
 - GitHub live evidence is exported and retained;
@@ -241,3 +302,7 @@ This closure plan is complete when:
 - release evidence bundle can be independently reconstructed;
 - remaining gaps are explicitly waived with expiry and risk acceptance;
 - public-facing docs do not exceed the achieved quality level.
+
+Its completion or incompletion has no effect on whether the product and DevOps
+roadmaps continue. It affects only the regulated-use and claim boundary named
+by the retained evidence.

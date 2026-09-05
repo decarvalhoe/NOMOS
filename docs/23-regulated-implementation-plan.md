@@ -1,11 +1,20 @@
 # 23 - Regulated-Grade Implementation Plan
 
-Date: 2026-05-03
+Date: 2026-09-05
 Current release: `v0.1.0-ALPHA`
 
 ## Purpose
 
 This plan turns the regulated quality reference, Nomos/Praxis synergy audit, and regulated-by-design structure into the current implementation path.
+
+This is an **independent regulated-assurance plan**, not a product or DevOps
+release train. Per [ADR-VRC-0004](adr/0004-independent-roadmaps-risk-based-validation.md),
+manual controls may operate before supporting tools exist; tools may be
+developed and technically verified before they are validated for a regulated
+intended use. Until validation proportional to intended use and risk is
+complete, tool output is supporting evidence and remains manually reconciled.
+Human records, calendar evidence, licensed acquisition and approvals block only
+their named regulated claim, never product/DevOps task selection.
 
 The goal is not to make a stronger claim. The goal is to make every future claim defensible through:
 
@@ -30,18 +39,17 @@ NQ-2 alpha achieved by operational CLI, real RBOK corpus evidence, strict fideli
 NQ-3 candidate remains open until self-compliance evidence, owner/approval records, and GitHub QMS evidence are closed.
 ```
 
-## Current Open Dependencies
+## Current Regulated Inputs And Claim Gates
 
-| Issue | Dependency | Blocks |
+| Issue | Regulated input / claim gate | Blocks |
 |---|---|---|
-| `#314` | RBOK AQ proof umbrella | Stronger RBOK POC validation claim. |
-| `#320` | Nomos verified artifacts | Nomos/Praxis atom mapping and joint evidence claim. |
 | `#192` | Licensed ISO 13485 acquisition/intake | Complete regulated reference baseline. |
 | `#193` | Licensed ISO/IEC/IEEE 12207 acquisition/intake | Lifecycle-standard clause closure. |
 | `#194` | GAMP 5 and ISO/IEC 25010 license review | Licensed-standard processing decision. |
-| `#196` | Public/licensed bible processing | Reference-to-control proof at higher assurance levels. |
+| `#196` | Licensed bible processing | Named licensed-reference proof at higher assurance levels. Public processing proceeds in #644. |
 
-These issues do not block `v0.1.0-ALPHA` if the release remains a pre-release and keeps the claim boundary explicit.
+These issues block no product or DevOps version. They lock only the regulated
+use/claim named in the third column.
 
 ## Quality-Level Ladder
 
@@ -55,9 +63,9 @@ These issues do not block `v0.1.0-ALPHA` if the release remains a pre-release an
 | `NQ-5` | Scoped validation pack and release bundle are customer-review ready. | Future. |
 | `NQ-6` | Independent reviewer can reconstruct every material claim. | Future. |
 
-## Implementation Phases
+## Independent Regulated Workstreams (Not Product Phase Gates)
 
-### Phase 1 - Alpha Release Closure
+### Historical Baseline - Alpha Release Closure
 
 Goal: publish `v0.1.0-ALPHA` without overclaim.
 
@@ -75,7 +83,7 @@ Exit gate:
 Release exists, checks are green, and no public document claims formal regulated compliance.
 ```
 
-### Phase 2 - NQ-3 Self-Compliance Closure
+### Workstream R1 - NQ-3 Self-Compliance Closure
 
 Goal: make Nomos self-compliance executable and reviewer-ready.
 
@@ -96,7 +104,10 @@ Exit gate:
 An internal quality reviewer can trace Nomos claims to controlled evidence without relying on chat history.
 ```
 
-### Phase 3 - Portable Fidelity Closure
+### Product Evidence Interface - Portable Fidelity
+
+Owned and sequenced by product roadmap 14. This roadmap consumes its versioned
+evidence; it does not block that implementation on R1 records.
 
 Goal: prove Nomos is not RBOK-only.
 
@@ -117,13 +128,15 @@ Exit gate:
 The fidelity gate blocks missing active source coverage across portable fixture families.
 ```
 
-### Phase 4 - Reference Bible Closure
+### Workstream R2 - Reference Bible Closure
 
 Goal: make regulatory and quality references controlled authorities.
 
 Required:
 
-- close `#192`, `#193`, `#194`, and `#196`;
+- retain `#192`, `#193`, `#194`, and `#196` as explicit external/human states
+  until each named source is legitimately available and approved;
+- execute public processing independently through #644;
 - keep licensed full text outside public Git unless license allows redistribution;
 - publish sidecars with source, hash, license holder, allowed use, reviewer, and decision;
 - process permitted public and licensed material read-only with Nomos;
@@ -135,7 +148,10 @@ Exit gate:
 No cited framework remains decorative.
 ```
 
-### Phase 5 - RAG And AI Governance
+### Product Evidence Interface - RAG And AI Governance
+
+Owned and sequenced by product roadmap 14. Regulated intended-use validation
+may later consume the evidence; it is not an implementation prerequisite.
 
 Goal: make downstream LLM use bounded by the canonical source.
 
@@ -154,17 +170,21 @@ Exit gate:
 LLM output assists the product without becoming the authority.
 ```
 
-### Phase 6 - Nomos/Praxis Evidence Integration
+### Workstream R4 - Nomos/Praxis Regulated Reliance
 
 Goal: connect canonical evidence to runtime assurance.
 
 Required:
 
-- close `#320`;
+- consume the technical boundary delivered by closed issue `#320`;
 - publish Nomos-to-Praxis atom mapping;
 - validate shared evidence ledger fixtures;
 - record Praxis evidence quality level in Nomos release bundles;
 - feed runtime deviations/CAPA back into Nomos controls.
+
+Schema/import/reject fixtures may be developed beforehand with synthetic or
+`not_qualified` inputs. This workstream gates only authoritative regulated
+reliance and joint claims.
 
 Exit gate:
 

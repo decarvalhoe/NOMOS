@@ -1,7 +1,7 @@
-schema_version: "0.1.0"
+schema_version: "0.2.0"
 matrix_id: HPF-001
 record_type: high_potential_pilot_readiness_matrix
-decision_date: "2026-06-09"
+decision_date: "2026-09-05"
 owner: product_architecture
 claim_boundary: >-
   Planning and evidence-readiness artifact only. This matrix makes no
@@ -13,9 +13,10 @@ status_semantics:
     Repository evidence, claim boundary, and at least one automated gate are
     present for a bounded pilot conversation.
   wait: >-
-    Repository evidence exists, but customer-owned execution, licensed
-    references, external reviewers, or product packaging must land before
-    external pilot commitment.
+    Repository evidence exists, but customer-owned execution, external
+    reviewers, or product packaging must land before that pilot commitment.
+    Licensed references gate only their clause-level use/claim when the bounded
+    planning output preserves them as blocked.
   blocked: >-
     A non-repository dependency is missing and cannot be resolved by a code
     change alone.
@@ -316,15 +317,15 @@ lanes:
     name: Medical/SaMD readiness boundary
     issue: "#474"
     rank: 8
-    status: wait
+    status: go
     why_now: >-
-      The Medical/SaMD profile provides a clear boundary and evidence
-      placeholders, but clause-level ISO 13485 and ISO/IEC/IEEE 12207 use
-      remain blocked by licensed-reference intake.
+      The Medical/SaMD profile provides a bounded planning lane with explicit
+      blocked states. Clause-level ISO 13485 and ISO/IEC/IEEE 12207 use remain
+      blocked, but that is a claim boundary, not a pilot-planning dependency.
     evidence_gate_or_dependency: >-
-      Gate on the medical/SaMD profile and public-surrogate references. Wait
-      for licensed ISO 13485 and ISO/IEC/IEEE 12207 intake issues before any
-      clause-level or medical-device pilot claim.
+      Gate on the medical/SaMD profile and public-surrogate references. The
+      planning pilot may proceed; licensed intakes are required only before
+      their clause-level use or any medical-device/ISO claim.
     evidence_artifacts:
       - specs/examples/nomos-domain-profile.medical-samd.valid.yaml
       - docs/regulated/validation-pack/intended-use-model.yaml
@@ -350,7 +351,7 @@ lanes:
         - medical_device_compliance
         - clinical_validation
         - iso13485_certification
-    external_dependencies:
+    claim_dependencies:
       - "#192"
       - "#193"
 

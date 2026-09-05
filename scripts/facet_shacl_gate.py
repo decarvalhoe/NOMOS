@@ -6,12 +6,12 @@ nothing parsed as IRIs and a SKOS structure nothing checked. `cue vet` validates
 the FILE; the Go pack gate validates the pack CONTRACT. Neither produces a
 vocabulary a third party can audit with a standard tool.
 
-This script emits the vocabulary as a real SKOS/OWL graph and validates it with
-SHACL. The point is not to re-check what the Go gate checks — it is that the
-shapes in ``specs/shacl/facet-ontology.shapes.ttl`` are standard SHACL over a
-standard graph, so pySHACL, Apache Jena or TopBraid all render the same verdict
-on the same bytes. The check is reproducible OUTSIDE NOMOS, which is what makes
-it evidence rather than self-attestation.
+This script emits the vocabulary as a SKOS/RDF graph plus NOMOS predicates and
+validates it with SHACL. The point is not to re-check what the Go gate checks —
+the shapes in ``specs/shacl/facet-ontology.shapes.ttl`` are standard SHACL over
+a standard graph and can be replayed outside NOMOS. The recorded execution is
+pySHACL only; no OWL ``disjointUnionOf`` emission or Jena/TopBraid equivalence
+is claimed without a separate run.
 
 What the shapes constrain:
 
@@ -97,7 +97,7 @@ def _iri(value: str) -> URIRef:
 
 
 def build_graph(root: Path, pack_id: str, manifest: dict[str, Any]) -> Graph:
-    """Emit the pack's facet vocabulary as a SKOS/OWL graph.
+    """Emit the pack's facet vocabulary as SKOS/RDF + NOMOS predicates.
 
     Labels come from the vocabulary file and mappings from the ontology file, so
     a term present in one and absent from the other produces a concept that
@@ -176,10 +176,9 @@ def validate_pack(graph: Graph, shapes_path: Path) -> tuple[bool, str]:
         graph,
         shacl_graph=str(shapes_path),
         shacl_graph_format="turtle",
-        # Set for portability, not because this engine needs it: pySHACL 0.40
-        # evaluates sh:sparql either way (a mutation turning this off leaves the
-        # orthogonality test green), but engines that gate SPARQL constraints
-        # behind advanced mode need it to reach the same verdict.
+        # pySHACL 0.40 evaluates sh:sparql either way (a mutation turning this
+        # off leaves the orthogonality test green). Keep the explicit mode as
+        # part of this engine invocation; no cross-engine equivalence is claimed.
         advanced=True,
         inference="none",  # no reasoning: the verdict is on the bytes as written
         abort_on_first=False,

@@ -76,13 +76,19 @@ Until Praxis independently completes:
 
 ### Rule 4: Evidence Handoff Protocol
 
-When Nomos produces evidence for downstream consumption:
+For **authoritative regulated** downstream consumption:
 
 1. Evidence is finalized (approval record signed, chain valid)
 2. Evidence is exported as immutable artifact (hash-locked)
 3. Praxis receives via defined interface (CI artifact, API, or Git)
 4. Praxis verifies artifact hash matches Nomos attestation
 5. Praxis stores as external input (not owned, not modifiable)
+
+Technical integration does not wait for that handoff. Schema checks,
+import/reject fixtures and non-regulated dry runs may consume synthetic or
+pending Nomos artifacts when they are explicitly marked
+`not_qualified_external_input`; they carry no regulated weight and cannot be
+used for release, CAPA closure, audit response or customer validation.
 
 ### Rule 5: No Praxis Code in Nomos Repository
 

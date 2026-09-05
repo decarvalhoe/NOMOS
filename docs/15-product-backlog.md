@@ -1,6 +1,6 @@
 # 15 - Nomos Product Backlog
 
-Date: 2026-05-04
+Date: 2026-09-05
 Current release target: post-`v0.1.0-ALPHA`
 
 ## Backlog Rule
@@ -11,6 +11,13 @@ The implementation issue list for the next releases lives in
 [`docs/29-post-alpha-release-issue-list.md`](29-post-alpha-release-issue-list.md).
 Create the GitHub child issues from that document before coding a
 release wave.
+
+Roadmap routing is defined by
+[`docs/47-roadmap-lanes-and-risk-based-validation.md`](47-roadmap-lanes-and-risk-based-validation.md)
+and enforced from [`docs/roadmap-lanes.yaml`](roadmap-lanes.yaml). Product,
+DevOps and regulated assurance are independent. Only `dispatch:autonomous`
+items enter the engineering queue; calendar evidence, human records,
+acquisitions and public writes block their named claim, never task selection.
 
 The GitHub workflow integration issue list lives in
 [`docs/30-github-workflow-integration-issue-list.md`](30-github-workflow-integration-issue-list.md).
@@ -32,20 +39,27 @@ Each active backlog item must have:
 - a dependency relationship;
 - an evidence artifact or testable exit gate;
 - a clear claim impact.
+- one lane (`product`, `devops`, `regulated`) and one dispatch state
+  (`autonomous`, `passive`, `human`, `external`).
 
-## Current GitHub Open Items
+## Current Autonomous Queues
 
-As checked on 2026-05-04, open Nomos issues are:
+As checked on 2026-09-05, `docs/roadmap-lanes.yaml` orders Product and DevOps
+independently:
 
-| Issue | Area | Role in dependency tree | Release impact |
-|---|---|---|---|
-| `#314` | AQ / RBOK POC | Umbrella epic for elevating RBOK POC proof level. | Does not block `v0.1.0-ALPHA` if alpha limitations are explicit; blocks stronger RBOK validation claim. |
-| `#320` | Nomos/Praxis | Activate Nomos-to-Praxis atom mapping after Nomos verification. | Deferred; blocks joint Nomos/Praxis regulated claim. |
-| `#192` | Reference bibles | Acquire and intake ISO 13485:2016. | Blocks complete licensed-reference baseline. |
-| `#193` | Reference bibles | Acquire and intake ISO/IEC/IEEE 12207:2026. | Blocks lifecycle-standard clause closure. |
-| `#194` | Reference bibles | Complete license review for GAMP 5 and ISO/IEC 25010. | Blocks licensed-standard processing and redistribution decisions. |
-| `#196` | Reference bibles | Process public and licensed bibles with Nomos. | Depends on licensed/public reference readiness; blocks higher assurance reference-to-control proof. |
-| `#382` | FSQ future | Short critical atom reconciliation. | Blocks stronger fidelity claims where short strings carry standalone regulatory, operational, legal, or game-rule meaning. |
+| Product queue | DevOps queue |
+|---|---|
+| `#642` — rule-execution persisted integrity | `#640` — competence template/gate contract |
+| `#610` → `#611` → `#612` — Recursio contract, snapshot, E2E | `#641` — licence/no-full-text gates |
+| `#637` — offline Sigstore verification | `#644` — actual public-source processing |
+| `#643` — static SKOS authoring/distribution | `#639` — candidate release-bundle rehearsal |
+| — | `#645` — keyless issuance against injected non-production services |
+
+Non-dispatchable regulated work is visible in the same registry: #560 is
+passive evidence accumulation; #561/#562/#194 require authentic human acts;
+#192/#193/#196/#638 require external acquisition or irreversible activation.
+None is a product/DevOps dependency, and neither autonomous queue waits for the
+other.
 
 ## Delivered Alpha Capabilities
 
@@ -82,15 +96,17 @@ Public claim boundary
   -> regulated docs
   -> GitHub pre-release
 
-Licensed reference acquisition (#192, #193, #194)
-  -> public/licensed bible processing (#196)
-  -> reference-to-control closure
-  -> NQ-5 validation-pack readiness
+Public reference tooling (#641, #644)
+  -> public provenance evidence (autonomous)
 
-Nomos verified artifacts
-  -> Praxis atom mapping (#320)
-  -> joint evidence contract
-  -> NQ-4 candidate
+Licensed acquisition and decisions (#192, #193, #194, #196)
+  -> named clause-level claims only (independent regulated roadmap)
+
+Praxis technical boundary (#320 closed)
+  -> autonomous schema/import/reject fixtures on not_qualified inputs
+
+Accepted regulated activation (independent roadmap)
+  -> joint claim / NQ-4 candidate
 ```
 
 ## Next Implementation Epics
@@ -113,9 +129,9 @@ Exit gate:
 No active source block is silently dropped, and every generated node has a source span or explicit unsupported status.
 ```
 
-#### Future item - Short Critical Atom Reconciliation (#382)
+#### Delivered Foundation - Short Critical Atom Reconciliation (#382)
 
-Owner / issue: `#382`.
+Historical issue: `#382` (closed; not a live dispatch target).
 
 Problem statement:
 
@@ -150,16 +166,19 @@ Definition of done:
 - Regression fixtures cover at least `GxP`, `ALCOA+`, `21 CFR`, `SOP-01`, `P0`, `Yes`, `No`, threshold values, status labels, table cells, and structured YAML/JSON scalars.
 - The strict gate exposes unresolved short-critical findings as blocking evidence.
 
-### EPIC B - Reference Bible Governance
+### EPIC B - Reference Tooling And Public Provenance
 
-Goal: turn external references into controlled source authorities.
+Goal: provide gates and retained provenance without waiting for licensed-source
+acquisition.
 
 Work:
 
-- Close `#192`, `#193`, `#194`, and `#196`.
+- Deliver #641 (licence/no-full-text gates) and #644 (actual public-source processing).
 - Maintain licensed sidecars without redistributing restricted content.
 - Create public surrogate annexes only where license permits.
 - Map references to controls, tests, evidence, waivers, and public claims.
+- Leave #192/#193/#194/#196 on the independent regulated roadmap; each blocks
+  only the named clause-level use.
 
 Exit gate:
 
@@ -167,21 +186,24 @@ Exit gate:
 Every cited regulation, standard, or framework is mapped or explicitly marked not applicable / blocked.
 ```
 
-### EPIC C - Regulated Release Evidence
+### EPIC C - Release-Support Tooling
 
-Goal: make release decisions reconstructible by a quality reviewer.
+Goal: make a release candidate reconstructible without inventing the authentic
+release decision.
 
 Work:
 
-- Generate release evidence bundles per tag.
-- Retain CI run URLs, hashes, reports, source/corpus attestation, deviations, waivers, and approvals.
+- Deliver #639: generate/verify a candidate bundle per commit (optional real tag).
+- Retain CI run URLs, hashes, reports, source/corpus attestation, deviations,
+  waivers and explicit pending approval/decision states.
 - Activate GitHub-native QMS evidence exports.
-- Add named owner and training evidence.
+- Never generate owner, training, signature or approval records.
 
 Exit gate:
 
 ```text
-An independent reviewer can reconstruct why a release was allowed without private tribal knowledge.
+A reviewer can reconstruct the candidate and see exactly which regulated
+decisions remain pending. Plan 28 owns actual approval/publication.
 ```
 
 ### EPIC D - RAG And Conversational Governance
@@ -208,9 +230,12 @@ Goal: connect Nomos canonical evidence to Praxis runtime assurance without overc
 
 Work:
 
-- Close `#320` after Nomos artifacts are verified.
+- Use the technical boundary delivered by closed issue `#320`.
 - Publish atom mapping and evidence ledger contract.
-- Let Praxis consume Nomos artifacts as downstream evidence.
+- Run schema/import/reject fixtures on synthetic or `not_qualified` inputs
+  before regulated activation.
+- Let Praxis rely on Nomos artifacts as regulated evidence only after its own
+  activation gate is accepted.
 - Feed Praxis runtime evidence and CAPA status back into Nomos release decisions.
 
 Exit gate:
@@ -264,7 +289,7 @@ qualification claims.
 - FSQ-05 (#368) shipped: corpus body ledger separate from curated feed.
 - FSQ-06 (#369) shipped: semantic quality gate (`CheckSemanticQuality`).
 - FSQ-07 (#370) shipped: context-rich RAG chunk composer (`ComposeRAGChunks`).
-- FSQ-08 (#371 / #379 / #380) shipped: `scripts/rbok-poc-integrity.sh` was extended through the integrity stages, `docs/rbok-poc-validation-dossier.md` records the AQ-3 bounded POC dossier, and the alpha release notes record the passing evidence pack. Remaining future work is not the FSQ epic itself; it is the stronger portable fidelity backlog above, including short critical atom reconciliation, broader adapter fixtures, repeated CI evidence, and attestation `claim_coverage` wiring.
+- FSQ-08 (#371 / #379 / #380) shipped: `scripts/rbok-poc-integrity.sh` was extended through the integrity stages, `docs/rbok-poc-validation-dossier.md` records the AQ-3 bounded POC dossier, and the alpha release notes record the passing evidence pack. Remaining product work is broader adapter/portable-fidelity coverage. Repeated private-CI evidence is the passive regulated issue #560; attestation `claim_coverage` wiring has shipped.
 
 ## NGW Wave Status (GitHub workflow integration)
 

@@ -78,9 +78,12 @@ evidence_categories:
     claim_allowed: "execution_plan_only"
 blocking_gaps:
   - id: GAP-QMS-OWNER
-    description: "Quality owner is not assigned."
+    description: >-
+      Closed: quality, product, validation, security and data-integrity owners
+      are assigned by NOMOS-REC-ROLE-2026-001 (2026-06-11); role accumulation
+      and the independent-reviewer waiver are explicit in that record.
     severity: major
-    status: open
+    status: closed
     blocks_claims:
       - regulated_grade
       - effective_qms

@@ -68,6 +68,11 @@ note and compensating controls are recorded in
 
 ## Required Evidence Before Effectiveness
 
+These are conditions for **this QMS/regulated-assurance claim**, not product or
+DevOps development gates (ADR-VRC-0004). Controls may operate manually before a
+supporting tool exists; a tool developed first remains supporting-use until its
+intended use is validated proportionately to risk.
+
 - approved document-control procedure;
 - training matrix and training records — **open** (VRC-16 #562);
 - control matrix populated with evidence links;

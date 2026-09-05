@@ -30,7 +30,10 @@
 3. **Pas de *done* sans preuve adversariale.** Un test qui passe ne prouve rien ; un test
    qui **échoue sans le fix** prouve. Le tamis : bug → *revert-and-confirm* ; crypto →
    *tamper-fail* (altérer 1 octet → `verify` rouge) ; mécanique → **consommée par le
-   moteur Go + test Go** (un schéma CUE + script Python sidecar = `PARTIAL`, pas `done`) ;
+   moteur Go + test Go** quand son caller attendu est le moteur (un schéma CUE +
+   sidecar ne remplace pas cette mécanique). Un outil volontairement hors core
+   peut être livré comme `sidecar` ; intended use, validation et reliance sont
+   suivis séparément selon ADR-VRC-0004 ;
    résultat de pipeline → **calculé**, jamais une chaîne `"green"` déclarée ; connecteur →
    **fetch réel + hash réel**.
 4. **L'IA propose, le spécialiste décide.** Sourcé ou inconnu ; **l'abstention est une
@@ -42,6 +45,11 @@
    AGPL → **isoler** (frontière process/API, cf. license register) ; commercial →
    s'inspirer du concept, jamais code/contenu/IP ; références payantes (GAMP 5, ISO,
    SIA…) → **jamais de texte intégral** (hash + crosswalk via sidecar).
+7. **Roadmaps indépendantes, validation basée sur le risque.** Produit, DevOps et
+   assurance régulée avancent séparément (`docs/47`, ADR-VRC-0004). Un contrôle
+   régulé peut être manuel avant son outil ; un outil peut être développé avant
+   validation de son intended use. Calendrier, signatures, achats et writes
+   publics bloquent leurs claims, jamais le dispatcher autonome.
 
 ## 3. Modèle de savoir (vocabulaire commun aux deux dev)
 

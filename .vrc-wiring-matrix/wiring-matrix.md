@@ -27,27 +27,27 @@
 | `rag_eval_harness` | B2 | real | real | ✅ | — | — |
 | `rag_eval_context_metrics` | B2 | real | real | ✅ | — | — |
 | `faithfulness_scorer_interface` | A1 | real | real | ✅ | — | — |
-| `hhem_nli_scorer_sidecar` | A1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `hhem_nli_scorer_sidecar` | A1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `rag_evidence_sidecar_consumes_go_verdict` | A1 | real | real | ✅ | — | — |
 | `rag_interop_export` | interop | real | real | ✅ | — | — |
 | `rag_index_staleness_verify` | interop | real | real | ✅ | — | — |
 | `rag_lens_scoped_export` | interop | real | real | ✅ | — | — |
-| `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `evidence_pack_bom` | A5 | real | real | ✅ | — | — |
 | `docx_adapter` | ingestion | real | real | ✅ | — | — |
-| `sigstore_keyless` | P7 | absent | absent | ✅ | VRC-40 | — |
+| `sigstore_keyless` | P7 | absent | absent | ✅ | #645 | — |
 | `strict_fidelity_gate` | P1 | real | real | ✅ | — | — |
 | `manifest_check_family` | P1 | real | real | ✅ | — | — |
 | `report_and_bom_export` | P7 | real | real | ✅ | — | — |
 | `eu_ai_act_pack` | D3 | real | real | ✅ | — | — |
-| `rule_execution_substrate` | B3 | sidecar | sidecar | ✅ | VRC-42 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `rule_execution_substrate` | B3 | real | real | ✅ | — | — |
 | `cross_reference_graph` | B5 | real | real | ✅ | — | — |
-| `vocabulary_skos_shacl` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `vocabulary_skos_shacl` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `public_cite_or_abstain_bench` | A-exit | real | real | ✅ | — | — |
-| `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | VRC-14 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `training_competence_status` | P1 | sidecar | sidecar | ✅ | VRC-16 | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `training_competence_status` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -55,7 +55,7 @@
 
 ## Summary
 
-- capabilities: 40 (real=31, partial=0, sidecar=8, stub=0, absent=1)
+- capabilities: 40 (real=32, partial=0, sidecar=7, stub=0, absent=1)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

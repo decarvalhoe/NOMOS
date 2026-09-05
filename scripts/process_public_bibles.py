@@ -129,10 +129,15 @@ def process(root: Path, nomos_bin: str) -> dict[str, Any]:
         leaked = [p for p in processed_files for lid in licensed_ids if lid.lower() in p.lower()]
 
         return {
-            "schema_version": "nomos-public-bibles-processing-v1",
-            "claim_boundary": "Public-reference processing evidence only; the licensed bibles are blocked on procurement and are not processed.",
+            "schema_version": "nomos-public-policy-fixture-v2",
+            "claim_boundary": (
+                "Two in-repo public policy documents exercise the pipeline; "
+                "public_classified_count is registry classification, not the number "
+                "of external public bibles processed. Licensed bibles are excluded."
+            ),
             "bible_split": {
-                "public_count": len(split["public"]),
+                "public_classified_count": len(split["public"]),
+                "external_public_sources_processed": 0,
                 "licensed_blocked": split["licensed"],
                 "canon_status": split["canon_status"],
             },
@@ -154,14 +159,14 @@ def process(root: Path, nomos_bin: str) -> dict[str, Any]:
 
 
 def acceptance_ok(summary: dict[str, Any]) -> bool:
+    artifacts = summary["artifacts_present"]
+    steps = summary["pipeline_steps"]
     return (
         summary["read_only_guard"] == "pass"
         and summary["source_mutation"] == "none"
         and not summary["licensed_leak"]
-        and summary["artifacts_present"]["snapshot"]
-        and summary["artifacts_present"]["manifest"]
-        and summary["pipeline_steps"].get("scan") == 0
-        and summary["pipeline_steps"].get("manifest") == 0
+        and all(artifacts.get(name) for name in ("snapshot", "manifest", "atomization_feed", "attestation"))
+        and all(steps.get(name) == 0 for name in ("scan", "manifest", "feed", "attest"))
     )
 
 
