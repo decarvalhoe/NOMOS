@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [643]
+    product: []
     devops: [645]
     regulated: []
 
@@ -262,18 +262,18 @@ items:
     depends_on: [610, 611]
   - issue: 643
     title: Static SKOS authoring and distribution
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 580
     regulated_tool:
       intended_use: author and distribute deterministic SKOS vocabularies for validation and consumption
       impact: support
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_review
   - issue: 192
     title: Acquire ISO 13485

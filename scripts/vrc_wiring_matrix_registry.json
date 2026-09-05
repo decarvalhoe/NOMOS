@@ -2917,6 +2917,92 @@
           ]
         }
       ]
+    },
+    {
+      "id": "skos_static_distribution",
+      "title": "Authoring et distribution statique SKOS (#643) — source d'authoring explicite et versionnée pour les axes fermés (`core-facets.authoring.yaml` : IRIs stables, labels, définitions ; ses ensembles de valeurs doivent égaler `facets-vocab.json` issu de `facets.cue`, toute dérive refuse le build), axes ouverts lus dans les packs exactement comme le gate SHACL les lit. Build déterministe (sérialiseur Turtle canonique : triplets triés, préfixes fixes ; JSON-LD étendu à clés triées) vers `specs/generated/skos/` : Turtle + JSON-LD par graphe, `index.json` (IRIs, fichiers, media types, sha256, compteurs), `mappings.json` (IRI → fichier + Content-Type pour un hébergeur statique). `--check` : rebuild en temporaire, un octet différent → exit 4 en nommant les fichiers. `--verify` : chaque fichier commité est re-parsé (rdflib), doit être ISOMORPHE au graphe construit, les graphes de pack distribués sont revalidés par les shapes, chaque concept a un mapping et un prefLabel, les sha256 de l'index tiennent. Label perdu, IRI changé, nœud JSON-LD perdu, hash falsifié, mapping absent, fichier orphelin, source de pack modifiée sans rebuild, valeur d'authoring absente ou inconnue de CUE → rouge. Le TTL manuscrit non référencé a été intégré (retiré). Sidecar : Python/rdflib/pySHACL seulement ; la sonde `skos|shacl` interdit tout cela dans cli/**/*.go. NON revendiqué : service Skosmos/VocBench opéré, conformité ISO 25964, justesse ontologique des ancrages.",
+      "pillar": "B4",
+      "claim_level": "artifact-generated (vocabulaires authored, distribuables et validés selon le profil NOMOS ; aucun service en production, aucune conformité ISO 25964)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "SKOS static distribution — deterministic build + round-trip (#643)",
+            "skos_distribution.py --root . --check --verify"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/skos_distribution.py",
+          "contains": [
+            "def check_core_drift(",
+            "def to_canonical_turtle(",
+            "def to_expanded_jsonld(",
+            "def verify(",
+            "to_isomorphic",
+            "no static mapping",
+            "rc = 4"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/facet-vocabularies/core-facets.authoring.yaml",
+          "contains": [
+            "schema_version: nomos-skos-authoring-v1",
+            "source_of_truth: specs/generated/facets-vocab.json"
+          ]
+        },
+        {
+          "path": "specs/generated/skos/index.json",
+          "contains": [
+            "nomos-skos-distribution-index-v1",
+            "\"name\": \"core-facets\""
+          ]
+        },
+        {
+          "path": "specs/generated/skos/mappings.json",
+          "contains": [
+            "nomos-skos-static-mappings-v1",
+            "text/turtle"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "tests/test_skos_distribution.py",
+          "contains": [
+            "test_lost_label_in_turtle_is_red",
+            "test_changed_iri_in_turtle_is_red",
+            "test_lost_node_in_jsonld_is_red",
+            "test_pack_label_change_makes_distribution_stale",
+            "test_authoring_missing_a_cue_value_is_refused",
+            "test_build_is_deterministic"
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "specs/facet-vocabularies/README.md",
+          "contains": [
+            "Not claimed",
+            "mappings.json"
+          ]
+        }
+      ],
+      "must_be_absent": [
+        {
+          "dir": "cli",
+          "regex": "skos|shacl",
+          "suffixes": [
+            ".go"
+          ],
+          "ignore_case": true
+        }
+      ]
     }
   ]
 }

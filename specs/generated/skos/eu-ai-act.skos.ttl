@@ -1,0 +1,155 @@
+@prefix nomos: <https://nomos.dev/ns/facets#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://nomos.dev/ns/pack/eu-ai-act/axis/activity>
+  a nomos:FacetAxis ;
+  skos:prefLabel "activity"@en ;
+  nomos:bfoRoot <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofClass <https://spec.industrialontologies.org/ontology/core/Core/Process> .
+
+<https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role>
+  a nomos:FacetAxis ;
+  skos:prefLabel "discipline_role"@en ;
+  nomos:bfoRoot <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofClass <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> .
+
+<https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier>
+  a nomos:FacetAxis ;
+  skos:prefLabel "risk_tier"@en ;
+  nomos:bfoRoot <http://purl.obolibrary.org/obo/BFO_0000019> ;
+  nomos:iofClass <https://spec.industrialontologies.org/ontology/core/Core/Quality> .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.documentation_technique>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Documentation technique"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:termId "ai_act.documentation_technique"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.enregistrement>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Enregistrement"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:termId "ai_act.enregistrement"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.evaluation_conformite>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Évaluation de la conformité"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:termId "ai_act.evaluation_conformite"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.gestion_risque>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Gestion des risques"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:termId "ai_act.gestion_risque"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.surveillance_post_marche>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Surveillance après commercialisation"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:termId "ai_act.surveillance_post_marche"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.autorite_notifiante>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Autorité notifiante"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:termId "ai_act.autorite_notifiante"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.deployeur>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Déployeur"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:termId "ai_act.deployeur"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.distributeur>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Distributeur"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:termId "ai_act.distributeur"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.fournisseur>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Fournisseur"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:termId "ai_act.fournisseur"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.importateur>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Importateur"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:termId "ai_act.importateur"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.haut_risque>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Haut risque"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000019> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Quality> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier> ;
+  nomos:termId "ai_act.haut_risque"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_inacceptable>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Risque inacceptable"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000019> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Quality> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier> ;
+  nomos:termId "ai_act.risque_inacceptable"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_limite>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Risque limité"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000019> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Quality> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier> ;
+  nomos:termId "ai_act.risque_limite"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_minimal>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/eu-ai-act/scheme> ;
+  skos:prefLabel "Risque minimal"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000019> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Quality> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier> ;
+  nomos:termId "ai_act.risque_minimal"^^xsd:string .
+
+<https://nomos.dev/ns/pack/eu-ai-act/scheme>
+  a skos:ConceptScheme ;
+  skos:prefLabel "eu-ai-act"@en ;
+  nomos:disjointAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/activity> ;
+  nomos:disjointAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role> ;
+  nomos:disjointAxis <https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier> .
