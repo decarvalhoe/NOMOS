@@ -46,9 +46,15 @@ and binds the exact response bytes by digest into the record.
   own toolchain (job "Offline Sigstore verification gate").
 - The protocol is versioned. A response with another schema is refused, never
   interpreted.
-- Issuance (#645, #638) will reuse the same module and boundary; production
-  Fulcio/Rekor writes remain forbidden by default and are a regulated-lane
-  decision (#638).
+- Issuance (#645) reuses the same module and boundary, against injected,
+  non-production endpoints only: `nomos attest sign-sigstore` (non-production) speaks
+  `nomos.sigstore-issue.request.v1` to the same binary, which contacts only
+  loopback, reserved test domains or explicitly declared hosts and refuses every
+  Sigstore public instance with no override. A localhost fixture pair
+  (`cmd/nomos-sigstore-fixture-services`) stands in for Fulcio and Rekor so the
+  protocol is exercised end to end in CI. Production Fulcio/Rekor writes, the
+  OIDC permission and the public identity remain a regulated-lane decision
+  (#638).
 
 ## Claim boundary
 

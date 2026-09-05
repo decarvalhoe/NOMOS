@@ -92,6 +92,12 @@ jobs:
         run: cd tools/sigstore-verifier && go vet ./... && go test ./...
       - name: Offline verification gate through the CLI
         run: WORK_DIR="$RUNNER_TEMP/sigstore-gate" bash scripts/sigstore-verify-gate.sh
+      # #645: keyless issuance against INJECTED, NON-PRODUCTION Fulcio/Rekor
+      # (localhost fixture services), independently verified; production
+      # endpoints refused before any request; services down → no partial
+      # bundle. Nothing is published, no id-token permission is requested.
+      - name: "Keyless issuance on injected non-production services (#645)"
+        run: WORK_DIR="$RUNNER_TEMP/sigstore-issue-gate" bash scripts/sigstore-issue-gate.sh
 
   corpus-cross-platform:
     name: Corpus tests (${{ matrix.os }})

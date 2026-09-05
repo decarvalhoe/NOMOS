@@ -25,10 +25,26 @@ def registry() -> dict:
 
 
 def nonempty_lane(data) -> str:
-    """The first lane whose autonomous queue is not exhausted. Tests must not
-    assume a particular lane still has work: queues empty as items close."""
+    """The first lane whose autonomous queue is not exhausted. When every
+    autonomous item of both lanes is closed (the roadmap's goal state), reopen
+    one closed autonomous item IN THE TEST DATA so the queue rules can still be
+    exercised — the registry on disk is not touched. Tests must not assume a
+    particular lane still has work: queues empty as items close."""
     queues = data["selection_policy"]["dispatch_queues"]
-    return next(lane for lane in ("product", "devops") if queues[lane])
+    for lane in ("product", "devops"):
+        if queues[lane]:
+            return lane
+    item = next(
+        item for item in data["items"]
+        if item["dispatch"] == "autonomous" and item["state"] == "closed" and item["lane"] in ("product", "devops")
+    )
+    item["state"] = "open"
+    item["delivery_state"] = "planned"
+    item["evidence_state"] = "none"
+    if item.get("regulated_tool"):
+        item["regulated_tool"]["validation_state"] = "planned"
+    queues[item["lane"]].append(item["issue"])
+    return item["lane"]
 
 
 class RoadmapLaneGuardTests(unittest.TestCase):
@@ -102,10 +118,11 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         # Structural: any still-planned regulated tool, not a hardcoded issue —
         # the item that used to be named here has since been delivered.
         data = registry()
-        item = next(
-            item for item in data["items"]
-            if item.get("regulated_tool") and item.get("delivery_state") == "planned"
-        )
+        item = next(item for item in data["items"] if item.get("regulated_tool"))
+        # Put the item back into the planned state IN THE TEST DATA: the rule
+        # under test is about a planned, unvalidated tool claiming too much.
+        item["delivery_state"] = "planned"
+        item["regulated_tool"]["validation_state"] = "planned"
         item["regulated_tool"]["impact"] = "critical_decision"
         item["claim_state"] = "unlocked"
         failures = guard.validate(data)
@@ -237,17 +254,18 @@ class RegistryTruthTests(unittest.TestCase):
                     "more prose after\n",
                     encoding="utf-8",
                 )
-            self.assertEqual(guard.emit_docs(root, registry()), [])
+            data = registry()
+            lane = nonempty_lane(data)
+            self.assertEqual(guard.emit_docs(root, data), [])
             text = (root / guard.QUEUE_DOCS[0]).read_text(encoding="utf-8")
             self.assertIn("hand-written prose that must survive", text)
             self.assertIn("more prose after", text)
             self.assertNotIn("| stale | table |", text)
-            data = registry()
-            head = data["selection_policy"]["dispatch_queues"][nonempty_lane(data)][0]
+            head = data["selection_policy"]["dispatch_queues"][lane][0]
             self.assertIn(f"#{head} —", text)
             # Idempotent: a second run changes nothing.
             before = text
-            guard.emit_docs(root, registry())
+            guard.emit_docs(root, data)
             self.assertEqual((root / guard.QUEUE_DOCS[0]).read_text(encoding="utf-8"), before)
 
     def test_emit_docs_refuses_a_doc_without_markers(self) -> None:

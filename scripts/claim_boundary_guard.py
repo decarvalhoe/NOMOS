@@ -66,6 +66,23 @@ SIGNING_MARKER_TOKENS = ("ecdsa", "dsse", "SignASN1", "VerifyASN1")
 # verifier module. A sentence that says NOMOS *verifies supplied bundles* is
 # backed iff both markers are present; any sentence that says NOMOS signs,
 # issues or publishes with Sigstore keeps failing regardless.
+# #645: keyless ISSUANCE is real only against injected, non-production
+# endpoints. A sentence that says so is backed iff both issuance markers are
+# present AND the sentence names the injected/non-production bound; a sentence
+# that claims production, public-good or a Sigstore public instance keeps failing.
+SIGSTORE_ISSUE_MARKERS = (
+    (Path("cli/internal/attestation/sigstore_issue.go"), ("IssueSigstoreBundle", "SIGSTORE_PRODUCTION_FORBIDDEN", "CheckEndpointPolicy")),
+    (Path("tools/sigstore-verifier/issue.go"), ("sign.Bundle(", "PRODUCTION_FORBIDDEN", "nomos.sigstore-issue.response.v1")),
+)
+_SIGSTORE_ISSUE_BOUNDED = re.compile(
+    r"\b(injected|non[- ]production|fixture|localhost|controlled|staging|injecté\w*|hors[- ]production)\b",
+    re.IGNORECASE,
+)
+_SIGSTORE_PRODUCTION_WORDS = re.compile(
+    r"\b(production|public[- ]good|sigstore\.dev|sigstage\.dev|public\s+instance|instance\s+publique)\b",
+    re.IGNORECASE,
+)
+
 SIGSTORE_VERIFY_MARKERS = (
     (Path("cli/internal/attestation/sigstore_external.go"), ("VerifySigstoreBundle", "SIGSTORE_DIGEST_DISAGREEMENT", "no verdict")),
     (Path("tools/sigstore-verifier/main.go"), ("verify.NewVerifier", "WithCertificateIdentity", "nomos.sigstore-verify.response.v1")),
@@ -194,6 +211,34 @@ _SIGSTORE_ISSUANCE_WORDS = re.compile(
 )
 
 
+def sigstore_issuance_present(root: Path) -> bool:
+    """True iff the injected-environment keyless issuance (#645) is in the tree."""
+    for marker, tokens in SIGSTORE_ISSUE_MARKERS:
+        path = root / marker
+        if not path.is_file():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return False
+        if not all(token in text for token in tokens):
+            return False
+    return True
+
+
+_NEGATED_PRODUCTION = re.compile(
+    r"\b(no|never|not|non|without|refus\w*|forbid\w*|interdit\w*|jamais|aucune?|pas\s+(?:de|en|d'))\W{0,3}(?:\w+\W{0,3}){0,3}?"
+    r"(production|public[- ]good|sigstore\.dev|sigstage\.dev|public\s+instance|instance\s+publique)\b",
+    re.IGNORECASE,
+)
+
+
+def _strip_negated_production(text: str) -> str:
+    """Remove 'no production' / 'production is refused' spans so a negation is not read as a claim."""
+    text = _NEGATED_PRODUCTION.sub(" ", text)
+    return re.sub(r"\b(production|public[- ]good|sigstore\.dev|sigstage\.dev)\b[^.|]{0,40}?\b(refused|forbidden|never|not|interdit\w*|refusé\w*)\b", " ", text, flags=re.IGNORECASE)
+
+
 def signing_capability_present(root: Path) -> bool:
     """True iff the real key-based signing implementation is present in the tree."""
     marker = root / SIGNING_MARKER
@@ -234,7 +279,11 @@ def _strip_quoted(line: str) -> str:
 
 
 def classify_line(
-    line: str, signing_present: bool, section_deferred: bool = False, verify_present: bool = False
+    line: str,
+    signing_present: bool,
+    section_deferred: bool = False,
+    verify_present: bool = False,
+    issue_present: bool = False,
 ) -> str | None:
     """Return a violation reason for a line, or None if the line is clean.
 
@@ -260,6 +309,18 @@ def classify_line(
     # verification capability — but only when the same sentence claims no
     # issuance. "verifies supplied bundles and signs them keyless" still fails.
     if verify_present and _SIGSTORE_VERIFY_BOUNDED.search(bare) and not _SIGSTORE_ISSUANCE_WORDS.search(bare):
+        return None
+
+    # #645 bounded marker: issuance wording is honest only when the sentence
+    # itself names the injected/non-production bound and says nothing about
+    # production or a public instance. "signs keyless with Sigstore" alone,
+    # or "...in production", keeps failing.
+    if (
+        issue_present
+        and _SIGSTORE_ISSUANCE_WORDS.search(bare)
+        and _SIGSTORE_ISSUE_BOUNDED.search(bare)
+        and not _SIGSTORE_PRODUCTION_WORDS.search(_strip_negated_production(bare))
+    ):
         return None
 
     # Affirmative "<subject> are Sigstore-signed" adjective claim — the precise
@@ -401,6 +462,7 @@ def find_duplicate_claims(root: Path) -> list[tuple[Path, int, str, str]]:
 def scan(root: Path) -> list[tuple[Path, int, str, str]]:
     signing_present = signing_capability_present(root)
     verify_present = sigstore_verification_present(root)
+    issue_present = sigstore_issuance_present(root)
     violations: list[tuple[Path, int, str, str]] = []
     for path in iter_scoped_files(root):
         try:
@@ -411,7 +473,7 @@ def scan(root: Path) -> list[tuple[Path, int, str, str]]:
         for lineno, line in enumerate(lines, start=1):
             if line.lstrip().startswith("#"):
                 section_deferred = bool(_DEFERRED_HEADING.search(line))
-            reason = classify_line(line, signing_present, section_deferred, verify_present)
+            reason = classify_line(line, signing_present, section_deferred, verify_present, issue_present)
             if reason is not None:
                 violations.append((path, lineno, line.strip(), reason))
     return violations
