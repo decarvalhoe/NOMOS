@@ -162,6 +162,18 @@ jobs:
             echo "::error::unsupported domain compliance claim passed"
             exit 1
           fi
+      # NRT-016 (#660): the Nomos/Praxis exchange contract — the valid fixture
+      # passes, a forged regulated reliance and an inverted authority fail.
+      - name: "Nomos/Praxis evidence contract (NRT-016 #660)"
+        run: |
+          cue vet specs/nomos-praxis-evidence.cue \
+            specs/examples/nomos-praxis-evidence.valid.yaml \
+            -d '#PraxisEvidenceExchange'
+          for bad in specs/examples/nomos-praxis-evidence.invalid-*.yaml; do
+            if cue vet specs/nomos-praxis-evidence.cue "$bad" -d '#PraxisEvidenceExchange'; then
+              echo "::error::$bad passed the Praxis exchange contract"; exit 1
+            fi
+          done
       - name: Domain pack contract (VRC-20)
         run: |
           cue vet specs/domain-pack.cue \
@@ -204,7 +216,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install --quiet pyyaml pyshacl
+      - run: pip install --quiet pyyaml pyshacl jsonschema
       # VRC-44 (#580): facet vocabularies are emitted as SKOS/RDF + NOMOS
       # predicates and validated with standard SHACL shapes. This recorded run
       # uses pySHACL; the graph/shapes are inspectable outside NOMOS, but no

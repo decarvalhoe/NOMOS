@@ -3124,6 +3124,97 @@
           ]
         }
       ]
+    },
+    {
+      "id": "praxis_evidence_contract",
+      "title": "Contrat d'evidence Nomos ⇄ Praxis v1 (NRT-016 #660) — `specs/nomos-praxis-evidence.cue` (`#PraxisEvidenceExchange`, normatif) : artefacts Nomos par kind/chemin/sha256 avec état de vérification enregistré par NOMOS, scénarios Praxis aval (claims/atomes cités, résultat, hash d'evidence), findings runtime, CAPA liés aux contrôles, niveau de reliance. Règle croisée : `regulated_evidence` exige chaque artefact `verified` avec record ET un verdict d'activation lié ; sinon `not_qualified_external_input` (consumer_guard de praxis-activation-gate.yaml). Autorité fixée : producer nomos, consumer praxis. Miroir JSON Schema `specs/nomos-praxis-evidence.schema.json` prouvé équivalent sur les fixtures (test à trois vérificateurs : jsonschema, cue vet, moteur Go). Moteur Go `compliance.VerifyPraxisExchange` + `nomos evidence praxis-verify --repo-root` : forme, intégrité référentielle (finding→scénario, CAPA→finding, finding→CAPA), règle de reliance, hashes des artefacts et records recalculés contre l'arbre ; champ inconnu refusé au chargement (aucun champ interne Nomos ne traverse). 22 refus nommés testés, 10 mutations tuées. Ce que cela N'EST PAS : une activation de Praxis, une qualification de son evidence, ou la transformation d'un artefact Nomos non vérifié en evidence régulée.",
+      "pillar": "P1",
+      "claim_level": "contract (contrat partagé vérifié ; n'active pas Praxis, ne qualifie aucune evidence runtime)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Nomos/Praxis evidence contract (NRT-016 #660)",
+            "-d '#PraxisEvidenceExchange'",
+            "pyyaml pyshacl jsonschema"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/compliance/praxis_exchange.go",
+          "contains": [
+            "func VerifyPraxisExchange(",
+            "PRAXIS_RELIANCE_UNSUPPORTED",
+            "PRAXIS_AUTHORITY_INVERTED",
+            "PRAXIS_REFERENCE_DANGLING",
+            "PRAXIS_ARTIFACT_HASH_MISMATCH",
+            "dec.KnownFields(true)"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/evidence_cmd.go",
+          "contains": [
+            "case \"praxis-verify\":",
+            "compliance.VerifyPraxisExchange(",
+            "REFUSED, no report written"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/compliance/praxis_exchange_test.go",
+          "contains": [
+            "TestPraxisRules",
+            "TestPraxisNegativeFixtures",
+            "TestPraxisTreeHashes",
+            "TestPraxisUnknownFieldIsRefusedAtLoad",
+            "regulated with unverified artifact"
+          ]
+        },
+        {
+          "path": "tests/test_praxis_evidence_contract.py",
+          "contains": [
+            "class JsonSchemaMirror",
+            "class CueContract",
+            "class GoEngine",
+            "test_tampered_referenced_artifact_is_red"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/nomos-praxis-evidence.cue",
+          "contains": [
+            "#PraxisEvidenceExchange",
+            "if reliance == \"regulated_evidence\"",
+            "product: \"nomos\""
+          ]
+        },
+        {
+          "path": "specs/nomos-praxis-evidence.schema.json",
+          "contains": [
+            "nomos-praxis-evidence-exchange-v1",
+            "\"regulated_evidence\""
+          ]
+        },
+        {
+          "path": "specs/examples/nomos-praxis-evidence.valid.yaml",
+          "contains": [
+            "reliance: not_qualified_external_input"
+          ]
+        },
+        {
+          "path": "specs/examples/nomos-praxis-evidence.invalid-regulated-unverified.yaml",
+          "contains": [
+            "reliance: regulated_evidence"
+          ]
+        }
+      ]
     }
   ]
 }

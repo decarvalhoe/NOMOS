@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/RBOKproject/Nomos/cli/internal/compliance"
 	"io"
 	"os"
 	"time"
@@ -78,6 +79,8 @@ func evidenceCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return evidenceSignCommand(args[1:], stdout, stderr)
 	case "verify":
 		return evidenceVerifyCommand(args[1:], stdout, stderr)
+	case "praxis-verify":
+		return evidencePraxisVerifyCommand(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		printEvidenceUsage(stdout)
 		return 0
@@ -93,6 +96,8 @@ func printEvidenceUsage(w io.Writer) {
 	fmt.Fprintln(w, "  nomos evidence hash --artifact <path>")
 	fmt.Fprintln(w, "  nomos evidence sign --artifact <path> --out <bundle.json> --bundle-id <id>")
 	fmt.Fprintln(w, "  nomos evidence verify --bundle <bundle.json>")
+	fmt.Fprintln(w, "  nomos evidence praxis-verify --exchange <exchange.yaml|json> [--repo-root <dir>] [--out <report.json>]")
+	fmt.Fprintln(w, "      Verify a Nomos/Praxis evidence exchange (NRT-016 #660): shape, authority, references, reliance rule, artifact hashes. Never activates Praxis.")
 }
 
 func evidenceHashCommand(args []string, stdout io.Writer, stderr io.Writer) int {
@@ -291,5 +296,49 @@ func writeEvidenceJSON(stdout io.Writer, value any, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "evidence: write json: %v\n", err)
 		return 1
 	}
+	return 0
+}
+
+// evidencePraxisVerifyCommand is `nomos evidence praxis-verify` (NRT-016 #660).
+func evidencePraxisVerifyCommand(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("evidence praxis-verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	exchangePath := flags.String("exchange", "", "exchange document, YAML or JSON (required)")
+	repoRoot := flags.String("repo-root", "", "recompute artifact and record hashes against this tree (recommended)")
+	out := flags.String("out", "", "write the verification report here (default: stdout)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *exchangePath == "" {
+		fmt.Fprintln(stderr, "evidence praxis-verify: --exchange is required")
+		return 2
+	}
+	ex, err := compliance.LoadPraxisExchange(*exchangePath)
+	if err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-verify: REFUSED — %v\n", err)
+		return 1
+	}
+	report, err := compliance.VerifyPraxisExchange(ex, *repoRoot)
+	if err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-verify: REFUSED, no report written — %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(report)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, write); err != nil {
+		fmt.Fprintf(stderr, "evidence praxis-verify: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "evidence praxis-verify: OK — %s reliance=%s, %d artifact(s) (%d verified), %d scenario(s), hashes_checked=%v → %s\n",
+		report.ExchangeID, report.Reliance, report.Artifacts, report.VerifiedArtifacts, report.Scenarios, report.HashesChecked, *out)
 	return 0
 }

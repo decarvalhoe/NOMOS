@@ -1,0 +1,19 @@
+# NEGATIVE — Praxis presented as the producer of the exchange: authority
+# inversion. Must fail the contract (producer.product is fixed to "nomos").
+schema_version: nomos-praxis-evidence-exchange-v1
+exchange_id: PRAXIS-EXCHANGE-INVERTED
+generated_at: 2026-09-05T12:00:00Z
+producer: {product: praxis, version: fixture-0.0.0}
+consumer: {product: nomos, version: 0.1.0-ALPHA}
+nomos_artifacts:
+  - artifact_id: NOMOS-CONTROL-MATRIX
+    kind: control_matrix
+    path: docs/regulated/control-matrix/nomos-control-matrix.yaml
+    sha256: sha256:5e3fee91aa600cbc84dc578ea77526d5eeb735b20ef73588b12a3953a33eb9cf
+    verification: {state: unverified}
+praxis_scenarios: []
+runtime_findings: []
+capa: []
+reliance: not_qualified_external_input
+claim_boundary: >-
+  Forged: Praxis cannot be the producer of Nomos evidence; the authority is fixed.

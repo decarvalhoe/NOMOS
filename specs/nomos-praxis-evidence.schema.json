@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomos.dev/specs/nomos-praxis-evidence.schema.json",
+  "title": "Nomos/Praxis evidence exchange v1 (NRT-016 #660)",
+  "description": "JSON Schema mirror of specs/nomos-praxis-evidence.cue #PraxisEvidenceExchange for non-CUE consumers. The CUE contract is normative; tests/test_praxis_evidence_contract.py proves both accept the same fixtures.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "exchange_id", "generated_at", "producer", "consumer", "nomos_artifacts", "praxis_scenarios", "runtime_findings", "capa", "reliance", "claim_boundary"],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "ident": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"},
+    "timestamp": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "kind", "path", "sha256", "verification"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/ident"},
+        "kind": {"enum": ["corpus_attestation", "release_candidate_manifest", "control_matrix", "lawbook_feed", "atom_set", "body_ledger", "canonical_matrix", "evidence_ledger"]},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "verification": {
+          "type": "object", "additionalProperties": false, "required": ["state"],
+          "properties": {"state": {"enum": ["verified", "unverified", "failed"]}, "record_path": {"type": "string", "minLength": 1}, "record_sha256": {"$ref": "#/$defs/sha256"}},
+          "if": {"properties": {"state": {"const": "verified"}}}, "then": {"required": ["record_path", "record_sha256"]}
+        },
+        "claim_ids": {"type": "array", "items": {"$ref": "#/$defs/ident"}}
+      }
+    },
+    "scenario": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scenario_id", "test_id", "nomos_claim_ids", "nomos_atom_ids", "result", "evidence_sha256", "evidence_ref", "executed_at", "praxis_version"],
+      "properties": {
+        "scenario_id": {"$ref": "#/$defs/ident"}, "test_id": {"$ref": "#/$defs/ident"},
+        "nomos_claim_ids": {"type": "array", "items": {"$ref": "#/$defs/ident"}},
+        "nomos_atom_ids": {"type": "array", "items": {"$ref": "#/$defs/ident"}},
+        "result": {"enum": ["pass", "fail", "blocked", "not_run"]},
+        "evidence_sha256": {"$ref": "#/$defs/sha256"}, "evidence_ref": {"type": "string", "minLength": 1},
+        "executed_at": {"$ref": "#/$defs/timestamp"}, "praxis_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["finding_id", "scenario_id", "severity", "status", "summary"],
+      "properties": {
+        "finding_id": {"$ref": "#/$defs/ident"}, "scenario_id": {"$ref": "#/$defs/ident"},
+        "severity": {"enum": ["critical", "major", "minor", "observation"]}, "status": {"enum": ["open", "mitigated", "closed"]},
+        "summary": {"type": "string", "minLength": 1}, "capa_id": {"$ref": "#/$defs/ident"}
+      }
+    },
+    "capa": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capa_id", "finding_ids", "control_ids", "status", "owner", "opened_at"],
+      "properties": {
+        "capa_id": {"$ref": "#/$defs/ident"}, "finding_ids": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/ident"}},
+        "control_ids": {"type": "array", "items": {"$ref": "#/$defs/ident"}},
+        "status": {"enum": ["open", "in_progress", "verified_effective", "closed"]}, "owner": {"type": "string", "minLength": 1},
+        "opened_at": {"$ref": "#/$defs/timestamp"}, "closed_at": {"$ref": "#/$defs/timestamp"}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "nomos-praxis-evidence-exchange-v1"},
+    "exchange_id": {"$ref": "#/$defs/ident"},
+    "generated_at": {"$ref": "#/$defs/timestamp"},
+    "producer": {"type": "object", "additionalProperties": false, "required": ["product", "version"], "properties": {"product": {"const": "nomos"}, "version": {"type": "string", "minLength": 1}}},
+    "consumer": {"type": "object", "additionalProperties": false, "required": ["product", "version"], "properties": {"product": {"const": "praxis"}, "version": {"type": "string", "minLength": 1}}},
+    "nomos_artifacts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/artifact"}},
+    "praxis_scenarios": {"type": "array", "items": {"$ref": "#/$defs/scenario"}},
+    "runtime_findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "capa": {"type": "array", "items": {"$ref": "#/$defs/capa"}},
+    "reliance": {"enum": ["not_qualified_external_input", "regulated_evidence"]},
+    "activation_verdict_path": {"type": "string", "minLength": 1},
+    "activation_verdict_sha256": {"$ref": "#/$defs/sha256"},
+    "claim_boundary": {"type": "string", "minLength": 40}
+  },
+  "if": {"properties": {"reliance": {"const": "regulated_evidence"}}},
+  "then": {
+    "required": ["activation_verdict_path", "activation_verdict_sha256"],
+    "properties": {"nomos_artifacts": {"items": {"properties": {"verification": {"properties": {"state": {"const": "verified"}}}}}}}
+  }
+}
