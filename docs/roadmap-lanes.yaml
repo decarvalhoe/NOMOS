@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [612, 637, 643]
+    product: [637, 643]
     devops: [639, 645]
     regulated: []
 
@@ -253,11 +253,11 @@ items:
       manifest from a refused snapshot; strict gate section external-snapshot.
   - issue: 612
     title: Recursio to Nomos offline E2E fixture
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [610, 611]
   - issue: 643

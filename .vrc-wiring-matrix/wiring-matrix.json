@@ -2390,6 +2390,66 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "recursio_offline_e2e",
+      "title": "Recursio → NOMOS offline E2E (#612) — la chaîne web-source complète tourne SANS réseau et SANS crawler sur un site synthétique de trois pages : HTML → texte normalisé → Markdown (normaliseur déterministe, export commité prouvé identique octet pour octet à une régénération), records JSONL avec provenance #610 et `export_path`, enveloppe #611 scellée par la vraie CLI, puis `snapshot verify` → `snapshot import` → scan → feed → body-ledger → `attest --external-snapshot` → strict. L’attestation porte le type de source web et la couverture du snapshot (id, racine, compteurs, `web_sources`), MESURÉS depuis l’enveloppe vérifiée — une racine falsifiée refuse l’attestation, aucun fichier écrit. Un octet changé dans une page change son hash brut, son hash normalisé, son Markdown et la racine ; le contrôle de dérive (exit 4) nomme les fichiers périmés et aucune étape ne tourne. Le chrome (nav/footer) ne touche pas le hash normalisé. Ce que cela NE prouve PAS : quoi que ce soit sur un site réel (robots et licence sont `allowed` par construction dans la fixture) ; que Recursio, absent du dépôt, produit exactement cet export.",
+      "pillar": "P1",
+      "claim_level": "capability (chaîne offline prouvée sur fixture synthétique ; aucun claim sur un site réel)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/external_snapshot.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/corpus_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/recursio-e2e-fixture.sh",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/app/corpus_attest_snapshot_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_recursio_e2e_fixture.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/recursio_export_fixture.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2426,9 +2486,9 @@
     }
   ],
   "summary": {
-    "capabilities": 44,
+    "capabilities": 45,
     "computed": {
-      "real": 34,
+      "real": 35,
       "partial": 0,
       "sidecar": 9,
       "stub": 0,

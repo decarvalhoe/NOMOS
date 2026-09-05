@@ -57,6 +57,13 @@ jobs:
         run: |
           go build -o "$RUNNER_TEMP/nomos-bench" .
           python3 ../scripts/cite_or_abstain_bench.py --root .. --nomos-bin "$RUNNER_TEMP/nomos-bench"
+      # #612: the Recursio → NOMOS web-source chain runs OFFLINE on the synthetic
+      # fixture — export byte-identical to a fresh normalisation of the site,
+      # sealed snapshot verified and imported, scan → feed → body-ledger →
+      # attest → strict all green, attestation binding web source type and
+      # snapshot coverage asserted from the artifact, fixture untouched.
+      - name: "Recursio → NOMOS offline E2E (#612)"
+        run: RUN_DIR="$RUNNER_TEMP/recursio-e2e" bash ../scripts/recursio-e2e-fixture.sh
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating

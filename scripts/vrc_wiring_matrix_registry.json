@@ -10,18 +10,52 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/attestation/signing.go", "contains": ["ecdsa", "dsse", "SignASN1", "VerifyASN1"]}
+        {
+          "path": "cli/internal/attestation/signing.go",
+          "contains": [
+            "ecdsa",
+            "dsse",
+            "SignASN1",
+            "VerifyASN1"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/attest_cmd.go", "contains": ["GenerateSigner", "VerifyEnvelope"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"attest\":"]}
+        {
+          "path": "cli/internal/app/attest_cmd.go",
+          "contains": [
+            "GenerateSigner",
+            "VerifyEnvelope"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"attest\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/attestation/signing_test.go", "contains": ["TestVerify_FailsWhenArtifactDigestTampered"]},
-        {"path": "cli/internal/app/attest_cmd_test.go", "contains": ["TestAttestCLI_VerifyFailsOnTamper"]}
+        {
+          "path": "cli/internal/attestation/signing_test.go",
+          "contains": [
+            "TestVerify_FailsWhenArtifactDigestTampered"
+          ]
+        },
+        {
+          "path": "cli/internal/app/attest_cmd_test.go",
+          "contains": [
+            "TestAttestCLI_VerifyFailsOnTamper"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ]
     },
     {
@@ -32,18 +66,48 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/atomization/facets.go", "contains": ["func DeriveFacets("]}
+        {
+          "path": "cli/internal/atomization/facets.go",
+          "contains": [
+            "func DeriveFacets("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/atomization/atoms.go", "contains": ["DeriveFacets("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+        {
+          "path": "cli/internal/atomization/atoms.go",
+          "contains": [
+            "DeriveFacets("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"atomize\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/atomization/facets_test.go", "contains": ["DeriveFacets("]},
-        {"path": "cli/internal/atomization/facets_cue_conformance_test.go", "contains": ["DeriveFacets("]}
+        {
+          "path": "cli/internal/atomization/facets_test.go",
+          "contains": [
+            "DeriveFacets("
+          ]
+        },
+        {
+          "path": "cli/internal/atomization/facets_cue_conformance_test.go",
+          "contains": [
+            "DeriveFacets("
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["specs/facets.cue"]}
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "specs/facets.cue"
+          ]
+        }
       ]
     },
     {
@@ -54,21 +118,56 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/atomization/facets.go", "contains": ["func ApplyLens(", "KnowledgeLens"]}
+        {
+          "path": "cli/internal/atomization/facets.go",
+          "contains": [
+            "func ApplyLens(",
+            "KnowledgeLens"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/atomize_cmd.go", "contains": ["ApplyLens(", "loadKnowledgeLens"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+        {
+          "path": "cli/internal/app/atomize_cmd.go",
+          "contains": [
+            "ApplyLens(",
+            "loadKnowledgeLens"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"atomize\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/atomize_lens_test.go", "contains": ["TestAtomizeChunksLensExcludesFacet"]},
-        {"path": "cli/internal/atomization/facets_test.go", "contains": ["TestApplyLens"]}
+        {
+          "path": "cli/internal/app/atomize_lens_test.go",
+          "contains": [
+            "TestAtomizeChunksLensExcludesFacet"
+          ]
+        },
+        {
+          "path": "cli/internal/atomization/facets_test.go",
+          "contains": [
+            "TestApplyLens"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_knowledge_lens_filter.py"]}
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "ckm_knowledge_lens_filter.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/ckm_knowledge_lens_filter.py", "contains": []}
+        {
+          "path": "scripts/ckm_knowledge_lens_filter.py",
+          "contains": []
+        }
       ]
     },
     {
@@ -79,14 +178,35 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["buildMerkleProofs("]}
+        {
+          "path": "cli/internal/corpus/body_ledger.go",
+          "contains": [
+            "buildMerkleProofs("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpusBodyLedgerCommand", "body-ledger"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"corpus\":"]}
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "contains": [
+            "corpusBodyLedgerCommand",
+            "body-ledger"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"corpus\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestCKM06"]}
+        {
+          "path": "cli/internal/corpus/body_ledger_test.go",
+          "contains": [
+            "TestCKM06"
+          ]
+        }
       ]
     },
     {
@@ -97,15 +217,41 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/body_ledger.go", "contains": ["func VerifyMerkleProof("]},
-        {"path": "cli/internal/corpus/body_ledger_verify.go", "contains": ["func VerifyCorpusBodyLedgerProofs("]}
+        {
+          "path": "cli/internal/corpus/body_ledger.go",
+          "contains": [
+            "func VerifyMerkleProof("
+          ]
+        },
+        {
+          "path": "cli/internal/corpus/body_ledger_verify.go",
+          "contains": [
+            "func VerifyCorpusBodyLedgerProofs("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpus.VerifyCorpusBodyLedgerProofs("]}
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "contains": [
+            "corpus.VerifyCorpusBodyLedgerProofs("
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/body_ledger_verify_test.go", "contains": ["TestVerifyCorpusBodyLedgerProofs_FailsWhenProofHopTampered", "TestVerifyCorpusBodyLedgerProofs_FailsWhenSourceRowTampered"]},
-        {"path": "cli/internal/app/corpus_attest_ledger_test.go", "contains": ["TestCorpusBodyLedgerVerifyCLI"]}
+        {
+          "path": "cli/internal/corpus/body_ledger_verify_test.go",
+          "contains": [
+            "TestVerifyCorpusBodyLedgerProofs_FailsWhenProofHopTampered",
+            "TestVerifyCorpusBodyLedgerProofs_FailsWhenSourceRowTampered"
+          ]
+        },
+        {
+          "path": "cli/internal/app/corpus_attest_ledger_test.go",
+          "contains": [
+            "TestCorpusBodyLedgerVerifyCLI"
+          ]
+        }
       ]
     },
     {
@@ -116,14 +262,37 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/attestation.go", "contains": ["func computeClaimCoverage(", "ClaimCoverage"]}
+        {
+          "path": "cli/internal/corpus/attestation.go",
+          "contains": [
+            "func computeClaimCoverage(",
+            "ClaimCoverage"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["corpus-body-ledger", "bodyLedger = &ledger"]}
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "contains": [
+            "corpus-body-ledger",
+            "bodyLedger = &ledger"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/body_ledger_test.go", "contains": ["TestFSQ05AttestationClaimCoverage"]},
-        {"path": "cli/internal/app/corpus_attest_ledger_test.go", "contains": ["TestCorpusAttestFailsOnTamperedLedger", "TestCorpusAttestEmitsCalculatedClaimCoverage"]}
+        {
+          "path": "cli/internal/corpus/body_ledger_test.go",
+          "contains": [
+            "TestFSQ05AttestationClaimCoverage"
+          ]
+        },
+        {
+          "path": "cli/internal/app/corpus_attest_ledger_test.go",
+          "contains": [
+            "TestCorpusAttestFailsOnTamperedLedger",
+            "TestCorpusAttestEmitsCalculatedClaimCoverage"
+          ]
+        }
       ]
     },
     {
@@ -134,15 +303,42 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/attestation/attestation.go", "contains": ["SupplyChainPredicate", "VerifySupplyChainStatement"]}
+        {
+          "path": "cli/internal/attestation/attestation.go",
+          "contains": [
+            "SupplyChainPredicate",
+            "VerifySupplyChainStatement"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/attest_supply_chain.go", "contains": ["attestation.GenerateSupplyChainStatement(", "attestation.VerifySupplyChainStatement("]},
-        {"path": "cli/internal/app/attest_cmd.go", "contains": ["attestSupplyChainCommand"]}
+        {
+          "path": "cli/internal/app/attest_supply_chain.go",
+          "contains": [
+            "attestation.GenerateSupplyChainStatement(",
+            "attestation.VerifySupplyChainStatement("
+          ]
+        },
+        {
+          "path": "cli/internal/app/attest_cmd.go",
+          "contains": [
+            "attestSupplyChainCommand"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/attestation/attestation_test.go", "contains": ["TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry"]},
-        {"path": "cli/internal/app/attest_supply_chain_test.go", "contains": ["TestAttestSupplyChainVerifyPassesThenFailsOnTamperedArtifact"]}
+        {
+          "path": "cli/internal/attestation/attestation_test.go",
+          "contains": [
+            "TestVerifySupplyChainStatementRejectsSignedClaimWithoutRekorEntry"
+          ]
+        },
+        {
+          "path": "cli/internal/app/attest_supply_chain_test.go",
+          "contains": [
+            "TestAttestSupplyChainVerifyPassesThenFailsOnTamperedArtifact"
+          ]
+        }
       ]
     },
     {
@@ -153,15 +349,41 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/connector/connector.go", "contains": ["func Fetch(", "sha256.Sum256"]}
+        {
+          "path": "cli/internal/connector/connector.go",
+          "contains": [
+            "func Fetch(",
+            "sha256.Sum256"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/connector_cmd.go", "contains": ["connector.Fetch("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"connector\":"]}
+        {
+          "path": "cli/internal/app/connector_cmd.go",
+          "contains": [
+            "connector.Fetch("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"connector\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/connector/connector_test.go", "contains": ["func Test"]},
-        {"path": "cli/internal/connector/connector_live_test.go", "contains": ["func Test"]}
+        {
+          "path": "cli/internal/connector/connector_test.go",
+          "contains": [
+            "func Test"
+          ]
+        },
+        {
+          "path": "cli/internal/connector/connector_live_test.go",
+          "contains": [
+            "func Test"
+          ]
+        }
       ]
     },
     {
@@ -172,17 +394,43 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/bundle/bundle.go", "contains": ["BuildInput"]}
+        {
+          "path": "cli/internal/bundle/bundle.go",
+          "contains": [
+            "BuildInput"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/bundle_cmd.go", "contains": ["bundle.Build("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"bundle\":"]}
+        {
+          "path": "cli/internal/app/bundle_cmd.go",
+          "contains": [
+            "bundle.Build("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"bundle\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/bundle/bundle_conformance_test.go", "contains": ["func Test"]}
+        {
+          "path": "cli/internal/bundle/bundle_conformance_test.go",
+          "contains": [
+            "func Test"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_bundle_validate.py", "out-of-vocabulary facet value"]}
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "ckm_bundle_validate.py",
+            "out-of-vocabulary facet value"
+          ]
+        }
       ]
     },
     {
@@ -193,22 +441,68 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/answer.go", "contains": ["func Evaluate(", "func Gate(", "recomputeGroundedness", "func trustTier("]}
+        {
+          "path": "cli/internal/answer/answer.go",
+          "contains": [
+            "func Evaluate(",
+            "func Gate(",
+            "recomputeGroundedness",
+            "func trustTier("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Gate("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "answer.Gate("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/answer_test.go", "contains": ["TestGate_ForgedCitationHashIsBlocked", "TestGate_NoSpanForcesAbstention", "TestGate_NoSpanTextBypassIsClosed", "TestGate_DeclaredScoreCanOnlyLower"]},
-        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerGate_AbstainsAndFailsOnUngrounded"]}
+        {
+          "path": "cli/internal/answer/answer_test.go",
+          "contains": [
+            "TestGate_ForgedCitationHashIsBlocked",
+            "TestGate_NoSpanForcesAbstention",
+            "TestGate_NoSpanTextBypassIsClosed",
+            "TestGate_DeclaredScoreCanOnlyLower"
+          ]
+        },
+        {
+          "path": "cli/internal/app/answer_cmd_test.go",
+          "contains": [
+            "TestAnswerGate_AbstainsAndFailsOnUngrounded"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]},
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["regulated_rag_answer_evidence.py"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        },
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "regulated_rag_answer_evidence.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["faithfulness"]}
+        {
+          "path": "scripts/regulated_rag_answer_evidence.py",
+          "contains": [
+            "faithfulness"
+          ]
+        }
       ]
     },
     {
@@ -219,23 +513,69 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/canon/canon.go", "contains": ["func ValidateCanonPromotion(", "customer_confidential_atom_must_remain_siloed", "user_promoted_cannot_be_certified"]}
+        {
+          "path": "cli/internal/canon/canon.go",
+          "contains": [
+            "func ValidateCanonPromotion(",
+            "customer_confidential_atom_must_remain_siloed",
+            "user_promoted_cannot_be_certified"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/canon_cmd.go", "contains": ["canon.ValidateCanonPromotion("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"canon\":"]}
+        {
+          "path": "cli/internal/app/canon_cmd.go",
+          "contains": [
+            "canon.ValidateCanonPromotion("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"canon\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/canon/canon_test.go", "contains": ["TestCanon_CertifiedTrustTierIsRefused", "TestCanon_ConfidentialSourceLeakIsRefused", "TestCanon_ConfidentialAtomMustStaySiloed", "TestCanon_MissingAndRevokedCertificateRefused"]},
-        {"path": "cli/internal/app/canon_cmd_test.go", "contains": ["TestCanonValidate_FailsClosedOnCertifiedClaim"]}
+        {
+          "path": "cli/internal/canon/canon_test.go",
+          "contains": [
+            "TestCanon_CertifiedTrustTierIsRefused",
+            "TestCanon_ConfidentialSourceLeakIsRefused",
+            "TestCanon_ConfidentialAtomMustStaySiloed",
+            "TestCanon_MissingAndRevokedCertificateRefused"
+          ]
+        },
+        {
+          "path": "cli/internal/app/canon_cmd_test.go",
+          "contains": [
+            "TestCanonValidate_FailsClosedOnCertifiedClaim"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]},
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_canon_promotion_validate.py"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        },
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "ckm_canon_promotion_validate.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/ckm_canon_promotion_validate.py", "contains": []},
-        {"path": "specs/canon-promotion.cue", "contains": []}
+        {
+          "path": "scripts/ckm_canon_promotion_validate.py",
+          "contains": []
+        },
+        {
+          "path": "specs/canon-promotion.cue",
+          "contains": []
+        }
       ]
     },
     {
@@ -246,23 +586,68 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/pointintime/pointintime.go", "contains": ["func ResolvePointInTime(", "not_in_force", "stale or future expression"]}
+        {
+          "path": "cli/internal/pointintime/pointintime.go",
+          "contains": [
+            "func ResolvePointInTime(",
+            "not_in_force",
+            "stale or future expression"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/pointintime_cmd.go", "contains": ["pointintime.ResolvePointInTime("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"pointintime\":"]}
+        {
+          "path": "cli/internal/app/pointintime_cmd.go",
+          "contains": [
+            "pointintime.ResolvePointInTime("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"pointintime\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/pointintime/pointintime_test.go", "contains": ["TestPIT_FutureDateIsNotInForce", "TestPIT_StaleDateBetweenVersionsIsNotInForce", "TestPIT_LatestEffectiveFromWinsOnOverlap"]},
-        {"path": "cli/internal/app/pointintime_cmd_test.go", "contains": ["TestPIT_CLI_RefusesCoverageGap"]}
+        {
+          "path": "cli/internal/pointintime/pointintime_test.go",
+          "contains": [
+            "TestPIT_FutureDateIsNotInForce",
+            "TestPIT_StaleDateBetweenVersionsIsNotInForce",
+            "TestPIT_LatestEffectiveFromWinsOnOverlap"
+          ]
+        },
+        {
+          "path": "cli/internal/app/pointintime_cmd_test.go",
+          "contains": [
+            "TestPIT_CLI_RefusesCoverageGap"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]},
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_point_in_time_resolve.py"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        },
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "ckm_point_in_time_resolve.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/ckm_point_in_time_resolve.py", "contains": []},
-        {"path": "specs/point-in-time.cue", "contains": []}
+        {
+          "path": "scripts/ckm_point_in_time_resolve.py",
+          "contains": []
+        },
+        {
+          "path": "specs/point-in-time.cue",
+          "contains": []
+        }
       ]
     },
     {
@@ -273,21 +658,56 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/app/pack_cmd.go", "contains": ["packOntologyFile", "owl:disjointUnionOf", "axe non aligné"]}
+        {
+          "path": "cli/internal/app/pack_cmd.go",
+          "contains": [
+            "packOntologyFile",
+            "owl:disjointUnionOf",
+            "axe non aligné"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/app.go", "contains": ["\"pack\":"]}
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"pack\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/pack_cmd_test.go", "contains": ["TestPackValidate_UnregisteredAxisFailsClosed", "TestPackValidate_UnmappedTermFailsClosed", "TestPackValidate_DisjointAxisOverlapFailsClosed"]}
+        {
+          "path": "cli/internal/app/pack_cmd_test.go",
+          "contains": [
+            "TestPackValidate_UnregisteredAxisFailsClosed",
+            "TestPackValidate_UnmappedTermFailsClosed",
+            "TestPackValidate_DisjointAxisOverlapFailsClosed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["pack validate --manifest"]},
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["ckm_facet_ontology_validate.py"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "pack validate --manifest"
+          ]
+        },
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "ckm_facet_ontology_validate.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/ckm_facet_ontology_validate.py", "contains": []},
-        {"path": "specs/facet-ontology.cue", "contains": []}
+        {
+          "path": "scripts/ckm_facet_ontology_validate.py",
+          "contains": []
+        },
+        {
+          "path": "specs/facet-ontology.cue",
+          "contains": []
+        }
       ]
     },
     {
@@ -298,17 +718,45 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["type AdapterKit struct", "func validateKit(", "validateKit(name, a.Kit())"]}
+        {
+          "path": "cli/internal/fidelity/adapter_registry.go",
+          "contains": [
+            "type AdapterKit struct",
+            "func validateKit(",
+            "validateKit(name, a.Kit())"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["func DefaultRegistry("]},
-        {"path": "cli/internal/fidelity/pdf_adapter.go", "contains": ["func (PDFAdapter) Kit()"]}
+        {
+          "path": "cli/internal/fidelity/adapter_registry.go",
+          "contains": [
+            "func DefaultRegistry("
+          ]
+        },
+        {
+          "path": "cli/internal/fidelity/pdf_adapter.go",
+          "contains": [
+            "func (PDFAdapter) Kit()"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/fidelity/adapter_kit_test.go", "contains": ["TestRegisterRefusesIncompleteKits", "TestDefaultRegistryKitsAreCompleteAndResolve"]}
+        {
+          "path": "cli/internal/fidelity/adapter_kit_test.go",
+          "contains": [
+            "TestRegisterRefusesIncompleteKits",
+            "TestDefaultRegistryKitsAreCompleteAndResolve"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ]
     },
     {
@@ -319,13 +767,33 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/fidelity/pdf_adapter.go", "contains": ["type PDFAdapter struct", "unsupported", "out of claim", "ledongthuc/pdf"]}
+        {
+          "path": "cli/internal/fidelity/pdf_adapter.go",
+          "contains": [
+            "type PDFAdapter struct",
+            "unsupported",
+            "out of claim",
+            "ledongthuc/pdf"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["r.Register(PDFAdapter{})"]}
+        {
+          "path": "cli/internal/fidelity/adapter_registry.go",
+          "contains": [
+            "r.Register(PDFAdapter{})"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/fidelity/pdf_adapter_test.go", "contains": ["TestPDFAdapter_ByteMutationDriftsTheParse", "TestPDFAdapter_ScannedPageBecomesUnsupportedRecord", "TestDefaultRegistry_PDFAdapterIsReal"]}
+        {
+          "path": "cli/internal/fidelity/pdf_adapter_test.go",
+          "contains": [
+            "TestPDFAdapter_ByteMutationDriftsTheParse",
+            "TestPDFAdapter_ScannedPageBecomesUnsupportedRecord",
+            "TestDefaultRegistry_PDFAdapterIsReal"
+          ]
+        }
       ]
     },
     {
@@ -336,16 +804,43 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/app/pack_cmd.go", "contains": ["func packValidateCommand(", "FAIL [%s]", "golden_corpus", "bundle.Build("]}
+        {
+          "path": "cli/internal/app/pack_cmd.go",
+          "contains": [
+            "func packValidateCommand(",
+            "FAIL [%s]",
+            "golden_corpus",
+            "bundle.Build("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/app.go", "contains": ["\"pack\":"]}
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"pack\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/pack_cmd_test.go", "contains": ["TestPackValidate_MissingVocabularyFailsClosed", "TestPackValidate_RedGoldenCorpusFailsClosed", "TestPackValidate_BrokenPresetUnresolvedTermFailsClosed", "TestPackValidate_AbsentClaimBoundaryFailsClosed", "TestPackValidate_SmuggledFieldFailsClosed"]}
+        {
+          "path": "cli/internal/app/pack_cmd_test.go",
+          "contains": [
+            "TestPackValidate_MissingVocabularyFailsClosed",
+            "TestPackValidate_RedGoldenCorpusFailsClosed",
+            "TestPackValidate_BrokenPresetUnresolvedTermFailsClosed",
+            "TestPackValidate_AbsentClaimBoundaryFailsClosed",
+            "TestPackValidate_SmuggledFieldFailsClosed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["pack validate --manifest"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "pack validate --manifest"
+          ]
+        }
       ]
     },
     {
@@ -356,17 +851,46 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/eval.go", "contains": ["func Eval(", "EvalThresholds", "MinMeanCitationRecall"]}
+        {
+          "path": "cli/internal/answer/eval.go",
+          "contains": [
+            "func Eval(",
+            "EvalThresholds",
+            "MinMeanCitationRecall"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Eval(", "answerEvalCommand"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "answer.Eval(",
+            "answerEvalCommand"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/eval_test.go", "contains": ["TestEval_CitationRecallRegressionTurnsRed", "TestEval_EmptyCorpusFailsClosed"]}
+        {
+          "path": "cli/internal/answer/eval_test.go",
+          "contains": [
+            "TestEval_CitationRecallRegressionTurnsRed",
+            "TestEval_EmptyCorpusFailsClosed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["answer eval --corpus"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "answer eval --corpus"
+          ]
+        }
       ]
     },
     {
@@ -377,21 +901,72 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/context_metrics.go", "contains": ["func (a Answer) contextMetrics(", "NoiseInducedSentences", "methodContext"]},
-        {"path": "cli/internal/answer/eval.go", "contains": ["MaxMeanNoiseSensitivity", "MinMeanContextRecall", "mean_noise_sensitivity above the versioned ceiling"]}
+        {
+          "path": "cli/internal/answer/context_metrics.go",
+          "contains": [
+            "func (a Answer) contextMetrics(",
+            "NoiseInducedSentences",
+            "methodContext"
+          ]
+        },
+        {
+          "path": "cli/internal/answer/eval.go",
+          "contains": [
+            "MaxMeanNoiseSensitivity",
+            "MinMeanContextRecall",
+            "mean_noise_sensitivity above the versioned ceiling"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/answer/answer.go", "contains": ["a.contextMetrics("]},
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Eval("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/answer/answer.go",
+          "contains": [
+            "a.contextMetrics("
+          ]
+        },
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "answer.Eval("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/context_metrics_test.go", "contains": ["TestEval_NoiseSensitivityCatchesWhatFaithfulnessCannot", "TestEval_ContextRecallRegressionTurnsRed", "TestEval_ContextThresholdWithoutExpectationsFailsClosed"]},
-        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerEval_NoiseRegressionTurnsRed"]}
+        {
+          "path": "cli/internal/answer/context_metrics_test.go",
+          "contains": [
+            "TestEval_NoiseSensitivityCatchesWhatFaithfulnessCannot",
+            "TestEval_ContextRecallRegressionTurnsRed",
+            "TestEval_ContextThresholdWithoutExpectationsFailsClosed"
+          ]
+        },
+        {
+          "path": "cli/internal/app/answer_cmd_test.go",
+          "contains": [
+            "TestAnswerEval_NoiseRegressionTurnsRed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["answer eval --corpus"]},
-        {"path": "docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml", "contains": ["max_mean_noise_sensitivity"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "answer eval --corpus"
+          ]
+        },
+        {
+          "path": "docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml",
+          "contains": [
+            "max_mean_noise_sensitivity"
+          ]
+        }
       ]
     },
     {
@@ -402,22 +977,78 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/scorer.go", "contains": ["type Scorer interface", "type ExternalScorer struct", "ScorerRequestSchema", "func validateScores("]},
-        {"path": "cli/internal/answer/answer.go", "contains": ["cfg.Scorer", "FindingScorerFailed", "methodScorerFailed"]}
+        {
+          "path": "cli/internal/answer/scorer.go",
+          "contains": [
+            "type Scorer interface",
+            "type ExternalScorer struct",
+            "ScorerRequestSchema",
+            "func validateScores("
+          ]
+        },
+        {
+          "path": "cli/internal/answer/answer.go",
+          "contains": [
+            "cfg.Scorer",
+            "FindingScorerFailed",
+            "methodScorerFailed"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["scorer-cmd", "answer.ExternalScorer{", "answer.Gate(doc.Answers, cfg)", "answer.Eval(doc.Answers, cfg, th)"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "scorer-cmd",
+            "answer.ExternalScorer{",
+            "answer.Gate(doc.Answers, cfg)",
+            "answer.Eval(doc.Answers, cfg, th)"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/scorer_test.go", "contains": ["TestGate_NegatedClaimBlockedByScorerNotByLexicalProxy", "TestGate_ScorerCannotLoosenTheLexicalVerdict", "TestGate_ScorerFailureFailsClosed", "TestExternalScorer_RejectsMalformedResponses", "TestExternalScorer_RoundTripAlignsByID"]},
-        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerGate_ScorerCmdFailureFailsClosed", "TestAnswerGate_ScorerCmdBlocksNegatedClaim"]}
+        {
+          "path": "cli/internal/answer/scorer_test.go",
+          "contains": [
+            "TestGate_NegatedClaimBlockedByScorerNotByLexicalProxy",
+            "TestGate_ScorerCannotLoosenTheLexicalVerdict",
+            "TestGate_ScorerFailureFailsClosed",
+            "TestExternalScorer_RejectsMalformedResponses",
+            "TestExternalScorer_RoundTripAlignsByID"
+          ]
+        },
+        {
+          "path": "cli/internal/app/answer_cmd_test.go",
+          "contains": [
+            "TestAnswerGate_ScorerCmdFailureFailsClosed",
+            "TestAnswerGate_ScorerCmdBlocksNegatedClaim"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ],
       "must_be_absent": [
-        {"dir": "cli", "regex": "huggingface|transformers|\\btorch\\b|onnxruntime", "suffixes": [".go"], "ignore_case": true, "exclude_tests": true}
+        {
+          "dir": "cli",
+          "regex": "huggingface|transformers|\\btorch\\b|onnxruntime",
+          "suffixes": [
+            ".go"
+          ],
+          "ignore_case": true,
+          "exclude_tests": true
+        }
       ]
     },
     {
@@ -428,11 +1059,31 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/nomos_hhem_scorer.py", "contains": ["vectara/hallucination_evaluation_model", "nomos-scorer-request-v1", "nomos-scorer-response-v1", "class BackendUnavailable"]},
-        {"path": "tests/test_nomos_hhem_scorer.py", "contains": ["test_backend_unavailable_exits_nonzero_and_emits_no_scores", "test_backend_score_out_of_range_is_refused", "test_gate_with_unavailable_scorer_fails_closed"]}
+        {
+          "path": "scripts/nomos_hhem_scorer.py",
+          "contains": [
+            "vectara/hallucination_evaluation_model",
+            "nomos-scorer-request-v1",
+            "nomos-scorer-response-v1",
+            "class BackendUnavailable"
+          ]
+        },
+        {
+          "path": "tests/test_nomos_hhem_scorer.py",
+          "contains": [
+            "test_backend_unavailable_exits_nonzero_and_emits_no_scores",
+            "test_backend_score_out_of_range_is_refused",
+            "test_gate_with_unavailable_scorer_fails_closed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "unittest discover"
+          ]
+        }
       ]
     },
     {
@@ -443,25 +1094,88 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/answer.go", "contains": ["type Gates struct", "func (c Config) Gates()", "methodRefusal", "Gates: cfg.Gates()"]}
+        {
+          "path": "cli/internal/answer/answer.go",
+          "contains": [
+            "type Gates struct",
+            "func (c Config) Gates()",
+            "methodRefusal",
+            "Gates: cfg.Gates()"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Gate(doc.Answers, cfg)", "enc.Encode(result)"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "answer.Gate(doc.Answers, cfg)",
+            "enc.Encode(result)"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/answer_test.go", "contains": ["TestGate_EmitsGatesAndBatchThresholds", "methodRefusal"]},
-        {"path": "tests/test_rag_evidence_consumes_go_verdict.py", "contains": ["test_required_mode_without_engine_writes_no_report", "test_required_mode_engine_failure_never_falls_back", "test_required_mode_refuses_an_engine_that_emits_no_thresholds", "test_alignment_is_by_id_not_by_position", "test_report_follows_the_engine_verdict_not_the_python_proxy", "test_fallback_proxy_agrees_with_the_engine_on_the_real_fixtures"]}
+        {
+          "path": "cli/internal/answer/answer_test.go",
+          "contains": [
+            "TestGate_EmitsGatesAndBatchThresholds",
+            "methodRefusal"
+          ]
+        },
+        {
+          "path": "tests/test_rag_evidence_consumes_go_verdict.py",
+          "contains": [
+            "test_required_mode_without_engine_writes_no_report",
+            "test_required_mode_engine_failure_never_falls_back",
+            "test_required_mode_refuses_an_engine_that_emits_no_thresholds",
+            "test_alignment_is_by_id_not_by_position",
+            "test_report_follows_the_engine_verdict_not_the_python_proxy",
+            "test_fallback_proxy_agrees_with_the_engine_on_the_real_fixtures"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/regulated-evidence-pack.yml", "contains": ["go build -o", "--nomos-bin"]},
-        {"path": "scripts/ckm-non-regression.sh", "contains": ["regulated_rag_answer_evidence.py", "--nomos-bin"]}
+        {
+          "path": ".github/workflows/regulated-evidence-pack.yml",
+          "contains": [
+            "go build -o",
+            "--nomos-bin"
+          ]
+        },
+        {
+          "path": "scripts/ckm-non-regression.sh",
+          "contains": [
+            "regulated_rag_answer_evidence.py",
+            "--nomos-bin"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/regulated_rag_answer_evidence.py", "contains": ["VERDICT_SOURCE_ENGINE", "run_engine_gate", "ENGINE_UNAVAILABLE_CODE", "RAG_GATE_VERDICT_FROM_PYTHON_FALLBACK"]}
+        {
+          "path": "scripts/regulated_rag_answer_evidence.py",
+          "contains": [
+            "VERDICT_SOURCE_ENGINE",
+            "run_engine_gate",
+            "ENGINE_UNAVAILABLE_CODE",
+            "RAG_GATE_VERDICT_FROM_PYTHON_FALLBACK"
+          ]
+        }
       ],
       "must_be_absent": [
-        {"dir": "scripts", "regex": "python_fallback", "suffixes": [".sh"], "ignore_case": false, "exclude_tests": true}
+        {
+          "dir": "scripts",
+          "regex": "python_fallback",
+          "suffixes": [
+            ".sh"
+          ],
+          "ignore_case": false,
+          "exclude_tests": true
+        }
       ]
     },
     {
@@ -472,21 +1186,80 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/ragexport/export.go", "contains": ["func Build(", "func BuildContextPrefix(", "RecordSchemaVersion", "RejectMissingSourceHash"]},
-        {"path": "cli/internal/ragexport/manifest.go", "contains": ["func BuildManifest(", "digestOf("]}
+        {
+          "path": "cli/internal/ragexport/export.go",
+          "contains": [
+            "func Build(",
+            "func BuildContextPrefix(",
+            "RecordSchemaVersion",
+            "RejectMissingSourceHash"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/manifest.go",
+          "contains": [
+            "func BuildManifest(",
+            "digestOf("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.BuildInputs(", "ragexport.BuildManifest(", "ragExportCommand", "ragManifestCommand"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+        {
+          "path": "cli/internal/app/rag_cmd.go",
+          "contains": [
+            "ragexport.BuildInputs(",
+            "ragexport.BuildManifest(",
+            "ragExportCommand",
+            "ragManifestCommand"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"rag\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/ragexport/export_test.go", "contains": ["TestBuild_ContextPrefixNeverLeaksIntoCitableBody", "TestBuild_RejectsChunksThatCouldNotBeCited", "TestBuild_OrderIsIndependentOfInputOrder"]},
-        {"path": "cli/internal/ragexport/manifest_test.go", "contains": ["TestManifest_DigestMovesWhenSourceHashChanges", "TestManifest_PerSourceDigestIsolatesTheChangedSource"]},
-        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGExport_ReportsRejectionsAndStrictFailsClosed", "TestRAGManifest_DigestMovesWhenTheCorpusMoves"]}
+        {
+          "path": "cli/internal/ragexport/export_test.go",
+          "contains": [
+            "TestBuild_ContextPrefixNeverLeaksIntoCitableBody",
+            "TestBuild_RejectsChunksThatCouldNotBeCited",
+            "TestBuild_OrderIsIndependentOfInputOrder"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/manifest_test.go",
+          "contains": [
+            "TestManifest_DigestMovesWhenSourceHashChanges",
+            "TestManifest_PerSourceDigestIsolatesTheChangedSource"
+          ]
+        },
+        {
+          "path": "cli/internal/app/rag_cmd_test.go",
+          "contains": [
+            "TestRAGExport_ReportsRejectionsAndStrictFailsClosed",
+            "TestRAGManifest_DigestMovesWhenTheCorpusMoves"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh"]},
-        {"path": "scripts/rag-export-gate.sh", "contains": ["rag export --feed", "rag manifest --feed", "cmp -s", "context prefix leaked"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "rag-export-gate.sh"
+          ]
+        },
+        {
+          "path": "scripts/rag-export-gate.sh",
+          "contains": [
+            "rag export --feed",
+            "rag manifest --feed",
+            "cmp -s",
+            "context prefix leaked"
+          ]
+        }
       ]
     },
     {
@@ -497,20 +1270,72 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/ragexport/delta.go", "contains": ["func Diff(", "DeltaSchemaVersion", "ReasonOldDigestMismatch", "ActionUpdateMetadata"]},
-        {"path": "cli/internal/ragexport/manifest.go", "contains": ["type ManifestChunk struct", "func fingerprintOf("]}
+        {
+          "path": "cli/internal/ragexport/delta.go",
+          "contains": [
+            "func Diff(",
+            "DeltaSchemaVersion",
+            "ReasonOldDigestMismatch",
+            "ActionUpdateMetadata"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/manifest.go",
+          "contains": [
+            "type ManifestChunk struct",
+            "func fingerprintOf("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.Diff(", "ragDeltaCommand", "ragVerifyCommand"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+        {
+          "path": "cli/internal/app/rag_cmd.go",
+          "contains": [
+            "ragexport.Diff(",
+            "ragDeltaCommand",
+            "ragVerifyCommand"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"rag\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/ragexport/delta_test.go", "contains": ["TestDiff_BodyEditIsReindexedNotIgnored", "TestDiff_TamperedOldManifestCannotVouchForFreshness", "TestDiff_ContextGrammarBumpForcesFullReindex", "TestDiff_SourceRehashWithSameTextOnlyRefreshesMetadata"]},
-        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGVerify_StaleIndexFailsClosed", "TestRAGVerify_TamperedManifestIsRefused", "TestRAGVerify_FreshIndexPasses"]}
+        {
+          "path": "cli/internal/ragexport/delta_test.go",
+          "contains": [
+            "TestDiff_BodyEditIsReindexedNotIgnored",
+            "TestDiff_TamperedOldManifestCannotVouchForFreshness",
+            "TestDiff_ContextGrammarBumpForcesFullReindex",
+            "TestDiff_SourceRehashWithSameTextOnlyRefreshesMetadata"
+          ]
+        },
+        {
+          "path": "cli/internal/app/rag_cmd_test.go",
+          "contains": [
+            "TestRAGVerify_StaleIndexFailsClosed",
+            "TestRAGVerify_TamperedManifestIsRefused",
+            "TestRAGVerify_FreshIndexPasses"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh"]},
-        {"path": "scripts/rag-export-gate.sh", "contains": ["rag verify --manifest", "old_manifest_digest_mismatch"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "rag-export-gate.sh"
+          ]
+        },
+        {
+          "path": "scripts/rag-export-gate.sh",
+          "contains": [
+            "rag verify --manifest",
+            "old_manifest_digest_mismatch"
+          ]
+        }
       ]
     },
     {
@@ -521,23 +1346,95 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/ragexport/export.go", "contains": ["func BuildInputs(", "atomization.ApplyLens(", "ExcludeLensNoFacets"]},
-        {"path": "cli/internal/ragexport/contract.go", "contains": ["func BuildRetrievalContract(", "RetrievalContractSchemaVersion", "temporal_scoping"]},
-        {"path": "cli/internal/ragexport/bundle_input.go", "contains": ["func InputsFromBundle("]},
-        {"path": "cli/internal/ragexport/lens.go", "contains": ["func LensDigest(", "func resolveFacets("]}
+        {
+          "path": "cli/internal/ragexport/export.go",
+          "contains": [
+            "func BuildInputs(",
+            "atomization.ApplyLens(",
+            "ExcludeLensNoFacets"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/contract.go",
+          "contains": [
+            "func BuildRetrievalContract(",
+            "RetrievalContractSchemaVersion",
+            "temporal_scoping"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/bundle_input.go",
+          "contains": [
+            "func InputsFromBundle("
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/lens.go",
+          "contains": [
+            "func LensDigest(",
+            "func resolveFacets("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/rag_cmd.go", "contains": ["ragexport.BuildInputs(", "ragexport.InputsFromBundle(", "loadKnowledgeLens(", "func loadDocumentFacets("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"rag\":"]}
+        {
+          "path": "cli/internal/app/rag_cmd.go",
+          "contains": [
+            "ragexport.BuildInputs(",
+            "ragexport.InputsFromBundle(",
+            "loadKnowledgeLens(",
+            "func loadDocumentFacets("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"rag\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/ragexport/lens_test.go", "contains": ["TestBuildInputs_LensExcludedChunkIsNeverExported", "TestBuildInputs_LensWithoutFacetsFailsClosed", "TestBuildInputs_DocumentFacetsChangeTheVerdict", "TestManifest_BindsTheLensAndComputesTheContract"]},
-        {"path": "cli/internal/ragexport/delta_test.go", "contains": ["TestDiff_LensChangeForcesFullReindex"]},
-        {"path": "cli/internal/app/rag_cmd_test.go", "contains": ["TestRAGExport_LensScopesTheExportAndReportsExclusions", "TestRAGExport_LensOverFeedFailsClosed", "TestRAGVerify_DifferentLensIsStale"]}
+        {
+          "path": "cli/internal/ragexport/lens_test.go",
+          "contains": [
+            "TestBuildInputs_LensExcludedChunkIsNeverExported",
+            "TestBuildInputs_LensWithoutFacetsFailsClosed",
+            "TestBuildInputs_DocumentFacetsChangeTheVerdict",
+            "TestManifest_BindsTheLensAndComputesTheContract"
+          ]
+        },
+        {
+          "path": "cli/internal/ragexport/delta_test.go",
+          "contains": [
+            "TestDiff_LensChangeForcesFullReindex"
+          ]
+        },
+        {
+          "path": "cli/internal/app/rag_cmd_test.go",
+          "contains": [
+            "TestRAGExport_LensScopesTheExportAndReportsExclusions",
+            "TestRAGExport_LensOverFeedFailsClosed",
+            "TestRAGVerify_DifferentLensIsStale"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["rag-export-gate.sh", "pyyaml"]},
-        {"path": "scripts/rag-export-gate.sh", "contains": ["rag export --bundle", "--lens", "def lens_includes(", "lens_changed"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "rag-export-gate.sh",
+            "pyyaml"
+          ]
+        },
+        {
+          "path": "scripts/rag-export-gate.sh",
+          "contains": [
+            "rag export --bundle",
+            "--lens",
+            "def lens_includes(",
+            "lens_changed"
+          ]
+        }
       ]
     },
     {
@@ -548,14 +1445,38 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/nomos_reference_retrieval.py", "contains": ["def lens_includes(", "accuracy_with_lens", "never_retrieve"]},
-        {"path": "docs/regulated/domain-packs/built-environment/retrieval-harness.yaml", "contains": ["thresholds", "never_retrieve"]}
+        {
+          "path": "scripts/nomos_reference_retrieval.py",
+          "contains": [
+            "def lens_includes(",
+            "accuracy_with_lens",
+            "never_retrieve"
+          ]
+        },
+        {
+          "path": "docs/regulated/domain-packs/built-environment/retrieval-harness.yaml",
+          "contains": [
+            "thresholds",
+            "never_retrieve"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "unittest discover"
+          ]
+        }
       ],
       "must_be_absent": [
-        {"dir": "cli/internal", "regex": "rank_documents|ReferenceRetrieval", "suffixes": [".go"]}
+        {
+          "dir": "cli/internal",
+          "regex": "rank_documents|ReferenceRetrieval",
+          "suffixes": [
+            ".go"
+          ]
+        }
       ]
     },
     {
@@ -566,11 +1487,35 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/pack_core_coupling_check.py", "contains": ["PACK_ALLOWED_PREFIXES", "PACK_LABEL_REQUIRED_PREFIXES", "pack_label_present", "missing_pack_label", "adr_justifications", "core_changes_required"]},
-        {"path": "docs/regulated/domain-packs/built-environment/reproducibility-metric.yaml", "contains": ["core_changes_required", "target: 0"]}
+        {
+          "path": "scripts/pack_core_coupling_check.py",
+          "contains": [
+            "PACK_ALLOWED_PREFIXES",
+            "PACK_LABEL_REQUIRED_PREFIXES",
+            "pack_label_present",
+            "missing_pack_label",
+            "adr_justifications",
+            "core_changes_required"
+          ]
+        },
+        {
+          "path": "docs/regulated/domain-packs/built-environment/reproducibility-metric.yaml",
+          "contains": [
+            "core_changes_required",
+            "target: 0"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/pack-coupling.yml", "contains": ["types: [opened, synchronize, reopened, edited, labeled, unlabeled]", "github.event.pull_request.labels.*.name, 'pack'", "--pack-label-present", "pack_core_coupling_check.py"]}
+        {
+          "path": ".github/workflows/pack-coupling.yml",
+          "contains": [
+            "types: [opened, synchronize, reopened, edited, labeled, unlabeled]",
+            "github.event.pull_request.labels.*.name, 'pack'",
+            "--pack-label-present",
+            "pack_core_coupling_check.py"
+          ]
+        }
       ]
     },
     {
@@ -581,11 +1526,28 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/nomos_consumer_kit.py", "contains": ["go_canonical_json", "KIT_ATTESTATION_DIGEST_MISMATCH", "KIT_SCHEMA_VERSION"]},
-        {"path": "scripts/ckm_bundle_validate.py", "contains": ["validate_bundle"]}
+        {
+          "path": "scripts/nomos_consumer_kit.py",
+          "contains": [
+            "go_canonical_json",
+            "KIT_ATTESTATION_DIGEST_MISMATCH",
+            "KIT_SCHEMA_VERSION"
+          ]
+        },
+        {
+          "path": "scripts/ckm_bundle_validate.py",
+          "contains": [
+            "validate_bundle"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "unittest discover"
+          ]
+        }
       ]
     },
     {
@@ -596,18 +1558,53 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/export/evidence_bom.go", "contains": ["func GenerateEvidenceCycloneDX(", "func GenerateEvidenceSPDX(", "VerifyCorpusBodyLedgerProofs"]}
+        {
+          "path": "cli/internal/export/evidence_bom.go",
+          "contains": [
+            "func GenerateEvidenceCycloneDX(",
+            "func GenerateEvidenceSPDX(",
+            "VerifyCorpusBodyLedgerProofs"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/report_cmds.go", "contains": ["ExportEvidenceBOMCommand", "export.GenerateEvidenceCycloneDX(", "export.GenerateEvidenceSPDX("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"export\":"]}
+        {
+          "path": "cli/internal/app/report_cmds.go",
+          "contains": [
+            "ExportEvidenceBOMCommand",
+            "export.GenerateEvidenceCycloneDX(",
+            "export.GenerateEvidenceSPDX("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"export\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/export/evidence_bom_test.go", "contains": ["TestEvidenceBOM_FailsClosedOnTamperedHash", "TestEvidenceBOM_RejectsLedgerWithoutMerkle"]},
-        {"path": "cli/internal/app/export_evidence_bom_test.go", "contains": ["TestExportEvidenceBOM_FailsClosedOnTamperedLedger"]}
+        {
+          "path": "cli/internal/export/evidence_bom_test.go",
+          "contains": [
+            "TestEvidenceBOM_FailsClosedOnTamperedHash",
+            "TestEvidenceBOM_RejectsLedgerWithoutMerkle"
+          ]
+        },
+        {
+          "path": "cli/internal/app/export_evidence_bom_test.go",
+          "contains": [
+            "TestExportEvidenceBOM_FailsClosedOnTamperedLedger"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ]
     },
     {
@@ -618,13 +1615,32 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/fidelity/docx_adapter.go", "contains": ["type DocxAdapter struct", "func (DocxAdapter) Kit()", "docxSpanID"]}
+        {
+          "path": "cli/internal/fidelity/docx_adapter.go",
+          "contains": [
+            "type DocxAdapter struct",
+            "func (DocxAdapter) Kit()",
+            "docxSpanID"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/fidelity/adapter_registry.go", "contains": ["r.Register(DocxAdapter{})"]}
+        {
+          "path": "cli/internal/fidelity/adapter_registry.go",
+          "contains": [
+            "r.Register(DocxAdapter{})"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/fidelity/docx_adapter_test.go", "contains": ["TestDocxAdapter_ByteChangeDriftsTheParse", "TestDocxAdapter_InvalidZipFailsClosed", "TestDefaultRegistry_DocxAdapterIsReal"]}
+        {
+          "path": "cli/internal/fidelity/docx_adapter_test.go",
+          "contains": [
+            "TestDocxAdapter_ByteChangeDriftsTheParse",
+            "TestDocxAdapter_InvalidZipFailsClosed",
+            "TestDefaultRegistry_DocxAdapterIsReal"
+          ]
+        }
       ]
     },
     {
@@ -635,7 +1651,13 @@
       "promotion_issue": "#645",
       "expected": "absent",
       "must_be_absent": [
-        {"dir": "cli", "regex": "github\\.com/sigstore", "suffixes": [".go"]}
+        {
+          "dir": "cli",
+          "regex": "github\\.com/sigstore",
+          "suffixes": [
+            ".go"
+          ]
+        }
       ]
     },
     {
@@ -646,13 +1668,28 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/app/strict_gate.go", "contains": ["StrictGateCommand"]}
+        {
+          "path": "cli/internal/app/strict_gate.go",
+          "contains": [
+            "StrictGateCommand"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/app.go", "contains": ["\"strict\":"]}
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"strict\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/strict_gate_test.go", "contains": ["func Test"]}
+        {
+          "path": "cli/internal/app/strict_gate_test.go",
+          "contains": [
+            "func Test"
+          ]
+        }
       ]
     },
     {
@@ -663,14 +1700,34 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/app/checks.go", "contains": ["func checkCommand("]}
+        {
+          "path": "cli/internal/app/checks.go",
+          "contains": [
+            "func checkCommand("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/app.go", "contains": ["\"check\":"]}
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"check\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/wiring_reachability_test.go", "contains": ["TestRunCheckSubcommandsAreReachable"]},
-        {"path": "cli/internal/app/checks_test.go", "contains": ["func Test"]}
+        {
+          "path": "cli/internal/app/wiring_reachability_test.go",
+          "contains": [
+            "TestRunCheckSubcommandsAreReachable"
+          ]
+        },
+        {
+          "path": "cli/internal/app/checks_test.go",
+          "contains": [
+            "func Test"
+          ]
+        }
       ]
     },
     {
@@ -681,17 +1738,56 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/export/spdx.go", "contains": ["GenerateSPDX"]},
-        {"path": "cli/internal/export/cyclonedx.go", "contains": ["GenerateCycloneDX"]},
-        {"path": "cli/internal/report/generate.go", "contains": ["func Generate("]}
+        {
+          "path": "cli/internal/export/spdx.go",
+          "contains": [
+            "GenerateSPDX"
+          ]
+        },
+        {
+          "path": "cli/internal/export/cyclonedx.go",
+          "contains": [
+            "GenerateCycloneDX"
+          ]
+        },
+        {
+          "path": "cli/internal/report/generate.go",
+          "contains": [
+            "func Generate("
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/report_cmds.go", "contains": ["export.GenerateSPDX(", "export.GenerateCycloneDX(", "report.Generate("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"report\":", "\"export\":"]}
+        {
+          "path": "cli/internal/app/report_cmds.go",
+          "contains": [
+            "export.GenerateSPDX(",
+            "export.GenerateCycloneDX(",
+            "report.Generate("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"report\":",
+            "\"export\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/export/export_test.go", "contains": ["func Test"]},
-        {"path": "cli/internal/app/wiring_reachability_test.go", "contains": ["TestRunExportSubcommandsAreReachable", "TestRunAttestCreateIsReachable"]}
+        {
+          "path": "cli/internal/export/export_test.go",
+          "contains": [
+            "func Test"
+          ]
+        },
+        {
+          "path": "cli/internal/app/wiring_reachability_test.go",
+          "contains": [
+            "TestRunExportSubcommandsAreReachable",
+            "TestRunAttestCreateIsReachable"
+          ]
+        }
       ]
     },
     {
@@ -702,24 +1798,85 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/app/pack_cmd.go", "contains": ["func packValidateCommand(", "packOpenAxes", "risk_tier"]}
+        {
+          "path": "cli/internal/app/pack_cmd.go",
+          "contains": [
+            "func packValidateCommand(",
+            "packOpenAxes",
+            "risk_tier"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": ".github/workflows/ci.yml", "contains": ["docs/regulated/domain-packs/eu-ai-act/pack.yaml"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"pack\":"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "docs/regulated/domain-packs/eu-ai-act/pack.yaml"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"pack\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/app/pack_cmd_test.go", "contains": ["TestPackValidate_RealEUAIActPackIsGreen", "TestPackValidate_CoreStillOwnsTheAxisList", "TestPackValidate_EmptyRiskTierAxisFailsClosed"]}
+        {
+          "path": "cli/internal/app/pack_cmd_test.go",
+          "contains": [
+            "TestPackValidate_RealEUAIActPackIsGreen",
+            "TestPackValidate_CoreStillOwnsTheAxisList",
+            "TestPackValidate_EmptyRiskTierAxisFailsClosed"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["pack validate --manifest ../docs/regulated/domain-packs/eu-ai-act/pack.yaml"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "pack validate --manifest ../docs/regulated/domain-packs/eu-ai-act/pack.yaml"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "docs/regulated/domain-packs/eu-ai-act/pack.yaml", "contains": ["risk_tier", "pilot-grade", "SYNTHÉTIQUE"]},
-        {"path": "docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml", "contains": ["ai_act.haut_risque", "ai_act.fournisseur", "ai_act.gestion_risque"]},
-        {"path": "docs/regulated/domain-packs/eu-ai-act/eurlex-source-connectors.yaml", "contains": ["32024R1689", "verified_at_utc", "No article text is fetched"]},
-        {"path": "docs/regulated/domain-packs/eu-ai-act/README.md", "contains": ["pilot-grade", "synthétique"]},
-        {"path": "docs/adr/0002-risk-tier-open-facet-axis.md", "contains": ["risk_tier"]}
+        {
+          "path": "docs/regulated/domain-packs/eu-ai-act/pack.yaml",
+          "contains": [
+            "risk_tier",
+            "pilot-grade",
+            "SYNTHÉTIQUE"
+          ]
+        },
+        {
+          "path": "docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml",
+          "contains": [
+            "ai_act.haut_risque",
+            "ai_act.fournisseur",
+            "ai_act.gestion_risque"
+          ]
+        },
+        {
+          "path": "docs/regulated/domain-packs/eu-ai-act/eurlex-source-connectors.yaml",
+          "contains": [
+            "32024R1689",
+            "verified_at_utc",
+            "No article text is fetched"
+          ]
+        },
+        {
+          "path": "docs/regulated/domain-packs/eu-ai-act/README.md",
+          "contains": [
+            "pilot-grade",
+            "synthétique"
+          ]
+        },
+        {
+          "path": "docs/adr/0002-risk-tier-open-facet-axis.md",
+          "contains": [
+            "risk_tier"
+          ]
+        }
       ]
     },
     {
@@ -730,46 +1887,144 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/ruleexec/substrate.go", "contains": ["func Execute(", "func VerifyRecord(", "RULE_SUBSTRATE_FAILED", "no substrate configured", "NOTHING IS COMPUTED HERE"]}
+        {
+          "path": "cli/internal/ruleexec/substrate.go",
+          "contains": [
+            "func Execute(",
+            "func VerifyRecord(",
+            "RULE_SUBSTRATE_FAILED",
+            "no substrate configured",
+            "NOTHING IS COMPUTED HERE"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/rule_cmd.go", "contains": ["ruleexec.Execute(", "ruleexec.VerifyRecord(", "FormulaBlockLanguage"]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"rule\":"]}
+        {
+          "path": "cli/internal/app/rule_cmd.go",
+          "contains": [
+            "ruleexec.Execute(",
+            "ruleexec.VerifyRecord(",
+            "FormulaBlockLanguage"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"rule\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/ruleexec/substrate_test.go", "contains": ["TestExecute_WithoutASubstrateNothingIsComputed", "TestExecute_NomosNeverFillsInAValueTheSubstrateWithheld", "TestExecute_SubstrateFailureProducesNoPartialRecord", "TestVerifyRecord_RefusesATamperedRecord"]},
-        {"path": "cli/internal/app/rule_cmd_test.go", "contains": ["TestRuleExec_BoundedDemoRunsAFormulaAtomThroughTheSubstrate", "TestRuleExec_WithoutASubstrateNothingRuns"]}
+        {
+          "path": "cli/internal/ruleexec/substrate_test.go",
+          "contains": [
+            "TestExecute_WithoutASubstrateNothingIsComputed",
+            "TestExecute_NomosNeverFillsInAValueTheSubstrateWithheld",
+            "TestExecute_SubstrateFailureProducesNoPartialRecord",
+            "TestVerifyRecord_RefusesATamperedRecord"
+          ]
+        },
+        {
+          "path": "cli/internal/app/rule_cmd_test.go",
+          "contains": [
+            "TestRuleExec_BoundedDemoRunsAFormulaAtomThroughTheSubstrate",
+            "TestRuleExec_WithoutASubstrateNothingRuns"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/nomos_rule_substrate_demo.py", "contains": ["not a rule engine", "imports no third-party module", "nomos-rule-substrate-response-v1"]},
-        {"path": "docs/regulated/ip-governance/license-register.yaml", "contains": ["agpl_boundary_implementation", "process_api_boundary", "NOMOS computes nothing itself"]}
+        {
+          "path": "scripts/nomos_rule_substrate_demo.py",
+          "contains": [
+            "not a rule engine",
+            "imports no third-party module",
+            "nomos-rule-substrate-response-v1"
+          ]
+        },
+        {
+          "path": "docs/regulated/ip-governance/license-register.yaml",
+          "contains": [
+            "agpl_boundary_implementation",
+            "process_api_boundary",
+            "NOMOS computes nothing itself"
+          ]
+        }
       ],
       "must_be_absent": [
-        {"dir": "cli", "regex": "openfisca|catala", "suffixes": [".go"], "ignore_case": true}
+        {
+          "dir": "cli",
+          "regex": "openfisca|catala",
+          "suffixes": [
+            ".go"
+          ],
+          "ignore_case": true
+        }
       ]
     },
     {
       "id": "cross_reference_graph",
-      "title": "Graphe de renvois déterministe (VRC-43 #579) — `nomos atomize crossref` PARSE les renvois par règles, jamais par modèle : sept locutions juridiquement distinctes (sous réserve de, sans préjudice de, nonobstant, par dérogation à, conformément à, au sens de, voir/cf.), chaque arête portant le texte verbatim et les offsets demi-ouverts d\u2019où elle vient. VerifyCrossRefGraph re-découpe l\u2019atome et refuse toute arête qui ne se reconstruit pas — c\u2019est ce qui fait de « parsé, jamais généré » une propriété et non une promesse. Une locution sans cible parsable devient un `unsupported` explicite (le silence laisserait croire la règle autonome) ; une cible hors corpus reste `unresolved_target` avec le locateur verbatim, jamais une destination inventée. Les trois issues sont publiées séparément. Renvoi connu du corpus doré prouvé présent avec son span. Toujours pas de sonde must_be_absent, pour la raison notée à la création de l\u2019entrée : un marqueur générique produit un faux positif dans ce paquet (« llm » matche par sous-chaîne dans allMatchedAtomIDs). L\u2019absence de modèle est prouvée par VerifyCrossRefGraph, qui refuse toute arête ne se reconstruisant pas depuis les octets source — une preuve plus forte qu\u2019un grep.",
+      "title": "Graphe de renvois déterministe (VRC-43 #579) — `nomos atomize crossref` PARSE les renvois par règles, jamais par modèle : sept locutions juridiquement distinctes (sous réserve de, sans préjudice de, nonobstant, par dérogation à, conformément à, au sens de, voir/cf.), chaque arête portant le texte verbatim et les offsets demi-ouverts d’où elle vient. VerifyCrossRefGraph re-découpe l’atome et refuse toute arête qui ne se reconstruit pas — c’est ce qui fait de « parsé, jamais généré » une propriété et non une promesse. Une locution sans cible parsable devient un `unsupported` explicite (le silence laisserait croire la règle autonome) ; une cible hors corpus reste `unresolved_target` avec le locateur verbatim, jamais une destination inventée. Les trois issues sont publiées séparément. Renvoi connu du corpus doré prouvé présent avec son span. Toujours pas de sonde must_be_absent, pour la raison notée à la création de l’entrée : un marqueur générique produit un faux positif dans ce paquet (« llm » matche par sous-chaîne dans allMatchedAtomIDs). L’absence de modèle est prouvée par VerifyCrossRefGraph, qui refuse toute arête ne se reconstruisant pas depuis les octets source — une preuve plus forte qu’un grep.",
       "pillar": "B5",
       "claim_level": "artifact-generated (le graphe atteste que le texte le dit, pas que le renvoi soit juridiquement correct, en vigueur ou exhaustif)",
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/atomization/crossref.go", "contains": ["func BuildCrossRefGraph(", "func VerifyCrossRefGraph(", "CrossRefSubjectTo", "not parsed from the source", "the destination was invented", "no parsable target locator follows the cue"]}
+        {
+          "path": "cli/internal/atomization/crossref.go",
+          "contains": [
+            "func BuildCrossRefGraph(",
+            "func VerifyCrossRefGraph(",
+            "CrossRefSubjectTo",
+            "not parsed from the source",
+            "the destination was invented",
+            "no parsable target locator follows the cue"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/atomize_cmd.go", "contains": ["atomization.BuildCrossRefGraph(", "atomization.VerifyCrossRefGraph(", "func atomizeCrossRef("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"atomize\":"]}
+        {
+          "path": "cli/internal/app/atomize_cmd.go",
+          "contains": [
+            "atomization.BuildCrossRefGraph(",
+            "atomization.VerifyCrossRefGraph(",
+            "func atomizeCrossRef("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"atomize\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/atomization/crossref_test.go", "contains": ["TestCrossRef_ForgedEdgeIsRefused", "TestCrossRef_InventedDestinationIsRefused", "TestCrossRef_ShiftedSpanIsRefused", "TestCrossRef_UnparsableCueIsRecordedNotDropped", "TestCrossRef_CueDoesNotLeapAcrossASentence", "TestCrossRef_KnownReferenceOfTheGoldenCorpusIsInTheGraph"]}
+        {
+          "path": "cli/internal/atomization/crossref_test.go",
+          "contains": [
+            "TestCrossRef_ForgedEdgeIsRefused",
+            "TestCrossRef_InventedDestinationIsRefused",
+            "TestCrossRef_ShiftedSpanIsRefused",
+            "TestCrossRef_UnparsableCueIsRecordedNotDropped",
+            "TestCrossRef_CueDoesNotLeapAcrossASentence",
+            "TestCrossRef_KnownReferenceOfTheGoldenCorpusIsInTheGraph"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ]
     },
     {
@@ -780,15 +2035,53 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["facet_shacl_gate.py", "pyshacl"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "facet_shacl_gate.py",
+            "pyshacl"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/facet_shacl_gate.py", "contains": ["def build_graph(", "def validate_pack(", "shacl_validate", "SKOS.ConceptScheme", "NOMOS.disjointAxis"]},
-        {"path": "specs/shacl/facet-ontology.shapes.ttl", "contains": ["nomos:OrthogonalityShape", "sh:sparql", "disjointUnionOf is violated", "orthogonality unfalsifiable"]},
-        {"path": "tests/test_facet_shacl_gate.py", "contains": ["test_non_orthogonal_vocabulary_turns_the_gate_red", "test_orthogonality_is_unfalsifiable_without_declared_disjoint_axes", "test_axis_with_no_term_is_refused", "test_every_shipped_pack_conforms"]}
+        {
+          "path": "scripts/facet_shacl_gate.py",
+          "contains": [
+            "def build_graph(",
+            "def validate_pack(",
+            "shacl_validate",
+            "SKOS.ConceptScheme",
+            "NOMOS.disjointAxis"
+          ]
+        },
+        {
+          "path": "specs/shacl/facet-ontology.shapes.ttl",
+          "contains": [
+            "nomos:OrthogonalityShape",
+            "sh:sparql",
+            "disjointUnionOf is violated",
+            "orthogonality unfalsifiable"
+          ]
+        },
+        {
+          "path": "tests/test_facet_shacl_gate.py",
+          "contains": [
+            "test_non_orthogonal_vocabulary_turns_the_gate_red",
+            "test_orthogonality_is_unfalsifiable_without_declared_disjoint_axes",
+            "test_axis_with_no_term_is_refused",
+            "test_every_shipped_pack_conforms"
+          ]
+        }
       ],
       "must_be_absent": [
-        {"dir": "cli", "regex": "skos|shacl", "suffixes": [".go"], "ignore_case": true}
+        {
+          "dir": "cli",
+          "regex": "skos|shacl",
+          "suffixes": [
+            ".go"
+          ],
+          "ignore_case": true
+        }
       ]
     },
     {
@@ -799,26 +2092,109 @@
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/answer/bench.go", "contains": ["func Bench(", "FalseCiteRate", "MustCiteRecall", "MustAbstainRecall", "nothing was measured, refusing to pass"]}
+        {
+          "path": "cli/internal/answer/bench.go",
+          "contains": [
+            "func Bench(",
+            "FalseCiteRate",
+            "MustCiteRecall",
+            "MustAbstainRecall",
+            "nothing was measured, refusing to pass"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/answer_cmd.go", "contains": ["answer.Bench(", "func answerBenchCommand("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"answer\":"]}
+        {
+          "path": "cli/internal/app/answer_cmd.go",
+          "contains": [
+            "answer.Bench(",
+            "func answerBenchCommand("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"answer\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/answer/bench_test.go", "contains": ["TestBench_MeasuresAgreementAndBothErrorDirections", "TestBench_TheSecondJudgeMovesTheMeasurement", "TestBench_OverAbstentionIsMeasuredAsADefect", "TestBench_UnlabelledItemIsADefectNotAMeasurement", "TestBench_ABoundNobodyMeasuredFailsClosed", "TestBench_IsDeterministicUnderItemOrder"]},
-        {"path": "cli/internal/app/answer_cmd_test.go", "contains": ["TestAnswerBench_MeasuresAndPublishesTheFalseCite", "TestAnswerBench_CeilingTurnsTheBenchRed", "TestAnswerBench_UnlabelledCorpusIsADefect", "TestAnswerBench_ScorerMovesTheMeasurement"]},
-        {"path": "tests/test_cite_or_abstain_bench.py", "contains": ["test_published_result_replays_on_the_real_tree", "test_a_hand_edited_published_number_is_named", "test_a_moved_source_makes_the_bench_stale", "test_an_invented_quote_is_refused", "test_an_unverified_reference_is_refused", "test_publish_refuses_a_stale_tree"]}
+        {
+          "path": "cli/internal/answer/bench_test.go",
+          "contains": [
+            "TestBench_MeasuresAgreementAndBothErrorDirections",
+            "TestBench_TheSecondJudgeMovesTheMeasurement",
+            "TestBench_OverAbstentionIsMeasuredAsADefect",
+            "TestBench_UnlabelledItemIsADefectNotAMeasurement",
+            "TestBench_ABoundNobodyMeasuredFailsClosed",
+            "TestBench_IsDeterministicUnderItemOrder"
+          ]
+        },
+        {
+          "path": "cli/internal/app/answer_cmd_test.go",
+          "contains": [
+            "TestAnswerBench_MeasuresAndPublishesTheFalseCite",
+            "TestAnswerBench_CeilingTurnsTheBenchRed",
+            "TestAnswerBench_UnlabelledCorpusIsADefect",
+            "TestAnswerBench_ScorerMovesTheMeasurement"
+          ]
+        },
+        {
+          "path": "tests/test_cite_or_abstain_bench.py",
+          "contains": [
+            "test_published_result_replays_on_the_real_tree",
+            "test_a_hand_edited_published_number_is_named",
+            "test_a_moved_source_makes_the_bench_stale",
+            "test_an_invented_quote_is_refused",
+            "test_an_unverified_reference_is_refused",
+            "test_publish_refuses_a_stale_tree"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["cite_or_abstain_bench.py", "go test -race ./..."]},
-        {"path": "scripts/cite_or_abstain_bench.py", "contains": ["def check_sources(", "def check_replay(", "not verbatim", "NOMOS_ENGINE_UNAVAILABLE"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "cite_or_abstain_bench.py",
+            "go test -race ./..."
+          ]
+        },
+        {
+          "path": "scripts/cite_or_abstain_bench.py",
+          "contains": [
+            "def check_sources(",
+            "def check_replay(",
+            "not verbatim",
+            "NOMOS_ENGINE_UNAVAILABLE"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml", "contains": ["expected_decision", "BENCH-NEGATION"]},
-        {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml", "contains": ["max_false_cite_rate"]},
-        {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/references.yaml", "contains": ["verified_at_utc"]},
-        {"path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md", "contains": ["false_cite_rate"]}
+        {
+          "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml",
+          "contains": [
+            "expected_decision",
+            "BENCH-NEGATION"
+          ]
+        },
+        {
+          "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml",
+          "contains": [
+            "max_false_cite_rate"
+          ]
+        },
+        {
+          "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/references.yaml",
+          "contains": [
+            "verified_at_utc"
+          ]
+        },
+        {
+          "path": "docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md",
+          "contains": [
+            "false_cite_rate"
+          ]
+        }
       ]
     },
     {
@@ -829,15 +2205,66 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["repeated_ci_evidence.py"]},
-        {"path": ".github/workflows/rbok-lawbook-e2e.yml", "contains": ["schedule:", "cron: '0 5 * * 1'", "retention-days: 90"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "repeated_ci_evidence.py"
+          ]
+        },
+        {
+          "path": ".github/workflows/rbok-lawbook-e2e.yml",
+          "contains": [
+            "schedule:",
+            "cron: '0 5 * * 1'",
+            "retention-days: 90"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/repeated_ci_evidence.py", "contains": ["def measure(", "def run_is_countable(", "def check_replay(", "def check_claim_language(", "consecutive_green_runs_ignoring_cadence", "every archived artifact has expired"]},
-        {"path": "docs/regulated/evidence-index/repeated-ci-evidence/policy.yaml", "contains": ["consecutive_green_runs: 8", "max_gap_days", "require_unexpired_artifact"]},
-        {"path": "docs/regulated/evidence-index/repeated-ci-evidence/README.md", "contains": ["consecutive_green_runs", "Claim unlocked"]},
-        {"path": "docs/regulated/evidence-index/evidence-ledger.yaml", "contains": ["EV-CI-REPEAT-001", "GAP-REPEATED-CI-EVIDENCE"]},
-        {"path": "tests/test_repeated_ci_evidence.py", "contains": ["test_missed_week_breaks_the_chain", "test_expired_pack_makes_a_green_run_uncountable", "test_hand_edited_streak_is_named", "test_stale_chain_does_not_unlock_the_claim", "test_prose_asserting_a_locked_claim_turns_the_gate_red", "test_lowering_artifact_retention_turns_the_gate_red"]}
+        {
+          "path": "scripts/repeated_ci_evidence.py",
+          "contains": [
+            "def measure(",
+            "def run_is_countable(",
+            "def check_replay(",
+            "def check_claim_language(",
+            "consecutive_green_runs_ignoring_cadence",
+            "every archived artifact has expired"
+          ]
+        },
+        {
+          "path": "docs/regulated/evidence-index/repeated-ci-evidence/policy.yaml",
+          "contains": [
+            "consecutive_green_runs: 8",
+            "max_gap_days",
+            "require_unexpired_artifact"
+          ]
+        },
+        {
+          "path": "docs/regulated/evidence-index/repeated-ci-evidence/README.md",
+          "contains": [
+            "consecutive_green_runs",
+            "Claim unlocked"
+          ]
+        },
+        {
+          "path": "docs/regulated/evidence-index/evidence-ledger.yaml",
+          "contains": [
+            "EV-CI-REPEAT-001",
+            "GAP-REPEATED-CI-EVIDENCE"
+          ]
+        },
+        {
+          "path": "tests/test_repeated_ci_evidence.py",
+          "contains": [
+            "test_missed_week_breaks_the_chain",
+            "test_expired_pack_makes_a_green_run_uncountable",
+            "test_hand_edited_streak_is_named",
+            "test_stale_chain_does_not_unlock_the_claim",
+            "test_prose_asserting_a_locked_claim_turns_the_gate_red",
+            "test_lowering_artifact_retention_turns_the_gate_red"
+          ]
+        }
       ]
     },
     {
@@ -848,104 +2275,444 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["training_competence_gate.py"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "training_competence_gate.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/training_competence_gate.py", "contains": ["def compute_status(", "def check_crosswalk(", "def check_attestations(", "def check_published_status(", "STATUS_REQUIRES_DEFINITION", "no recorded independence waiver"]},
-        {"path": "docs/regulated/operations/training-records/role-crosswalk.yaml", "contains": ["requires_definition", "assigned_role: quality_owner"]},
-        {"path": "docs/regulated/operations/training-records/independence-waiver.yaml", "contains": ["waived_records"]},
-        {"path": "docs/regulated/operations/training-records/attestations/README.md", "contains": ["cannot be generated"]},
-        {"path": "tests/test_training_competence_gate.py", "contains": ["test_self_assessment_without_a_waiver_is_refused", "test_one_missing_competence_keeps_the_whole_role_short", "test_expired_record_stops_counting", "test_matrix_claiming_established_without_records_is_refused", "test_role_held_but_absent_from_the_crosswalk_is_refused", "test_attestations_directory_holds_no_generated_record"]}
+        {
+          "path": "scripts/training_competence_gate.py",
+          "contains": [
+            "def compute_status(",
+            "def check_crosswalk(",
+            "def check_attestations(",
+            "def check_published_status(",
+            "STATUS_REQUIRES_DEFINITION",
+            "no recorded independence waiver"
+          ]
+        },
+        {
+          "path": "docs/regulated/operations/training-records/role-crosswalk.yaml",
+          "contains": [
+            "requires_definition",
+            "assigned_role: quality_owner"
+          ]
+        },
+        {
+          "path": "docs/regulated/operations/training-records/independence-waiver.yaml",
+          "contains": [
+            "waived_records"
+          ]
+        },
+        {
+          "path": "docs/regulated/operations/training-records/attestations/README.md",
+          "contains": [
+            "cannot be generated"
+          ]
+        },
+        {
+          "path": "tests/test_training_competence_gate.py",
+          "contains": [
+            "test_self_assessment_without_a_waiver_is_refused",
+            "test_one_missing_competence_keeps_the_whole_role_short",
+            "test_expired_record_stops_counting",
+            "test_matrix_claiming_established_without_records_is_refused",
+            "test_role_held_but_absent_from_the_crosswalk_is_refused",
+            "test_attestations_directory_holds_no_generated_record"
+          ]
+        }
       ]
     },
-{
+    {
       "id": "web_source_contract",
-      "title": "Contrat web-source (#610, Recursio → NOMOS) — un bloc `web_source` optionnel sur toute source porte la provenance d\u2019une capture : canonical_url et fetched_url, http_status, ETag/Last-Modified, content_hash des octets bruts et normalized_content_hash du texte normalisé, fetched_at, crawler_version, scope_policy, décisions robots/licence, parent_url et depth. Validé fail-closed par le manifeste, le feed et `nomos check` avec codes d\u2019erreur stables : sans adresse, sans hash stable algo:hex, sans instant ni crawler, la source est refusée. `undecided` peut être ENREGISTRÉ, jamais ADMIS ; une page disallowed ou hors scope se consigne, n\u2019entre jamais dans un feed. Les cinq natures (canonique, référence, binaire, unsupported, exclu par politique) sont les champs FSQ-02 existants, pas une seconde vocabulaire. Claim porté par l\u2019artefact : capture à l\u2019instant T, jamais la vérité courante du site ; décisions robots/licence enregistrées telles que prises, jamais adjugées.",
+      "title": "Contrat web-source (#610, Recursio → NOMOS) — un bloc `web_source` optionnel sur toute source porte la provenance d’une capture : canonical_url et fetched_url, http_status, ETag/Last-Modified, content_hash des octets bruts et normalized_content_hash du texte normalisé, fetched_at, crawler_version, scope_policy, décisions robots/licence, parent_url et depth. Validé fail-closed par le manifeste, le feed et `nomos check` avec codes d’erreur stables : sans adresse, sans hash stable algo:hex, sans instant ni crawler, la source est refusée. `undecided` peut être ENREGISTRÉ, jamais ADMIS ; une page disallowed ou hors scope se consigne, n’entre jamais dans un feed. Les cinq natures (canonique, référence, binaire, unsupported, exclu par politique) sont les champs FSQ-02 existants, pas une seconde vocabulaire. Claim porté par l’artefact : capture à l’instant T, jamais la vérité courante du site ; décisions robots/licence enregistrées telles que prises, jamais adjugées.",
       "pillar": "P2",
-      "claim_level": "artifact-generated (provenance d\u2019une capture ; aucun claim sur la licéité du crawl d\u2019un site réel)",
+      "claim_level": "artifact-generated (provenance d’une capture ; aucun claim sur la licéité du crawl d’un site réel)",
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/web_source.go", "contains": ["func (w WebSource) Validate(", "WEB_SOURCE_NO_CONTENT_HASH", "WEB_SOURCE_UNSTABLE_HASH", "WEB_SOURCE_ROBOTS_UNDECIDED", "never the site's ongoing truth"]}
+        {
+          "path": "cli/internal/corpus/web_source.go",
+          "contains": [
+            "func (w WebSource) Validate(",
+            "WEB_SOURCE_NO_CONTENT_HASH",
+            "WEB_SOURCE_UNSTABLE_HASH",
+            "WEB_SOURCE_ROBOTS_UNDECIDED",
+            "never the site's ongoing truth"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/corpus/manifest.go", "contains": ["WebSource *WebSource", "m.WebSource.Validate("]},
-        {"path": "cli/internal/corpus/feed.go", "contains": ["WebSource:         s.WebSource", "fs.WebSource.Normalize()"]},
-        {"path": "cli/internal/checks/sources.go", "contains": ["func checkWebSource(", "src.WebSource.Validate("]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"check\":", "\"corpus\":"]}
+        {
+          "path": "cli/internal/corpus/manifest.go",
+          "contains": [
+            "WebSource *WebSource",
+            "m.WebSource.Validate("
+          ]
+        },
+        {
+          "path": "cli/internal/corpus/feed.go",
+          "contains": [
+            "WebSource:         s.WebSource",
+            "fs.WebSource.Normalize()"
+          ]
+        },
+        {
+          "path": "cli/internal/checks/sources.go",
+          "contains": [
+            "func checkWebSource(",
+            "src.WebSource.Validate("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"check\":",
+            "\"corpus\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/web_source_test.go", "contains": ["TestWebSource_EachMissingProvenanceFieldIsRefusedWithItsCode", "TestWebSource_UndecidedIsRecordableButNeverAdmitted", "TestWebSource_DisallowedIsRecordableButNeverAdmitted", "TestManifestSource_AdmittedWebSourceWithoutProvenanceIsRefused", "TestManifestSource_WithoutWebSourceIsUnchanged"]}
+        {
+          "path": "cli/internal/corpus/web_source_test.go",
+          "contains": [
+            "TestWebSource_EachMissingProvenanceFieldIsRefusedWithItsCode",
+            "TestWebSource_UndecidedIsRecordableButNeverAdmitted",
+            "TestWebSource_DisallowedIsRecordableButNeverAdmitted",
+            "TestManifestSource_AdmittedWebSourceWithoutProvenanceIsRefused",
+            "TestManifestSource_WithoutWebSourceIsUnchanged"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "specs/source-manifest.cue", "contains": ["#WebSource", "#StableHash", "web_source?: #WebSource"]},
-        {"path": "templates/source-manifest.schema.yaml", "contains": ["web_source:", "robots_decision"]},
-        {"path": "docs/02-source-registry.md", "contains": ["Sources Web (#610)", "WEB_SOURCE_NO_CONTENT_HASH"]}
+        {
+          "path": "specs/source-manifest.cue",
+          "contains": [
+            "#WebSource",
+            "#StableHash",
+            "web_source?: #WebSource"
+          ]
+        },
+        {
+          "path": "templates/source-manifest.schema.yaml",
+          "contains": [
+            "web_source:",
+            "robots_decision"
+          ]
+        },
+        {
+          "path": "docs/02-source-registry.md",
+          "contains": [
+            "Sources Web (#610)",
+            "WEB_SOURCE_NO_CONTENT_HASH"
+          ]
+        }
       ]
     },
-{
+    {
       "id": "licensed_reference_review_gate",
-      "title": "Revue de licence et no-full-text réel (#641) — un hash d\u2019artefact vérifié prouve ce qui est sur disque, pas la permission de le traiter : le gate sépare `artifact_hash_verified` de `license_use_approved` et rend `verified_license_review_required` avec GAP-LICENSE-REVIEW / USE / SAFETY tant qu\u2019un reviewer ASSIGNÉ n\u2019a pas enregistré une approbation, que l\u2019usage interne n\u2019est pas autorisé et que commit du texte intégral et redistribution ne sont pas explicitement `false` (invariants restaurés de 570ed58, jamais mergé). Le no-full-text cesse d\u2019être un contrôle de champs : `no-full-text-policy.yaml` versionné pilote un scan des arbres publics et des fichiers stagés — copie intégrale détectée par hash de l\u2019artefact enregistré, copie partielle par digest de phrases sentinelles normalisées ; la politique ne stocke que des digests, jamais le texte, et zéro sentinelle est rendu `uncovered`, jamais propre. La décision de licence elle-même reste #194 (humain). Sidecar : guard Python, aucun moteur Go.",
+      "title": "Revue de licence et no-full-text réel (#641) — un hash d’artefact vérifié prouve ce qui est sur disque, pas la permission de le traiter : le gate sépare `artifact_hash_verified` de `license_use_approved` et rend `verified_license_review_required` avec GAP-LICENSE-REVIEW / USE / SAFETY tant qu’un reviewer ASSIGNÉ n’a pas enregistré une approbation, que l’usage interne n’est pas autorisé et que commit du texte intégral et redistribution ne sont pas explicitement `false` (invariants restaurés de 570ed58, jamais mergé). Le no-full-text cesse d’être un contrôle de champs : `no-full-text-policy.yaml` versionné pilote un scan des arbres publics et des fichiers stagés — copie intégrale détectée par hash de l’artefact enregistré, copie partielle par digest de phrases sentinelles normalisées ; la politique ne stocke que des digests, jamais le texte, et zéro sentinelle est rendu `uncovered`, jamais propre. La décision de licence elle-même reste #194 (humain). Sidecar : guard Python, aucun moteur Go.",
       "pillar": "P1",
-      "claim_level": "gate-status only (refuse un traitement sans revue ; n\u2019accorde aucune licence et ne détecte pas la paraphrase)",
+      "claim_level": "gate-status only (refuse un traitement sans revue ; n’accorde aucune licence et ne détecte pas la paraphrase)",
       "promotion_issue": "",
       "expected": "sidecar",
       "ci_gates": [
-        {"path": ".github/workflows/regulated-documentation-gate.yml", "contains": ["regulated_reference_canon.py"]}
+        {
+          "path": ".github/workflows/regulated-documentation-gate.yml",
+          "contains": [
+            "regulated_reference_canon.py"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/regulated_reference_canon.py", "contains": ["def verify_license_review(", "def scan_committed_full_text(", "artifact_hash_verified", "license_use_approved", "LICENSED_FULL_TEXT_COMMITTED", "LICENSED_TEXT_PRESENT", "uncovered_no_sentinels_registered"]},
-        {"path": "docs/regulated/reference-basis/no-full-text-policy.yaml", "contains": ["nomos-no-full-text-policy-v1", "requires_licensed_copy", "Never put the sentence here"]},
-        {"path": "templates/regulated/licensed-reference-intake.yaml", "contains": ["required_for_processing", "approved_status_values"]},
-        {"path": "tests/test_regulated_automation.py", "contains": ["test_reference_canon_hash_verified_is_not_use_approved", "test_reference_canon_committed_licensed_artifact_is_an_error", "test_reference_canon_sentinel_sentence_present_is_an_error", "test_reference_canon_honest_blocked_state_is_green_without_claim"]}
+        {
+          "path": "scripts/regulated_reference_canon.py",
+          "contains": [
+            "def verify_license_review(",
+            "def scan_committed_full_text(",
+            "artifact_hash_verified",
+            "license_use_approved",
+            "LICENSED_FULL_TEXT_COMMITTED",
+            "LICENSED_TEXT_PRESENT",
+            "uncovered_no_sentinels_registered"
+          ]
+        },
+        {
+          "path": "docs/regulated/reference-basis/no-full-text-policy.yaml",
+          "contains": [
+            "nomos-no-full-text-policy-v1",
+            "requires_licensed_copy",
+            "Never put the sentence here"
+          ]
+        },
+        {
+          "path": "templates/regulated/licensed-reference-intake.yaml",
+          "contains": [
+            "required_for_processing",
+            "approved_status_values"
+          ]
+        },
+        {
+          "path": "tests/test_regulated_automation.py",
+          "contains": [
+            "test_reference_canon_hash_verified_is_not_use_approved",
+            "test_reference_canon_committed_licensed_artifact_is_an_error",
+            "test_reference_canon_sentinel_sentence_present_is_an_error",
+            "test_reference_canon_honest_blocked_state_is_green_without_claim"
+          ]
+        }
       ]
     },
-{
+    {
       "id": "external_snapshot_input",
-      "title": "Snapshots externes immuables en entrée (#611) — la base opérationnelle (PostgreSQL, crawler) reste externe et mutable, NOMOS ne la lit jamais : il consomme une enveloppe `nomos.external-snapshot.v1` + un JSONL d\u2019enregistrements, et RECALCULE la racine de Merkle (machinerie du body ledger, déjà éprouvée) au lieu de la relire. Un octet changé, un enregistrement ajouté ou retiré → SNAPSHOT_ROOT_MISMATCH ; `immutable: false` → refusé ; compteurs vérifiés, jamais crus. `nomos corpus snapshot seal|verify|import` et section `external-snapshot` du strict gate. L\u2019import ne perd rien — source_id, version_id, locator, hash, captured_at traversent, une page web garde sa provenance #610 et est importée exclue avec sa raison si inadmissible — et un snapshot refusé ne produit AUCUN manifeste. Fixture commitée scellée par le vrai CLI. Claim : la racine prouve que ces enregistrements sont ceux exportés, pas que l\u2019export était complet ni que leur contenu est correct.",
+      "title": "Snapshots externes immuables en entrée (#611) — la base opérationnelle (PostgreSQL, crawler) reste externe et mutable, NOMOS ne la lit jamais : il consomme une enveloppe `nomos.external-snapshot.v1` + un JSONL d’enregistrements, et RECALCULE la racine de Merkle (machinerie du body ledger, déjà éprouvée) au lieu de la relire. Un octet changé, un enregistrement ajouté ou retiré → SNAPSHOT_ROOT_MISMATCH ; `immutable: false` → refusé ; compteurs vérifiés, jamais crus. `nomos corpus snapshot seal|verify|import` et section `external-snapshot` du strict gate. L’import ne perd rien — source_id, version_id, locator, hash, captured_at traversent, une page web garde sa provenance #610 et est importée exclue avec sa raison si inadmissible — et un snapshot refusé ne produit AUCUN manifeste. Fixture commitée scellée par le vrai CLI. Claim : la racine prouve que ces enregistrements sont ceux exportés, pas que l’export était complet ni que leur contenu est correct.",
       "pillar": "P2",
-      "claim_level": "artifact-generated (intégrité d\u2019un export scellé ; aucun claim de complétude vis-à-vis de la base)",
+      "claim_level": "artifact-generated (intégrité d’un export scellé ; aucun claim de complétude vis-à-vis de la base)",
       "promotion_issue": "",
       "expected": "real",
       "engine": [
-        {"path": "cli/internal/corpus/external_snapshot.go", "contains": ["func VerifyExternalSnapshot(", "func SealExternalSnapshot(", "func ImportSnapshotToManifest(", "SNAPSHOT_ROOT_MISMATCH", "SNAPSHOT_NOT_IMMUTABLE", "buildMerkleProofs(leaves)"]}
+        {
+          "path": "cli/internal/corpus/external_snapshot.go",
+          "contains": [
+            "func VerifyExternalSnapshot(",
+            "func SealExternalSnapshot(",
+            "func ImportSnapshotToManifest(",
+            "SNAPSHOT_ROOT_MISMATCH",
+            "SNAPSHOT_NOT_IMMUTABLE",
+            "buildMerkleProofs(leaves)"
+          ]
+        }
       ],
       "production_callers": [
-        {"path": "cli/internal/app/corpus_cmd.go", "contains": ["func corpusSnapshotCommand(", "corpus.VerifyExternalSnapshot(", "corpus.ImportSnapshotToManifest(", "corpus.SealExternalSnapshot("]},
-        {"path": "cli/internal/app/strict_gate.go", "contains": ["func runExternalSnapshotCheck(", "\"external-snapshot\""]},
-        {"path": "cli/internal/app/app.go", "contains": ["\"corpus\":", "\"strict\":"]}
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "contains": [
+            "func corpusSnapshotCommand(",
+            "corpus.VerifyExternalSnapshot(",
+            "corpus.ImportSnapshotToManifest(",
+            "corpus.SealExternalSnapshot("
+          ]
+        },
+        {
+          "path": "cli/internal/app/strict_gate.go",
+          "contains": [
+            "func runExternalSnapshotCheck(",
+            "\"external-snapshot\""
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"corpus\":",
+            "\"strict\":"
+          ]
+        }
       ],
       "adversarial_tests": [
-        {"path": "cli/internal/corpus/external_snapshot_test.go", "contains": ["TestSnapshot_OneChangedByteBreaksTheRoot", "TestSnapshot_AddedOrDroppedRecordIsCaught", "TestSnapshot_ImportLosesNothing", "TestSnapshot_CommittedFixtureVerifiesAndOneByteBreaksIt"]},
-        {"path": "cli/internal/app/corpus_snapshot_cmd_test.go", "contains": ["TestSnapshotCLI_ImportWritesNothingWhenRefused", "TestStrictGate_ExternalSnapshotSectionBlocksAMutatedSnapshot"]}
+        {
+          "path": "cli/internal/corpus/external_snapshot_test.go",
+          "contains": [
+            "TestSnapshot_OneChangedByteBreaksTheRoot",
+            "TestSnapshot_AddedOrDroppedRecordIsCaught",
+            "TestSnapshot_ImportLosesNothing",
+            "TestSnapshot_CommittedFixtureVerifiesAndOneByteBreaksIt"
+          ]
+        },
+        {
+          "path": "cli/internal/app/corpus_snapshot_cmd_test.go",
+          "contains": [
+            "TestSnapshotCLI_ImportWritesNothingWhenRefused",
+            "TestStrictGate_ExternalSnapshotSectionBlocksAMutatedSnapshot"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "go test -race ./..."
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "specs/external-snapshot.cue", "contains": ["#ExternalSnapshot", "#SnapshotRecord", "immutable: true"]},
-        {"path": "cli/internal/corpus/testdata/external-snapshot/snapshot.json", "contains": ["nomos.external-snapshot.v1", "content_hash_root"]},
-        {"path": "docs/02-source-registry.md", "contains": ["Snapshots Externes Immuables (#611)", "SNAPSHOT_ROOT_MISMATCH"]}
+        {
+          "path": "specs/external-snapshot.cue",
+          "contains": [
+            "#ExternalSnapshot",
+            "#SnapshotRecord",
+            "immutable: true"
+          ]
+        },
+        {
+          "path": "cli/internal/corpus/testdata/external-snapshot/snapshot.json",
+          "contains": [
+            "nomos.external-snapshot.v1",
+            "content_hash_root"
+          ]
+        },
+        {
+          "path": "docs/02-source-registry.md",
+          "contains": [
+            "Snapshots Externes Immuables (#611)",
+            "SNAPSHOT_ROOT_MISMATCH"
+          ]
+        }
       ]
     },
-{
+    {
       "id": "public_reference_processing",
-      "title": "Traitement des vraies références publiques (#644) — le pilote est conduit par le registre canonique (classifieur du gate de licence, jamais une liste codée), et une référence ne compte comme TRAITÉE que si un snapshot daté (URL officielle, date, sha256, taille, licence, identité de version) existe, qu\u2019une capture locale HORS dépôt porte exactement ce sha256, et que scan, manifest, feed, body ledger, attestation ET strict gate sortent tous à 0. Tout le reste est `blocked` avec sa raison, jamais une ligne manquante. Artefacts retenus content-adressés hors dépôt (feed et ledger portent du texte tiers dérivé) ; receipts commités qui les adressent. Un octet changé = hash différent = `capture_hash_mismatch` + receipt périmé nommé. Mesure du 2026-09-05 : 23 classées, 20 capturées hash-only, 3 bloquées nommées (dont un 404 = URL du registre périmée), 0 traitées bout en bout ; la fixture in-repo passe six étapes et n\u2019est jamais comptée comme externe. Sidecar : guard Python, aucun moteur Go.",
+      "title": "Traitement des vraies références publiques (#644) — le pilote est conduit par le registre canonique (classifieur du gate de licence, jamais une liste codée), et une référence ne compte comme TRAITÉE que si un snapshot daté (URL officielle, date, sha256, taille, licence, identité de version) existe, qu’une capture locale HORS dépôt porte exactement ce sha256, et que scan, manifest, feed, body ledger, attestation ET strict gate sortent tous à 0. Tout le reste est `blocked` avec sa raison, jamais une ligne manquante. Artefacts retenus content-adressés hors dépôt (feed et ledger portent du texte tiers dérivé) ; receipts commités qui les adressent. Un octet changé = hash différent = `capture_hash_mismatch` + receipt périmé nommé. Mesure du 2026-09-05 : 23 classées, 20 capturées hash-only, 3 bloquées nommées (dont un 404 = URL du registre périmée), 0 traitées bout en bout ; la fixture in-repo passe six étapes et n’est jamais comptée comme externe. Sidecar : guard Python, aucun moteur Go.",
       "pillar": "P1",
       "claim_level": "evidence-count only (dit ce qui a été capturé et traité ; aucun claim sur le contenu des références)",
       "promotion_issue": "",
       "expected": "sidecar",
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["unittest discover -s tests"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "unittest discover -s tests"
+          ]
+        }
       ],
       "sidecar": [
-        {"path": "scripts/process_public_bibles.py", "contains": ["def process_public_source(", "def capture_live(", "def retain(", "capture_hash_mismatch", "stale_receipts", "counted_as_external", "external_public_sources_processed"]},
-        {"path": "docs/regulated/reference-basis/public-source-snapshots.yaml", "contains": ["nomos-public-source-snapshots-v1", "captured_hash_only", "hash_only_no_full_text"]},
-        {"path": "docs/regulated/reference-basis/public-bibles-processing/README.md", "contains": ["Processed end to end", "counted_as_external: false", "capture_hash_mismatch"]},
-        {"path": "tests/test_public_bibles_processing.py", "contains": ["test_matching_capture_completes_the_chain_and_is_retained", "test_one_changed_byte_is_a_named_mismatch_and_the_old_receipt_is_stale", "test_hash_only_capture_without_content_is_not_processed", "test_acceptance_refuses_a_processed_source_without_a_receipt"]}
+        {
+          "path": "scripts/process_public_bibles.py",
+          "contains": [
+            "def process_public_source(",
+            "def capture_live(",
+            "def retain(",
+            "capture_hash_mismatch",
+            "stale_receipts",
+            "counted_as_external",
+            "external_public_sources_processed"
+          ]
+        },
+        {
+          "path": "docs/regulated/reference-basis/public-source-snapshots.yaml",
+          "contains": [
+            "nomos-public-source-snapshots-v1",
+            "captured_hash_only",
+            "hash_only_no_full_text"
+          ]
+        },
+        {
+          "path": "docs/regulated/reference-basis/public-bibles-processing/README.md",
+          "contains": [
+            "Processed end to end",
+            "counted_as_external: false",
+            "capture_hash_mismatch"
+          ]
+        },
+        {
+          "path": "tests/test_public_bibles_processing.py",
+          "contains": [
+            "test_matching_capture_completes_the_chain_and_is_retained",
+            "test_one_changed_byte_is_a_named_mismatch_and_the_old_receipt_is_stale",
+            "test_hash_only_capture_without_content_is_not_processed",
+            "test_acceptance_refuses_a_processed_source_without_a_receipt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recursio_offline_e2e",
+      "title": "Recursio → NOMOS offline E2E (#612) — la chaîne web-source complète tourne SANS réseau et SANS crawler sur un site synthétique de trois pages : HTML → texte normalisé → Markdown (normaliseur déterministe, export commité prouvé identique octet pour octet à une régénération), records JSONL avec provenance #610 et `export_path`, enveloppe #611 scellée par la vraie CLI, puis `snapshot verify` → `snapshot import` → scan → feed → body-ledger → `attest --external-snapshot` → strict. L’attestation porte le type de source web et la couverture du snapshot (id, racine, compteurs, `web_sources`), MESURÉS depuis l’enveloppe vérifiée — une racine falsifiée refuse l’attestation, aucun fichier écrit. Un octet changé dans une page change son hash brut, son hash normalisé, son Markdown et la racine ; le contrôle de dérive (exit 4) nomme les fichiers périmés et aucune étape ne tourne. Le chrome (nav/footer) ne touche pas le hash normalisé. Ce que cela NE prouve PAS : quoi que ce soit sur un site réel (robots et licence sont `allowed` par construction dans la fixture) ; que Recursio, absent du dépôt, produit exactement cet export.",
+      "pillar": "P1",
+      "claim_level": "capability (chaîne offline prouvée sur fixture synthétique ; aucun claim sur un site réel)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Recursio → NOMOS offline E2E (#612)",
+            "scripts/recursio-e2e-fixture.sh"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/corpus/external_snapshot.go",
+          "contains": [
+            "func SnapshotCoverageMetadata(",
+            "ExportPath string",
+            "if strings.TrimSpace(r.ExportPath) != \"\""
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/corpus_cmd.go",
+          "contains": [
+            "\"external-snapshot\"",
+            "external snapshot REFUSED, no attestation written",
+            "corpus.SnapshotCoverageMetadata(env, records)"
+          ]
+        },
+        {
+          "path": "scripts/recursio-e2e-fixture.sh",
+          "contains": [
+            "--external-snapshot \"$ENVELOPE\"",
+            "recursio_export_fixture.py\" --check",
+            "die 4"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/app/corpus_attest_snapshot_test.go",
+          "contains": [
+            "TestCorpusAttestExternalSnapshotBindsWebCoverage",
+            "TestCorpusAttestExternalSnapshotRefusesTamperedRoot",
+            "TestCorpusAttestExternalSnapshotMissingRecordsIsAnError"
+          ]
+        },
+        {
+          "path": "tests/test_recursio_e2e_fixture.py",
+          "contains": [
+            "test_one_byte_in_one_page_moves_only_that_page",
+            "test_chrome_does_not_reach_the_normalised_hash",
+            "test_runner_refuses_a_stale_export_before_any_stage",
+            "test_runner_passes_offline_and_attestation_binds_web_coverage"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/recursio_export_fixture.py",
+          "contains": [
+            "def normalise(",
+            "def check(",
+            "return 4"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/external-snapshot.cue",
+          "contains": [
+            "export_path?: string"
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "tests/fixtures/recursio-e2e/README.md",
+          "contains": [
+            "What this does not prove"
+          ]
+        }
       ]
     }
   ]
