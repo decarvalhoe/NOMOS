@@ -1,7 +1,8 @@
-schema_version: "0.1.0"
+# v0.2.0: fixtures may run non-authoritatively before regulated activation.
+schema_version: "0.2.0"
 record_type: praxis_activation_gate
 activation_id: PRAXIS-NOMOS-ACTIVATION-2026-05-14
-related_issue: "#320"
+related_issue: "RBOKproject/PRAXIS#333"
 current_status: blocked_until_nomos_verified
 claim_boundary: >
   Activation criteria and blocked-state evidence only; this is not an
@@ -42,9 +43,9 @@ activation_checklist:
     evidence_dependency: consumer_guard
     acceptance_rule: "Praxis treats unverified Nomos atoms as not_qualified_external_input."
   - id: mapping_contract_fixture
-    status: deferred
+    status: planned_non_authoritative
     evidence_dependency: mapping_contract_fixture
-    acceptance_rule: "Fixture import/reject tests run only after Nomos verification is accepted."
+    acceptance_rule: "Fixture import/reject tests may run on synthetic or not_qualified inputs before activation; only regulated reliance waits for accepted Nomos verification."
   - id: dossier_state_explains_block
     status: implemented
     evidence_dependency: dossier_state
@@ -64,7 +65,7 @@ consumer_guard:
     - customer_validation_claim
 
 mapping_contract_fixture:
-  status: deferred_until_nomos_verified
+  status: planned_non_authoritative
   contract_path: docs/regulated/customer-integration/praxis-atom-mapping.md
   planned_fixture_path: docs/regulated/customer-integration/praxis-activation-fixture.todo.yaml
   must_accept:
@@ -75,7 +76,7 @@ mapping_contract_fixture:
     - "missing content_hash"
     - "unverified attestation"
     - "blocked or waived Nomos atom without explicit waiver record"
-  execution_trigger: "Nomos verification and reconstruction verdict accepted"
+  execution_trigger: "autonomous contract-fixture work; use synthetic/not_qualified inputs until regulated activation"
 
 dossier_state:
   praxis_activation: blocked

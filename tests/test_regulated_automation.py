@@ -1313,8 +1313,9 @@ answers:
         gate_path = ROOT / "docs/regulated/qualification/praxis-activation-gate.yaml"
         self.assertTrue(gate_path.exists(), f"missing Praxis activation gate: {gate_path}")
         gate = yaml.safe_load(gate_path.read_text(encoding="utf-8"))
+        self.assertEqual(gate["schema_version"], "0.2.0")
         self.assertEqual(gate["activation_id"], "PRAXIS-NOMOS-ACTIVATION-2026-05-14")
-        self.assertEqual(gate["related_issue"], "#320")
+        self.assertEqual(gate["related_issue"], "RBOKproject/PRAXIS#333")
         self.assertEqual(gate["current_status"], "blocked_until_nomos_verified")
         self.assertIn("not an activation approval", gate["claim_boundary"])
 
@@ -1335,9 +1336,10 @@ answers:
         self.assertEqual(consumer_guard["unverified_atom_handling"], "not_qualified_external_input")
 
         fixture = gate["mapping_contract_fixture"]
-        self.assertEqual(fixture["status"], "deferred_until_nomos_verified")
+        self.assertEqual(fixture["status"], "planned_non_authoritative")
         self.assertEqual(fixture["contract_path"], "docs/regulated/customer-integration/praxis-atom-mapping.md")
         self.assertIn("review_state != approved", fixture["must_reject"])
+        self.assertIn("synthetic/not_qualified", fixture["execution_trigger"])
 
         dossier = gate["dossier_state"]
         self.assertEqual(dossier["praxis_activation"], "blocked")
@@ -1345,6 +1347,26 @@ answers:
 
         blocked_claims = set(gate["blocked_claims"])
         self.assertIn("Praxis inherits Nomos regulated evidence status", blocked_claims)
+
+        praxis_profile = yaml.safe_load(
+            (ROOT / "docs/regulated/product-profiles/praxis.yaml").read_text(encoding="utf-8")
+        )
+        nomos_profile = yaml.safe_load(
+            (ROOT / "docs/regulated/product-profiles/nomos.yaml").read_text(encoding="utf-8")
+        )
+        template = yaml.safe_load(
+            (ROOT / "templates/regulated/regulated-product-profile.yaml").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            {praxis_profile["schema_version"], nomos_profile["schema_version"], template["schema_version"]},
+            {"0.2.0"},
+        )
+        self.assertEqual(
+            praxis_profile["owned_evidence"][0]["status"], "planned_non_authoritative"
+        )
+        self.assertIn("#334", " ".join(praxis_profile["critical_path"]["praxis_open_followup"]))
+        self.assertIn("open_claim_gates", nomos_profile)
+        self.assertNotIn("open_dependencies", nomos_profile)
 
     def test_github_qms_audit_offline_reports_live_controls_as_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -29,6 +29,15 @@ Nomos has a regulated-readiness baseline. It does not yet have a completed regul
 
 Nomos is the evidence producer. Praxis is a future downstream runtime assurance consumer.
 
+This directory follows the independent regulated-assurance roadmap
+([plan 28](../28-regulated-compliance-closure-plan.md),
+[ADR-VRC-0004](../adr/0004-independent-roadmaps-risk-based-validation.md)). Product
+and DevOps releases do not wait for these records. A control may operate
+manually before its supporting tool exists; a tool may be developed first but
+remains supporting-use until its intended use is validated according to risk.
+Missing calendar evidence, signatures, approvals or licensed inputs lock only
+the named regulated claim.
+
 The intended order is:
 
 1. stabilize Nomos CLI, schemas, corpus feed, and self-compliance;

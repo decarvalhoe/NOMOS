@@ -64,7 +64,10 @@ class PublicBiblesProcessingTests(unittest.TestCase):
             self.assertEqual(summary["licensed_leak"], [], summary)
             licensed_ids = {b["id"] for b in summary["bible_split"]["licensed_blocked"]}
             self.assertIn("ISPE-GAMP5-2E-2022", licensed_ids, summary)
-            self.assertGreaterEqual(summary["bible_split"]["public_count"], 1, summary)
+            self.assertGreaterEqual(summary["bible_split"]["public_classified_count"], 1, summary)
+            self.assertEqual(summary["bible_split"]["external_public_sources_processed"], 0)
+            self.assertEqual(summary["processed_corpus"]["file_count"], 2)
+            self.assertIn("not the number of external public bibles processed", summary["claim_boundary"])
 
             # The acceptance predicate the CLI exit code keys off of.
             self.assertTrue(proc.acceptance_ok(summary), summary)

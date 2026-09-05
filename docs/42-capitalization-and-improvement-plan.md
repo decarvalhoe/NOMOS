@@ -12,6 +12,11 @@ Les références internes "nomos-*.md" pointent vers ces mêmes docs (noms Aedif
 > n'est à jeter. On pille honnêtement tout ce qui est utilisable — standards ouverts,
 > recherche, OSS permissif — sans jamais copier code propriétaire, contenu, ni IP.
 > Date : 2026-06-08.
+> Statut : baseline d'amélioration historique. Plusieurs slices bornées
+> (point-in-time, ontologie dans le gate, RAG eval, renvois, ruleexec) sont
+> désormais livrées ; la [matrice générée](../.vrc-wiring-matrix/wiring-matrix.md)
+> est la vérité courante. Les lignes ci-dessous restent des sources/trajectoires,
+> pas une liste implicite de capacités manquantes.
 
 ---
 
@@ -47,7 +52,7 @@ exister — l'intégration reste ton espace, mais vérifie).
 | Scoping retrieval au niveau base (P4) | **pgvector + RLS** (puis Qdrant payload filters) + reranker cross-encoder | ouvert | M | Lens enforced *avant* génération (consensus d'ingénierie mûr) |
 | Substrat d'exécution de règles (P6) | **L4** (MCP-natif, REST, vérif formelle, actif 2026) ; **OpenFisca** pour le calcul (⚠️ AGPL → via API) ; **Catala** pour la fidélité texte | mixte | L | Le déterministe certifié sans construire un moteur de règles |
 | Vocabulaires contrôlés (P3) | **SKOS** + **VocBench**/**Skosmos** ; **SHACL** pour valider les facettes | ouvert | M | Facettes authored + servies + validées proprement |
-| Signature/attestation (P7) | **in-toto** (DSSE) + **Sigstore/Rekor** (keyless + log) | Apache | M | Attestation signée réelle, outillage éprouvé, zéro gestion de clés |
+| Signature/attestation (P7) | **in-toto** (DSSE) + **Sigstore/Rekor** (keyless + log) | Apache | M | Local DSSE est livré ; verify offline #637 et émission non-prod #645 avancent autonomement ; activation production/Rekor #638 reste un claim externe, pas un gate produit |
 | Identité/format des sources légales (P6) | **Akoma Ntoso** + **ELI/ECLI** + **LegalRuleML** | ouvert | M | Citations déréférençables + versionnement FRBR gratuit |
 
 **Sortie A :** NOMOS « à niveau » sur tout le substrat commoditisé en réutilisant
@@ -159,9 +164,11 @@ exister — l'intégration reste ton espace, mais vérifie).
 
 ## E. Séquencement par effet de levier (pas par facilité)
 
-1. **Rendre le drapeau réel & mesurable** (C1+C2) : in-toto/Sigstore + ALCE/Trust-Align/
-   DeepEval → la « supply-chain du savoir + cite-or-abstain + evidence signé » passe de
-   concept à *mesuré et shippable*. **C'est ce qui se défend.**
+1. **Rendre le drapeau réel & mesurable** (C1+C2) : in-toto/DSSE + ALCE/Trust-Align/
+   DeepEval → la « supply-chain du savoir + cite-or-abstain + evidence signé localement »
+   passe de concept à *mesuré et shippable*. Sigstore est scindé par
+   ADR-VRC-0004 (#637 verify, #645 émission non-prod, #638 activation production) ;
+   la publication Rekor ne bloque pas cette sortie produit.
 2. **Rattraper le substrat** (A) : pgvector+RLS+reranker (P4), L4/OpenFisca via API (P6),
    harnais d'éval. Vite, en réutilisant l'existant.
 3. **Combler les faibles** (B) : point-in-time (SAT-Graph/LRMoo), faithfulness-NLI,

@@ -35,9 +35,10 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Release | `v0.1.0-ALPHA`. |
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
 | Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation; danach, in der Go-Engine: Cite-or-abstain Gate (Faithfulness aus den Spans neu berechnet, nie deklariert), RAG-Evaluationsharness in CI, interoperabler RAG-Export mit nachweisbarer Staleness, reproduzierbarer oeffentlicher Bench des Gates. |
-| Faehigkeitsregister | 38 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (29 real, 4 sidecar, 5 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Faehigkeitsregister | 40 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (32 real, 7 sidecar, 1 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Roadmaps | Produkt, DevOps und regulierte Assurance laufen unabhaengig (ADR-VRC-0004). Nur `dispatch:autonomous` Issues gehen in den Dispatcher; Kalendernachweis, Signaturen, Beschaffung und oeffentliche Writes blockieren ihren Claim, nie die Entwicklung — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
 | Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. Der oeffentliche Bench misst das Gate auf neun Items, kein Produkt. |
-| Naechste Haertung | Die fuenf `absent` Faehigkeiten des Registers, jede an ein offenes VRC-Issue gebunden: keyless Sigstore, EU-AI-Act-Pack, Regelausfuehrungssubstrat, Querverweisgraph, SKOS/SHACL-Vokabulare; danach Kunden-Validation-Packs und zusaetzliche Dokumentformate. |
+| Naechste Haertung | Unabhaengige autonome Queues: Produkt (#642, Recursio #610→#612, #637, #643); DevOps (#640, #641, #644, #639, #645). Die einzige `absent` Faehigkeit ist keyless Sigstore-Issuance: Offline-Verify #637, Non-Production-Issuance #645, Production/Rekor-Aktivierung #638 separat. |
 | Claim Boundary | Kein zertifiziertes eQMS, kein validiertes GxP-System, keine regulatorische Zertifizierung. |
 
 ## Warum Nomos Existiert
@@ -116,7 +117,7 @@ Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer
 - regulated-by-design Dokumentationsskelett, Evidence Templates und Control Records;
 - CI-Workflows fuer Go, CUE, Corpus, RBOK lawbook E2E, Runtime E2E, Fidelity Proof Reports, regulierte Dokumentation und Evidence Pack.
 
-Seit der Alpha hat die Engine die folgenden Faehigkeiten gewonnen. Jede ist ein Eintrag des Faehigkeitsregisters, dessen Status in CI aus Ankern im Baum berechnet wird (Engine, Production-Caller, adversarialer Test, CI-Gate); eine Faehigkeit, die nur ihren Python-Sidecar oder ihr CUE-Schema hat, zaehlt als `sidecar`, nie als `real`:
+Seit der Alpha hat die Engine die folgenden Faehigkeiten gewonnen. Jede ist ein Eintrag des Faehigkeitsregisters, dessen Status in CI aus Ankern im Baum berechnet wird (Engine, Production-Caller, adversarialer Test, CI-Gate); eine absichtlich ausserhalb des Core liegende Faehigkeit zaehlt als `sidecar`, nie als `real` — das ist Topologie, nicht ihr Liefer- oder regulierter Validierungsstatus:
 
 - **Cite-or-abstain Gate in der Engine** (`nomos answer gate`, VRC-10): Faithfulness aus dem Text der gefundenen Spans neu berechnet, nie aus einem deklarierten Score; eine gefaelschte Zitation, ein Span ohne Text oder eine Antwort ohne Quelle erzwingt Enthaltung; `trust_tier` pro Antwort; steckbarer zweiter NLI-Richter (`--scorer-cmd`, der strengste gewinnt, fail-closed, kein Modell in der Engine); der Python-Evidence-Sidecar konsumiert dieses Urteil statt eines zu erzeugen;
 - **RAG-Evaluationsharness** (`nomos answer eval`, VRC-13): Golden Corpus, versionierte Schwellen, `context_recall`, ranggewichtete `context_precision` und `noise_sensitivity`; eine Regression unter die Untergrenze blockiert den PR;
@@ -195,7 +196,7 @@ Aktueller strukturierter Source-to-Feed POC:
 | Strict Gate | `pass`, exit code 0 |
 | Source Mutation Check | keine Source-Mutation erkannt |
 
-Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt (Attestation `claim_coverage` ist jetzt verdrahtet — `corpus attest --corpus-body-ledger` verifiziert die Merkle-Beweise des Ledgers und berechnet die Coverage; der aufgezeichnete POC-Run behaelt sein historisches WARN). Die naechste Haertung zielt auf CI-Wiederholbarkeit, zusaetzliche Dokumentformate, Kundenvalidierung und breitere Universal-Fidelity-Evidenz. CI-Wiederholbarkeit wird jetzt **gemessen** statt angekuendigt (VRC-14 #560): `scripts/repeated_ci_evidence.py` zaehlt die Kette geplanter Runs auf dem privaten Corpus und veroeffentlicht einen datierten Index unter `docs/regulated/evidence-index/repeated-ci-evidence/`; Messung vom 2026-09-04, 4 aufeinanderfolgende gruene Runs von 8 angestrebten, der Claim bleibt daher gesperrt.
+Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt (Attestation `claim_coverage` ist jetzt verdrahtet — `corpus attest --corpus-body-ledger` verifiziert die Merkle-Beweise des Ledgers und berechnet die Coverage; der aufgezeichnete POC-Run behaelt sein historisches WARN). Die **Produkt**-Haertung zielt auf weitere Formate und portable Fidelity. Parallel misst die regulierte Roadmap CI-Wiederholbarkeit und Kundenvalidierung, ohne sie zu Produktabhaengigkeiten zu machen: VRC-14 #560 misst am 2026-09-04 4 aufeinanderfolgende gruene Runs von 8, daher bleibt nur dieser Claim gesperrt, waehrend die anderen Lanes fortfahren.
 
 ## Kontinuierlich Berechnete Nachweise
 
@@ -203,7 +204,7 @@ Ueber den aufgezeichneten POC hinaus werden zwei Nachweise bei jedem CI-Lauf neu
 
 | Nachweis | Aktuelles Ergebnis | Wie er gehalten wird |
 |---|---|---|
-| Wiring-Matrix (VRC-00) | 38 Faehigkeiten, 0 Abweichung zwischen Register und Baum, 0 Phantom-Befehl | `scripts/vrc_wiring_matrix.py`; die generierte Datei wird mit dem Commit verglichen |
+| Wiring-Matrix (VRC-00) | 40 Faehigkeiten, 0 Abweichung zwischen Register und Baum, 0 Phantom-Befehl | `scripts/vrc_wiring_matrix.py`; die generierte Datei wird mit dem Commit verglichen |
 | Oeffentlicher Cite-or-abstain Bench (VRC-46, Ergebnis vom 2026-09-04, lexikalischer Proxy) | 9 Items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — das einzige falsche "cite" ist die Negation, der dokumentierte blinde Fleck des Proxys | `scripts/cite_or_abstain_bench.py`: Quellen woertlich und unveraendert, Referenzen verifiziert und datiert, zwei byte-identische Laeufe, versionierte Grenzen, Messung identisch mit dem veroeffentlichten Ergebnis |
 
 Methodik, Corpus, Grenzen und datierte Ergebnisse: [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
@@ -348,6 +349,7 @@ Der Release-Prozess nutzt aktuell:
 go vet ./... && go test -race ./...            # aus cli/
 python -m unittest discover -s tests -v        # Python-Tests (pyyaml noetig; baut die Go-Engine fuer die Gates, die sie konsumieren)
 python scripts/claim_boundary_guard.py --root .          # kein "signed / Sigstore / certified" ohne Beweis
+python scripts/roadmap_lane_guard.py --root .             # kein menschliches/externes Warten in der autonomen Queue
 python scripts/vrc_wiring_matrix.py --root .             # Wiring-Matrix: Register und Baum im Gleichschritt
 python scripts/cite_or_abstain_bench.py --root .         # oeffentlicher Bench: das veroeffentlichte Ergebnis wiederholt sich
 bash scripts/ckm-non-regression.sh             # CKM-00 Harness: CLI, CUE, Python, e2e, RBOK, Cite-or-abstain Gate
@@ -364,7 +366,7 @@ Nomos macht ein LLM nicht autoritaer. In der Zielarchitektur bleiben determinist
 
 Nomos ersetzt keine Validierung. In regulierten Umgebungen brauchen Kunden weiterhin Intended-Use-Definition, Risk Assessment, Validation Planning, Testevidenz, Change Control, Supplier Assessment, Security Review und Approval Records.
 
-Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit nicht unterstuetzte Dokumentformate, verbleibende semantische Warnings, Kunden-Validation-Packs und CI-Wiederholbarkeit auf privaten Corpora — Letztere wird laufend gemessen, bei 4 aufeinanderfolgenden gruenen Runs von 8, mit 5 ausgefallenen woechentlichen Laeufen im Juli und 2 unterschiedlichen Corpus-Revisionen ueber das gesamte aufgezeichnete Fenster.
+Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Produkt-Feed-Quality-Roadmap behandelt nicht unterstuetzte Formate und semantische Warnings; die unabhaengige regulierte Roadmap behandelt Kunden-Validation-Packs und private CI-Wiederholbarkeit (4/8), ohne die erste zu blockieren.
 
 Das Cite-or-abstain Gate und sein oeffentlicher Bench messen das Gate, kein LLM: der Faithfulness-Proxy ist lexikalisch und negationsblind (in jedem Urteil gesagt, im Bench als falsches "cite" veroeffentlicht); der zweite NLI-Richter ist ein verifiziertes Protokoll, kein ausgeliefertes Modell, und kein CI-Lauf bewertet mit einem neuronalen Modell. Der Bench sagt nichts ueber die Qualitaet eines Retrievals, eines Embeddings oder eines LLM, noch ueber die fachliche Richtigkeit einer Antwort.
 

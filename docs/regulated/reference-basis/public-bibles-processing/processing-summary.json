@@ -7,6 +7,7 @@
   },
   "bible_split": {
     "canon_status": "requires_evidence",
+    "external_public_sources_processed": 0,
     "licensed_blocked": [
       {
         "id": "ISO-13485-2016",
@@ -25,9 +26,9 @@
         "source_class": "licensed"
       }
     ],
-    "public_count": 23
+    "public_classified_count": 23
   },
-  "claim_boundary": "Public-reference processing evidence only; the licensed bibles are blocked on procurement and are not processed.",
+  "claim_boundary": "Two in-repo public policy documents exercise the pipeline; public_classified_count is registry classification, not the number of external public bibles processed. Licensed bibles are excluded.",
   "licensed_leak": [],
   "pipeline_steps": {
     "attest": 0,
@@ -43,6 +44,6 @@
     ]
   },
   "read_only_guard": "pass",
-  "schema_version": "nomos-public-bibles-processing-v1",
+  "schema_version": "nomos-public-policy-fixture-v2",
   "source_mutation": "none"
 }

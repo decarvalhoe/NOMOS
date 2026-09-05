@@ -140,7 +140,7 @@ Use these statuses in product profiles, matrices, and release bundles:
 | `verified` | A repeatable gate proves the artifact or behavior. |
 | `approved` | A named reviewer approved the evidence for a release. |
 | `waived` | A time-bound, risk-accepted exception exists. |
-| `blocked` | A dependency prevents progress or use. |
+| `blocked` | A named input prevents the specific regulated use or claim. Unrelated product/DevOps progress continues (ADR-VRC-0004). |
 
 `verified` is the minimum status for product evidence. `approved` is the minimum status for release evidence in regulated-client contexts.
 

@@ -1036,7 +1036,7 @@
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -1352,7 +1352,7 @@
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -1391,7 +1391,7 @@
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -1430,7 +1430,7 @@
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -1553,10 +1553,10 @@
     },
     {
       "id": "sigstore_keyless",
-      "title": "Keyless Sigstore/Fulcio/Rekor signing — documented follow-up, not implemented (vocabulary exists, SDK does not)",
+      "title": "Keyless Sigstore/Fulcio/Rekor ISSUANCE — not implemented; offline verification is #637, non-production issuance against injected services is #645, and OIDC + production Rekor publication is the external activation #638",
       "pillar": "P7",
       "claim_level": "prohibited (claim_boundary_guard enforces)",
-      "promotion_issue": "VRC-40",
+      "promotion_issue": "#645",
       "expected": "absent",
       "computed": "absent",
       "mismatch": false,
@@ -1789,21 +1789,47 @@
     },
     {
       "id": "rule_execution_substrate",
-      "title": "Substrat d'exécution de règles emprunté, jamais construit (VRC-42 #578) — `nomos rule exec` fait passer un atome ```formula par un substrat EXTERNE via un protocole JSON versionné sur un process enfant. Le paquet cli/internal/ruleexec ne calcule RIEN : aucun évaluateur, aucune arithmétique, aucun parseur d’expression. Sans substrat configuré, rien n’est produit — jamais un défaut, jamais un zéro (test dédié). Un substrat absent, planté, en timeout ou hors contrat échoue fermé sans record partiel ; un résultat pour un atome jamais demandé, une réponse en double, une réponse manquante, un `computed` sans valeur, un `unsupported` sans motif ou portant une valeur : tous refusés. Chaque valeur voyage avec l’expression verbatim et la trace source (ref canonique, fichier, lignes) — sans quoi un nombre n’est qu’un nombre. La frontière AGPL du registre de licences (`process_api_boundary`) cesse d’être une intention et devient ce mécanisme ; aucun substrat n’est nommé dans le Go, et la sonde must_be_absent le garantit. Déclaré sidecar : seuls la frontière et une fixture de conformité de protocole sont livrées, aucun moteur réel intégré.",
+      "title": "Frontière d'exécution de règles empruntée, jamais moteur maison (VRC-42 #578) — `nomos rule exec` passe un atome ```formula à un process externe par protocole JSON versionné. Le moteur Go extrait et trace, appelle, aligne et vérifie le contrat mais ne calcule aucune formule. Sans substrat, rien n'est produit ; crash/timeout/hors-contrat échouent fermés. La capacité protocole est réelle (Go + caller + tests) ; la fixture Python est un substrat de conformité, pas un moteur réel. Aucun adapter L4/OpenFisca/Catala n'est revendiqué, et #642 durcit encore l'intégrité persistée.",
       "pillar": "B3",
       "claim_level": "artifact-generated (le record atteste que le substrat nommé a calculé ; NOMOS ne revendique rien sur la justesse du substrat)",
-      "promotion_issue": "VRC-42",
-      "expected": "sidecar",
-      "computed": "sidecar",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
       "mismatch": false,
-      "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
-      ],
+      "reasons": [],
       "drift": [],
       "checks": {
-        "engine": [],
-        "production_callers": [],
-        "adversarial_tests": [],
+        "engine": [
+          {
+            "path": "cli/internal/ruleexec/substrate.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/rule_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/ruleexec/substrate_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/rule_cmd_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
         "ci_gates": [
           {
             "path": ".github/workflows/ci.yml",
@@ -1813,32 +1839,12 @@
         ],
         "sidecar": [
           {
-            "path": "cli/internal/ruleexec/substrate.go",
-            "ok": true,
-            "missing": []
-          },
-          {
-            "path": "cli/internal/app/rule_cmd.go",
-            "ok": true,
-            "missing": []
-          },
-          {
             "path": "scripts/nomos_rule_substrate_demo.py",
             "ok": true,
             "missing": []
           },
           {
             "path": "docs/regulated/ip-governance/license-register.yaml",
-            "ok": true,
-            "missing": []
-          },
-          {
-            "path": "cli/internal/ruleexec/substrate_test.go",
-            "ok": true,
-            "missing": []
-          },
-          {
-            "path": "cli/internal/app/rule_cmd_test.go",
             "ok": true,
             "missing": []
           }
@@ -1897,7 +1903,7 @@
     },
     {
       "id": "vocabulary_skos_shacl",
-      "title": "Outillage vocabulaires SKOS/SHACL (VRC-44 #580) — les vocabulaires de facettes sont émis en graphe SKOS/OWL réel et validés par des shapes SHACL standard (specs/shacl/facet-ontology.shapes.ttl). Ce que cela ajoute au gate Go n’est pas une redite : les shapes sont du SHACL standard sur un graphe standard, donc pySHACL, Apache Jena ou TopBraid rendent le même verdict sur les mêmes octets — la vérification est rejouable HORS de NOMOS, ce qui en fait une preuve et non une auto-attestation. Contraintes : schéma étiqueté et déclarant ses axes disjoints, axe ancré à exactement un BFO root et une classe IOF (IRI réels) et portant au moins un terme, concept à exactement un prefLabel / scheme / axe / mapping BFO / mapping IOF et un id namespacé, et surtout ORTHOGONALITÉ — aucun terme sur deux axes déclarés disjoints, exprimée en SPARQL parce que c’est une relation à trois nœuds. Reste déclaré sidecar : la sonde must_be_absent garde SKOS/SHACL hors du moteur Go, et la doctrine lit sidecar comme PARTIAL.",
+      "title": "Validation de vocabulaires SKOS/RDF + prédicats NOMOS par SHACL (VRC-44 #580) — pySHACL vérifie en CI schéma, labels, mappings et orthogonalité SPARQL. Le run courant ne revendique ni émission OWL disjointUnionOf, ni équivalence Jena/TopBraid, ni justesse ontologique des ancrages. Déclaré sidecar car la validation est volontairement hors du moteur Go. Authoring/distribution statique est #643 ; VocBench/Skosmos et ISO 25964 restent hors claim courant.",
       "pillar": "B4",
       "claim_level": "artifact-generated (conformité du graphe aux shapes ; aucune revendication sur la justesse ontologique des ancrages BFO/IOF choisis)",
       "promotion_issue": "",
@@ -1905,7 +1911,7 @@
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -2026,15 +2032,15 @@
     },
     {
       "id": "repeated_ci_evidence_private_corpus",
-      "title": "Repeated CI evidence on the private corpus — scripts/repeated_ci_evidence.py MEASURES the scheduled-run chain of rbok-lawbook-e2e.yml from the Actions API and publishes a dated index; a run counts only if it is green AND still holds an unexpired archived pack, and a missed weekly occurrence breaks the chain (the streak ignoring cadence is published beside it so the rule's cost is visible); measured 2026-09-04 at 4 of 8 consecutive green runs, so the claim STAYS LOCKED — the offline CI gate fails on a hand-edited number, a policy edited after publication, a workflow that lost its schedule or lowered retention, a ledger that disagrees with the measurement, or prose asserting the claim (VRC-14 #560). Deliberately declared sidecar, not real: this is a Python guard over CI history with no Go engine, and the doctrine reads sidecar as PARTIAL — which is exactly the state of the chain at 4/8.",
+      "title": "Repeated CI evidence measurement on the private corpus — scripts/repeated_ci_evidence.py measures the scheduled-run chain and guards the published index; declared sidecar because the implementation intentionally lives over CI history, while the independent regulated roadmap tracks the evidence/claim state (4/8 on 2026-09-04, claim locked, #560 passive) separately",
       "pillar": "P1",
       "claim_level": "evidence-measurement only (one workflow, one private corpus; no coverage claim, and the claim it gates is locked until the target is met)",
-      "promotion_issue": "VRC-14",
+      "promotion_issue": "",
       "expected": "sidecar",
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -2085,15 +2091,15 @@
     },
     {
       "id": "training_competence_status",
-      "title": "Training and competence status COMPUTED from signed attestations (VRC-16 #562) — scripts/training_competence_gate.py reads the attestation records and reports established / requires_evidence / requires_definition per assigned role; absence of a record is never a pass, one uncovered competence keeps the whole role short, an unsigned, failed, expired or unknown-competence record is refused, and a self-assessment is refused unless a dated waiver with named compensating controls covers that exact record id. Computed 2026-09-04: 0 valid attestations, 0 of 6 held roles established, product_owner requires_definition. The gate also reconciles the three role vocabularies (assignment record, matrix, SOP) that previously shared exactly one role, and refuses any published status — matrix, SOP table, CTL-QS-004 — that drifts from the records. Declared sidecar, not real: a Python guard over QMS records with no Go engine, and the attestations it needs can only be produced by the people involved.",
+      "title": "Training and competence status computation — scripts/training_competence_gate.py reads attestations and reports established / requires_evidence / requires_definition per role, refusing absent, incomplete, unsigned, failed, expired, unknown-competence or unwaived self-assessment records. Declared sidecar because the tool intentionally lives over QMS records; the independent regulated roadmap tracks the authentic human-record state (0/6 established on 2026-09-04, #562) separately, and #640 repairs the template contract.",
       "pillar": "P1",
       "claim_level": "record-status computation only (says whether signed records exist and cover the required competences; no opinion on whether any person is competent)",
-      "promotion_issue": "VRC-16",
+      "promotion_issue": "",
       "expected": "sidecar",
       "computed": "sidecar",
       "mismatch": false,
       "reasons": [
-        "implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done)"
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
       ],
       "drift": [],
       "checks": {
@@ -2174,9 +2180,9 @@
   "summary": {
     "capabilities": 40,
     "computed": {
-      "real": 31,
+      "real": 32,
       "partial": 0,
-      "sidecar": 8,
+      "sidecar": 7,
       "stub": 0,
       "absent": 1
     },

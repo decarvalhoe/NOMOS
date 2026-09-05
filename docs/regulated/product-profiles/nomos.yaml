@@ -1,4 +1,5 @@
-schema_version: "0.1.0"
+# v0.2.0: open dependencies split into regulated claim gates (ADR-VRC-0004).
+schema_version: "0.2.0"
 product:
   id: nomos
   name: Nomos
@@ -22,13 +23,13 @@ owned_evidence:
     status: implemented
     path: docs/regulated/control-matrix/
   - id: nomos-validation-pack
-    status: implemented
+    status: structure_installed_not_validated
     path: docs/regulated/validation-pack/
   - id: nomos-supplier-assurance-pack
     status: implemented
     path: docs/regulated/supplier-pack/
   - id: nomos-release-evidence-bundle
-    status: implemented
+    status: planned
     path: docs/regulated/release-bundle/
   - id: nomos-ai-rag-governance
     status: implemented
@@ -36,15 +37,7 @@ owned_evidence:
   - id: nomos-praxis-evidence-contract
     status: planned
     path: docs/regulated/customer-integration/
-open_dependencies:
-  - id: RBOKproject/NOMOS#314
-    area: rbok_poc
-    status: open
-    blocks: stronger_rbok_validation_claim
-  - id: RBOKproject/NOMOS#320
-    area: praxis_interface
-    status: open
-    blocks: nomos_praxis_joint_claim
+open_claim_gates:
   - id: RBOKproject/NOMOS#192
     area: licensed_reference
     status: open
@@ -58,13 +51,15 @@ open_dependencies:
     status: open
     blocks: gamp5_iso25010_license_review
   - id: RBOKproject/NOMOS#196
-    area: reference_processing
+    area: licensed_reference_processing
     status: open
-    blocks: public_and_licensed_bible_processing
+    blocks: licensed_bible_clause_processing
+    autonomous_public_slice: RBOKproject/NOMOS#644
 praxis_relationship:
   relationship: upstream_evidence_producer
   downstream_product: praxis
-  praxis_status_until_nomos_contract_verified: blocked
+  praxis_regulated_reliance_until_nomos_contract_verified: blocked
+  technical_fixture_work_before_activation: allowed_with_not_qualified_inputs
   required_export:
     - canonical_claim_ids
     - source_manifest_hashes

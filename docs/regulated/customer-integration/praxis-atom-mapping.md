@@ -150,9 +150,11 @@ The contract version (`schema_version` for feeds, `contract_version` for engine 
 
 Praxis must pin to a major version and validate the contract version before import.
 
-## Activation Checklist
+## Authoritative Regulated Activation Checklist
 
-Before activating the Praxis integration:
+Technical schema/import/reject fixtures may run first on synthetic or
+`not_qualified_external_input` artifacts. They carry no regulated weight.
+Before **authoritative regulated activation**:
 
 - [ ] All Nomos prerequisite conditions reach `verified` status
 - [ ] Praxis has a pinned contract version in its import configuration

@@ -169,14 +169,16 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install --quiet pyyaml pyshacl
-      # VRC-44 (#580): the facet vocabularies are emitted as a SKOS/OWL graph and
-      # validated with standard SHACL shapes. The portability is the point — the
-      # same verdict is reachable with any SHACL engine, so the check is
-      # reproducible outside NOMOS. A term on two disjoint axes turns this red.
+      # VRC-44 (#580): facet vocabularies are emitted as SKOS/RDF + NOMOS
+      # predicates and validated with standard SHACL shapes. This recorded run
+      # uses pySHACL; the graph/shapes are inspectable outside NOMOS, but no
+      # cross-engine equivalence is claimed. A disjoint-axis term turns red.
       - name: Facet SKOS/SHACL gate (VRC-44)
         run: python scripts/facet_shacl_gate.py --root .
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
+      - name: Independent roadmap lane guard (ADR-VRC-0004)
+        run: python scripts/roadmap_lane_guard.py --root .
       # VRC-14 (#560): the published repeated-evidence index must replay exactly
       # from the runs it records, the workflow must still carry the schedule and
       # the retention the chain relies on, and the ledger and the claim boundary

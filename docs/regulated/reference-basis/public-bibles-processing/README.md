@@ -1,36 +1,49 @@
-# Public bibles processing (RCP-010 / #196, public half)
+# Public Reference Processing Fixture (RCP-010 / #196)
 
 [RCP-010 (#196)](https://github.com/RBOKproject/NOMOS/issues/196) asks to process
-the **public and licensed** Nomos canonical bibles. This directory delivers the
-**public half**, which is actionable today. The **licensed half** (ISO 13485,
-ISO/IEC/IEEE 12207, ISO/IEC 25010, ISPE GAMP 5) is **blocked on licensed-document
-procurement** (#192/#193/#194) and, per the development doctrine §2.6, must never
-be committed as full text — so it is explicitly excluded here rather than faked.
+public and licensed canonical bibles. This directory currently proves only the
+**pipeline mechanics on two public in-repo policy documents**. It does not prove
+that the 23 references classified `public` in the register were fetched or
+atomized.
 
-## The split
+Actual registry-driven public-source processing and retained evidence is the
+autonomous issue #644. The licensed half (ISO 13485, ISO/IEC/IEEE 12207,
+ISO/IEC 25010, ISPE GAMP 5) remains on the independent regulated roadmap
+(#192/#193/#194/#196) and blocks only its named clause-level use.
 
-The external reference register classifies every bible by `source_class`.
-`scripts/regulated_reference_canon.py` is the source of truth:
+## Measured Split
 
-| Class | Count | Processed here? |
-|---|---|---|
-| **public** (FDA, NIST, NASA, ICH, MHRA, EU, GitHub …) | 23 | ✅ yes — read-only Nomos pipeline |
-| **licensed** (ISO ×3, ISPE GAMP 5) | 4 | ⛔ blocked on procurement (#192/#193/#194) |
+`scripts/regulated_reference_canon.py` classifies the reference register;
+`scripts/process_public_bibles.py` currently selects two repository documents
+as its test corpus. These are different counts:
 
-## What is produced (RCP-010 deliverables)
+| Class / corpus | Registered | Actually processed by this fixture | Claim |
+|---|---:|---:|---|
+| Public references (FDA, NIST, NASA, ICH, MHRA, EU, GitHub…) | 23 | 0 external source snapshots | classified only |
+| In-repo reference-policy documents | — | 2 | pipeline mechanics exercised |
+| Licensed references (ISO ×3, ISPE GAMP 5) | 4 | 0 | explicitly blocked |
 
-`scripts/process_public_bibles.py` snapshots the in-repo public reference corpus
-into a dedicated, **push-free** git checkout (the corpus is never the live repo)
-and runs `nomos corpus scan → manifest → feed → attest` over it:
+The two processed files are `docs/regulated/reference-basis/README.md` and
+`docs/regulated/reference-basis/nomos-bible-corpus-policy.md`.
 
-- **manifests** — `source-manifest.yaml`;
-- **atomization reports** — the corpus `feed.json`;
-- **attestation** — `attestation.json`;
-- **no-source-mutation evidence** — the corpus read-only guard plus a before/after
-  `git status` check on the snapshot corpus.
+## What The Fixture Produces
 
-[`processing-summary.json`](processing-summary.json) is the committed, point-in-time
-receipt: `read_only_guard: pass`, `source_mutation: none`, `licensed_leak: []`.
+`scripts/process_public_bibles.py` copies those two files into a dedicated,
+push-free checkout and runs the read-only Nomos pipeline. During the run it
+creates a source manifest, feed and attestation in a temporary artifact
+directory; only [`processing-summary.json`](processing-summary.json) is retained
+today. The receipt records `read_only_guard: pass`, `source_mutation: none` and
+`licensed_leak: []`.
+
+Because the full artifacts are not retained and no registered external public
+source is snapshotted, the honest claim is:
+
+> Two public in-repo policy documents exercised the read-only pipeline without
+> licensed leakage or source mutation.
+
+It is not “23 public bibles processed.” #644 must retain/content-address every
+stage and count only a registered source that completes scan, manifest, feed,
+body ledger, attestation and strict gate.
 
 ## Reproduce
 
@@ -40,16 +53,15 @@ python scripts/process_public_bibles.py --nomos-bin /tmp/nomos \
   --out docs/regulated/reference-basis/public-bibles-processing/processing-summary.json
 ```
 
-The script returns non-zero if **any** source mutation is detected, a licensed
-bible leaks into the processed set, or the manifests/reports are not produced —
-so a green run is the acceptance evidence (doctrine §2.3). The test
-`tests/test_public_bibles_processing.py` runs the same pipeline in CI.
+The current test `tests/test_public_bibles_processing.py` proves the bounded
+fixture behavior. It must not be used as evidence for external-source coverage.
 
-## Acceptance mapping (#196)
+## Current Acceptance Mapping
 
-| Acceptance criterion | Evidence |
+| Bounded criterion | Evidence |
 |---|---|
-| Atomization reports and manifests exist | `artifacts_present.{manifest,atomization_feed}` |
-| …without source mutation | `read_only_guard: pass`, `source_mutation: none` |
-| Read-only guard proves corpus unchanged before/after | before/after `git status` + `git rev-parse HEAD` equal |
-| Licensed bibles not processed | `licensed_leak: []`, listed under `bible_split.licensed_blocked` |
+| Two policy documents selected | `processing-summary.json:corpus.documents` |
+| Temporary manifest/feed created during the run | `artifacts_present` receipt fields |
+| No source mutation | `read_only_guard: pass`, `source_mutation: none` |
+| No licensed bible processed | `licensed_leak: []` |
+| Actual public sources retained end-to-end | **open: #644** |

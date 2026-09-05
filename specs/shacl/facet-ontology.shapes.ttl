@@ -3,8 +3,8 @@
 # These shapes are the PORTABLE half of the facet contract. The Go pack gate
 # already checks the pack manifest's own rules; what it cannot give is a check a
 # third party can re-run without NOMOS. These shapes are standard SHACL over a
-# standard SKOS/OWL graph: pySHACL, Apache Jena and TopBraid all render the same
-# verdict on the same bytes. That portability is the evidence.
+# SKOS/RDF graph plus NOMOS predicates. The recorded engine is pySHACL; other
+# engines may replay the shapes, but equivalence needs its own execution record.
 #
 # The shapes deliberately restate nothing the CUE schema already enforces about
 # FILE shape. They constrain the GRAPH: that the vocabulary is a well-formed

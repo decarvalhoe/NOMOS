@@ -1,6 +1,6 @@
 # 29 - Post-Alpha Release Issue List
 
-Date: 2026-05-04
+Date: 2026-09-05
 Baseline: `v0.1.0-ALPHA`
 
 ## Purpose
@@ -10,13 +10,20 @@ GitHub issue list. It is the planning source for the next implementation
 waves and must be kept aligned with `docs/14-product-roadmap.md` and
 `docs/15-product-backlog.md`.
 
+This document plans **product and DevOps delivery only**. The independent
+regulated-assurance roadmap is [28](28-regulated-compliance-closure-plan.md).
+Its calendar evidence, human records, licence acquisitions, approvals and
+irreversible writes are nonblocking inputs/claim gates, never engineering
+dependencies. Routing is executable in [roadmap-lanes.yaml](roadmap-lanes.yaml)
+under [ADR-VRC-0004](adr/0004-independent-roadmaps-risk-based-validation.md).
+
 The validated priority is **fidelity first**:
 
 ```text
 v0.2 Fidelity Closure
   -> v0.3 Portable Corpus Fidelity
-  -> v0.4 Reference Bible Governance
-  -> v0.5 Regulated Evidence Pack
+  -> v0.4 Reference tooling and public provenance
+  -> v0.5 Evidence and release-support tooling
   -> v0.6 Nomos/Praxis Contract
 ```
 
@@ -24,22 +31,25 @@ No issue below may be used to claim certification, formal validation,
 or regulated compliance by itself. Each issue creates product evidence,
 operating controls, or claim-boundary clarity only.
 
-## Current Open GitHub Issues
+## Current Autonomous Issues
 
-| Issue | Release lane | Role | Status |
-|---|---|---|---|
-| `#314` | `v0.2` / `v0.3` | AQ epic for RBOK POC proof level and stronger fidelity claims. | Open |
-| `#382` | `v0.2` | Short critical atom reconciliation. | Open |
-| `#192` | `v0.4` | Acquire and intake ISO 13485:2016. | Open |
-| `#193` | `v0.4` | Acquire and intake ISO/IEC/IEEE 12207:2026. | Open |
-| `#194` | `v0.4` | Complete GAMP 5 and ISO/IEC 25010 license review. | Open |
-| `#196` | `v0.4` | Process public and licensed reference bibles with Nomos. | Open |
-| `#320` | `v0.6` | Activate Nomos-to-Praxis atom mapping after Nomos verification. | Open / blocked |
+| Product queue | DevOps queue |
+|---|---|
+| `#642` — persisted rule-execution integrity | `#640` — competence template/gate contract |
+| `#610` → `#611` → `#612` — Recursio contract, immutable snapshot, E2E | `#641` — licence/no-full-text gates |
+| `#637` — offline Sigstore verification | `#644` — actual public-source processing |
+| `#643` — static SKOS authoring/distribution | `#639` — candidate release-bundle rehearsal |
+| — | `#645` — non-production keyless issuance |
+
+Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
+28 as passive, human or external. They block only their named evidence/use or
+claim, and never either queue above. Product and DevOps select independently.
 
 ## Dependency Tree
 
 ```text
-NRT-001 #382 short critical inventory schema/report
+Historical closed foundation (#382 / #314):
+NRT-001 short critical inventory schema/report
   -> NRT-002 #382 short critical classifier + dispositions
   -> NRT-003 #382 semantic quality + strict-gate blocking
   -> NRT-004 #382 RBOK POC rerun with short-critical evidence
@@ -53,23 +63,35 @@ NRT-006 portable golden corpus fixtures
   -> NRT-010 multi-domain POC evidence pack
   -> v0.3 release decision
 
-#192 + #193 + #194
-  -> NRT-011 licensed sidecar and no-full-text policy gate
-  -> #196 reference bible processing
-  -> NRT-012 reference-to-control matrix closure
-  -> v0.4 release decision
+#641 licence/no-full-text gate (synthetic fixtures, autonomous)
+  -> #644 actual public-source processing (autonomous)
+  -> v0.4 product-tooling decision
 
-NRT-013 release evidence bundle by tag
+#192 + #193 + #194 + #196 (independent regulated inputs)
+  -> only their named licensed-source uses and claims
+
+NRT-013 candidate release evidence bundle (no tag/publication)
   -> NRT-014 attestation claim_coverage CLI wiring
-  -> NRT-015 owner/training/approval records
-  -> v0.5 release decision
+  -> v0.5 product-tooling decision
 
 NRT-016 Nomos/Praxis evidence schema
   -> NRT-017 atom mapping fixture
   -> NRT-018 Praxis activation gate
-  -> #320 closure decision
+  -> #320 closed technical boundary; regulated reliance remains plan 28
   -> v0.6 release decision
 ```
+
+Recursio is an independent, fixture-first product sequence:
+
+```text
+#610 nomos.web-source contract
+  -> #611 immutable external JSONL snapshot verifier/importer
+  -> #612 local Recursio -> Nomos E2E
+```
+
+Robots/licence decisions for a real website and production Recursio evidence
+are later source-specific inputs; the offline contract and fixtures do not wait
+for them.
 
 ## v0.2.0 - Fidelity Closure
 
@@ -350,14 +372,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 Claim impact: permits scoped wording that Nomos fidelity checks are
 portable across the tested corpus families.
 
-## v0.4.0 - Reference Bible Governance
+## v0.4.0 - Reference Tooling And Public Provenance
 
-Goal: process regulated reference bibles without license misuse or
-overclaiming.
+Goal: provide reference-policy gates and process actual public sources without
+licence misuse or overclaiming. Licensed acquisition/use remains on roadmap 28.
 
 ### NRT-011 - Licensed Sidecar And No-Full-Text Gate
 
-GitHub mapping: supports `#192`, `#193`, `#194`, `#196`.
+GitHub mapping: `#641`; supports regulated issues `#192`, `#193`, `#194`,
+`#196` without depending on their decisions.
 
 Deliverables:
 
@@ -382,7 +405,8 @@ regulatory approval.
 
 ### NRT-012 - Reference-To-Control Matrix Closure
 
-GitHub mapping: supports `#196`.
+GitHub mapping: public evidence `#644`; regulated licensed use `#196` consumes
+the same mapping later without blocking it.
 
 Deliverables:
 
@@ -405,23 +429,28 @@ python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evid
 Claim impact: moves Nomos closer to regulated-readiness evidence, not
 certification.
 
-## v0.5.0 - Regulated Evidence Pack
+## v0.5.0 - Evidence And Release-Support Tooling
 
-Goal: make release decisions reconstructible by a reviewer.
+Goal: make candidate evidence bundles reconstructible by a reviewer. The
+regulated roadmap owns the authentic release decision, approval, tag and
+publication.
 
-### NRT-013 - Release Evidence Bundle By Tag
+### NRT-013 - Candidate Release Evidence Bundle
 
-GitHub mapping: new issue.
+GitHub mapping: `#639`.
 
 Deliverables:
 
-- Emit `regulated-release-evidence-pack.json` per tag.
-- Include CI URLs, source hashes, corpus hashes, attestations,
-  deviations, waivers, approvals, and release decision.
+- Emit `regulated-release-evidence-pack.json` per candidate commit; a tag is
+  optional input, never invented.
+- Include CI URLs, source hashes, corpus hashes, attestations, deviations,
+  waivers, approval status and release-decision status. Pending stays pending;
+  tooling never invents the record.
 
 Definition of done:
 
-- A reviewer can reconstruct the release decision from retained files.
+- A reviewer can reconstruct what the candidate contains and which decisions
+  remain pending from retained files.
 - The bundle records missing evidence as blocked, not omitted.
 
 Verification:
@@ -430,11 +459,12 @@ Verification:
 python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json
 ```
 
-Claim impact: supports NQ-3/NQ-4 readiness discussions.
+Claim impact: proves candidate-bundle preparation only; NQ claims remain on
+roadmap 28.
 
-### NRT-014 - Attestation Claim Coverage CLI Wiring
+### NRT-014 - Attestation Claim Coverage CLI Wiring (Delivered)
 
-GitHub mapping: new issue.
+GitHub mapping: VRC-07 `#553` (closed; capability real in the wiring matrix).
 
 Deliverables:
 
@@ -458,29 +488,14 @@ go test ./internal/corpus -run Attestation -v
 
 Claim impact: closes a known alpha evidence gap.
 
-### NRT-015 - Owner, Training, Approval Records
+### Regulated Interface (Nonblocking)
 
-GitHub mapping: new issue.
-
-Deliverables:
-
-- Record named quality owner, technical owner, reviewer, approval role,
-  and required training evidence.
-- Keep placeholder or missing records as blocking release findings.
-
-Definition of done:
-
-- Release gate can distinguish documented approval from missing owner
-  evidence.
-
-Verification:
-
-```bash
-python scripts/regulated_approval_gate.py
-```
-
-Claim impact: supports regulated-release governance without replacing
-customer validation.
+Owner, training, competence, approval and release records are not product
+deliverables. They live on the independent regulated roadmap (plan 28,
+#561/#562). DevOps may provide technically verified templates with a declared
+validation state and bounded reliance, plus status tooling (#639, #640), but
+the records remain authentic human acts and never enter this engineering
+dependency tree.
 
 ## v0.6.0 - Nomos/Praxis Contract
 
@@ -489,7 +504,7 @@ to weaken the claim boundary.
 
 ### NRT-016 - Nomos/Praxis Evidence Schema
 
-GitHub mapping: prerequisite for `#320`.
+GitHub mapping: follow-up to the technical boundary delivered by closed issue `#320`.
 
 Deliverables:
 
@@ -511,7 +526,7 @@ Claim impact: creates the shared contract; does not activate Praxis yet.
 
 ### NRT-017 - Atom Mapping Fixture
 
-GitHub mapping: prerequisite for `#320`.
+GitHub mapping: autonomous fixture work after closed issue `#320`.
 
 Deliverables:
 
@@ -534,7 +549,7 @@ runtime assurance.
 
 ### NRT-018 - Praxis Activation Gate
 
-GitHub mapping: closes `#320` only if passed.
+GitHub mapping: gates regulated Praxis reliance; it does not reopen or close `#320`.
 
 Deliverables:
 
@@ -545,8 +560,9 @@ Deliverables:
 
 Definition of done:
 
-- `#320` remains blocked unless the gate passes on verified Nomos
-  artifacts.
+- Regulated Praxis reliance remains blocked unless the gate passes on verified
+  Nomos artifacts; technical fixtures may run earlier on `not_qualified`
+  inputs.
 
 Verification:
 
@@ -582,7 +598,8 @@ GitHub Actions run before merge.
    verification commands, dependencies, and claim impact from this file.
 3. Close a child issue only after its evidence artifact is committed or
    linked in the PR.
-4. Do not close `#314` or `#320` from documentation alone.
+4. Historical issues `#314` and `#320` are closed; do not reuse their closure
+   as evidence for a later regulated claim.
 5. Do not close licensed-reference issues from surrogate or public
    references; they require the explicit acquisition / license evidence
    described in the issue.
