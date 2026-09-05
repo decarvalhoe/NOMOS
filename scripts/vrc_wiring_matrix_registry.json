@@ -2714,6 +2714,97 @@
           ]
         }
       ]
+    },
+    {
+      "id": "release_candidate_bundle",
+      "title": "Bundle candidat de release v0.2.0-ALPHA (#639) — `nomos release candidate` assemble, depuis un commit, un bundle vérifié sur le CONTENU et les STATUTS : artefacts requis présents ET lisibles (YAML mapping, JSON valide, Markdown titré), gates requis mesurés verts sur le MÊME commit (`scripts/release_candidate_gates.py` enregistre les codes de sortie), tous les gaps bloquants ouverts du ledger reconnus — et rien de reconnu que le ledger a fermé —, risques LUS depuis leur source mesurée (VRC-14 : 4/8 enregistré, `blocking: false`, jamais une précondition), waivers complets, déviations avec record. Toute règle violée = refus nommé (`CANDIDATE_*`), rien n'est écrit. `approval_status` est toujours `pending` : un statut approuvé, une entrée d'approbation ou `release_executed: true` sont refusés — une approbation est un acte humain sous la SOP de release (#561), jamais une sortie d'outil. `nomos release verify` rejoue hors ligne : octet d'evidence changé, entrée retirée, gates.json édité, hash/gate/approbation falsifiés dans le manifeste, fichier du tree modifié après assemblage → `CANDIDATE_TAMPERED` ou le code d'invariant. Rehearsal CI : assemble → vérifie → un octet falsifié DOIT être refusé → archive `v0.2.0-ALPHA-candidate-<sha>` en artefact de workflow, `permissions: contents: read`, aucun tag ni release. Ce que cela NE prouve PAS : la décision de release, le niveau de qualité, l'acceptabilité d'un gap.",
+      "pillar": "P1",
+      "claim_level": "capability (bundle candidat vérifiable ; aucune release, aucune approbation, aucun claim de niveau)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/release-candidate-rehearsal.yml",
+          "contains": [
+            "nomos\" release candidate",
+            "release verify --bundle",
+            "verification accepted a tampered bundle",
+            "permissions:\n  contents: read",
+            "actions/upload-artifact@v4"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/compliance/release_candidate.go",
+          "contains": [
+            "func AssembleCandidate(",
+            "func VerifyCandidateZip(",
+            "func VerifyCandidateManifest(",
+            "CANDIDATE_APPROVAL_INVENTED",
+            "CANDIDATE_GAP_STATUS_MISMATCH",
+            "CANDIDATE_GATE_COMMIT_MISMATCH",
+            "CANDIDATE_TAMPERED",
+            "Blocking: false"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/release_cmd.go",
+          "contains": [
+            "compliance.AssembleCandidate(",
+            "REFUSED, nothing written",
+            "compliance.VerifyCandidateZip("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"release\":       releaseCommand"
+          ]
+        },
+        {
+          "path": "scripts/release_candidate_gates.py",
+          "contains": [
+            "nomos-release-candidate-gates-v1",
+            "\"exit_code\": code"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/compliance/release_candidate_test.go",
+          "contains": [
+            "TestCandidateRefusals",
+            "TestCandidateZipTamperIsRefused",
+            "TestArtifactContentChecksAreDistinct",
+            "approval invented while pending",
+            "gates measured on another commit",
+            "tree file changed after assembly"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/regulated/release/v0.2.0-ALPHA-candidate.yaml",
+          "contains": [
+            "approval_status: pending",
+            "approvals: []",
+            "release_executed: false",
+            "kind: repeated_ci_evidence"
+          ]
+        }
+      ],
+      "docs": [
+        {
+          "path": "docs/regulated/release/README.md",
+          "contains": [
+            "VRC-14 is a risk, not a gate",
+            "CANDIDATE_APPROVAL_INVENTED"
+          ]
+        }
+      ]
     }
   ]
 }

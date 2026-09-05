@@ -1,0 +1,102 @@
+name: Release candidate rehearsal
+
+# #639 — prepare and VERIFY a v0.2.0-ALPHA candidate bundle, and publish
+# nothing. The bundle is archived as a workflow artifact with
+# approval_status=pending; the tag, the GitHub Release, the notes and the
+# approvals are human acts under the release SOP (#561, regulated lane) and
+# never happen here. The VRC-14 repeated-CI measure is recorded in the bundle
+# as a risk with its measured value, not used as a gate.
+#
+# The rehearsal is also adversarial: after the bundle verifies, one evidence
+# byte inside a copy is flipped and verification MUST refuse it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-candidate-rehearsal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rehearse:
+    name: Assemble, verify and archive the candidate (never publish)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python deps for the gate set
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Build the CLI
+        run: cd cli && go build -o "$RUNNER_TEMP/nomos" .
+
+      # nomos-report.json is a RUN output on this commit (a required NQ-1
+      # artifact), produced here rather than committed.
+      - name: Produce nomos-report.json on this commit
+        run: |
+          "$RUNNER_TEMP/nomos" report --root . --project-id nomos --project-name NOMOS \
+            --domain regulated-tooling --risk-level medium --output nomos-report.json
+          test -s nomos-report.json
+
+      - name: Measure the gate set on this commit
+        run: python3 scripts/release_candidate_gates.py --out "$RUNNER_TEMP/gates.json" --commit "$GITHUB_SHA"
+
+      - name: Assemble the candidate (refuses and writes nothing on any rule)
+        run: |
+          "$RUNNER_TEMP/nomos" release candidate \
+            --spec docs/regulated/release/v0.2.0-ALPHA-candidate.yaml \
+            --gates "$RUNNER_TEMP/gates.json" \
+            --commit "$GITHUB_SHA" \
+            --repo-root . \
+            --out "$RUNNER_TEMP/candidate"
+
+      - name: Verify the candidate offline and against the tree
+        run: |
+          "$RUNNER_TEMP/nomos" release verify --bundle "$RUNNER_TEMP/candidate/v0.2.0-ALPHA-candidate.zip" --repo-root .
+          jq -e '.approval_status == "pending" and .release_executed == false and .verdict == "candidate_verified"' \
+            "$RUNNER_TEMP/candidate/candidate-manifest.json" > /dev/null
+          jq -r '"VRC-14 recorded as risk: \(.risks[0].measured.consecutive_green_runs)/\(.risks[0].measured.target_consecutive_green_runs) consecutive green, claim_unlocked=\(.risks[0].measured.claim_unlocked), blocking=\(.risks[0].blocking)"' \
+            "$RUNNER_TEMP/candidate/candidate-manifest.json"
+          jq -r '"open gaps carried: " + ([.gaps_open[].id] | join(", "))' "$RUNNER_TEMP/candidate/candidate-manifest.json"
+
+      - name: Adversarial — a flipped evidence byte must be refused
+        run: |
+          python3 - "$RUNNER_TEMP/candidate/v0.2.0-ALPHA-candidate.zip" "$RUNNER_TEMP/tampered.zip" <<'PY'
+          import sys, zipfile
+          src, dst = sys.argv[1], sys.argv[2]
+          target = "evidence/docs/regulated/product-profiles/nomos.yaml"
+          with zipfile.ZipFile(src) as zin, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:
+              names = zin.namelist()
+              assert target in names, names
+              for name in names:
+                  data = zin.read(name)
+                  if name == target:
+                      data += b"\n# tampered\n"
+                  zout.writestr(name, data)
+          PY
+          if "$RUNNER_TEMP/nomos" release verify --bundle "$RUNNER_TEMP/tampered.zip"; then
+            echo "::error::verification accepted a tampered bundle"; exit 1
+          fi
+          echo "tampered bundle refused, as required"
+
+      - name: Archive the candidate (approval pending; nothing published)
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0.2.0-ALPHA-candidate-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/candidate/
+            ${{ runner.temp }}/gates.json
+          retention-days: 90
+          if-no-files-found: error

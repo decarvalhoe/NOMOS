@@ -41,6 +41,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"github":        githubCommand,
 		"evidence":      evidenceCommand,
 		"attest":        attestCommand,
+		"release":       releaseCommand,
 	}
 
 	if len(args) == 0 {
@@ -89,6 +90,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
 	fmt.Fprintln(stdout, "  evidence   Hash, prepare/sign, and verify evidence bundles")
 	fmt.Fprintln(stdout, "  attest     Sign and verify attestation predicates (ECDSA P-256 DSSE)")
+	fmt.Fprintln(stdout, "  release    Assemble and verify a release CANDIDATE bundle (never approves, tags or publishes)")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
 	return 0

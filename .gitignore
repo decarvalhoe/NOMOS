@@ -20,3 +20,6 @@ tmp/
 
 # #644 — retained public-source artifacts (feed/ledger carry third-party derived text); receipts are committed, artifacts are not
 .nomos/
+
+# #639: nomos-report.json is a run output produced by the release-candidate rehearsal, never committed
+/nomos-report.json

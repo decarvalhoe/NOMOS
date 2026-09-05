@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: [637, 643]
-    devops: [639, 645]
+    devops: [645]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -131,11 +131,11 @@ items:
       reliance: supporting_use_until_validated
   - issue: 639
     title: Prepare and verify a v0.2.0-ALPHA candidate bundle
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     parent: 561
@@ -143,7 +143,7 @@ items:
     regulated_tool:
       intended_use: prepare and verify a release-candidate evidence bundle without approving or publishing a release
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 640
     title: Align competence template and gate
