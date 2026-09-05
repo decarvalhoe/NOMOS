@@ -857,6 +857,34 @@
         {"path": "docs/regulated/operations/training-records/attestations/README.md", "contains": ["cannot be generated"]},
         {"path": "tests/test_training_competence_gate.py", "contains": ["test_self_assessment_without_a_waiver_is_refused", "test_one_missing_competence_keeps_the_whole_role_short", "test_expired_record_stops_counting", "test_matrix_claiming_established_without_records_is_refused", "test_role_held_but_absent_from_the_crosswalk_is_refused", "test_attestations_directory_holds_no_generated_record"]}
       ]
+    },
+{
+      "id": "web_source_contract",
+      "title": "Contrat web-source (#610, Recursio → NOMOS) — un bloc `web_source` optionnel sur toute source porte la provenance d\u2019une capture : canonical_url et fetched_url, http_status, ETag/Last-Modified, content_hash des octets bruts et normalized_content_hash du texte normalisé, fetched_at, crawler_version, scope_policy, décisions robots/licence, parent_url et depth. Validé fail-closed par le manifeste, le feed et `nomos check` avec codes d\u2019erreur stables : sans adresse, sans hash stable algo:hex, sans instant ni crawler, la source est refusée. `undecided` peut être ENREGISTRÉ, jamais ADMIS ; une page disallowed ou hors scope se consigne, n\u2019entre jamais dans un feed. Les cinq natures (canonique, référence, binaire, unsupported, exclu par politique) sont les champs FSQ-02 existants, pas une seconde vocabulaire. Claim porté par l\u2019artefact : capture à l\u2019instant T, jamais la vérité courante du site ; décisions robots/licence enregistrées telles que prises, jamais adjugées.",
+      "pillar": "P2",
+      "claim_level": "artifact-generated (provenance d\u2019une capture ; aucun claim sur la licéité du crawl d\u2019un site réel)",
+      "promotion_issue": "",
+      "expected": "real",
+      "engine": [
+        {"path": "cli/internal/corpus/web_source.go", "contains": ["func (w WebSource) Validate(", "WEB_SOURCE_NO_CONTENT_HASH", "WEB_SOURCE_UNSTABLE_HASH", "WEB_SOURCE_ROBOTS_UNDECIDED", "never the site's ongoing truth"]}
+      ],
+      "production_callers": [
+        {"path": "cli/internal/corpus/manifest.go", "contains": ["WebSource *WebSource", "m.WebSource.Validate("]},
+        {"path": "cli/internal/corpus/feed.go", "contains": ["WebSource:         s.WebSource", "fs.WebSource.Normalize()"]},
+        {"path": "cli/internal/checks/sources.go", "contains": ["func checkWebSource(", "src.WebSource.Validate("]},
+        {"path": "cli/internal/app/app.go", "contains": ["\"check\":", "\"corpus\":"]}
+      ],
+      "adversarial_tests": [
+        {"path": "cli/internal/corpus/web_source_test.go", "contains": ["TestWebSource_EachMissingProvenanceFieldIsRefusedWithItsCode", "TestWebSource_UndecidedIsRecordableButNeverAdmitted", "TestWebSource_DisallowedIsRecordableButNeverAdmitted", "TestManifestSource_AdmittedWebSourceWithoutProvenanceIsRefused", "TestManifestSource_WithoutWebSourceIsUnchanged"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["go test -race ./..."]}
+      ],
+      "sidecar": [
+        {"path": "specs/source-manifest.cue", "contains": ["#WebSource", "#StableHash", "web_source?: #WebSource"]},
+        {"path": "templates/source-manifest.schema.yaml", "contains": ["web_source:", "robots_decision"]},
+        {"path": "docs/02-source-registry.md", "contains": ["Sources Web (#610)", "WEB_SOURCE_NO_CONTENT_HASH"]}
+      ]
     }
   ]
 }

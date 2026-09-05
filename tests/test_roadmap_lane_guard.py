@@ -49,10 +49,16 @@ class RoadmapLaneGuardTests(unittest.TestCase):
         self.assertTrue(any("#562 is not an open autonomous item" in failure for failure in failures), failures)
 
     def test_every_open_autonomous_item_is_ordered(self) -> None:
+        # Drop whichever item currently heads the product queue; the guard must
+        # name it. Not a literal issue number — those drift with every closure.
         data = registry()
-        data["selection_policy"]["dispatch_queues"]["product"].remove(610)
+        queue = data["selection_policy"]["dispatch_queues"]["product"]
+        head = queue[0]
+        queue.remove(head)
         failures = guard.validate(data)
-        self.assertTrue(any("omit open autonomous issue(s): #610" in failure for failure in failures), failures)
+        self.assertTrue(
+            any(f"omit open autonomous issue(s): #{head}" in failure for failure in failures), failures
+        )
 
     def test_regulated_tool_must_declare_intended_use_and_validation(self) -> None:
         data = copy.deepcopy(registry())
@@ -166,15 +172,21 @@ class RegistryTruthTests(unittest.TestCase):
         self.assertEqual(item["regulated_tool"]["validation_state"], "technically_verified")
 
     def test_queue_table_is_rendered_from_the_registry(self) -> None:
-        table = guard.render_queue_table(registry())
+        # Structural: the table shows exactly the registry's open autonomous
+        # items, in queue order, and nothing closed. Hardcoding the current head
+        # here would make this test drift with every closure — the very defect
+        # this table exists to remove.
+        data = registry()
+        table = guard.render_queue_table(data)
         self.assertIn(guard.QUEUE_BEGIN, table)
         self.assertIn(guard.QUEUE_END, table)
         self.assertIn("| Product queue | DevOps queue |", table)
-        # Heads are the real heads, and the delivered items are gone.
-        self.assertIn("#610 —", table)
-        self.assertIn("#641 —", table)
-        self.assertNotIn("#642", table)
-        self.assertNotIn("#640", table)
+        queues = data["selection_policy"]["dispatch_queues"]
+        for issue in queues["product"] + queues["devops"]:
+            self.assertIn(f"#{issue} —", table, f"queued #{issue} missing from the table")
+        for item in data["items"]:
+            if item["state"] == "closed":
+                self.assertNotIn(f"#{item['issue']} —", table, f"closed #{item['issue']} rendered")
 
     def test_queue_table_pads_the_shorter_lane(self) -> None:
         data = registry()
@@ -208,7 +220,8 @@ class RegistryTruthTests(unittest.TestCase):
             self.assertIn("hand-written prose that must survive", text)
             self.assertIn("more prose after", text)
             self.assertNotIn("| stale | table |", text)
-            self.assertIn("#610 —", text)
+            head = registry()["selection_policy"]["dispatch_queues"]["product"][0]
+            self.assertIn(f"#{head} —", text)
             # Idempotent: a second run changes nothing.
             before = text
             guard.emit_docs(root, registry())

@@ -2142,6 +2142,81 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "web_source_contract",
+      "title": "Contrat web-source (#610, Recursio → NOMOS) — un bloc `web_source` optionnel sur toute source porte la provenance d’une capture : canonical_url et fetched_url, http_status, ETag/Last-Modified, content_hash des octets bruts et normalized_content_hash du texte normalisé, fetched_at, crawler_version, scope_policy, décisions robots/licence, parent_url et depth. Validé fail-closed par le manifeste, le feed et `nomos check` avec codes d’erreur stables : sans adresse, sans hash stable algo:hex, sans instant ni crawler, la source est refusée. `undecided` peut être ENREGISTRÉ, jamais ADMIS ; une page disallowed ou hors scope se consigne, n’entre jamais dans un feed. Les cinq natures (canonique, référence, binaire, unsupported, exclu par politique) sont les champs FSQ-02 existants, pas une seconde vocabulaire. Claim porté par l’artefact : capture à l’instant T, jamais la vérité courante du site ; décisions robots/licence enregistrées telles que prises, jamais adjugées.",
+      "pillar": "P2",
+      "claim_level": "artifact-generated (provenance d’une capture ; aucun claim sur la licéité du crawl d’un site réel)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/corpus/web_source.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/corpus/manifest.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/corpus/feed.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/checks/sources.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/corpus/web_source_test.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "specs/source-manifest.cue",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "templates/source-manifest.schema.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/02-source-registry.md",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -2178,9 +2253,9 @@
     }
   ],
   "summary": {
-    "capabilities": 40,
+    "capabilities": 41,
     "computed": {
-      "real": 32,
+      "real": 33,
       "partial": 0,
       "sidecar": 7,
       "stub": 0,
