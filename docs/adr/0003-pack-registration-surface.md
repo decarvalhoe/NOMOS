@@ -86,3 +86,28 @@ ADR-0002.
 It does not widen what a pack may touch. The pack-allowed trees are unchanged,
 and `#PackLocalPath` in `specs/domain-pack.cue` still governs what a manifest
 may declare.
+
+## Amendment — label timing cannot bypass D6 (#632, 2026-09-05)
+
+The initial guard lived in the full CI workflow behind a job-level condition
+that inspected the `pack` label. GitHub's default pull-request events did not
+include `labeled`: the normal sequence "open the PR, then add the label" left
+the job permanently skipped until another commit or a reopen. Removing the
+label after a successful run had the same invisible failure mode.
+
+Decision:
+
+- D6 moves to `.github/workflows/pack-coupling.yml`, isolated from full CI so a
+  label event does not rerun every platform and every gate;
+- the workflow reacts to `opened`, `synchronize`, `reopened`, `edited`,
+  `labeled` and `unlabeled`, with one concurrency group per PR;
+- it always reports: a PR outside the pack tree returns an explicit
+  not-applicable pass instead of a skipped job;
+- touching `docs/regulated/domain-packs/` without the exact `pack` label is a
+  blocking error. An ADR cannot waive a missing label;
+- with `pack` present, the core/ADR policy above remains unchanged;
+- base and head SHAs come from the event payload and renames are expanded, so
+  the measured diff is not altered by a moving base or a rename.
+
+This amendment changes when and how the instrument reports, not what counts as
+engine coupling or what a pack is allowed to declare.
