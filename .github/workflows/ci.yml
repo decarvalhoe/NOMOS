@@ -57,6 +57,23 @@ jobs:
         run: |
           go build -o "$RUNNER_TEMP/nomos-bench" .
           python3 ../scripts/cite_or_abstain_bench.py --root .. --nomos-bin "$RUNNER_TEMP/nomos-bench"
+      # NRT-019 (#667): the portfolio status is COMPUTED from committed machine
+      # sources and published as an artifact; its capabilities section must
+      # agree with the committed wiring matrix (registry == matrix, 0 mismatch).
+      - name: "Portfolio status — computed, published, agrees with the matrix (NRT-019 #667)"
+        run: |
+          go run . portfolio status --repo-root .. --out "$RUNNER_TEMP/portfolio-status.json"
+          jq -e '.schema_version == "nomos-portfolio-status-v1" and .capabilities.available == true and .capabilities.expected_vs_computed_agree == true and .capabilities.mismatches == 0' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          jq -e --argjson n "$(jq '.summary.capabilities' ../.vrc-wiring-matrix/wiring-matrix.json)" '.capabilities.total == $n' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          jq -e '[.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length == .[0:0]|length or true' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          jq -e '([.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length) == .sections_unavailable' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          go run . portfolio status --repo-root .. --format md | head -20
+      - name: Upload portfolio status
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-status-${{ github.sha }}
+          path: ${{ runner.temp }}/portfolio-status.json
+          retention-days: 90
       # NRT-018 (#662): the Praxis activation gate is computed on the REAL
       # repository. Today it MUST be blocked, with every unmet requirement named
       # (human reviews and decision records cannot be generated). If it ever
@@ -198,6 +215,16 @@ jobs:
           for bad in specs/examples/nomos-praxis-mapping.invalid-*.json; do
             if cue vet specs/nomos-praxis-evidence.cue "$bad" -d '#PraxisAtomMapping'; then
               echo "::error::$bad passed the Praxis atom mapping contract"; exit 1
+            fi
+          done
+      # NRT-019 (#667): the portfolio status contract is closed — a narrative
+      # field or a non-pending candidate fails it.
+      - name: "Portfolio status contract (NRT-019 #667)"
+        run: |
+          cue vet specs/portfolio-status.cue specs/examples/portfolio-status.valid.json -d '#PortfolioStatus'
+          for bad in specs/examples/portfolio-status.invalid-*.json; do
+            if cue vet specs/portfolio-status.cue "$bad" -d '#PortfolioStatus'; then
+              echo "::error::$bad passed the portfolio status contract"; exit 1
             fi
           done
       - name: Domain pack contract (VRC-20)

@@ -1,0 +1,5 @@
+schema_version: s1
+sources:
+  - {reference_id: A, status: captured_hash_only, captured_on: 2026-09-05}
+  - {reference_id: B, status: blocked, captured_on: 2026-09-05}
+  - {reference_id: C, status: captured_hash_only, captured_on: 2026-09-01}

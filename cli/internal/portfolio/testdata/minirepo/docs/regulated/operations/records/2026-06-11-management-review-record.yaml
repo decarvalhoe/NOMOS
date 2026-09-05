@@ -1,0 +1,8 @@
+record_id: MR-1
+record_type: management_review
+date: 2026-06-11
+decisions:
+  - {id: D1, decision: x}
+  - {id: D2, decision: y}
+actions:
+  - {id: A1, action: z, owner: q, due: 2026-07-31}

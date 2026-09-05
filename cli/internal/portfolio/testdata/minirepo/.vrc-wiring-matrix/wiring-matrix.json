@@ -1,0 +1,26 @@
+{
+  "schema_version": "1",
+  "summary": {
+    "capabilities": 2,
+    "computed": {
+      "real": 1,
+      "sidecar": 1
+    },
+    "mismatches": 0,
+    "generic_check_failures": 0
+  },
+  "capabilities": [
+    {
+      "id": "alpha",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false
+    },
+    {
+      "id": "beta",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false
+    }
+  ]
+}

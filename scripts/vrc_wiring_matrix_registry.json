@@ -3390,6 +3390,93 @@
           ]
         }
       ]
+    },
+    {
+      "id": "portfolio_status_engine",
+      "title": "Statut de portefeuille calculé depuis les sources machine (NRT-019 #667) — `nomos portfolio status` agrège registre + matrice générée (compteurs par topologie, écarts, accord registre/matrice recalculé ligne à ligne), voies de roadmap (ouverts/fermés par dispatch, files, items régulés), gaps du ledger, records CAPA, records de revue (décisions/actions/findings comptés), dernier index CI répétée, verdict du gate Praxis (recalculé), fichiers de compétence, packs de domaine, snapshots de sources publiques, bundle candidat optionnel (refusé s'il n'est pas `pending`). Chaque section porte `path`, `sha256`, `as_of`, fraîcheur (`fresh|stale|undated`, politique en jours) ; source illisible → section `unavailable` avec raison, jamais omise ; digest du statut. Contrat CUE `#PortfolioStatus` à structs fermées : un champ narratif est refusé (fixture négative). Rendu Markdown depuis les MÊMES valeurs. Prouvé sur mini-dépôt synthétique : source éditée → hash, compteur et digest bougent ; source retirée → `unavailable` ; horloge avancée → `stale` ; ligne de matrice en écart → accord faux ; candidat approuvé → refusé ; record Praxis forgé → `unavailable` avec le refus. Sur le dépôt réel : 52 capacités, accord vrai, ledger d'evidence signalé `stale` (daté 2026-05-02). CE QUE CE N'EST PAS : une evidence, une approbation, un claim — une vue verte d'un outil non validé reste un outil non validé.",
+      "pillar": "P1",
+      "claim_level": "view (statut calculé depuis l'evidence commitée ; ne lève aucun claim)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Portfolio status — computed, published, agrees with the matrix (NRT-019 #667)",
+            "Portfolio status contract (NRT-019 #667)",
+            "-d '#PortfolioStatus'"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/portfolio/status.go",
+          "contains": [
+            "func Compute(",
+            "func (c *ctx) miss(",
+            "Freshness = \"stale\"",
+            "ExpectedVsComputedAgree",
+            "a candidate is always pending"
+          ]
+        },
+        {
+          "path": "cli/internal/portfolio/render.go",
+          "contains": [
+            "func WriteMarkdown("
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/portfolio_cmd.go",
+          "contains": [
+            "portfolio.Compute(",
+            "case \"status\":"
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"portfolio\":     portfolioCommand"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/portfolio/status_test.go",
+          "contains": [
+            "TestStatusIsDeterministicAndMovesWithItsSources",
+            "TestMissingSourcesAreUnavailableNotOmitted",
+            "TestStalenessFollowsTheClockAndPolicy",
+            "TestRegistryMatrixDisagreementIsVisible",
+            "TestReleaseCandidateMustBePending",
+            "TestBrokenPraxisRecordIsUnavailable"
+          ]
+        },
+        {
+          "path": "tests/test_portfolio_status.py",
+          "contains": [
+            "test_contract_refuses_narrative_and_non_pending_candidate",
+            "test_real_repository_status_is_self_consistent"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/portfolio-status.cue",
+          "contains": [
+            "#PortfolioStatus",
+            "#Unavailable",
+            "freshness: \"fresh\" | \"stale\" | \"undated\""
+          ]
+        },
+        {
+          "path": "specs/examples/portfolio-status.valid.json",
+          "contains": [
+            "nomos-portfolio-status-v1"
+          ]
+        }
+      ]
     }
   ]
 }
