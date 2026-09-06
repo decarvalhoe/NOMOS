@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -88,16 +89,25 @@ MANIFEST_NAMES = ("package.json", "pyproject.toml", "go.mod", "Cargo.toml", "Gem
 
 
 def repo_manifests(root: Path) -> list[str]:
-    out = []
-    for p in root.rglob("*"):
-        if not p.is_file():
-            continue
-        rel = p.relative_to(root).as_posix()
-        if any(seg in ("node_modules", ".git", ".venv", "dist") for seg in rel.split("/")):
-            continue
-        if p.name in MANIFEST_NAMES or (p.name.startswith("requirements") and p.suffix == ".txt"):
-            out.append(rel)
-    return sorted(out)
+    """Dependency manifests that are PART OF THE REPOSITORY: tracked files when
+    git is available (a module cache or a virtualenv inside the tree is not a
+    manifest we ship), otherwise every non-hidden path."""
+    names: list[str] = []
+    try:
+        out = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, check=True)
+        names = [n for n in out.stdout.decode("utf-8", "replace").split("\0") if n]
+    except (OSError, subprocess.CalledProcessError):
+        for p in root.rglob("*"):
+            if p.is_file():
+                rel = p.relative_to(root).as_posix()
+                if not any(seg.startswith(".") or seg in ("node_modules", "dist") for seg in rel.split("/")):
+                    names.append(rel)
+    out_paths = []
+    for rel in names:
+        base = rel.rsplit("/", 1)[-1]
+        if (base in MANIFEST_NAMES or (base.startswith("requirements") and base.endswith(".txt"))) and (root / rel).is_file():
+            out_paths.append(rel)
+    return sorted(out_paths)
 
 
 def manifest_coverage(root: Path, doc: dict) -> list[str]:

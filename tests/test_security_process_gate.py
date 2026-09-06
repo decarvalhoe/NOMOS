@@ -99,6 +99,13 @@ class SecurityGateTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("manifest tools/forgotten/package.json is neither scanned, watched by Dependabot, nor listed", r.stderr)
 
+    def test_manifest_inside_a_hidden_cache_is_not_ours(self) -> None:
+        m = self.root / ".tools" / "cache" / "gomod" / "x@v1" / "go.mod"
+        m.parent.mkdir(parents=True)
+        m.write_text("module x\n")
+        r = run(self.root, "--check")
+        self.assertEqual(r.returncode, 0, r.stderr)
+
     def test_stale_manifest_exclusion_is_red(self) -> None:
         p = self.root / "docs/security/security-process.yaml"
         p.write_text(p.read_text(encoding="utf-8").replace("  - path: cli/internal/detect/testdata/corpus/fullstack/go.mod\n", "  - path: cli/internal/detect/testdata/corpus/gone/go.mod\n", 1), encoding="utf-8")

@@ -3758,7 +3758,8 @@
             "test_process_without_gated_scanner_is_red",
             "test_stale_supported_versions_is_drift",
             "test_unscanned_manifest_is_red",
-            "test_stale_manifest_exclusion_is_red"
+            "test_stale_manifest_exclusion_is_red",
+            "test_manifest_inside_a_hidden_cache_is_not_ours"
           ]
         }
       ]
