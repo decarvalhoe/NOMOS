@@ -148,7 +148,7 @@ La matrice est calculee par `nomos contracts status --emit-docs` depuis `specs/c
 <!-- compatibility-matrix:begin -->
 <!-- GENERATED from specs/contract-registry.yaml and adapters/*/adapter.nomos.yaml by `nomos contracts status --emit-docs`; do not edit by hand, CI fails on drift -->
 
-Core `0.2.0-ALPHA` — 38 contract(s) registered, 15 stable. `reads`/`writes` = a Go reader/writer is declared in the registry.
+Core `0.2.0-ALPHA` — 39 contract(s) registered, 15 stable. `reads`/`writes` = a Go reader/writer is declared in the registry.
 
 | Contract | Version | Stability | Core reads | Core writes |
 |---|---|---|---|---|

@@ -9,6 +9,8 @@ rules:
   compat_fixtures_must_read: true
   fixtures_vet_with_cue: true
   reader_fixtures_are_not_cue_fixtures: true
+  adapters_must_include_core_version: true
+  writers_declared_where_identified: true
 contracts:
 - id: adapter-manifest
   path: specs/adapter-manifest.cue
@@ -16,14 +18,19 @@ contracts:
   version_kind: default
   schema_version: 0.1.0
   sha256: sha256:a14850d16b7213f66015f7353337a2c99cf10e484f162c5599be04885086e5ae
-  definition: ''
+  definition: '#AdapterManifest'
   fixtures:
     valid:
     - specs/examples/adapter-manifest.node-typescript.yaml
+    - adapters/jvm/adapter.nomos.yaml
+    - adapters/node-typescript/adapter.nomos.yaml
+    - adapters/python/adapter.nomos.yaml
     invalid: []
   readers:
   - cli/internal/validate/validate.go
+  - cli/internal/validate/manifests.go
   compat_fixtures: []
+  writers: []
 - id: ai-rag-controls
   path: specs/ai-rag-controls.cue
   stability: experimental
@@ -36,6 +43,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: alcoa-evidence
   path: specs/alcoa-evidence.cue
   stability: experimental
@@ -49,6 +57,7 @@ contracts:
   readers:
   - cli/internal/compliance/rcp_evidence_bundle.go
   compat_fixtures: []
+  writers: []
 - id: approval-semantics
   path: specs/approval-semantics.cue
   stability: experimental
@@ -61,6 +70,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: atomization-spine
   path: specs/atomization-spine.cue
   stability: experimental
@@ -75,6 +85,7 @@ contracts:
     - specs/examples/atomization-spine.invalid-atom.yaml
   readers: []
   compat_fixtures: []
+  writers: []
 - id: built-environment-source-connectors
   path: specs/built-environment-source-connectors.cue
   stability: experimental
@@ -87,6 +98,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: canon-promotion
   path: specs/canon-promotion.cue
   stability: stable
@@ -104,6 +116,7 @@ contracts:
   - cli/internal/app/canon_cmd.go
   - cli/internal/canon/canon.go
   compat_fixtures: []
+  writers: []
 - id: canonical-knowledge-bundle
   path: specs/canonical-knowledge-bundle.cue
   stability: stable
@@ -120,6 +133,7 @@ contracts:
   - cli/internal/app/bundle_cmd.go
   - cli/internal/bundle/bundle.go
   compat_fixtures: []
+  writers: []
 - id: canonical-matrix
   path: specs/canonical-matrix.cue
   stability: stable
@@ -145,6 +159,7 @@ contracts:
   - cli/internal/diagnose/diagnose.go
   - cli/internal/validate/validate.go
   compat_fixtures: []
+  writers: []
 - id: corpus-body-ledger
   path: specs/corpus-body-ledger.cue
   stability: stable
@@ -162,6 +177,8 @@ contracts:
   - cli/internal/corpus/body_ledger.go
   - cli/internal/corpus/cmd/body-ledger/main.go
   compat_fixtures: []
+  writers:
+  - cli/internal/corpus/body_ledger.go
 - id: corpus-evidence
   path: specs/corpus-evidence.cue
   stability: experimental
@@ -175,6 +192,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: corpus-integrity-report
   path: specs/corpus-integrity-report.cue
   stability: stable
@@ -190,6 +208,7 @@ contracts:
   - cli/internal/app/strict_gate.go
   - cli/internal/corpus/source_integrity_gate.go
   compat_fixtures: []
+  writers: []
 - id: domain-cartography
   path: specs/domain-cartography.cue
   stability: experimental
@@ -205,6 +224,7 @@ contracts:
     - specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml
   readers: []
   compat_fixtures: []
+  writers: []
 - id: domain-pack
   path: specs/domain-pack.cue
   stability: stable
@@ -223,6 +243,7 @@ contracts:
   - cli/internal/app/pack_cmd.go
   - cli/internal/portfolio/status.go
   compat_fixtures: []
+  writers: []
 - id: evidence-contract
   path: specs/evidence-contract.cue
   stability: experimental
@@ -236,6 +257,7 @@ contracts:
   readers:
   - cli/internal/compliance/evidence_contract.go
   compat_fixtures: []
+  writers: []
 - id: external-snapshot
   path: specs/external-snapshot.cue
   stability: stable
@@ -256,6 +278,8 @@ contracts:
     reader: external-snapshot
     schema_version: nomos.external-snapshot.v1
   version_field: format
+  writers:
+  - cli/internal/corpus/external_snapshot.go
 - id: facet-ontology
   path: specs/facet-ontology.cue
   stability: experimental
@@ -273,6 +297,7 @@ contracts:
   readers:
   - cli/internal/app/pack_cmd.go
   compat_fixtures: []
+  writers: []
 - id: facets
   path: specs/facets.cue
   stability: stable
@@ -302,6 +327,7 @@ contracts:
   - cli/internal/ragexport/export.go
   - cli/internal/ragexport/lens.go
   compat_fixtures: []
+  writers: []
 - id: feed-audit-report
   path: specs/feed-audit-report.cue
   stability: experimental
@@ -316,6 +342,7 @@ contracts:
   readers: []
   compat_fixtures: []
   schema_version_pattern: ^fsq-audit-v[0-9]+$
+  writers: []
 - id: fidelity-ast
   path: specs/fidelity-ast.cue
   stability: experimental
@@ -329,6 +356,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: knowledge-lens
   path: specs/knowledge-lens.cue
   stability: stable
@@ -348,6 +376,7 @@ contracts:
   - cli/internal/app/atomize_cmd.go
   - cli/internal/atomization/facets.go
   compat_fixtures: []
+  writers: []
 - id: nomos-domain-profile
   path: specs/nomos-domain-profile.cue
   stability: experimental
@@ -373,6 +402,7 @@ contracts:
     - specs/examples/nomos-domain-profile.unsupported-claim.invalid.yaml
   readers: []
   compat_fixtures: []
+  writers: []
 - id: nomos-github-workflow
   path: specs/nomos-github-workflow.cue
   stability: experimental
@@ -390,6 +420,7 @@ contracts:
   - cli/internal/githubworkflow/config.go
   compat_fixtures: []
   schema_version_pattern: ^0\\.[0-9]+\\.[0-9]+$
+  writers: []
 - id: nomos-praxis-evidence
   path: specs/nomos-praxis-evidence.cue
   stability: experimental
@@ -421,6 +452,7 @@ contracts:
     specs/examples/nomos-praxis-mapping.invalid-internal-field.json: '#PraxisAtomMapping'
     specs/examples/nomos-praxis-mapping.invalid-praxis-authority.json: '#PraxisAtomMapping'
     specs/examples/nomos-praxis-mapping.invalid-unapproved.json: '#PraxisAtomMapping'
+  writers: []
 - id: nomos-praxis-evidence-schema
   path: specs/nomos-praxis-evidence.schema.json
   stability: stable
@@ -437,6 +469,7 @@ contracts:
   readers: []
   compat_fixtures: []
   note: JSON Schema mirror of nomos-praxis-evidence.cue for non-CUE consumers; must move with the CUE contract
+  writers: []
 - id: nomos-project
   path: specs/nomos-project.cue
   stability: stable
@@ -456,6 +489,7 @@ contracts:
   - cli/internal/export/cyclonedx.go
   - cli/internal/validate/validate.go
   compat_fixtures: []
+  writers: []
 - id: nomos-report.schema
   path: specs/nomos-report.schema.json
   stability: stable
@@ -481,6 +515,8 @@ contracts:
   - cli/internal/report/types.go
   - cli/internal/validate/manifests.go
   compat_fixtures: []
+  writers:
+  - cli/internal/report/generate.go
 - id: nomos-trace-manifest
   path: specs/nomos-trace-manifest.cue
   stability: experimental
@@ -497,6 +533,7 @@ contracts:
   - cli/internal/bundle/trace.go
   compat_fixtures: []
   schema_version_pattern: ^0\\.[0-9]+\\.[0-9]+$
+  writers: []
 - id: point-in-time
   path: specs/point-in-time.cue
   stability: stable
@@ -515,6 +552,7 @@ contracts:
   - cli/internal/pointintime/pointintime.go
   - cli/internal/ragexport/contract.go
   compat_fixtures: []
+  writers: []
 - id: portfolio-status
   path: specs/portfolio-status.cue
   stability: experimental
@@ -534,6 +572,8 @@ contracts:
   - path: specs/examples/portfolio-status.valid.json
     reader: portfolio-status
     schema_version: nomos-portfolio-status-v1
+  writers:
+  - cli/internal/portfolio/status.go
 - id: provenance-gate
   path: specs/provenance-gate.cue
   stability: experimental
@@ -546,6 +586,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: rbok-lawbook-feed
   path: specs/rbok-lawbook-feed.cue
   stability: experimental
@@ -562,6 +603,7 @@ contracts:
   - cli/internal/corpus/rbok_multi_feed.go
   compat_fixtures: []
   note: readers exist in the CLI but no committed fixture; promote to stable when a fixture lands
+  writers: []
 - id: rbok-runtime-import-contract
   path: specs/rbok-runtime-import-contract.cue
   stability: experimental
@@ -576,6 +618,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: rbok-unit-ids
   path: specs/rbok-unit-ids.cue
   stability: experimental
@@ -588,6 +631,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: source-manifest
   path: specs/source-manifest.cue
   stability: stable
@@ -612,6 +656,8 @@ contracts:
   - cli/internal/diagnose/diagnose.go
   - cli/internal/validate/validate.go
   compat_fixtures: []
+  writers:
+  - cli/internal/corpus/manifest.go
 - id: source-segment-ledger
   path: specs/source-segment-ledger.cue
   stability: experimental
@@ -626,6 +672,7 @@ contracts:
     - specs/examples/source-segment-ledger.invalid.yaml
   readers: []
   compat_fixtures: []
+  writers: []
 - id: toc-artifact
   path: specs/toc-artifact.cue
   stability: experimental
@@ -638,6 +685,7 @@ contracts:
     invalid: []
   readers: []
   compat_fixtures: []
+  writers: []
 - id: validation-inventory
   path: specs/validation-inventory.cue
   stability: experimental
@@ -651,6 +699,7 @@ contracts:
   readers:
   - cli/internal/compliance/reconstruction_review.go
   compat_fixtures: []
+  writers: []
 - id: verdicts
   path: specs/verdicts.cue
   stability: stable
@@ -668,3 +717,4 @@ contracts:
   - cli/internal/app/portfolio_cmd.go
   - cli/internal/partial/partial.go
   compat_fixtures: []
+  writers: []

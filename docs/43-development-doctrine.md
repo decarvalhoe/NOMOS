@@ -88,10 +88,9 @@
 
 - **NOMOS `docs/`** : `39-canonical-knowledge-mesh-pivot` · `40-knowledge-mesh-architecture`
   · `41-state-of-the-art-positioning` · `42-capitalization-and-improvement-plan`
-  · `48-sovereign-legal-rag-concepts-and-collaboration` (anti-patterns du principe 8) ;
+  · `47-roadmap-lanes-and-risk-based-validation`
+  · `49-sovereign-legal-rag-concepts-and-collaboration` (anti-patterns du principe 8) ;
   `public-claim-boundary.md` · `08-governance-and-change.md` · `38-domain-opportunity-roadmap`.
-  `47-roadmap-lanes-and-risk-based-validation` · `48-sovereign-legal-rag-concepts-and-collaboration`
-  (principe 8, anti-patterns appris).
 - **Aedifica `docs/strategy/`** : `nomos-pivot-masterplan` · `nomos-implementation-audit`
   · `hardening-discipline` · `development-approach` (compagnon de ce doc).
 - **Epics** : #481 (pivot CKM), #518 (durcissement) ; Aedifica #278 (W19).
