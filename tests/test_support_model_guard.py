@@ -34,6 +34,17 @@ GO_MOD = ROOT / "cli/go.mod"
 REAL_TAGS = "v0.1.0-ALPHA,v0.2.0-ALPHA"
 
 
+sys.path.insert(0, str(ROOT / "scripts"))
+import support_model_guard as guard  # noqa: E402
+
+gate_tags = guard.git_tags
+
+
+def current_branch() -> str:
+    proc = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--abbrev-ref", "HEAD"], text=True, capture_output=True, check=False)
+    return proc.stdout.strip() or "HEAD"
+
+
 def run_guard(root: Path, *extra: str) -> tuple[int, dict, str]:
     proc = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--check", *extra], cwd=root, text=True, capture_output=True, check=False)
     verdict = json.loads(proc.stdout) if proc.stdout.strip().startswith("{") else {}
@@ -180,6 +191,18 @@ class DriftTests(unittest.TestCase):
             self.assertEqual(code, 1)
             problems = checks_by_name(verdict)["model"]["problems"]
             self.assertTrue(any("'control plane' unsupported" in p for p in problems), problems)
+
+    def test_shallow_tagless_checkout_reads_the_tags_from_origin(self) -> None:
+        # CI checkouts are shallow and carry no tags: the guard must still see
+        # the real tag set (from origin) instead of declaring every version a ghost.
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = Path(tmp) / "shallow"
+            proc = subprocess.run(["git", "clone", "-q", "--depth", "1", "--no-tags", "--branch", current_branch(), f"file://{ROOT}", str(clone)], text=True, capture_output=True, check=False)
+            if proc.returncode != 0:
+                self.skipTest(f"shallow clone unavailable: {proc.stderr.strip()[:200]}")
+            local_tags = subprocess.run(["git", "-C", str(clone), "tag", "-l"], text=True, capture_output=True, check=False).stdout.split()
+            self.assertEqual(local_tags, [], "precondition: the shallow clone carries no tag")
+            self.assertEqual(sorted(gate_tags(clone)), ["v0.1.0-ALPHA", "v0.2.0-ALPHA"])
 
     def test_measured_targets_without_record_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

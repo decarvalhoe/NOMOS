@@ -272,13 +272,30 @@ def check_toolchain(root: Path, model: dict[str, Any], ci: dict[str, Any] | None
 
 
 def git_tags(root: Path) -> list[str] | None:
+    """Tags of the checkout; a shallow or tagless checkout (CI) falls back to
+    the tag names advertised by `origin` (`git ls-remote --tags`). None means
+    no tag source could be read at all — the caller fails closed."""
     try:
         proc = subprocess.run(["git", "-C", str(root), "tag", "-l", "v*"], text=True, capture_output=True, check=False)
     except OSError:
         return None
     if proc.returncode != 0:
         return None
-    return sorted(t.strip() for t in proc.stdout.splitlines() if t.strip())
+    local = sorted(t.strip() for t in proc.stdout.splitlines() if t.strip())
+    if local:
+        return local
+    try:
+        remote = subprocess.run(["git", "-C", str(root), "ls-remote", "--tags", "--refs", "origin", "refs/tags/v*"], text=True, capture_output=True, timeout=120, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if remote.returncode != 0:
+        return None
+    tags = []
+    for line in remote.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) == 2 and parts[1].startswith("refs/tags/"):
+            tags.append(parts[1][len("refs/tags/"):])
+    return sorted(tags)
 
 
 def cli_candidate(version_file: Path) -> str | None:
