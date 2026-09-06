@@ -77,7 +77,7 @@ jobs:
       - name: Disable corpus push remote
         run: git -C corpus-src remote set-url --push origin DISABLED
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: nomos/cli/go.mod
           cache-dependency-path: nomos/cli/go.sum
@@ -156,7 +156,7 @@ jobs:
       - name: Disable corpus push remote
         run: git -C corpus-src remote set-url --push origin DISABLED
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: nomos/cli/go.mod
           cache-dependency-path: nomos/cli/go.sum
@@ -244,7 +244,7 @@ jobs:
       - name: Disable corpus push remote
         run: git -C corpus-src remote set-url --push origin DISABLED
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: nomos/cli/go.mod
           cache-dependency-path: nomos/cli/go.sum

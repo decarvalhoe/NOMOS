@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           # The Go version is cli/go.mod's, as everywhere else in CI and as the
           # support model declares; a hand-written pin drifted to 1.22 and only

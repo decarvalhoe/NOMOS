@@ -106,7 +106,7 @@ jobs:
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.mod
           cache-dependency-path: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.sum
