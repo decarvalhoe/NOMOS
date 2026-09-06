@@ -6,6 +6,17 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
+- Cross-consumption proof kit, NOMOS side (NRT-029 #702, docs/50): an executable guide replayed
+  in CI against the pack golden corpus — canonical bundle, consumer kit, neutral export and index
+  manifest, lens scope, fresh and stale `rag verify`, the consumer's import proof
+  (`scripts/cross_consumption_import_check.py`: every chunk present once with the manifest's
+  `source_hash`, `embedding_hash` and `body_hash`, per-source counts, the index digest recomputed
+  from the consumer's own records, citations of answer records resolved against the manifest; a
+  tampered chunk is refused), answers through `nomos answer gate` (four cited, one acceptable
+  refusal), the golden set under versioned floors, a parameter inventory checked by
+  `scripts/parameter_inventory_check.py` (the gate and harness thresholds are `default`, and say
+  so) and a domain cartography vetted by CUE and recounted against the manifest. Federal texts
+  stay hash-only receipts; nothing here measures a partner (#701).
 - Dependency manifest coverage in the security gate (#696): `scripts/security_process_gate.py`
   enumerates every dependency manifest tracked by git (`package.json`, `pyproject.toml`,
   `go.mod`, `pom.xml`, `requirements*.txt`, …) and requires each one to be in a scanner

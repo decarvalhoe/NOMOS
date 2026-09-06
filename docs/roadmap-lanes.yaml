@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [702]
+    product: []
     devops: []
     regulated: []
 
@@ -515,13 +515,18 @@ items:
       reliance: manual_review
   - issue: 702
     title: Cross-consumption proof kit, NOMOS side (NRT-029)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
     depends_on: [680]
+    regulated_tool:
+      intended_use: replay, on the NOMOS side and against the pack golden corpus, the mechanics a cross-consumption proof needs — bundle, export, manifest, import proof, cite-or-abstain, golden set, inventory, cartography; never a statement about a partner's ingestion, retrieval or answers
+      impact: evidence
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 701
     title: Cross-consumption proof with the neighbouring sovereign legal RAG (NRT-030)
     state: open

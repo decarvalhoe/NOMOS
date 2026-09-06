@@ -276,6 +276,15 @@ ses lignes rouges de §4.4, et ne bloque que sa propre claim. L'entrée du domai
 juridique dans la matrice de pilotes reste `blocked` tant que #701 n'a pas
 livré une mesure datée : un périmètre client ne se déclare pas avant la preuve.
 
+#702 est livré (`docs/50`) : le kit se rejoue en CI contre le corpus doré du
+pack — bundle attesté, export et manifeste, lentille fail-closed, `rag verify`
+vert puis rouge, preuve d'import du consommateur (digest de l'index recalculé
+depuis ses propres enregistrements, chunk altéré refusé), réponses citées ou
+abstenues avec chaque citation recoupée au manifeste, jeu doré sous ses seuils,
+inventaire de paramètres vérifié (huit défauts nommés) et cartographie de
+domaine recomptée. Les textes fédéraux restent des reçus hash-only. Ce que le
+kit ne prouve pas est dit dans `docs/50` §4.2 ; la preuve conjointe reste #701.
+
 Ce que NOMOS retient pour lui, au-delà du partenaire : la question de §2.2 —
 « si ceci cesse d'agir, qu'est-ce qui le dit ? » — vaut pour chaque mécanique
 du dépôt, et la réponse « rien » est un finding.

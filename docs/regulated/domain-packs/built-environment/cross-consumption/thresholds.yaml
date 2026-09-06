@@ -1,0 +1,16 @@
+# NRT-029 (#702) — the VERSIONED floors the kit's golden question set
+# (eval-corpus.yaml) must hold under `nomos answer eval`. Inherited from the
+# regulated harness (docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml,
+# VRC-13) and, as the kit's parameter inventory says, `default`: never
+# calibrated on this corpus. Bump deliberately, with a dated measurement;
+# never to paper over a regression.
+min_mean_citation_recall: 0.95
+min_mean_citation_precision: 0.95
+min_mean_faithfulness: 0.95
+max_failed_answers: 0
+# Retrieval-side bounds over the answers that declare expected_chunk_ids
+# (every answer of the kit does): a retriever that misses the expected chunk,
+# ranks it below a distractor, or lets a distractor support a sentence, is red.
+min_mean_context_recall: 1.0
+min_mean_context_precision: 1.0
+max_mean_noise_sensitivity: 0.0

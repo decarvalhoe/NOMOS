@@ -3407,6 +3407,85 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "cross_consumption_proof_kit",
+      "title": "Cross-consumption proof kit, NOMOS side (NRT-029 #702, docs/50) — the half of the cross-consumption proof that ships without the partner, REPLAYED in CI against the pack golden corpus: canonical bundle emitted and passed through the consumer kit (attestation digest recomputed), neutral export and index manifest with the pack document facets, a lens preset excluding at the base level, `rag verify` green on the fresh corpus and red on a modified copy with a reindexing plan, a simulated consumer's index proven to be the export by `scripts/cross_consumption_import_check.py` (every chunk present once with the manifest's source_hash / embedding_hash / body_hash, per-source counts, the index digest recomputed from the consumer's own records; neutral, langchain and hashes-only shapes; a tampered chunk refused; citations of answer records resolved against the manifest), four answer records cited and one acceptable refusal abstained by `nomos answer gate`, the golden set under versioned floors, a parameter inventory checked by `scripts/parameter_inventory_check.py` (the gate and harness thresholds are `default`, and say so) and a domain cartography vetted by CUE and recounted against the manifest. Federal texts stay hash-only connector receipts. Proves identity and fingerprint preservation on this toolchain against this corpus; nothing about a partner's ingestion, retrieval or answers (#701)",
+      "pillar": "customer-integration",
+      "claim_level": "sidecar (executable guide + Python checks replayed in CI; the engine commands it exercises are their own capabilities)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "docs/50-cross-consumption-proof-kit.md",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/cross_consumption_import_check.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "scripts/parameter_inventory_check.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/answers.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/eval-corpus.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/thresholds.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/cartography.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/parameter-inventory.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_cross_consumption_import_check.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_parameter_inventory_check.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3446,11 +3525,11 @@
     }
   ],
   "summary": {
-    "capabilities": 64,
+    "capabilities": 65,
     "computed": {
       "real": 47,
       "partial": 0,
-      "sidecar": 15,
+      "sidecar": 16,
       "stub": 0,
       "absent": 2
     },

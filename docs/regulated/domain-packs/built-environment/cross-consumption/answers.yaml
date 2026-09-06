@@ -1,0 +1,111 @@
+# NRT-029 (#702) — answer records of the cross-consumption proof kit (docs/50).
+#
+# Five answers a consumer could produce on the kit corpus, in the shape
+# `nomos answer gate --fixtures` reads. Four are grounded verbatim in a chunk
+# the kit bundle really contains (chunk_id and source_hash are the ones the
+# export emits from the pack golden corpus; docs/50 cross-checks every
+# citation against out/manifest.json, so a chunk that stops existing is red);
+# the fifth is an explicit, acceptable refusal — the gate must abstain, not
+# invent. License-safe synthetic text (the pack golden corpus).
+#
+# Claim boundary: these records prove that the gate cites what the bundle
+# contains and abstains otherwise; nothing here measures a partner's answers.
+schema_version: "0.1.0"
+claim_boundary: >-
+  Answer records of the cross-consumption kit: citation and refusal outcomes on
+  the pack golden corpus. They make no LLM output authoritative and measure no
+  external system.
+answers:
+  - answer_id: KIT-RECUL
+    prompt_id: Q-RECUL
+    expected_chunk_ids: ["chunk:A-129EA30978A06237"]
+    answer: "L'implantation de l'exemple respecte un recul fictif de 6 mètres sur la limite nord de la parcelle d'étude."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: conception.md
+        source_hash: "sha256:51ab8bee9d7395f8fcdd7c49384e5980f030dfccfb5ef8a3a80a1250c131b062"
+        span: L8-L9
+        chunk_id: "chunk:A-129EA30978A06237"
+        text: "L'implantation de l'exemple respecte un recul fictif de 6 mètres sur la limite nord de la parcelle d'étude."
+    retrieved_chunks:
+      - chunk_id: "chunk:A-129EA30978A06237"
+        source_id: conception.md
+        source_hash: "sha256:51ab8bee9d7395f8fcdd7c49384e5980f030dfccfb5ef8a3a80a1250c131b062"
+        span: L8-L9
+        text: "L'implantation de l'exemple respecte un recul fictif de 6 mètres sur la limite nord de la parcelle d'étude."
+
+  - answer_id: KIT-GABARIT
+    prompt_id: Q-GABARIT
+    expected_chunk_ids: ["chunk:A-B1EB07DB7E6FC754"]
+    answer: "Le gabarit d'étude retient une hauteur fictive de 9 mètres au faîte pour le volume principal."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: conception.md
+        source_hash: "sha256:51ab8bee9d7395f8fcdd7c49384e5980f030dfccfb5ef8a3a80a1250c131b062"
+        span: L13-L14
+        chunk_id: "chunk:A-B1EB07DB7E6FC754"
+        text: "Le gabarit d'étude retient une hauteur fictive de 9 mètres au faîte pour le volume principal."
+    retrieved_chunks:
+      - chunk_id: "chunk:A-B1EB07DB7E6FC754"
+        source_id: conception.md
+        source_hash: "sha256:51ab8bee9d7395f8fcdd7c49384e5980f030dfccfb5ef8a3a80a1250c131b062"
+        span: L13-L14
+        text: "Le gabarit d'étude retient une hauteur fictive de 9 mètres au faîte pour le volume principal."
+
+  - answer_id: KIT-ENQUETE
+    prompt_id: Q-ENQUETE
+    expected_chunk_ids: ["chunk:A-9EDAEFBE9245F38C"]
+    answer: "La mise à l'enquête de l'exemple est réputée publique pendant trente jours fictifs."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: permis.md
+        source_hash: "sha256:b84a4157111ff36225140299134a9efcd6f6148fef00f89e49529e006559b683"
+        span: L13-L14
+        chunk_id: "chunk:A-9EDAEFBE9245F38C"
+        text: "La mise à l'enquête de l'exemple est réputée publique pendant trente jours fictifs."
+    retrieved_chunks:
+      - chunk_id: "chunk:A-9EDAEFBE9245F38C"
+        source_id: permis.md
+        source_hash: "sha256:b84a4157111ff36225140299134a9efcd6f6148fef00f89e49529e006559b683"
+        span: L13-L14
+        text: "La mise à l'enquête de l'exemple est réputée publique pendant trente jours fictifs."
+
+  - answer_id: KIT-RECEPTION
+    prompt_id: Q-RECEPTION
+    expected_chunk_ids: ["chunk:A-0FEE09A95D8050B7"]
+    answer: "La réception fictive de l'étape un est consignée avec une réserve d'exemple."
+    citation_status: source_backed
+    policy_outcome: acceptable
+    confidence: 0.95
+    source_spans:
+      - source_id: dt-chantier.md
+        source_hash: "sha256:8b240fa434ba4cddd35fd25c1aad0047fc8d0e9a228b656d6813a8f4de525cb3"
+        span: L12-L12
+        chunk_id: "chunk:A-0FEE09A95D8050B7"
+        text: "La réception fictive de l'étape un est consignée avec une réserve d'exemple."
+    retrieved_chunks:
+      - chunk_id: "chunk:A-0FEE09A95D8050B7"
+        source_id: dt-chantier.md
+        source_hash: "sha256:8b240fa434ba4cddd35fd25c1aad0047fc8d0e9a228b656d6813a8f4de525cb3"
+        span: L12-L12
+        text: "La réception fictive de l'étape un est consignée avec une réserve d'exemple."
+
+  # The question has no answer in the kit corpus: the only acceptable outcome
+  # is an explicit refusal. The gate abstains; it never fills the gap.
+  - answer_id: KIT-ABSTAIN
+    prompt_id: Q-HORS-CORPUS
+    answer: "Le corpus fourni ne contient pas la hauteur maximale légale d'un bâtiment ; pas de réponse sans source."
+    citation_status: not_applicable
+    refusal_status: refused
+    policy_outcome: acceptable_refusal
+    confidence: 0.2
+    uncertainties:
+      - "Aucun chunk du bundle ne porte une hauteur maximale légale."
+    source_spans: []
+    retrieved_chunks: []
