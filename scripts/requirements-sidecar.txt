@@ -4,4 +4,4 @@
 # every sidecar. Optional runtime extras (transformers for the HHEM scorer)
 # are NOT installed in CI and are documented in scripts/nomos_hhem_scorer.py.
 PyYAML==6.0.3
-jsonschema==4.25.1
+jsonschema==4.26.0
