@@ -1,6 +1,6 @@
-# Release v1.0.0-BETA.1 — CANDIDATE (approval pending, #720)
+# Release v1.0.0-BETA.1
 
-A `v1.0.0-BETA.1` candidate is PREPARED on `main`: the readiness verdict is `ready` on the eight `docs/14` criteria and is a required gate of the candidate; the support surface is declared; the decision record is a draft with `decision: pending`. Nothing is tagged or published until the human release act under the SOP. Notes: `docs/release-v1.0.0-beta.1.md`. The section below describes the last executed release.
+Nomos `v1.0.0-BETA.1` (2026-09-07) is the first pre-release of the 1.0 line, released by the repository owner's decision recorded in `docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml`: the readiness verdict is `ready` on the eight `docs/14` criteria and was a required gate of the candidate; the stable contracts are read at their versions by the engine; the support surface is declared and checked. A beta is a product statement, not a validated-use, QMS-effectiveness or regulated-readiness claim. Notes: `docs/release-v1.0.0-beta.1.md`. The sections below describe the previous release, `v0.2.0-ALPHA`, kept as history.
 
 # Release v0.2.0-ALPHA
 

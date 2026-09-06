@@ -22,15 +22,15 @@ current_candidate: v1.0.0-BETA.1
 
 supported_versions:
   - version: v1.0.0-BETA.1
-    released_on: 2026-09-06   # date of the CHANGELOG heading; the candidate is NOT tagged — a human decision (#720) is pending
-    state: candidate
-    security_support: none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720)
-    end_of_support: not applicable until tagged
+    released_on: 2026-09-07
+    state: supported
+    security_support: best-effort beta triage (current release)
+    end_of_support: until the next tagged release
   - version: v0.2.0-ALPHA
     released_on: 2026-09-06
-    state: supported
-    security_support: best-effort alpha triage (current release)
-    end_of_support: until the next tagged release
+    state: superseded
+    security_support: none — superseded by v1.0.0-BETA.1
+    end_of_support: 2026-09-07
   - version: v0.1.0-ALPHA
     released_on: 2026-05-03
     state: superseded
@@ -38,8 +38,8 @@ supported_versions:
     end_of_support: 2026-09-06
 
 end_of_support_rule: >-
-  An alpha version is supported until the next tagged release; only the newest
-  tag receives security triage. No version outside this list is supported, and
+  A pre-release (alpha or beta) is supported until the next tagged release;
+  only the newest tag receives security triage. No version outside this list is supported, and
   no version becomes supported by being listed here without a tag.
 
 channels:
@@ -51,7 +51,7 @@ channels:
     scope: vulnerabilities (docs/security/security-process.yaml)
   - kind: support_guide
     ref: SUPPORT.md
-    scope: what alpha support covers and what requires project-specific work
+    scope: what pre-release support covers and what requires project-specific work
 
 response_targets:
   # Declared targets. No measurement record backs them; the day one exists,
@@ -87,7 +87,7 @@ unsupported_surfaces:
   - surface: GitHub App
     reason: readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.
   - surface: production deployment
-    reason: customer-owned (docs/regulated/customer-integration); the alpha proves the method, not a deployment.
+    reason: customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.
   - surface: regulated validation package approval
     reason: regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).
 

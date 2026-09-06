@@ -116,9 +116,12 @@ class StaticChecksTests(unittest.TestCase):
             copy_security_tree(root)
             security = root / "SECURITY.md"
             text = security.read_text(encoding="utf-8")
-            self.assertIn("| `v0.2.0-ALPHA` |", text)
-            self.assertIn("best-effort alpha triage (current release)", text)
-            security.write_text(text.replace("best-effort alpha triage (current release)", "fully supported with an SLA"), encoding="utf-8")
+            process = yaml.safe_load((root / "docs/security/security-process.yaml").read_text(encoding="utf-8"))
+            model = yaml.safe_load((root / process["supported_versions"]["support_model_ref"]).read_text(encoding="utf-8"))
+            current = next(v for v in model["supported_versions"] if v["state"] == "supported")
+            self.assertIn(f"| `{current['version']}` |", text)
+            self.assertIn(current["security_support"], text)
+            security.write_text(text.replace(current["security_support"], "fully supported with an SLA"), encoding="utf-8")
             code, verdict, stderr = run_gate(root)
             self.assertEqual(code, 1, stderr)
             drift = checks_by_name(verdict)["supported_versions"]
@@ -127,7 +130,7 @@ class StaticChecksTests(unittest.TestCase):
             # --write repairs it from the source, then the check passes again.
             code, verdict, stderr = run_gate(root, "--write")
             self.assertEqual(code, 0, stderr)
-            self.assertIn("best-effort alpha triage (current release)", security.read_text(encoding="utf-8"))
+            self.assertIn(current["security_support"], security.read_text(encoding="utf-8"))
 
     def test_supported_versions_follow_the_support_model(self) -> None:
         # NRT-026 (#679): the model is the source; a new version declared there

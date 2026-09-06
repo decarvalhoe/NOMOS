@@ -159,7 +159,8 @@ class DriftTests(unittest.TestCase):
             root = Path(tmp)
             copy_tree(root)
             model = load_model()
-            model["supported_versions"][0]["released_on"] = "2026-09-07"
+            alpha = next(v for v in model["supported_versions"] if v["version"] == "v0.2.0-ALPHA")
+            alpha["released_on"] = "2026-12-24"
             write_model(root, model)
             code, verdict, _ = run_guard(root, "--tags", REAL_TAGS, "--write")
             self.assertEqual(code, 1)

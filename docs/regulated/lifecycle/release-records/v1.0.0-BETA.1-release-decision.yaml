@@ -1,26 +1,33 @@
-# Release decision record — v1.0.0-BETA.1 — DRAFT, decision PENDING (NRT-036 #719).
+# Release decision record — v1.0.0-BETA.1 (2026-09-07).
 #
-# This file is prepared by tooling so that the human release act (#720, under
-# docs/regulated/lifecycle/release-and-retirement-sop.md) has its inputs on one
-# page. It records NO decision: `decision: pending`, `decided_by` empty,
-# `approval_status: pending`. Only a human completes it; the tag, the GitHub
-# release and the notes follow that act, never this file.
+# This is the RECORD of a human decision, written contemporaneously. It does
+# not create the decision: the repository owner instructed the release in the
+# assisted working session of 2026-09-07 ("mettre à jour le README et faire la
+# release"), on the candidate prepared by NRT-036 (#719) on a `ready` readiness
+# verdict. This file records who decided, under which roles, on which
+# candidate, with which gaps and risks knowingly accepted. Tooling computed
+# the inputs (readiness verdict #681, candidate gates #717, portfolio status
+# and findings); it did not decide.
 schema_version: "0.1.0"
 record_type: release_decision
 record_id: NOMOS-REC-REL-2026-002
-status: draft
+status: recorded
 version: v1.0.0-BETA.1
 release_kind: pre-release (beta, first of the 1.0 line)
-decision_date: null
-decision: pending
-approval_status: pending
-decided_by: ""
+decision_date: 2026-09-07
+decision: release
+approval_status: approved_by_owner   # recorded here; the candidate tool itself never records an approval
+decided_by: "decarvalhoe (dev@realisons.com) — release_manager, quality_owner, product_owner per NOMOS-REC-ROLE-2026-001"
 method: >-
-  To be recorded contemporaneously by the release manager under the release
-  SOP: verify the candidate bundle (nomos release verify), review the inputs
-  below, sign this record, create the tag, publish the notes. Independent
-  review: per NOMOS-REC-ROLE-2026-001 (independent_reviewer vacant at alpha;
-  the beta decision states whether the waiver is renewed).
+  Owner instruction given in the assisted working session of 2026-09-07 and
+  recorded here contemporaneously; executed through git tag + GitHub
+  pre-release by the assistant on the owner's behalf, after `nomos release
+  verify` on the candidate bundle assembled on the release commit. Independent
+  review: the waiver of NOMOS-REC-ROLE-2026-001 (independent_reviewer vacant)
+  is RENEWED for this beta by the same owner — a known gap
+  (GAP-INDEPENDENT-AUDIT), not a review. No electronic-signature compliance is
+  claimed for this record; the GitHub commit and pull-request trail is the
+  approval evidence.
 issue: "#720 — release v1.0.0-BETA.1 executed through the SOP (regulated lane, human)"
 sop: docs/regulated/lifecycle/release-and-retirement-sop.md
 sop_status: draft_not_effective   # recorded as-is
@@ -30,8 +37,9 @@ candidate:
   manifest: "rehearsal artifact v1.0.0-BETA.1-candidate-<sha> (computed on the merge commit)"
   approval_status_in_candidate: pending
   required_gates: [claim-boundary-guard, vrc-wiring-matrix, roadmap-lane-guard, repeated-ci-evidence, training-competence-gate, go-vet, go-test, release-readiness]
-inputs_at_preparation:
+inputs_at_decision:
   prepared_on: 2026-09-06
+  decided_on: 2026-09-07
   readiness_verdict: "nomos portfolio release-readiness — ready, 8/8 docs/14 criteria met (NRT-028..036); ready is not a release"
   contract_registry: "39 contracts, 15 stable, 19 compatibility reads by the engine's loaders, 3 adapters compatible with core 1.0.0-BETA.1"
   wiring_matrix: ".vrc-wiring-matrix/wiring-matrix.json — 66 capabilities, 0 mismatch"
@@ -39,15 +47,33 @@ inputs_at_preparation:
   support_surface: "docs/support-model.yaml — 15 stable contracts, 21 covered commands, guides docs/48 and docs/50 replayed in CI"
   security: "govulncheck (cli, tools/sigstore-verifier) and pip-audit gated; allowlist per docs/security/vulnerability-allowlist.yaml"
   repeated_ci_evidence: "VRC-14 (#560) recorded as a RISK, not a precondition — see the candidate manifest"
-  praxis_gate: "blocked — Praxis reliance is not activated by this release"
-gaps_to_be_knowingly_accepted:
+  praxis_gate: "blocked, 11/11 unmet — Praxis reliance is not activated by this release"
+  portfolio_status: "nomos portfolio status — 1 section unavailable (release candidate: run output), 0 stale"
+  portfolio_findings: "nomos portfolio findings — 23 open: 6 ledger gaps, 11 Praxis activation requirements, 3 blocked public captures, 3 management-review actions overdue since July 2026"
+  repeated_ci_measured: "4 of 8 consecutive green scheduled runs (streak broken by a 41-day gap; 7/7 green ignoring cadence), 2 distinct corpus revisions — RISK, not a precondition"
+  competence: "0 valid attestations (VRC-16 #562)"
+gaps_knowingly_accepted:
   - GAP-APPROVAL-WORKFLOW
   - GAP-TRAINING
   - GAP-INDEPENDENT-AUDIT
   - GAP-GITHUB-LIVE-CONFIG
   - GAP-REPEATED-CI-EVIDENCE
   - GAP-LICENSED-BIBLES
+deviations: []
+waivers:
+  - docs/regulated/operations/records/2026-06-11-role-assignment-record.yaml   # independent review waived, renewed for the beta
+retained_evidence:
+  - docs/release-v1.0.0-beta.1.md
+  - CHANGELOG.md
+  - "GitHub release assets: candidate-manifest.json, gates.json, v1.0.0-BETA.1-candidate.zip, release-readiness.json, portfolio-status.json, portfolio-findings.json, this record, SHA256SUMS"
 claim_boundary: >-
-  A prepared record of inputs for a pending human decision. It approves
-  nothing, releases nothing, and establishes no validated-use, QMS-effectiveness
-  or regulated-readiness claim (plan 28).
+  v1.0.0-BETA.1 is a beta pre-release: the eight docs/14 v1.0 criteria are
+  computed ready on the release commit, the stable contracts are read at their
+  versions by the engine, the support surface is declared and checked. It does
+  not establish QMS effectiveness, a validated intended use, regulated
+  readiness, or any certification; the release SOP under which it is recorded
+  is itself not yet effective. Every gap above stays open after this release.
+next_actions:
+  - "Autonomous follow-up: support model dated (v1.0.0-BETA.1 supported, v0.2.0-ALPHA superseded), Support sections regenerated — done in the release PR."
+  - "Human: authentic approvals beyond the single operator, SOP made effective, independent review staffed (GAP-INDEPENDENT-AUDIT)."
+  - "Human: the 3 overdue management-review actions (MR-2026-001-A1..A3) and the competence records (#562)."

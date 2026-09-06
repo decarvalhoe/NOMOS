@@ -1,7 +1,7 @@
 # Nomos Self-Compliance Report
 
 Generated: 2026-05-03
-Release context: `v0.2.0-ALPHA` (the `v0.1.0-ALPHA` measurements below are the historical baseline)
+Release context: `v1.0.0-BETA.1` (the `v0.1.0-ALPHA` measurements below are the historical baseline; `v0.2.0-ALPHA` superseded)
 Scope: Nomos repository, release documentation, CLI gates, regulated-readiness baseline
 
 ## Executive Verdict
@@ -30,7 +30,7 @@ Nomos is not yet a validated regulated system. The repository contains the struc
 
 ## Product Evidence Summary
 
-- `nomos version` reported `0.1.0-ALPHA` at the time of this report; it reports `0.2.0-ALPHA` since 2026-09-06.
+- `nomos version` reported `0.1.0-ALPHA` at the time of this report; it reported `0.2.0-ALPHA` from 2026-09-06 and `1.0.0-BETA.1` since 2026-09-07.
 - RBOK lawbook POC generated 7191 nodes with spans.
 - Certified TOC contains 1090 entries.
 - Strict fidelity gate passed with 0 findings for the current POC output.

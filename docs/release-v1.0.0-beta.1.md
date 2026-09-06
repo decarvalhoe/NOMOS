@@ -1,8 +1,9 @@
-# Nomos v1.0.0-BETA.1 Release Notes — CANDIDATE
+# Nomos v1.0.0-BETA.1 Release Notes
 
-Status: **candidate prepared, approval pending (#720)**. Not tagged, not
-published. These notes describe what the candidate contains so that the human
-release decision can be taken on measured facts.
+Status: **released 2026-09-07** as a GitHub pre-release, by the repository owner's
+decision recorded in
+`docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml`
+(#720). The candidate was prepared on 2026-09-06 on a `ready` readiness verdict.
 
 ## Release Position
 
@@ -47,9 +48,9 @@ surface (#718), this candidate (#719).
 
 The candidate assembles only when every required gate passed on the same
 commit, `release-readiness` included; the rehearsal proves the refusal on a
-forged gate. `approval_status` stays `pending` in the candidate; the decision
-record `docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml`
-is a draft with `decision: pending`.
+forged gate. `approval_status` stays `pending` in the candidate manifest by design — the
+candidate tool never records an approval; the approval is the owner's decision
+in the release record.
 
 ## Known Open Items
 
@@ -60,5 +61,6 @@ gaps are carried by the candidate manifest.
 
 ## Claim Boundary
 
-"A beta candidate exists, pending a human decision." No tag, no publication,
-no approval by the PR that prepared it.
+A beta pre-release decided by the owner on measured facts. No validated-use,
+QMS-effectiveness or regulated-readiness claim follows; every ledger gap stays
+open; the release SOP itself is not yet effective.

@@ -2,9 +2,9 @@
 
 All notable changes to Nomos are tracked here. The project uses explicit alpha/beta labels until the public API, evidence contracts, and support model are stable enough for a `v1.0` release (planned as NRT-023..028 in `docs/29`).
 
-## v1.0.0-BETA.1 - 2026-09-06
+## v1.0.0-BETA.1 - 2026-09-07
 
-First pre-release of the 1.0 line, PREPARED as a candidate: `approval_status: pending`, not tagged, not published — the release itself is a human act under the release SOP (#720). What `docs/16` "Release Discipline" requires:
+First pre-release of the 1.0 line. Released on 2026-09-07 by the repository owner's decision, recorded in `docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml` (#720); the candidate was prepared on 2026-09-06 on a `ready` readiness verdict (#719). What `docs/16` "Release Discipline" requires:
 
 - **Core version**: `1.0.0-BETA.1` (`nomos version --json` announces it). Readiness verdict `ready` on the eight `docs/14` criteria (`nomos portfolio release-readiness`), asserted in CI; `ready` is not a release.
 - **Supported schema versions**: the 15 `stable` contracts of `specs/contract-registry.yaml`, each read at its version by the engine's loader (19 compatibility reads); experimental contracts may change without a MAJOR notice (docs/16). Full matrix: `docs/16` "Compatibility Matrix".

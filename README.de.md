@@ -32,8 +32,7 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Dimension | Aktueller Stand |
 |---|---|
 | Produkt | Authority-to-product Engine fuer gesteuerte Software, KI und RAG. |
-| Release | `v0.2.0-ALPHA` (2026-09-06, Pre-Release; Entscheidung dokumentiert in `docs/regulated/lifecycle/release-records/`). |
-| Kandidat | `v1.0.0-BETA.1` vorbereitet (2026-09-06, Readiness-Verdikt `ready`, Freigabe ausstehend — #720; nichts veröffentlicht). |
+| Release | `v1.0.0-BETA.1` (2026-09-07, Beta-Pre-Release; Entscheidung dokumentiert in `docs/regulated/lifecycle/release-records/`). `v0.2.0-ALPHA` (2026-09-06) ist abgelöst. |
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
 | Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation; danach, in der Go-Engine: Cite-or-abstain Gate (Faithfulness aus den Spans neu berechnet, nie deklariert), RAG-Evaluationsharness in CI, interoperabler RAG-Export mit nachweisbarer Staleness, reproduzierbarer oeffentlicher Bench des Gates. |
 | Faehigkeitsregister | 40 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (32 real, 7 sidecar, 1 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
@@ -394,17 +393,17 @@ Der Support ist in `docs/support-model.yaml` deklariert und wird in CI durch `sc
 
 | Version | Released | State | Security support | End of support |
 |---|---|---|---|---|
-| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) | not applicable until tagged |
-| `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) | until the next tagged release |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 | 2026-09-07 |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
 
 - Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
-- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what pre-release support covers and what requires project-specific work).
 - Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
 - Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
 - Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
-- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); the alpha proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
-- End of support: An alpha version is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: A pre-release (alpha or beta) is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
 - Supported contracts (15 stable, per specs/contract-registry.yaml): `canon-promotion`, `canonical-knowledge-bundle`, `canonical-matrix`, `corpus-body-ledger`, `corpus-integrity-report`, `domain-pack`, `external-snapshot`, `facets`, `knowledge-lens`, `nomos-praxis-evidence-schema`, `nomos-project`, `nomos-report.schema`, `point-in-time`, `source-manifest`, `verdicts`. Contracts registered as experimental in specs/contract-registry.yaml may change without a MAJOR notice (docs/16); they are listed as such where a guide relies on them and are not part of the supported surface.
 - Covered commands: `nomos version`, `nomos contracts status`, `nomos init`, `nomos validate`, `nomos diagnose`, `nomos strict`, `nomos corpus scan`, `nomos corpus feed`, `nomos corpus body-ledger`, `nomos corpus attest`, `nomos corpus snapshot`, `nomos github plan`, `nomos portfolio status`, `nomos portfolio release-readiness`, `nomos bundle`, `nomos rag export`, `nomos rag manifest`, `nomos rag delta`, `nomos rag verify`, `nomos answer gate`, `nomos answer eval`.
 - Guides replayed in CI: docs/48-customer-integration-guide.md, docs/50-cross-consumption-proof-kit.md.
