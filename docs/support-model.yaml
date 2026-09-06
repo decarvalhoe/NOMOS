@@ -86,6 +86,71 @@ unsupported_surfaces:
   - surface: regulated validation package approval
     reason: regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).
 
+
+# NRT-035 (#718) — what the beta SUPPORTS, declared as data and cross-checked by
+# scripts/support_model_guard.py: every `stable` contract of specs/contract-registry.yaml
+# must be listed here (a forgotten one is red), every contract a customer guide
+# (docs/48, docs/50) names must be here or be marked experimental in the guide, and
+# every command the guides replay must be covered. Wording for experimental contracts
+# is docs/16's: they may change without a MAJOR notice.
+support_surface:
+  contracts:
+    stable:
+      - canon-promotion
+      - canonical-knowledge-bundle
+      - canonical-matrix
+      - corpus-body-ledger
+      - corpus-integrity-report
+      - domain-pack
+      - external-snapshot
+      - facets
+      - knowledge-lens
+      - nomos-praxis-evidence-schema
+      - nomos-project
+      - nomos-report.schema
+      - point-in-time
+      - source-manifest
+      - verdicts
+    experimental_rule: >-
+      Contracts registered as experimental in specs/contract-registry.yaml may change
+      without a MAJOR notice (docs/16); they are listed as such where a guide relies on
+      them and are not part of the supported surface.
+  commands:
+    - version
+    - contracts status
+    - init
+    - validate
+    - diagnose
+    - strict
+    - corpus scan
+    - corpus feed
+    - corpus body-ledger
+    - corpus attest
+    - corpus snapshot
+    - github plan
+    - portfolio status
+    - portfolio release-readiness
+    - bundle
+    - rag export
+    - rag manifest
+    - rag delta
+    - rag verify
+    - answer gate
+    - answer eval
+  artifacts:
+    - nomos-report.json (nomos-report.schema)
+    - source-manifest.yaml (source-manifest)
+    - canonical-matrix.yaml (canonical-matrix)
+    - feed.json / body-ledger.json (corpus-body-ledger)
+    - attestation.json (attestation, ECDSA P-256 DSSE offline)
+    - snapshot.json + sources.jsonl (external-snapshot)
+    - canonical knowledge bundle (canonical-knowledge-bundle)
+    - RAG export, index manifest and delta (rag contracts, experimental)
+    - contracts-status.json, version.json, release-readiness.json (verdicts of the core)
+  guides:
+    - docs/48-customer-integration-guide.md
+    - docs/50-cross-consumption-proof-kit.md
+
 rendered_in:
   - README.md
   - README.en.md

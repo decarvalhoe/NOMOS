@@ -336,6 +336,96 @@ def check_versions(root: Path, model: dict[str, Any], tags: list[str] | None, ve
     return check("versions", problems, {"tags": tags, "candidate": candidate, "declared": sorted(declared_versions)})
 
 
+# --- 6. support surface (NRT-035 #718) ---------------------------------------------
+
+CONTRACT_REGISTRY = Path("specs/contract-registry.yaml")
+CONTRACTS_MARK = re.compile(r"^\s*<!--\s*contracts\s*-->\s*$")
+REPLAY_CMD = re.compile(r'"\$NOMOS"\s+([a-z][a-z-]*)(?:\s+([a-z][a-z-]*))?')
+
+
+def guide_contract_rows(text: str) -> list[tuple[int, str, str]]:
+    """(line, contract id, stability cell) for every row of the <!-- contracts --> tables."""
+    rows: list[tuple[int, str, str]] = []
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        if CONTRACTS_MARK.match(lines[i]):
+            j = i + 1
+            while j < len(lines) and not lines[j].strip():
+                j += 1
+            j += 2  # header + separator
+            while j < len(lines) and lines[j].strip().startswith("|"):
+                cells = [c.strip().strip("`") for c in lines[j].strip().strip("|").split("|")]
+                if len(cells) >= 2:
+                    rows.append((j + 1, cells[0], cells[1].lower()))
+                j += 1
+            i = j
+            continue
+        i += 1
+    return rows
+
+
+def guide_commands(text: str) -> set[str]:
+    """Commands the guide's replay blocks invoke, as "cmd" or "cmd sub"."""
+    out: set[str] = set()
+    for m in REPLAY_CMD.finditer(text):
+        cmd, sub = m.group(1), m.group(2)
+        out.add(cmd)
+        if sub and not sub.startswith("-"):
+            out.add(f"{cmd} {sub}")
+    return out
+
+
+def check_surface(root: Path, model: dict[str, Any]) -> dict[str, Any]:
+    problems: list[str] = []
+    surface = model.get("support_surface") if isinstance(model.get("support_surface"), dict) else None
+    if surface is None:
+        return check("surface", ["support_surface is required: the beta must say what it supports"])
+    contracts = surface.get("contracts") if isinstance(surface.get("contracts"), dict) else {}
+    declared_stable = {str(c) for c in (contracts.get("stable") or [])}
+    if "MAJOR" not in str(contracts.get("experimental_rule") or ""):
+        problems.append("support_surface.contracts.experimental_rule must carry the docs/16 wording: experimental contracts may change without a MAJOR notice")
+    registry_path = root / CONTRACT_REGISTRY
+    registry = load_yaml(registry_path) if registry_path.exists() else None
+    if not isinstance(registry, dict):
+        problems.append(f"{CONTRACT_REGISTRY}: unreadable — the surface cannot be checked against the registry")
+        return check("surface", problems)
+    by_id = {c.get("id"): c for c in registry.get("contracts") or [] if isinstance(c, dict)}
+    registry_stable = {cid for cid, c in by_id.items() if c.get("stability") == "stable"}
+    for cid in sorted(registry_stable - declared_stable):
+        problems.append(f"stable contract {cid} is missing from support_surface.contracts.stable — a stable contract the beta does not say it supports")
+    for cid in sorted(declared_stable - registry_stable):
+        state = by_id.get(cid, {}).get("stability", "unregistered")
+        problems.append(f"support_surface lists {cid} as supported but the registry says {state} — the surface cannot claim more than the registry")
+    commands = {str(c) for c in (surface.get("commands") or [])}
+    if not commands:
+        problems.append("support_surface.commands is empty")
+    for guide in surface.get("guides") or []:
+        gpath = root / str(guide)
+        if not gpath.exists():
+            problems.append(f"{guide}: listed in support_surface.guides but missing")
+            continue
+        text = gpath.read_text(encoding="utf-8")
+        rows = guide_contract_rows(text)
+        if not rows:
+            problems.append(f"{guide}: names no contract under a <!-- contracts --> table")
+        for line, cid, stability in rows:
+            if cid in declared_stable:
+                continue
+            if "experimental" in stability:
+                if by_id.get(cid, {}).get("stability") == "stable":
+                    problems.append(f"{guide}:{line}: {cid} is marked experimental in the guide but stable in the registry — declare it in the surface")
+                continue
+            problems.append(f"{guide}:{line}: {cid} is neither in support_surface.contracts.stable nor marked experimental in the guide")
+        for cmd in sorted(guide_commands(text)):
+            if " " in cmd:
+                if cmd not in commands and cmd.split()[0] not in commands:
+                    problems.append(f"{guide}: replays `nomos {cmd}` which support_surface.commands does not cover")
+            elif cmd not in commands and not any(c.startswith(cmd + " ") for c in commands):
+                problems.append(f"{guide}: replays `nomos {cmd}` which support_surface.commands does not cover")
+    return check("surface", problems, {"stable": sorted(declared_stable), "commands": sorted(commands), "guides": list(surface.get("guides") or [])})
+
+
 # --- 5. rendered -------------------------------------------------------------------
 
 
@@ -371,6 +461,12 @@ def render(model: dict[str, Any]) -> str:
     surfaces = "; ".join(f"{s.get('surface')} ({s.get('reason')})" for s in (model.get("unsupported_surfaces") or []) if isinstance(s, dict))
     lines.append(f"- Not supported: {surfaces}.")
     lines.append(f"- End of support: {str(model.get('end_of_support_rule') or '').strip()}")
+    surface = model.get("support_surface") if isinstance(model.get("support_surface"), dict) else {}
+    contracts = surface.get("contracts") if isinstance(surface.get("contracts"), dict) else {}
+    stable = [str(c) for c in (contracts.get("stable") or [])]
+    lines.append(f"- Supported contracts ({len(stable)} stable, per specs/contract-registry.yaml): {', '.join('`' + c + '`' for c in stable)}. {str(contracts.get('experimental_rule') or '').strip()}")
+    lines.append(f"- Covered commands: {', '.join('`nomos ' + str(c) + '`' for c in (surface.get('commands') or []))}.")
+    lines.append(f"- Guides replayed in CI: {', '.join(str(g) for g in (surface.get('guides') or []))}.")
     lines.append(MARK_END)
     return "\n".join(lines)
 
@@ -454,6 +550,7 @@ def main() -> int:
         check_platforms(model_dict, ci, ci_path),
         check_toolchain(root, model_dict, ci, resolve(args.go_mod)),
         check_versions(root, model_dict, tags, resolve(args.version_file), resolve(args.changelog)),
+        check_surface(root, model_dict),
         check_rendered(root, model_dict, args.write),
     ]
     status = "pass" if all(c["status"] == "pass" for c in checks) else "fail"

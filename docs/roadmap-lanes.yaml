@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: [717, 719]
-    devops: [718]
+    devops: []
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -625,13 +625,18 @@ items:
       reliance: supporting_use_until_validated
   - issue: 718
     title: Beta support surface declared and checked (NRT-035)
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
     depends_on: []
+    regulated_tool:
+      intended_use: "declare the beta support surface (stable contracts, covered commands, replayed guides) and refuse a surface that contradicts the contract registry or a guide that relies on an undeclared contract; a declaration checked in CI, never an SLA"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 720
     title: Release v1.0.0-BETA.1 executed through the SOP
     state: open

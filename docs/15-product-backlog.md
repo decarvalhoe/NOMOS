@@ -51,7 +51,7 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #717 — Readiness verdict as a required candidate gate (NRT-034) | #718 — Beta support surface declared and checked (NRT-035) |
+| #717 — Readiness verdict as a required candidate gate (NRT-034) | — |
 | #719 — Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036) | — |
 <!-- roadmap-queues:end -->
 
