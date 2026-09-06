@@ -3486,6 +3486,46 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "evidence_ledger_index",
+      "title": "Ledger d'évidence calculé et en vigueur (NRT-033 #716) — `scripts/evidence_ledger_guard.py --write` recalcule pour chaque catégorie du ledger un bloc `observed` (existence, nature, chemin généré, fichiers, marqueurs `status:` recomptés, non marqués) depuis les fichiers de `expected_location`, écrit `status: effective` (= index en vigueur, calculé et vérifié en CI — jamais une effectivité QMS ; les statuts des documents indexés sont recomptés, jamais adoucis) et `generated_at` daté ; `--check` rougit sur dérive du bloc observé, présence déclarée sur un emplacement absent, `present` sur des brouillons, `generated_by_workflow_when_run` hors chemin généré, vocabulaire inconnu, gap malformé, claim boundary « Missing evidence is not assumed » retirée, index plus vieux que 90 jours (politique de fraîcheur du portefeuille) — la régénération est l'action DevOps récurrente déclarée dans le README. Sidecar Python : aucun moteur Go ; les lecteurs Go (evidence_contract, self_compliance, portfolio) lisent le résultat. Ce que ce N'EST PAS : une approbation QMS ni une preuve que l'évidence indexée existe au-delà de ce que les fichiers montrent.",
+      "pillar": "P1",
+      "claim_level": "index (le ledger est calculé et en vigueur ; aucune effectivité QMS)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "tests/test_evidence_ledger_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/evidence_ledger_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3525,11 +3565,11 @@
     }
   ],
   "summary": {
-    "capabilities": 65,
+    "capabilities": 66,
     "computed": {
       "real": 47,
       "partial": 0,
-      "sidecar": 16,
+      "sidecar": 17,
       "stub": 0,
       "absent": 2
     },

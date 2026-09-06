@@ -4,6 +4,10 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ## Unreleased
 
+### Unreleased
+
+- NRT-033 (#716): the evidence ledger becomes a generated index — `scripts/evidence_ledger_guard.py --write` recomputes an `observed` block per category from the tree and sets `status: effective` (index in force, checked in CI; not QMS effectiveness); `--check` refuses drift, missing locations declared present, `present` over drafts, stale indexes (90 days). Readiness criterion C7 met.
+
 ### Added
 
 - Autonomous plan to the beta release (docs/51, docs/29 "v1.0.0-BETA.1", docs/14 "Definition Of

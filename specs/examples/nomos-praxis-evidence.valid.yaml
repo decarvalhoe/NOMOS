@@ -22,7 +22,7 @@ nomos_artifacts:
   - artifact_id: NOMOS-EVIDENCE-LEDGER
     kind: evidence_ledger
     path: docs/regulated/evidence-index/evidence-ledger.yaml
-    sha256: sha256:7a3695a49135a25e86f687e0009fdf17bd51b5cd29830b14a0290a1e699a4268
+    sha256: sha256:550037b6d1b03b2868b82c68b32f73e8a81442f7f81774bc81affaaf406eb856
     verification:
       state: unverified
 praxis_scenarios:

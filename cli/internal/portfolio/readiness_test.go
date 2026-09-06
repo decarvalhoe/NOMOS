@@ -100,7 +100,7 @@ func TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies(t *testing.T) {
 		t.Fatalf("today's tree must be not_ready with named reasons: %s %v", r.Verdict, r.Unmet)
 	}
 	joined := strings.Join(r.Unmet, "\n")
-	if !strings.Contains(joined, "C1/stable-contracts-compat-fixtures") || !strings.Contains(joined, "C7/evidence-ledger") {
+	if !strings.Contains(joined, "C1/stable-contracts-compat-fixtures") {
 		t.Fatalf("expected the known gaps named:\n%s", joined)
 	}
 	path := filepath.Join(t.TempDir(), "readiness.json")
