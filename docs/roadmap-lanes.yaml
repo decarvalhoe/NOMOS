@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [676, 677, 680, 681]
+    product: [677, 680, 681]
     devops: []
     regulated: []
 
@@ -375,17 +375,17 @@ items:
       reliance: supporting_use_until_validated
   - issue: 676
     title: Contract stability registry and compatibility guard (NRT-023)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     regulated_tool:
       intended_use: register every machine contract with its version and stability and refuse evidence-affecting changes made without a version bump
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 677
     title: Compatibility matrix, version announcement, deprecation enforcement (NRT-024)

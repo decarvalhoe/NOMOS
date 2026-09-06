@@ -43,6 +43,7 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"attest":        attestCommand,
 		"release":       releaseCommand,
 		"portfolio":     portfolioCommand,
+		"contracts":     contractsCommand,
 	}
 
 	if len(args) == 0 {
@@ -93,6 +94,7 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  attest     Sign and verify attestation predicates (ECDSA P-256 DSSE)")
 	fmt.Fprintln(stdout, "  release    Assemble and verify a release CANDIDATE bundle (never approves, tags or publishes)")
 	fmt.Fprintln(stdout, "  portfolio  Compute the portfolio status from committed machine sources (a view: lifts no claim)")
+	fmt.Fprintln(stdout, "  contracts  Verify the contract stability registry against the tree (changed stable contract without bump → red)")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
 	return 0

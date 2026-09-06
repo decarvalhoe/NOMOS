@@ -3171,6 +3171,60 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "contract_stability_registry",
+      "title": "Registre de stabilité des contrats (NRT-023 #676) — `specs/contract-registry.yaml` déclare pour chaque contrat machine de specs/ (36 CUE + 2 miroirs JSON Schema) sa stabilité (stable|experimental|deprecated), sa version (pinned, default, pattern, registry_declared), son sha256, ses fixtures valides/invalides, ses lecteurs Go et ses fixtures de compatibilité. `nomos contracts status` VÉRIFIE contre l'arbre : fichier de contrat non enregistré, fichier absent, hash changé sans bump accepté, version du fichier ≠ registre, contrat stable sans version ou sans fixture valide, fixture absente, dépréciation sans dates ou dépassée, fixture de compatibilité non lue par son lecteur Go (external-snapshot, praxis-evidence, praxis-mapping, portfolio-status) → refus nommé, exit 1. `--accept <id> --new-version <v>` enregistre un bump délibéré et refuse la même version ou une version que le fichier ne déclare pas. En CI sur le dépôt réel : 15 stables, 4 lectures de compatibilité. Ce que ce N'EST PAS : une preuve de justesse sémantique d'un contrat, ni une promesse de compatibilité au-delà de ce que les lecteurs lisent.",
+      "pillar": "P1",
+      "claim_level": "gate (stabilité déclarée et vérifiée ; un contrat stable ne change pas sans bump accepté)",
+      "promotion_issue": "",
+      "expected": "real",
+      "computed": "real",
+      "mismatch": false,
+      "reasons": [],
+      "drift": [],
+      "checks": {
+        "engine": [
+          {
+            "path": "cli/internal/contracts/registry.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "production_callers": [
+          {
+            "path": "cli/internal/app/contracts_cmd.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "cli/internal/app/app.go",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "adversarial_tests": [
+          {
+            "path": "cli/internal/contracts/registry_test.go",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_contract_registry.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3185,6 +3239,7 @@
         "canon",
         "check",
         "connector",
+        "contracts",
         "corpus",
         "diagnose",
         "evidence",
@@ -3209,9 +3264,9 @@
     }
   ],
   "summary": {
-    "capabilities": 59,
+    "capabilities": 60,
     "computed": {
-      "real": 44,
+      "real": 45,
       "partial": 0,
       "sidecar": 13,
       "stub": 0,

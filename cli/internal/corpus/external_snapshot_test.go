@@ -41,7 +41,7 @@ func TestSnapshot_SealedSnapshotVerifies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("a freshly sealed snapshot does not verify: %v", err)
 	}
-	if v.Status != "pass" || v.RecomputedRoot != env.ContentHashRoot {
+	if v.Status != "pass" || "sha256:"+v.RecomputedRoot != env.ContentHashRoot {
 		t.Fatalf("verdict: %+v", v)
 	}
 	if v.SourceCount != 2 || v.VersionCount != 3 {
@@ -108,7 +108,7 @@ func TestSnapshot_RootIsOrderIndependent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("export order must not matter: %v", err)
 	}
-	if v.RecomputedRoot != env.ContentHashRoot {
+	if "sha256:"+v.RecomputedRoot != env.ContentHashRoot {
 		t.Fatal("root depends on order")
 	}
 }

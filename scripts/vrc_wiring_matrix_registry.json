@@ -3690,15 +3690,67 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/security_process_gate.py", "contains": ["def check_process(", "def check_allowlist(", "def check_supported_versions(", "def check_govulncheck(", "def check_pip_audit(", "a requested scanner that is missing is a failed check"]},
-        {"path": "docs/security/security-process.yaml", "contains": ["nomos-security-process-v1", "declared_not_measured", "fail_on: called"]},
-        {"path": "docs/security/vulnerability-allowlist.yaml", "contains": ["nomos-vulnerability-allowlist-v1"]},
-        {"path": ".github/dependabot.yml", "contains": ["package-ecosystem: gomod", "package-ecosystem: github-actions", "package-ecosystem: pip"]},
-        {"path": "SECURITY.md", "contains": ["<!-- supported-versions:begin -->"]},
-        {"path": "tests/test_security_process_gate.py", "contains": ["test_called_vulnerable_dependency_turns_the_gate_red", "test_known_vulnerable_pin_turns_the_gate_red", "test_undated_entry_is_refused", "test_expired_entry_is_refused", "test_hand_edited_supported_versions_is_drift", "test_a_missing_requested_scanner_is_a_failed_check"]}
+        {
+          "path": "scripts/security_process_gate.py",
+          "contains": [
+            "def check_process(",
+            "def check_allowlist(",
+            "def check_supported_versions(",
+            "def check_govulncheck(",
+            "def check_pip_audit(",
+            "a requested scanner that is missing is a failed check"
+          ]
+        },
+        {
+          "path": "docs/security/security-process.yaml",
+          "contains": [
+            "nomos-security-process-v1",
+            "declared_not_measured",
+            "fail_on: called"
+          ]
+        },
+        {
+          "path": "docs/security/vulnerability-allowlist.yaml",
+          "contains": [
+            "nomos-vulnerability-allowlist-v1"
+          ]
+        },
+        {
+          "path": ".github/dependabot.yml",
+          "contains": [
+            "package-ecosystem: gomod",
+            "package-ecosystem: github-actions",
+            "package-ecosystem: pip"
+          ]
+        },
+        {
+          "path": "SECURITY.md",
+          "contains": [
+            "<!-- supported-versions:begin -->"
+          ]
+        },
+        {
+          "path": "tests/test_security_process_gate.py",
+          "contains": [
+            "test_called_vulnerable_dependency_turns_the_gate_red",
+            "test_known_vulnerable_pin_turns_the_gate_red",
+            "test_undated_entry_is_refused",
+            "test_expired_entry_is_refused",
+            "test_hand_edited_supported_versions_is_drift",
+            "test_a_missing_requested_scanner_is_a_failed_check"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["security_process_gate.py", "govulncheck", "pip-audit", "tests.test_security_process_gate"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "security_process_gate.py",
+            "govulncheck",
+            "pip-audit",
+            "tests.test_security_process_gate"
+          ]
+        }
       ]
     },
     {
@@ -3709,14 +3761,137 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "scripts/support_model_guard.py", "contains": ["def check_model(", "def check_platforms(", "def check_toolchain(", "def check_versions(", "def check_rendered(", "neither a git tag nor the current candidate"]},
-        {"path": "docs/support-model.yaml", "contains": ["nomos-support-model-v1", "declared_not_measured", "unsupported_surfaces"]},
-        {"path": "README.md", "contains": ["<!-- support-model:begin -->"]},
-        {"path": "SECURITY.md", "contains": ["<!-- support-model:begin -->"]},
-        {"path": "tests/test_support_model_guard.py", "contains": ["test_ci_matrix_edited_without_the_model_is_red", "test_go_mod_edited_without_the_model_is_red", "test_new_tag_not_declared_is_red", "test_hand_edited_support_section_is_drift", "test_candidate_must_equal_the_cli_constant"]}
+        {
+          "path": "scripts/support_model_guard.py",
+          "contains": [
+            "def check_model(",
+            "def check_platforms(",
+            "def check_toolchain(",
+            "def check_versions(",
+            "def check_rendered(",
+            "neither a git tag nor the current candidate"
+          ]
+        },
+        {
+          "path": "docs/support-model.yaml",
+          "contains": [
+            "nomos-support-model-v1",
+            "declared_not_measured",
+            "unsupported_surfaces"
+          ]
+        },
+        {
+          "path": "README.md",
+          "contains": [
+            "<!-- support-model:begin -->"
+          ]
+        },
+        {
+          "path": "SECURITY.md",
+          "contains": [
+            "<!-- support-model:begin -->"
+          ]
+        },
+        {
+          "path": "tests/test_support_model_guard.py",
+          "contains": [
+            "test_ci_matrix_edited_without_the_model_is_red",
+            "test_go_mod_edited_without_the_model_is_red",
+            "test_new_tag_not_declared_is_red",
+            "test_hand_edited_support_section_is_drift",
+            "test_candidate_must_equal_the_cli_constant"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["support_model_guard.py", "tests.test_support_model_guard", "git fetch --tags"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "support_model_guard.py",
+            "tests.test_support_model_guard",
+            "git fetch --tags"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contract_stability_registry",
+      "title": "Registre de stabilité des contrats (NRT-023 #676) — `specs/contract-registry.yaml` déclare pour chaque contrat machine de specs/ (36 CUE + 2 miroirs JSON Schema) sa stabilité (stable|experimental|deprecated), sa version (pinned, default, pattern, registry_declared), son sha256, ses fixtures valides/invalides, ses lecteurs Go et ses fixtures de compatibilité. `nomos contracts status` VÉRIFIE contre l'arbre : fichier de contrat non enregistré, fichier absent, hash changé sans bump accepté, version du fichier ≠ registre, contrat stable sans version ou sans fixture valide, fixture absente, dépréciation sans dates ou dépassée, fixture de compatibilité non lue par son lecteur Go (external-snapshot, praxis-evidence, praxis-mapping, portfolio-status) → refus nommé, exit 1. `--accept <id> --new-version <v>` enregistre un bump délibéré et refuse la même version ou une version que le fichier ne déclare pas. En CI sur le dépôt réel : 15 stables, 4 lectures de compatibilité. Ce que ce N'EST PAS : une preuve de justesse sémantique d'un contrat, ni une promesse de compatibilité au-delà de ce que les lecteurs lisent.",
+      "pillar": "P1",
+      "claim_level": "gate (stabilité déclarée et vérifiée ; un contrat stable ne change pas sans bump accepté)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Contract stability registry — verified against the tree (NRT-023 #676)",
+            "contracts status --repo-root .. --out",
+            "nomos-contract-status-v1"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/contracts/registry.go",
+          "contains": [
+            "func Verify(",
+            "func AcceptBump(",
+            "func readCompat(",
+            "CONTRACT_CHANGED_WITHOUT_BUMP",
+            "CONTRACT_STABLE_WITHOUT_FIXTURE",
+            "CONTRACT_COMPAT_FIXTURE_UNREADABLE",
+            "without an accepted schema_version bump",
+            "a bump needs a NEW schema_version"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/contracts_cmd.go",
+          "contains": [
+            "contracts.Verify(",
+            "contracts.AcceptBump("
+          ]
+        },
+        {
+          "path": "cli/internal/app/app.go",
+          "contains": [
+            "\"contracts\":     contractsCommand"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "specs/contract-registry.yaml",
+          "contains": [
+            "nomos-contract-registry-v1",
+            "stable_requires_valid_fixture",
+            "compat_fixtures:"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/contracts/registry_test.go",
+          "contains": [
+            "TestRealRegistryVerifies",
+            "TestUnregisteredContractFileIsRed",
+            "TestChangedWithoutBumpIsRed",
+            "TestAcceptBumpRequiresANewVersionDeclaredByTheFile",
+            "TestStableWithoutFixtureOrVersionIsRed",
+            "TestDeprecationNeedsDatesAndRespectsRemoval",
+            "TestCompatFixtureMustBeReadByAKnownReader",
+            "TestCompatSnapshotTamperedRecordIsRed"
+          ]
+        },
+        {
+          "path": "tests/test_contract_registry.py",
+          "contains": [
+            "test_every_registered_fixture_vets_against_its_definition",
+            "test_registry_covers_every_contract_file"
+          ]
+        }
       ]
     }
   ]

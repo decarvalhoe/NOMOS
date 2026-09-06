@@ -7,7 +7,7 @@
   "immutable": true,
   "source_count": 3,
   "version_count": 3,
-  "content_hash_root": "105b6bed2bd85afc3ee3dc5046d9a68a26a730c99738944753184394b2643c28",
+  "content_hash_root": "sha256:105b6bed2bd85afc3ee3dc5046d9a68a26a730c99738944753184394b2643c28",
   "records_file": "sources.jsonl",
   "claim_boundary": "An immutable export consumed as-is; NOMOS never reads the operational store. The root proves these records are the ones exported, not that the export was complete relative to the store, nor that any record's content is correct."
 }

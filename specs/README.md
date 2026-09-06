@@ -28,6 +28,10 @@
 - validation inventory;
 - evidence contract.
 
+## Stability Registry
+
+`contract-registry.yaml` declares every contract file here with its stability (`stable`, `experimental`, `deprecated`), its version, its sha256, its fixtures, its Go readers and its compatibility fixtures. `nomos contracts status --repo-root .` verifies it in CI: a stable contract whose bytes change without an accepted bump is red (`nomos contracts status --accept <id> --new-version <v>` records a deliberate bump once the file declares the new version). Stability is declared and verified, not inferred; it says nothing about semantic correctness.
+
 ## Release Rule
 
 Schema changes are evidence-affecting changes. They require tests, documentation updates, and a migration note when the change can affect generated artifacts or customer validation records.
