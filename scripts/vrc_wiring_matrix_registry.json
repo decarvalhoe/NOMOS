@@ -4031,6 +4031,62 @@
           ]
         }
       ]
+    },
+    {
+      "id": "release_readiness_verdict",
+      "title": "Verdict de readiness v1.0 calculé (NRT-028 #681) — `nomos portfolio release-readiness` mappe les huit critères de docs/14 « Definition Of v1.0 » à des vérifications machine : registre des contrats sans refus et chaque contrat stable avec fixture de compatibilité ; strict fidelity gate et moteur des formats non supportés ; body ledger Merkle (émission, vérification) et graphe de références ; adapters compatibles (NRT-024) et enregistrés comme fixtures ; bundle canonique, candidat de release et attestation de couverture `real` ; chaque `regulated_tool` de roadmap-lanes complet et chaque item fermé porteur d'un ; ledger d'évidence effectif, versionné, frais, processus sécurité et modèle de support présents ; garde des claims publics verte (frontière de process Python, non exécutable → not_ready). Verdict `ready` ou `not_ready` avec chaque vérification non satisfaite nommée — jamais `released` ; lié au digest du statut de portefeuille (NRT-019) ; `--verify` relit un verdict et refuse digest altéré, `ready` contredit par ses critères, liste unmet incohérente, verdict inconnu, 7 critères, digest de statut périmé. En CI : `not_ready` asserté comme tripwire, fichier re-vérifié. Ce que ce N'EST PAS : une release, une approbation, un claim d'usage validé.",
+      "pillar": "P1",
+      "claim_level": "verdict (readiness v1.0 calculée depuis l'arbre ; la release reste #561)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "portfolio release-readiness --repo-root .. --out",
+            "nomos-release-readiness-v1",
+            ".verdict == \"not_ready\"",
+            "release-readiness --repo-root .. --verify"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/portfolio/readiness.go",
+          "contains": [
+            "func ComputeReadiness(",
+            "func VerifyReadinessFile(",
+            "func evaluate(",
+            "func gather(",
+            "contradicts its own criteria",
+            "no `released`",
+            "readiness_digest does not match",
+            "bound to portfolio status"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/portfolio_cmd.go",
+          "contains": [
+            "case \"release-readiness\":",
+            "portfolio.ComputeReadiness(",
+            "portfolio.VerifyReadinessFile("
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/portfolio/readiness_test.go",
+          "contains": [
+            "TestReadinessEvaluateAllMetIsReady",
+            "TestReadinessEachCriterionBreaksAndIsNamed",
+            "TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies",
+            "TestForgedReadinessIsRefused",
+            "TestReadinessGatherNamesMissingSources"
+          ]
+        }
+      ]
     }
   ]
 }

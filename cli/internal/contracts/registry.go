@@ -22,7 +22,6 @@ import (
 
 	"github.com/RBOKproject/Nomos/cli/internal/compliance"
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
-	"github.com/RBOKproject/Nomos/cli/internal/portfolio"
 )
 
 const (
@@ -323,7 +322,11 @@ func readCompat(root string, cf CompatFixture) error {
 		if err != nil {
 			return refuse(CodeCompatUnread, "%s: %v", cf.Path, err)
 		}
-		var st portfolio.Status
+		// Decoded structurally (no import of the portfolio package: it imports this one).
+		var st struct {
+			SchemaVersion string `json:"schema_version"`
+			StatusDigest  string `json:"status_digest"`
+		}
 		if err := json.Unmarshal(raw, &st); err != nil || st.SchemaVersion != cf.SchemaVersion || st.StatusDigest == "" {
 			return refuse(CodeCompatUnread, "%s via %s: not a %s document (%v)", cf.Path, cf.Reader, cf.SchemaVersion, err)
 		}

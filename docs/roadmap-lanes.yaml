@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [681]
+    product: []
     devops: []
     regulated: []
 
@@ -417,17 +417,17 @@ items:
       reliance: manual_review
   - issue: 681
     title: v1.0 readiness verdict, computed (NRT-028)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [676, 677, 680]
     regulated_tool:
       intended_use: compute whether the docs/14 v1.0 criteria are met from the tree and name every unmet one; never decide, tag or publish a release
       impact: decision
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_verification_required
   - issue: 678
     title: Security process, executable (NRT-025)
