@@ -61,12 +61,12 @@ jobs:
       total_files: ${{ steps.scan.outputs.total_files }}
     steps:
       - name: Checkout Nomos
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: nomos
 
       - name: Checkout source corpus
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -140,12 +140,12 @@ jobs:
       manifest_path: ${{ steps.generate.outputs.manifest_path }}
     steps:
       - name: Checkout Nomos
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: nomos
 
       - name: Checkout source corpus
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -228,12 +228,12 @@ jobs:
       - validate-sidecar
     steps:
       - name: Checkout Nomos
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: nomos
 
       - name: Checkout source corpus
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}

@@ -99,7 +99,7 @@ jobs:
       # `nomos_ref` input to lift this; for v0.1 we accept the drift.
       # ----------------------------------------------------------------------
       - name: Checkout NOMOS (workflow source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
@@ -132,7 +132,7 @@ jobs:
       # change) from accidentally writing to the source corpus.
       # ----------------------------------------------------------------------
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -451,14 +451,14 @@ jobs:
       trace_artifact_name: nomos-trace
     steps:
       - name: Checkout NOMOS (generator script source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -600,7 +600,7 @@ jobs:
       NOMOS_CHECKOUT_PATH: nomos
     steps:
       - name: Checkout NOMOS (publisher script source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
@@ -748,14 +748,14 @@ jobs:
       # planner's; the corpus checkout stays read-only by the same two
       # rules (persist-credentials false + push remote DISABLED).
       - name: Checkout NOMOS (workflow source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
