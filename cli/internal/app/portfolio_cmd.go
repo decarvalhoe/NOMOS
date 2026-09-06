@@ -4,6 +4,7 @@ package app
 // computed from committed machine sources. A view, not a decision.
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -25,6 +26,8 @@ func portfolioCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		return runPortfolioProjects(args[1:], stdout, stderr)
 	case "findings":
 		return runPortfolioFindings(args[1:], stdout, stderr)
+	case "release-readiness":
+		return runPortfolioReadiness(args[1:], stdout, stderr)
 	case "reviews":
 		return runPortfolioReviews(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -50,6 +53,9 @@ const portfolioUsage = `usage:
       Every open finding across committed sources (ledger gaps, CAPA, audit findings, review actions, Praxis gate
       requirements, blocked public captures, wiring mismatches) plus consistency findings where two sources
       disagree (NRT-020 #668). Traceable to path + hash. Closes, waives or prioritises nothing.
+  nomos portfolio release-readiness --repo-root <dir> [--out <verdict.json>] [--format json|md] [--verify <verdict.json>]
+      The eight docs/14 v1.0 criteria mapped to machine checks: ready or not_ready with every unmet check named,
+      bound to the portfolio status digest. Never "released" — the release is a regulated decision (#561).
   nomos portfolio reviews --repo-root <dir> [--format json|md] [--out f] [--now RFC3339]
       The periodic review records indexed: decisions, actions with due state, findings, cited artifacts and their existence.`
 
@@ -295,5 +301,66 @@ func runPortfolioReviews(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintf(stdout, "portfolio reviews: %d record(s), %d overdue action(s) → %s\n", rep.Total, rep.OverdueActions, *out)
+	return 0
+}
+
+// runPortfolioReadiness is `nomos portfolio release-readiness` (NRT-028 #681):
+// the eight docs/14 v1.0 criteria mapped to machine checks, answered ready or
+// not_ready with every unmet check named, bound to the portfolio status digest.
+// --verify re-reads a written verdict and refuses a forged or stale one.
+func runPortfolioReadiness(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("portfolio release-readiness", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	repoRoot := flags.String("repo-root", ".", "repository root")
+	out := flags.String("out", "", "write the verdict here (default: stdout)")
+	format := flags.String("format", "json", "json or md")
+	verify := flags.String("verify", "", "re-read this verdict file against the tree instead of computing")
+	nowFlag := flags.String("now", "", "generation time (RFC3339, default now)")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	now := time.Now().UTC()
+	if *nowFlag != "" {
+		t, err := time.Parse(time.RFC3339, *nowFlag)
+		if err != nil {
+			fmt.Fprintf(stderr, "portfolio release-readiness: --now: %v\n", err)
+			return 2
+		}
+		now = t.UTC()
+	}
+	if *verify != "" {
+		r, err := portfolio.VerifyReadinessFile(*verify, *repoRoot, now)
+		if err != nil {
+			fmt.Fprintf(stderr, "portfolio release-readiness: REFUSED — %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "portfolio release-readiness: %s holds — verdict %s, %d unmet check(s), bound to %s\n", *verify, r.Verdict, len(r.Unmet), r.StatusDigest)
+		return 0
+	}
+	r, err := portfolio.ComputeReadiness(portfolio.ReadinessOptions{RepoRoot: *repoRoot, Now: now, CoreVersion: Version})
+	if err != nil {
+		fmt.Fprintf(stderr, "portfolio release-readiness: %v\n", err)
+		return 1
+	}
+	write := func(w io.Writer) error {
+		if *format == "md" {
+			_, err := io.WriteString(w, portfolio.RenderReadinessMarkdown(r))
+			return err
+		}
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(r)
+	}
+	if *out == "" {
+		if err := write(stdout); err != nil {
+			return 1
+		}
+		return 0
+	}
+	if err := writeFile(*out, write); err != nil {
+		fmt.Fprintf(stderr, "portfolio release-readiness: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "portfolio release-readiness: %s — %d unmet check(s) → %s\n", r.Verdict, len(r.Unmet), *out)
 	return 0
 }

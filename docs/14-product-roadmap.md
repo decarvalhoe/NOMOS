@@ -155,6 +155,11 @@ Nomos can be considered a stable product release candidate only when:
 - regulated documentation consumes versioned product evidence without becoming a product implementation dependency;
 - public claims never exceed the current evidence level.
 
+These eight criteria are mapped to machine checks by `nomos portfolio
+release-readiness` (NRT-028), which answers `ready` or `not_ready` with every
+unmet check named and is asserted `not_ready` in CI until each criterion is
+met on purpose; the verdict is never `released`.
+
 The separate regulated-assurance roadmap defines when a customer or Nomos may
 make a validated-use, QMS-effectiveness or regulated-readiness claim. Product
 `v1.0` alone does not unlock one.

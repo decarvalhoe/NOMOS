@@ -74,6 +74,14 @@ jobs:
           go run . portfolio reviews --repo-root .. --out "$RUNNER_TEMP/portfolio-reviews.json"
           jq -e '.schema_version == "nomos-portfolio-reviews-v1" and .total >= 3' "$RUNNER_TEMP/portfolio-reviews.json" > /dev/null
           go run . portfolio findings --repo-root .. --format md | head -12
+          # NRT-028 (#681): the v1.0 readiness verdict is COMPUTED from the tree against the
+          # eight docs/14 criteria and published with the portfolio artifacts. It is
+          # `not_ready` today — asserted as a tripwire until every criterion is met on
+          # purpose — and the written file must re-verify (digest, criteria, status binding).
+          go run . portfolio release-readiness --repo-root .. --out "$RUNNER_TEMP/release-readiness.json"
+          jq -e '.schema_version == "nomos-release-readiness-v1" and .verdict == "not_ready" and (.criteria | length) == 8 and (.unmet | length) > 0 and (.status_digest | startswith("sha256:"))' "$RUNNER_TEMP/release-readiness.json" > /dev/null
+          go run . portfolio release-readiness --repo-root .. --verify "$RUNNER_TEMP/release-readiness.json"
+          go run . portfolio release-readiness --repo-root .. --format md | head -30
       # NRT-023 (#676): the contract stability registry is VERIFIED against the tree —
       # every specs/*.cue and *.schema.json registered, hash-at-version intact, stable
       # contracts with a version and a valid fixture, compatibility fixtures READ by
