@@ -143,20 +143,50 @@ Les SDK suivent SemVer et declarent la version du coeur et des schemas avec lesq
 
 ## Compatibility Matrix
 
-Nomos doit publier une matrice de compatibilite entre :
+La matrice est calculee par `nomos contracts status --emit-docs` depuis `specs/contract-registry.yaml` et `adapters/*/adapter.nomos.yaml` ; `nomos version --json` annonce les memes donnees. Un adapter hors plage rougit `nomos contracts status` ; une edition manuelle de la section rougit la CI.
 
-- coeur ;
-- adapters ;
-- schemas ;
-- policies ;
-- SDK.
+<!-- compatibility-matrix:begin -->
+<!-- GENERATED from specs/contract-registry.yaml and adapters/*/adapter.nomos.yaml by `nomos contracts status --emit-docs`; do not edit by hand, CI fails on drift -->
 
-Exemple conceptuel :
+Core `0.2.0-ALPHA` — 38 contract(s) registered, 15 stable. `reads`/`writes` = a Go reader/writer is declared in the registry.
 
-| Core | Schema | Adapter | Policy | Status |
+| Contract | Version | Stability | Core reads | Core writes |
 |---|---|---|---|---|
-| 0.4.x | 0.2.x | node-typescript 0.3.x | 0.2.x | supported |
-| 0.4.x | 0.1.x | python 0.1.x | 0.1.x | deprecated |
+| `adapter-manifest` | `0.1.0` | experimental | yes | no |
+| `alcoa-evidence` | `0.1.0` | experimental | yes | no |
+| `canon-promotion` | `0.1.0` | stable | yes | no |
+| `canonical-knowledge-bundle` | `ckm-bundle-v1` | stable | yes | no |
+| `canonical-matrix` | `0.1.0` | stable | yes | no |
+| `corpus-body-ledger` | `0.1.0` | stable | yes | yes |
+| `corpus-integrity-report` | `0.1.0` | stable | yes | no |
+| `domain-pack` | `nomos-domain-pack-v1` | stable | yes | no |
+| `evidence-contract` | `0.1.0` | experimental | yes | no |
+| `external-snapshot` | `nomos.external-snapshot.v1` | stable | yes | yes |
+| `facet-ontology` | `ckm-facet-ontology-v1` | experimental | yes | no |
+| `facets` | `0.1.0` | stable | yes | no |
+| `knowledge-lens` | `0.1.0` | stable | yes | no |
+| `nomos-github-workflow` | `` | experimental | yes | no |
+| `nomos-praxis-evidence` | `nomos-praxis-evidence-exchange-v1` | experimental | yes | no |
+| `nomos-praxis-evidence-schema` | `nomos-praxis-evidence-exchange-v1` | stable | no | no |
+| `nomos-project` | `0.1.0` | stable | yes | no |
+| `nomos-report.schema` | `0.1.0` | stable | yes | yes |
+| `nomos-trace-manifest` | `` | experimental | yes | no |
+| `point-in-time` | `0.1.0` | stable | yes | no |
+| `portfolio-status` | `nomos-portfolio-status-v1` | experimental | yes | yes |
+| `rbok-lawbook-feed` | `0.1.0` | experimental | yes | no |
+| `source-manifest` | `0.1.0` | stable | yes | yes |
+| `validation-inventory` | `0.1.0` | experimental | yes | no |
+| `verdicts` | `0.1.0` | stable | yes | no |
+
+| Adapter | Version | Status | Core range | Manifest contract | Schema minimums | Verdict |
+|---|---|---|---|---|---|---|
+| `jvm` | `0.1.0` | experimental | >= 0.1.0 | `0.1.0` | adapter_manifest 0.1.0, canonical_matrix 0.1.0, nomos_project 0.1.0, source_manifest 0.1.0 | compatible |
+| `node-typescript` | `0.1.0` | experimental | >= 0.1.0 | `0.1.0` | adapter_manifest 0.1.0, canonical_matrix 0.1.0, nomos_project 0.1.0, source_manifest 0.1.0 | compatible |
+| `python` | `0.1.0` | experimental | >= 0.1.0 | `0.1.0` | adapter_manifest 0.1.0, canonical_matrix 0.1.0, nomos_project 0.1.0, source_manifest 0.1.0 | compatible |
+
+Other formats the core emits: attestation_predicate `https://nomos.dev/attestation/v1`, claim_boundary_predicate `https://nomos.dev/claim-boundary/v1`, contract_status `nomos-contract-status-v1`, portfolio_status `nomos-portfolio-status-v1`, release_candidate_gates `nomos-release-candidate-gates-v1`, release_candidate_spec `nomos-release-candidate-spec-v1`, slsa_provenance_predicate `https://slsa.dev/provenance/v1`, version_announcement `nomos-version-announcement-v1`.
+
+<!-- compatibility-matrix:end -->
 
 ## Deprecation Policy
 

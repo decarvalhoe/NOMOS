@@ -100,11 +100,6 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	return 0
 }
 
-func versionCommand(_ []string, stdout io.Writer, _ io.Writer) int {
-	fmt.Fprintln(stdout, Version)
-	return 0
-}
-
 func notImplemented(name string) commandFunc {
 	return func(_ []string, _ io.Writer, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "command %q is scaffolded but not implemented yet\n", name)

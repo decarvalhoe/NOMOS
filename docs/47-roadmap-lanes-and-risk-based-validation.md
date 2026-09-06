@@ -39,7 +39,6 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #677 — Compatibility matrix, version announcement, deprecation enforcement (NRT-024) | — |
 | #680 — Customer integration guide with commands replayed against fixtures (NRT-027) | — |
 | #681 — v1.0 readiness verdict, computed (NRT-028) | — |
 <!-- roadmap-queues:end -->

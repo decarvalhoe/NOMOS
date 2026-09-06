@@ -3893,6 +3893,90 @@
           ]
         }
       ]
+    },
+    {
+      "id": "compatibility_matrix",
+      "title": "Matrice de compatibilité générée, annonce de version, dépréciations appliquées (NRT-024 #677) — `nomos version --json` annonce la version du coeur, chaque contrat du registre avec sa version, sa stabilité et si un lecteur/écrivain Go est déclaré, les formats émis (statut de contrat, candidat de release, prédicats d'attestation…) et le verdict de chaque adapter ; `cli/internal/contracts/compat.go` compare `adapters/*/adapter.nomos.yaml` au coeur courant (min/max nomos_core, version du contrat de manifeste, minimums/maximums de schémas, clé de schéma inconnue, manifeste illisible → `ADAPTER_INCOMPATIBLE`/`ADAPTER_MANIFEST_UNREADABLE`, fail-closed dans `nomos contracts status`) ; la section « Compatibility Matrix » de docs/16 est générée depuis le même registre (`--emit-docs`), `--check-docs` exit 4 et `git diff --exit-code` en CI sur dérive ; un contrat `deprecated` est AVERTI avec sa date de retrait et refusé au-delà (registre). Ce que ce N'EST PAS : une promesse de compatibilité au-delà des déclarations comparées ; `writes` n'est vrai que là où un écrivain Go est identifié au registre.",
+      "pillar": "P1",
+      "claim_level": "gate (le coeur annonce ce qu'il lit et écrit ; les adapters se déclarent et sont vérifiés ; matrice générée, jamais éditée)",
+      "promotion_issue": "",
+      "expected": "real",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Compatibility — version announcement, adapters in range, matrix generated (NRT-024 #677)",
+            "version --json --repo-root ..",
+            "nomos-version-announcement-v1",
+            "contracts status --repo-root .. --check-docs",
+            "git -C .. diff --exit-code docs/16-versioning-policy.md"
+          ]
+        }
+      ],
+      "engine": [
+        {
+          "path": "cli/internal/contracts/compat.go",
+          "contains": [
+            "func CheckAdapters(",
+            "func Announce(",
+            "func RenderMatrix(",
+            "func CheckDocs(",
+            "func DeprecationWarnings(",
+            "ADAPTER_INCOMPATIBLE",
+            "COMPATIBILITY_MATRIX_DRIFT",
+            "requires core >=",
+            "is not a schema the core knows"
+          ]
+        }
+      ],
+      "production_callers": [
+        {
+          "path": "cli/internal/app/version_cmd.go",
+          "contains": [
+            "contracts.Announce("
+          ]
+        },
+        {
+          "path": "cli/internal/app/contracts_cmd.go",
+          "contains": [
+            "contracts.Announce(",
+            "contracts.EmitDocs(",
+            "contracts.CheckDocs(",
+            "WARNING —"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/16-versioning-policy.md",
+          "contains": [
+            "<!-- compatibility-matrix:begin -->",
+            "GENERATED from specs/contract-registry.yaml and adapters/*/adapter.nomos.yaml"
+          ]
+        },
+        {
+          "path": "specs/contract-registry.yaml",
+          "contains": [
+            "adapters_must_include_core_version",
+            "writers_declared_where_identified"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "cli/internal/contracts/compat_test.go",
+          "contains": [
+            "TestAdapterOutsideRangeIsRed",
+            "TestAdapterManifestContractAndSchemasAreChecked",
+            "TestAdapterSchemaMaxBelowShippedIsRed",
+            "TestMatrixIsDeterministicAndDriftIsRed",
+            "TestDeprecatedContractIsWarnedAndAnnounced",
+            "TestEveryDeprecatedContractIsWarned",
+            "TestRealAdaptersAreCompatibleWithTheRealCore",
+            "TestSemverRejectsTrailingGarbageAndOrdersReleasesAbovePreReleases"
+          ]
+        }
+      ]
     }
   ]
 }
