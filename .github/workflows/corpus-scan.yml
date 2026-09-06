@@ -126,7 +126,7 @@ jobs:
           echo "total_files=$TOTAL" >> "$GITHUB_OUTPUT"
           echo "Scanned $TOTAL files from ${{ inputs.corpus_repository }}@${{ inputs.corpus_ref }}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: corpus-snapshot
           path: /tmp/nomos-corpus-output/snapshot.json
@@ -214,7 +214,7 @@ jobs:
           fi
           "$GITHUB_WORKSPACE/nomos-cli" corpus validate-sidecar "${VALIDATE_ARGS[@]}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sidecar-manifest
           path: /tmp/nomos-corpus-output/source-manifest.yaml
@@ -290,7 +290,7 @@ jobs:
           test "$CHUNKS" -gt 0
           echo "Built feed with $UNITS units and $CHUNKS RAG chunks"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: corpus-feed
           path: /tmp/nomos-corpus-output/rbok-feed.json
