@@ -4104,13 +4104,43 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "specs/domain-cartography.cue", "contains": ["#DomainCartography", "nomos-domain-cartography-v1", "\"not_verified\"", "never_duplicated"]},
-        {"path": "specs/examples/domain-cartography.valid.yaml", "contains": ["kind: phantom", "kind: transversal_base"]},
-        {"path": "specs/examples/domain-cartography.invalid-inferred-layer.yaml", "contains": ["verified_by: not_verified"]},
-        {"path": "specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml", "contains": ["kind: phantom"]}
+        {
+          "path": "specs/domain-cartography.cue",
+          "contains": [
+            "#DomainCartography",
+            "nomos-domain-cartography-v1",
+            "\"not_verified\"",
+            "never_duplicated"
+          ]
+        },
+        {
+          "path": "specs/examples/domain-cartography.valid.yaml",
+          "contains": [
+            "kind: phantom",
+            "kind: transversal_base"
+          ]
+        },
+        {
+          "path": "specs/examples/domain-cartography.invalid-inferred-layer.yaml",
+          "contains": [
+            "verified_by: not_verified"
+          ]
+        },
+        {
+          "path": "specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml",
+          "contains": [
+            "kind: phantom"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["Domain cartography contract (docs/49)", "-d '#DomainCartography'"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Domain cartography contract (docs/49)",
+            "-d '#DomainCartography'"
+          ]
+        }
       ]
     },
     {
@@ -4121,19 +4151,154 @@
       "promotion_issue": "",
       "expected": "sidecar",
       "sidecar": [
-        {"path": "docs/50-cross-consumption-proof-kit.md", "contains": ["out/bundle.json -->", "<!-- replay expects: out/import-verdict-tampered.json -->", "<!-- replay expects: out/answer-gate.json, out/citations-verdict.json -->", "<!-- replay expects: out/inventory-verdict.json, out/cartography-verdict.json -->", "<!-- contracts -->"]},
-        {"path": "scripts/cross_consumption_import_check.py", "contains": ["def check_index(", "def check_citations(", "def digest_of(", "the index is not the export"]},
-        {"path": "scripts/parameter_inventory_check.py", "contains": ["def check_inventory(", "a validated parameter needs evidence", "detection is none and no finding is referenced"]},
-        {"path": "docs/cross-consumption-kit/answers.yaml", "contains": ["KIT-ABSTAIN", "acceptable_refusal"]},
-        {"path": "docs/cross-consumption-kit/eval-corpus.yaml", "contains": ["expected_chunk_ids"]},
-        {"path": "docs/cross-consumption-kit/thresholds.yaml", "contains": ["min_mean_context_recall"]},
-        {"path": "docs/cross-consumption-kit/cartography.yaml", "contains": ["federal-texts-fedlex-eli", "verified_by: not_verified", "kind: phantom"]},
-        {"path": "docs/cross-consumption-kit/parameter-inventory.yaml", "contains": ["status: default", "silent_failure_review"]},
-        {"path": "tests/test_cross_consumption_import_check.py", "contains": ["test_altered_embedding_text_moves_the_digest", "test_unreadable_line_is_named_not_skipped", "test_citation_of_an_unknown_chunk_is_red", "test_the_kit_guide_replays_against_the_fixtures"]},
-        {"path": "tests/test_parameter_inventory_check.py", "contains": ["test_validated_without_dated_evidence_is_red", "test_the_template_itself_is_refused_as_placeholders"]}
+        {
+          "path": "docs/50-cross-consumption-proof-kit.md",
+          "contains": [
+            "out/bundle.json -->",
+            "<!-- replay expects: out/import-verdict-tampered.json -->",
+            "<!-- replay expects: out/answer-gate.json, out/citations-verdict.json -->",
+            "<!-- replay expects: out/inventory-verdict.json, out/cartography-verdict.json -->",
+            "<!-- contracts -->"
+          ]
+        },
+        {
+          "path": "scripts/cross_consumption_import_check.py",
+          "contains": [
+            "def check_index(",
+            "def check_citations(",
+            "def digest_of(",
+            "the index is not the export"
+          ]
+        },
+        {
+          "path": "scripts/parameter_inventory_check.py",
+          "contains": [
+            "def check_inventory(",
+            "a validated parameter needs evidence",
+            "detection is none and no finding is referenced"
+          ]
+        },
+        {
+          "path": "docs/cross-consumption-kit/answers.yaml",
+          "contains": [
+            "KIT-ABSTAIN",
+            "acceptable_refusal"
+          ]
+        },
+        {
+          "path": "docs/cross-consumption-kit/eval-corpus.yaml",
+          "contains": [
+            "expected_chunk_ids"
+          ]
+        },
+        {
+          "path": "docs/cross-consumption-kit/thresholds.yaml",
+          "contains": [
+            "min_mean_context_recall"
+          ]
+        },
+        {
+          "path": "docs/cross-consumption-kit/cartography.yaml",
+          "contains": [
+            "federal-texts-fedlex-eli",
+            "verified_by: not_verified",
+            "kind: phantom"
+          ]
+        },
+        {
+          "path": "docs/cross-consumption-kit/parameter-inventory.yaml",
+          "contains": [
+            "status: default",
+            "silent_failure_review"
+          ]
+        },
+        {
+          "path": "tests/test_cross_consumption_import_check.py",
+          "contains": [
+            "test_altered_embedding_text_moves_the_digest",
+            "test_unreadable_line_is_named_not_skipped",
+            "test_citation_of_an_unknown_chunk_is_red",
+            "test_the_kit_guide_replays_against_the_fixtures"
+          ]
+        },
+        {
+          "path": "tests/test_parameter_inventory_check.py",
+          "contains": [
+            "test_validated_without_dated_evidence_is_red",
+            "test_the_template_itself_is_refused_as_placeholders"
+          ]
+        }
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)", "docs/50-cross-consumption-proof-kit.md", "cross-consumption-kit/cartography.yaml -d '#DomainCartography'"]}
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)",
+            "docs/50-cross-consumption-proof-kit.md",
+            "cross-consumption-kit/cartography.yaml -d '#DomainCartography'"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence_ledger_index",
+      "title": "Ledger d'évidence calculé et en vigueur (NRT-033 #716) — `scripts/evidence_ledger_guard.py --write` recalcule pour chaque catégorie du ledger un bloc `observed` (existence, nature, chemin généré, fichiers, marqueurs `status:` recomptés, non marqués) depuis les fichiers de `expected_location`, écrit `status: effective` (= index en vigueur, calculé et vérifié en CI — jamais une effectivité QMS ; les statuts des documents indexés sont recomptés, jamais adoucis) et `generated_at` daté ; `--check` rougit sur dérive du bloc observé, présence déclarée sur un emplacement absent, `present` sur des brouillons, `generated_by_workflow_when_run` hors chemin généré, vocabulaire inconnu, gap malformé, claim boundary « Missing evidence is not assumed » retirée, index plus vieux que 90 jours (politique de fraîcheur du portefeuille) — la régénération est l'action DevOps récurrente déclarée dans le README. Sidecar Python : aucun moteur Go ; les lecteurs Go (evidence_contract, self_compliance, portfolio) lisent le résultat. Ce que ce N'EST PAS : une approbation QMS ni une preuve que l'évidence indexée existe au-delà de ce que les fichiers montrent.",
+      "pillar": "P1",
+      "claim_level": "index (le ledger est calculé et en vigueur ; aucune effectivité QMS)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Evidence ledger — computed index in force, no drift, not stale (NRT-033 #716)",
+            "evidence_ledger_guard.py --root . --check"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/evidence_ledger_guard.py",
+          "contains": [
+            "def observe(",
+            "def check_category(",
+            "def check_gaps(",
+            "observed block drifts from the tree",
+            "stale index; regenerate with --write",
+            "a draft is not present evidence",
+            "is only for generated paths"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/regulated/evidence-index/evidence-ledger.yaml",
+          "contains": [
+            "status: effective",
+            "index_rule:",
+            "observed:",
+            "Missing evidence is not assumed"
+          ]
+        },
+        {
+          "path": "docs/regulated/evidence-index/README.md",
+          "contains": [
+            "evidence_ledger_guard.py --root . --write"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "tests/test_evidence_ledger_guard.py",
+          "contains": [
+            "test_tree_change_without_regeneration_is_drift",
+            "test_declared_presence_over_missing_location_is_red",
+            "test_stale_index_is_red",
+            "test_present_over_drafts_and_unknown_vocabulary_are_red",
+            "test_generated_status_on_a_real_path_is_red",
+            "test_the_committed_ledger_is_a_fresh_index"
+          ]
+        }
       ]
     }
   ]

@@ -1,139 +1,241 @@
-schema_version: "0.1.0"
-generated_at: "2026-05-02"
-status: draft
-claim_boundary: "Evidence ledger baseline only. Missing evidence is not assumed."
+schema_version: 0.1.0
+generated_at: '2026-09-06'
+status: effective
+claim_boundary: Evidence ledger baseline only. Missing evidence is not assumed.
 evidence_categories:
-  - id: EV-REF-001
-    category: external_reference_register
-    expected_location: "docs/regulated/reference-basis/external-reference-register.yaml"
-    current_status: present_draft
-    claim_allowed: "reference_registered"
-  - id: EV-REF-CANON-001
-    category: nomos_bible_corpus
-    expected_location: ".regulated-doc-gate/reference-canon-report.json"
-    current_status: generated_by_workflow_when_run
-    claim_allowed: "canonical_bible_registry_only"
-  - id: EV-QMS-001
-    category: quality_system_documents
-    expected_location: "docs/regulated/quality-system/"
-    current_status: draft_not_effective
-    claim_allowed: "documentation_baseline_only"
-  - id: EV-SDLC-001
-    category: lifecycle_documents
-    expected_location: "docs/regulated/lifecycle/"
-    current_status: draft_not_effective
-    claim_allowed: "documentation_baseline_only"
-  - id: EV-VAL-001
-    category: validation_evidence
-    expected_location: "docs/regulated/validation-pack/"
-    current_status: requires_evidence
-    claim_allowed: "none"
-  - id: EV-DI-001
-    category: data_integrity_records
-    expected_location: "docs/regulated/data-integrity/"
-    current_status: draft_not_effective
-    claim_allowed: "policy_draft_only"
-  - id: EV-SEC-001
-    category: security_and_supply_chain_evidence
-    expected_location: "docs/regulated/security-privacy/"
-    current_status: draft_not_effective
-    claim_allowed: "policy_draft_only"
-  - id: EV-AI-001
-    category: ai_rag_governance_evidence
-    expected_location: "docs/regulated/ai-rag-governance/"
-    current_status: requires_evidence
-    claim_allowed: "none"
-  - id: EV-REL-001
-    category: release_bundle
-    expected_location: "docs/regulated/release-bundle/"
-    current_status: requires_evidence
-    claim_allowed: "none"
-  - id: EV-GH-QMS-001
-    category: github_regulated_operating_model
-    expected_location: "docs/regulated/github-operating-model/"
-    current_status: draft_not_effective
-    claim_allowed: "github_documentary_qms_candidate"
-  - id: EV-AUTO-001
-    category: regulated_automation_reports
-    expected_location: ".regulated-evidence-pack/"
-    current_status: generated_by_workflow_when_run
-    claim_allowed: "evidence_inventory_only"
-  - id: EV-CI-REPEAT-001
-    category: repeated_ci_evidence_private_corpus
-    expected_location: "docs/regulated/evidence-index/repeated-ci-evidence/"
-    current_status: requires_evidence
-    claim_allowed: "none"
-    detail: >-
-      VRC-14 (#560). Scheduled weekly runs of the RBOK lawbook E2E workflow on
-      the private corpus, indexed and measured by
-      scripts/repeated_ci_evidence.py. Measured 2026-09-04: 4 of the 8
-      consecutive green runs the target requires. Status flips to
-      present_measured, and claim_allowed to
-      repeated_ci_evidence_private_corpora, only when the measurement says so;
-      the gate refuses any other combination.
-  - id: EV-PLAN-001
-    category: regulated_compliance_closure_plan
-    expected_location: "docs/28-regulated-compliance-closure-plan.md"
-    current_status: present_draft
-    claim_allowed: "execution_plan_only"
+- id: EV-REF-001
+  category: external_reference_register
+  expected_location: docs/regulated/reference-basis/external-reference-register.yaml
+  current_status: present_draft
+  claim_allowed: reference_registered
+  observed:
+    exists: true
+    kind: file
+    generated_path: false
+    files: 1
+    statuses:
+      draft: 1
+    unmarked: 0
+- id: EV-REF-CANON-001
+  category: nomos_bible_corpus
+  expected_location: .regulated-doc-gate/reference-canon-report.json
+  current_status: generated_by_workflow_when_run
+  claim_allowed: canonical_bible_registry_only
+  observed:
+    exists: false
+    kind: absent
+    generated_path: true
+    files: 0
+    statuses: {}
+    unmarked: 0
+- id: EV-QMS-001
+  category: quality_system_documents
+  expected_location: docs/regulated/quality-system/
+  current_status: draft_not_effective
+  claim_allowed: documentation_baseline_only
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 8
+    statuses:
+      draft: 7
+    unmarked: 1
+- id: EV-SDLC-001
+  category: lifecycle_documents
+  expected_location: docs/regulated/lifecycle/
+  current_status: draft_not_effective
+  claim_allowed: documentation_baseline_only
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 7
+    statuses:
+      draft: 5
+    unmarked: 2
+- id: EV-VAL-001
+  category: validation_evidence
+  expected_location: docs/regulated/validation-pack/
+  current_status: requires_evidence
+  claim_allowed: none
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 11
+    statuses:
+      draft: 2
+      effective: 1
+      executed: 1
+      executed_local_pending_independent_review: 1
+      pending_approval: 2
+      template: 1
+    unmarked: 3
+- id: EV-DI-001
+  category: data_integrity_records
+  expected_location: docs/regulated/data-integrity/
+  current_status: draft_not_effective
+  claim_allowed: policy_draft_only
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 3
+    statuses:
+      draft: 2
+    unmarked: 1
+- id: EV-SEC-001
+  category: security_and_supply_chain_evidence
+  expected_location: docs/regulated/security-privacy/
+  current_status: draft_not_effective
+  claim_allowed: policy_draft_only
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 5
+    statuses:
+      draft: 4
+    unmarked: 1
+- id: EV-AI-001
+  category: ai_rag_governance_evidence
+  expected_location: docs/regulated/ai-rag-governance/
+  current_status: requires_evidence
+  claim_allowed: none
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 11
+    statuses:
+      complete: 1
+      published: 1
+    unmarked: 9
+- id: EV-REL-001
+  category: release_bundle
+  expected_location: docs/regulated/release-bundle/
+  current_status: requires_evidence
+  claim_allowed: none
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 1
+    statuses: {}
+    unmarked: 1
+- id: EV-GH-QMS-001
+  category: github_regulated_operating_model
+  expected_location: docs/regulated/github-operating-model/
+  current_status: draft_not_effective
+  claim_allowed: github_documentary_qms_candidate
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 4
+    statuses:
+      applied_main: 1
+      draft: 1
+      partially_applied: 2
+    unmarked: 0
+- id: EV-AUTO-001
+  category: regulated_automation_reports
+  expected_location: .regulated-evidence-pack/
+  current_status: generated_by_workflow_when_run
+  claim_allowed: evidence_inventory_only
+  observed:
+    exists: false
+    kind: absent
+    generated_path: true
+    files: 0
+    statuses: {}
+    unmarked: 0
+- id: EV-CI-REPEAT-001
+  category: repeated_ci_evidence_private_corpus
+  expected_location: docs/regulated/evidence-index/repeated-ci-evidence/
+  current_status: requires_evidence
+  claim_allowed: none
+  detail: 'VRC-14 (#560). Scheduled weekly runs of the RBOK lawbook E2E workflow on the private corpus,
+    indexed and measured by scripts/repeated_ci_evidence.py. Measured 2026-09-04: 4 of the 8 consecutive
+    green runs the target requires. Status flips to present_measured, and claim_allowed to repeated_ci_evidence_private_corpora,
+    only when the measurement says so; the gate refuses any other combination.'
+  observed:
+    exists: true
+    kind: directory
+    generated_path: false
+    files: 3
+    statuses: {}
+    unmarked: 3
+- id: EV-PLAN-001
+  category: regulated_compliance_closure_plan
+  expected_location: docs/28-regulated-compliance-closure-plan.md
+  current_status: present_draft
+  claim_allowed: execution_plan_only
+  observed:
+    exists: true
+    kind: file
+    generated_path: false
+    files: 1
+    statuses: {}
+    unmarked: 1
 blocking_gaps:
-  - id: GAP-QMS-OWNER
-    description: >-
-      Closed: quality, product, validation, security and data-integrity owners
-      are assigned by NOMOS-REC-ROLE-2026-001 (2026-06-11); role accumulation
-      and the independent-reviewer waiver are explicit in that record.
-    severity: major
-    status: closed
-    blocks_claims:
-      - regulated_grade
-      - effective_qms
-  - id: GAP-APPROVAL-WORKFLOW
-    description: "Controlled approval workflow is not implemented."
-    severity: major
-    status: open
-    blocks_claims:
-      - approved_release_evidence
-      - part_11_like_records
-  - id: GAP-TRAINING
-    description: >-
-      Competence attestations are absent. VRC-16 (#562) reconciled the three
-      role vocabularies, extended the matrix to the four owner roles that were
-      held by a named human with no matrix entry, and wired
-      scripts/training_competence_gate.py to compute the per-role status from
-      signed records. Computed 2026-09-04: 0 valid attestations, 0 of 6 held
-      roles established, product_owner still requires_definition. The records
-      themselves can only be produced by the people involved.
-    severity: major
-    status: open
-    blocks_claims:
-      - effective_sop_use
-  - id: GAP-INDEPENDENT-AUDIT
-    description: "No independent audit record exists."
-    severity: major
-    status: open
-    blocks_claims:
-      - independent_audit_ready
-  - id: GAP-GITHUB-LIVE-CONFIG
-    description: "GitHub branch protection, rulesets, environments, security features, audit-log export, and retention settings require live evidence."
-    severity: major
-    status: open
-    blocks_claims:
-      - github_validated_operating_model
-      - approved_release_evidence
-  - id: GAP-REPEATED-CI-EVIDENCE
-    description: >-
-      Repeated CI evidence on the private corpus is measured but below target:
-      4 of 8 consecutive green scheduled runs as of 2026-09-04, with 5 missed
-      weekly occurrences between 2026-06-29 and 2026-08-10, and only 2 distinct
-      corpus revisions across the whole recorded window.
-    severity: major
-    status: open
-    blocks_claims:
-      - repeated_ci_evidence_private_corpora
-  - id: GAP-LICENSED-BIBLES
-    description: "Licensed bible references, including GAMP 5 and ISO standards, require licensed local artifacts before full-text atomization and clause-level mapping."
-    severity: major
-    status: open
-    blocks_claims:
-      - clause_level_mapping_against_licensed_references
-      - csv_csa_gxp_claim_against_gamp5
+- id: GAP-QMS-OWNER
+  description: 'Closed: quality, product, validation, security and data-integrity owners are assigned
+    by NOMOS-REC-ROLE-2026-001 (2026-06-11); role accumulation and the independent-reviewer waiver are
+    explicit in that record.'
+  severity: major
+  status: closed
+  blocks_claims:
+  - regulated_grade
+  - effective_qms
+- id: GAP-APPROVAL-WORKFLOW
+  description: Controlled approval workflow is not implemented.
+  severity: major
+  status: open
+  blocks_claims:
+  - approved_release_evidence
+  - part_11_like_records
+- id: GAP-TRAINING
+  description: 'Competence attestations are absent. VRC-16 (#562) reconciled the three role vocabularies,
+    extended the matrix to the four owner roles that were held by a named human with no matrix entry,
+    and wired scripts/training_competence_gate.py to compute the per-role status from signed records.
+    Computed 2026-09-04: 0 valid attestations, 0 of 6 held roles established, product_owner still requires_definition.
+    The records themselves can only be produced by the people involved.'
+  severity: major
+  status: open
+  blocks_claims:
+  - effective_sop_use
+- id: GAP-INDEPENDENT-AUDIT
+  description: No independent audit record exists.
+  severity: major
+  status: open
+  blocks_claims:
+  - independent_audit_ready
+- id: GAP-GITHUB-LIVE-CONFIG
+  description: GitHub branch protection, rulesets, environments, security features, audit-log export,
+    and retention settings require live evidence.
+  severity: major
+  status: open
+  blocks_claims:
+  - github_validated_operating_model
+  - approved_release_evidence
+- id: GAP-REPEATED-CI-EVIDENCE
+  description: 'Repeated CI evidence on the private corpus is measured but below target: 4 of 8 consecutive
+    green scheduled runs as of 2026-09-04, with 5 missed weekly occurrences between 2026-06-29 and 2026-08-10,
+    and only 2 distinct corpus revisions across the whole recorded window.'
+  severity: major
+  status: open
+  blocks_claims:
+  - repeated_ci_evidence_private_corpora
+- id: GAP-LICENSED-BIBLES
+  description: Licensed bible references, including GAMP 5 and ISO standards, require licensed local artifacts
+    before full-text atomization and clause-level mapping.
+  severity: major
+  status: open
+  blocks_claims:
+  - clause_level_mapping_against_licensed_references
+  - csv_csa_gxp_claim_against_gamp5
+index_rule: 'status: effective means this INDEX is in force — computed from the tree by scripts/evidence_ledger_guard.py
+  and checked in CI. It says nothing about the effectiveness of the indexed documents: their statuses
+  are observed and recounted under each category''s observed block, never softened.'
