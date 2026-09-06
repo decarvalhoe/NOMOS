@@ -53,7 +53,7 @@ jobs:
           go-version-file: cli/go.mod
 
       - name: Install validator dependencies
-        run: python -m pip install --quiet pyyaml
+        run: python -m pip install --quiet -r scripts/requirements-sidecar.txt
 
       - name: Build the nomos engine
         # #624: the evidence sidecar consumes the Go verdict, in `required`

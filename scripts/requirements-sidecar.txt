@@ -1,0 +1,7 @@
+# NRT-025 (#678) — the declared, pinned Python dependencies of the sidecars.
+# What CI installs and what pip-audit audits (--no-deps on exact pins).
+# jsonschema is imported by scripts that validate JSON contracts; PyYAML by
+# every sidecar. Optional runtime extras (transformers for the HHEM scorer)
+# are NOT installed in CI and are documented in scripts/nomos_hhem_scorer.py.
+PyYAML==6.0.3
+jsonschema==4.25.1

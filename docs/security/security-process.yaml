@@ -1,0 +1,83 @@
+# NRT-025 (#678) — the security process, as data the gate reads.
+#
+# scripts/security_process_gate.py validates this file, the expiring allowlist
+# it names, the generated "Supported Versions" section of SECURITY.md, and runs
+# the declared scanners in CI. Every path below must exist; a missing file is a
+# failed check, not a silent skip.
+#
+# Claim boundary: this declares a process and proves that dependencies are
+# scanned and that accepted findings expire. It is not a security
+# certification, not a penetration test, not a guarantee about any deployment.
+schema_version: nomos-security-process-v1
+claim_boundary: >-
+  Dependencies are scanned in CI and every accepted finding expires. Nothing
+  here claims that Nomos is secure, certified, or fit for a given deployment;
+  customers keep their own threat model, access control, secret management and
+  vulnerability management.
+
+intake:
+  channels:
+    - kind: github_private_advisory
+      ref: https://github.com/decarvalhoe/NOMOS/security/advisories/new
+    - kind: maintainers
+      ref: SECURITY.md#reporting-a-vulnerability
+  no_public_disclosure_before_triage: true
+
+triage:
+  # Targets are DECLARED. No measurement record backs them yet; the day one
+  # exists, `status` becomes `measured` and the gate will require its reference.
+  status: declared_not_measured
+  targets:
+    - severity: critical
+      acknowledge_within_days: 2
+      remediate_or_mitigate_within_days: 14
+    - severity: high
+      acknowledge_within_days: 5
+      remediate_or_mitigate_within_days: 30
+    - severity: medium
+      acknowledge_within_days: 10
+      remediate_or_mitigate_within_days: 90
+    - severity: low
+      acknowledge_within_days: 30
+      remediate_or_mitigate_within_days: 180
+
+disclosure:
+  rule: coordinated
+  embargo_days_max: 90
+
+supported_versions:
+  # `changelog` until the support model of NRT-026 (#679) exists; then
+  # `support_model` and the gate reads `supported_versions:` from it
+  # (schema nomos-support-model-v1, entries: version, released_on, state,
+  # security_support). Nonblocking input, never a dependency.
+  source: changelog
+  changelog_ref: CHANGELOG.md
+  support_model_ref: docs/support-model.yaml
+  rendered_in:
+    - SECURITY.md
+
+scanners:
+  govulncheck:
+    modules:
+      - cli
+      - tools/sigstore-verifier
+    scan_level: symbol
+    # A vulnerability the code CALLS (standard library included) fails the gate
+    # unless an unexpired allowlist entry names it; imported-only and
+    # required-only findings are reported in the verdict, never hidden.
+    fail_on: called
+  pip_audit:
+    # The declared, pinned sidecar dependencies — what CI installs.
+    requirements: scripts/requirements-sidecar.txt
+    fail_on: any
+  dependabot:
+    config: .github/dependabot.yml
+    ecosystems: [gomod, github-actions, pip]
+
+allowlist:
+  path: docs/security/vulnerability-allowlist.yaml
+  max_validity_days: 180
+
+sops:
+  vulnerability_management: docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md
+  secure_sdlc: docs/regulated/security-privacy/secure-sdlc-sop.md

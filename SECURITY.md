@@ -4,11 +4,16 @@ Nomos is currently in alpha. Security reports are handled as high-priority proje
 
 ## Supported Versions
 
-| Version | Security support |
-|---|---|
-| `v0.2.0-ALPHA` | Best-effort alpha triage |
-| `v0.1.0-ALPHA` | Superseded; not supported |
-| `< v0.1.0-ALPHA` | Not supported |
+<!-- supported-versions:begin -->
+<!-- GENERATED from CHANGELOG.md by scripts/security_process_gate.py --write (source: changelog until the support model of NRT-026 exists); do not edit by hand, CI fails on drift -->
+
+| Version | Released | Security support |
+|---|---|---|
+| `v0.2.0-ALPHA` | 2026-09-06 | Supported — best-effort alpha triage (current release) |
+| `v0.1.0-ALPHA` | 2026-05-03 | Superseded — not supported |
+| older than `v0.1.0-ALPHA` | — | Not supported |
+
+<!-- supported-versions:end -->
 
 ## Reporting A Vulnerability
 
@@ -22,7 +27,7 @@ Include:
 - whether source corpus integrity, generated evidence, credentials, CI, or release artifacts are affected;
 - any relevant logs with secrets removed.
 
-Dependency vulnerability scanning in CI, an expiring allowlist and Dependabot are planned as NRT-025 (#678); until then there is no automated scan — say so, do not assume it.
+The security process is executable (NRT-025, #678): `docs/security/security-process.yaml` declares intake, triage targets (declared, not measured), disclosure and scanners; `scripts/security_process_gate.py` runs `govulncheck` on `cli/` and `tools/sigstore-verifier/` and `pip-audit` on the pinned sidecar requirements in CI, and any accepted finding lives in `docs/security/vulnerability-allowlist.yaml` with an owner and an expiry. Dependabot covers Go modules, GitHub Actions and Python. This proves that dependencies are scanned and that exceptions expire; it is not a security certification. See `docs/security/README.md`.
 
 ## Security Scope
 

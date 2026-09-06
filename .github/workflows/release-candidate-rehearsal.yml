@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Python deps for the gate set
-        run: python3 -m pip install --quiet pyyaml
+        run: python3 -m pip install --quiet -r scripts/requirements-sidecar.txt
 
       - name: Build the CLI
         run: cd cli && go build -o "$RUNNER_TEMP/nomos" .
