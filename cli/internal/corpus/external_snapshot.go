@@ -212,7 +212,7 @@ func VerifyExternalSnapshot(env ExternalSnapshot, records []SnapshotRecord) (Sna
 	v := SnapshotVerification{
 		SnapshotID:     env.SnapshotID,
 		RecordCount:    len(records),
-		DeclaredRoot:   strings.ToLower(strings.TrimSpace(env.ContentHashRoot)),
+		DeclaredRoot:   normalizeRoot(env.ContentHashRoot),
 		DeclaredCounts: [2]int{env.SourceCount, env.VersionCount},
 		ClaimBoundary:  ExternalSnapshotClaimBoundary,
 		Status:         "fail",
@@ -312,7 +312,7 @@ func SealExternalSnapshot(snapshotID, producer, dbSchemaVersion, generatedAt, re
 		Immutable:       true,
 		SourceCount:     len(sources),
 		VersionCount:    len(records),
-		ContentHashRoot: root,
+		ContentHashRoot: "sha256:" + root,
 		RecordsFile:     recordsFile,
 		ClaimBoundary:   ExternalSnapshotClaimBoundary,
 	}, nil
@@ -456,4 +456,12 @@ func SnapshotCoverageMetadata(env ExternalSnapshot, records []SnapshotRecord) ma
 		"source_types":      types,
 		"claim_boundary":    ExternalSnapshotClaimBoundary,
 	}
+}
+
+// normalizeRoot accepts the contract form ("sha256:<hex>", #StableHash in
+// specs/external-snapshot.cue) and the bare-hex form older envelopes carried;
+// the comparison is always on the hex.
+func normalizeRoot(v string) string {
+	v = strings.ToLower(strings.TrimSpace(v))
+	return strings.TrimPrefix(v, "sha256:")
 }

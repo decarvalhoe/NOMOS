@@ -67,6 +67,7 @@
 | `portfolio_findings_index` | P1 | real | real | ✅ | — | — |
 | `security_process_gates` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `support_model` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `contract_stability_registry` | P1 | real | real | ✅ | — | — |
 
 ## Generic checks
 
@@ -74,7 +75,7 @@
 
 ## Summary
 
-- capabilities: 59 (real=44, partial=0, sidecar=13, stub=0, absent=2)
+- capabilities: 60 (real=45, partial=0, sidecar=13, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

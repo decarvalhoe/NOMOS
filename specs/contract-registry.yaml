@@ -1,0 +1,655 @@
+schema_version: nomos-contract-registry-v1
+claim_boundary: 'Registry of the machine contracts under specs/ with their declared stability. `stable` means: has Go readers
+  in the CLI, has a valid fixture, and any change to the file requires a schema_version bump accepted in this registry. It
+  says nothing about the semantic correctness of a contract.'
+rules:
+  stable_requires_valid_fixture: true
+  hash_change_requires_bump: true
+  deprecated_requires_dates: true
+  compat_fixtures_must_read: true
+  fixtures_vet_with_cue: true
+  reader_fixtures_are_not_cue_fixtures: true
+contracts:
+- id: adapter-manifest
+  path: specs/adapter-manifest.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:a14850d16b7213f66015f7353337a2c99cf10e484f162c5599be04885086e5ae
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/adapter-manifest.node-typescript.yaml
+    invalid: []
+  readers:
+  - cli/internal/validate/validate.go
+  compat_fixtures: []
+- id: ai-rag-controls
+  path: specs/ai-rag-controls.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:4d73cd4e09e7595fb70c0d3c44797e375df3b716c92ebe7436f135737293c454
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: alcoa-evidence
+  path: specs/alcoa-evidence.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:02e78aeac8bffbdf8c41cd68a68f5e882932e59b86d2832c514d16b881b2382b
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers:
+  - cli/internal/compliance/rcp_evidence_bundle.go
+  compat_fixtures: []
+- id: approval-semantics
+  path: specs/approval-semantics.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:68ff2a65b86d9ac6ca4251f4e7fd8cd67a9721b498981dad08b2223821a8459a
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: atomization-spine
+  path: specs/atomization-spine.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:e30c08702c683ff951c4ee58d0eea86f3f830484f5c6d513260911e4380f19e4
+  definition: '#AtomizationSpine'
+  fixtures:
+    valid:
+    - specs/examples/atomization-spine.valid.yaml
+    invalid:
+    - specs/examples/atomization-spine.invalid-atom.yaml
+  readers: []
+  compat_fixtures: []
+- id: built-environment-source-connectors
+  path: specs/built-environment-source-connectors.cue
+  stability: experimental
+  version_kind: pinned
+  schema_version: ckm-built-environment-connectors-v1
+  sha256: sha256:dc21575d7b5ad8b726f6138f03baaa4070aa2f1a1a8e3c2660a677108d91d200
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: canon-promotion
+  path: specs/canon-promotion.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: 0.1.0
+  sha256: sha256:1fdc67aa947881bd393e8da85ffda0bd3d9836d83702f6e23e5390f9a2f6309b
+  definition: '#CanonPromotionBundle'
+  fixtures:
+    valid:
+    - specs/examples/canon-promotion.valid.yaml
+    invalid:
+    - specs/examples/canon-promotion.invalid-shared.yaml
+  readers:
+  - cli/internal/app/app.go
+  - cli/internal/app/canon_cmd.go
+  - cli/internal/canon/canon.go
+  compat_fixtures: []
+- id: canonical-knowledge-bundle
+  path: specs/canonical-knowledge-bundle.cue
+  stability: stable
+  version_kind: pinned
+  schema_version: ckm-bundle-v1
+  sha256: sha256:ed07bc626328ed05602f85868f679a303f8cc8337240597bbd36b6920396e420
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/canonical-knowledge-bundle.emitted.json
+    - specs/examples/canonical-knowledge-bundle.valid.json
+    invalid: []
+  readers:
+  - cli/internal/app/bundle_cmd.go
+  - cli/internal/bundle/bundle.go
+  compat_fixtures: []
+- id: canonical-matrix
+  path: specs/canonical-matrix.cue
+  stability: stable
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:28c7c90120034597f937745c050ed1ac30f08a63aa2f759edf6bd79c0d74fca7
+  definition: '#CanonicalMatrix'
+  fixtures:
+    valid:
+    - specs/examples/canonical-matrix.valid.yaml
+    invalid:
+    - specs/examples/canonical-matrix.invalid-contract-object-id.yaml
+    - specs/examples/canonical-matrix.invalid-covered-missing-test.yaml
+    - specs/examples/canonical-matrix.invalid-reference-format.yaml
+  readers:
+  - cli/internal/app/app.go
+  - cli/internal/app/checks.go
+  - cli/internal/app/corpus_cmd.go
+  - cli/internal/app/strict_gate.go
+  - cli/internal/checks/matrix.go
+  - cli/internal/corpus/feed.go
+  - cli/internal/corpus/feed_quality_gate.go
+  - cli/internal/diagnose/diagnose.go
+  - cli/internal/validate/validate.go
+  compat_fixtures: []
+- id: corpus-body-ledger
+  path: specs/corpus-body-ledger.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: 0.1.0
+  sha256: sha256:1b7c7707a6b13a7d7ffdcb66057229ae37d24c9b6010a637411782e46791f405
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/corpus-body-ledger.valid.yaml
+    invalid: []
+  readers:
+  - cli/internal/app/corpus_cmd.go
+  - cli/internal/app/strict_gate.go
+  - cli/internal/corpus/body_ledger.go
+  - cli/internal/corpus/cmd/body-ledger/main.go
+  compat_fixtures: []
+- id: corpus-evidence
+  path: specs/corpus-evidence.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:f93e3be76dda1d93a590ffa2ddfa30aed95316bd0d6f42e6abb3ebd0f6ff17cd
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/corpus-evidence.valid.yaml
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: corpus-integrity-report
+  path: specs/corpus-integrity-report.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: 0.1.0
+  sha256: sha256:bf43fa3455cb0def4cd6f13cb4ee2f31d2302d683bafc61712707d4d38d8feab
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/corpus-integrity-report.valid.yaml
+    invalid: []
+  readers:
+  - cli/internal/app/strict_gate.go
+  - cli/internal/corpus/source_integrity_gate.go
+  compat_fixtures: []
+- id: domain-pack
+  path: specs/domain-pack.cue
+  stability: stable
+  version_kind: pinned
+  schema_version: nomos-domain-pack-v1
+  sha256: sha256:f550178012ec69923a2c4eaf49ab3f563951cfea3394ed68e8c051d3c35cd279
+  definition: '#DomainPack'
+  fixtures:
+    valid:
+    - docs/regulated/domain-packs/built-environment/pack.yaml
+    - docs/regulated/domain-packs/eu-ai-act/pack.yaml
+    invalid:
+    - specs/examples/domain-pack.code-artifact.invalid.yaml
+    - specs/examples/domain-pack.mechanics-field.invalid.yaml
+  readers:
+  - cli/internal/app/pack_cmd.go
+  - cli/internal/portfolio/status.go
+  compat_fixtures: []
+- id: evidence-contract
+  path: specs/evidence-contract.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:3f643d0104a6aac452617a1ba8423e98720115ebcaa63a68ff28b0d299904e23
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers:
+  - cli/internal/compliance/evidence_contract.go
+  compat_fixtures: []
+- id: external-snapshot
+  path: specs/external-snapshot.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: nomos.external-snapshot.v1
+  sha256: sha256:0feef7df436a550c30ee04b5c4c43dfb8a7869c72358972542c2a74795e369d9
+  definition: '#ExternalSnapshot'
+  fixtures:
+    valid:
+    - cli/internal/corpus/testdata/external-snapshot/snapshot.json
+    invalid: []
+  readers:
+  - cli/internal/app/corpus_cmd.go
+  - cli/internal/app/strict_gate.go
+  - cli/internal/corpus/external_snapshot.go
+  compat_fixtures:
+  - path: cli/internal/corpus/testdata/external-snapshot/snapshot.json
+    reader: external-snapshot
+    schema_version: nomos.external-snapshot.v1
+  version_field: format
+- id: facet-ontology
+  path: specs/facet-ontology.cue
+  stability: experimental
+  version_kind: pinned
+  schema_version: ckm-facet-ontology-v1
+  sha256: sha256:b94cba46ec06774e87b1a05c40146dc4cded432bd6988276775e833b44d35ec6
+  definition: '#FacetOntology'
+  fixtures:
+    valid:
+    - specs/examples/facet-ontology.valid.yaml
+    invalid: []
+    reader_invalid:
+    - path: specs/examples/facet-ontology.invalid-overlap.yaml
+      reader: scripts/ckm_facet_ontology_validate.py
+  readers:
+  - cli/internal/app/pack_cmd.go
+  compat_fixtures: []
+- id: facets
+  path: specs/facets.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: 0.1.0
+  sha256: sha256:f023baf6f5c50ba063c2fc5efc5326a7ce5f997a413b8ae7d1d655127b097816
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/facets.atom.valid.yaml
+    - specs/examples/facets.business-metier.valid.yaml
+    - specs/examples/facets.chunk.valid.yaml
+    invalid:
+    - specs/examples/facets.invalid-trust-tier.yaml
+  readers:
+  - cli/internal/app/app.go
+  - cli/internal/app/atomize_cmd.go
+  - cli/internal/app/pack_cmd.go
+  - cli/internal/app/rag_cmd.go
+  - cli/internal/atomization/atoms.go
+  - cli/internal/atomization/facets.go
+  - cli/internal/atomization/rag_projection.go
+  - cli/internal/bundle/bundle.go
+  - cli/internal/canon/canon.go
+  - cli/internal/ragexport/bundle_input.go
+  - cli/internal/ragexport/contract.go
+  - cli/internal/ragexport/export.go
+  - cli/internal/ragexport/lens.go
+  compat_fixtures: []
+- id: feed-audit-report
+  path: specs/feed-audit-report.cue
+  stability: experimental
+  version_kind: pattern
+  schema_version: null
+  sha256: sha256:b1518df27486cfa4a22a8b65575eb9dfb7adb121d44302fa1a253fad7dbe7321
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/feed-audit-report.valid.yaml
+    invalid: []
+  readers: []
+  compat_fixtures: []
+  schema_version_pattern: ^fsq-audit-v[0-9]+$
+- id: fidelity-ast
+  path: specs/fidelity-ast.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:ef892476a2ad8c080857c9b6cb0dc82bdaafd7e5a50567d55e8e4b472d88404e
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/fidelity-ast.valid.yaml
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: knowledge-lens
+  path: specs/knowledge-lens.cue
+  stability: stable
+  version_kind: registry_declared
+  schema_version: 0.1.0
+  sha256: sha256:197802c654a6847e38c002e5fc892fd4a01cf0ce2901616fb56ba61a9cfdf848
+  definition: '#KnowledgeLensBundle'
+  fixtures:
+    valid:
+    - specs/examples/knowledge-lens.valid.yaml
+    invalid: []
+    reader_valid:
+    - path: specs/examples/knowledge-lens-candidates.valid.yaml
+      reader: scripts/ckm_knowledge_lens_filter.py
+  readers:
+  - cli/internal/app/app.go
+  - cli/internal/app/atomize_cmd.go
+  - cli/internal/atomization/facets.go
+  compat_fixtures: []
+- id: nomos-domain-profile
+  path: specs/nomos-domain-profile.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:1726dfa10410f427c05f155c019cafd81828e32f157dc9dd06a1ec35f6a4f65f
+  definition: '#DomainProfile'
+  fixtures:
+    valid:
+    - specs/examples/nomos-domain-profile.ai.valid.yaml
+    - specs/examples/nomos-domain-profile.built-environment.valid.yaml
+    - specs/examples/nomos-domain-profile.business-operations.valid.yaml
+    - specs/examples/nomos-domain-profile.cyber-supplier-assurance.valid.yaml
+    - specs/examples/nomos-domain-profile.eu-ai-act.valid.yaml
+    - specs/examples/nomos-domain-profile.finance.valid.yaml
+    - specs/examples/nomos-domain-profile.gxp.valid.yaml
+    - specs/examples/nomos-domain-profile.high-assurance.valid.yaml
+    - specs/examples/nomos-domain-profile.legal.valid.yaml
+    - specs/examples/nomos-domain-profile.medical-samd.valid.yaml
+    - specs/examples/nomos-domain-profile.six-sigma-capa.valid.yaml
+    - specs/examples/nomos-domain-profile.verifiable-evidence.valid.yaml
+    invalid:
+    - specs/examples/nomos-domain-profile.unsupported-claim.invalid.yaml
+  readers: []
+  compat_fixtures: []
+- id: nomos-github-workflow
+  path: specs/nomos-github-workflow.cue
+  stability: experimental
+  version_kind: pattern
+  schema_version: null
+  sha256: sha256:49fc1a499729041316d3a4a7a26079b0c00ee73fcf6459ed6118ddbf97d23653
+  definition: '#NomosGitHubWorkflowConfig'
+  fixtures:
+    valid:
+    - specs/examples/nomos-github-workflow.output-owned.valid.yaml
+    - specs/examples/nomos-github-workflow.source-owned.valid.yaml
+    invalid:
+    - specs/examples/nomos-github-workflow.invalid.yaml
+  readers:
+  - cli/internal/githubworkflow/config.go
+  compat_fixtures: []
+  schema_version_pattern: ^0\\.[0-9]+\\.[0-9]+$
+- id: nomos-praxis-evidence
+  path: specs/nomos-praxis-evidence.cue
+  stability: experimental
+  version_kind: pinned
+  schema_version: nomos-praxis-evidence-exchange-v1
+  sha256: sha256:9d8d7ad7ee9a59994cc220826db47aeb7f2d2ab74dbb485f08c207b6dc42e271
+  definition: '#PraxisEvidenceExchange'
+  fixtures:
+    valid:
+    - specs/examples/nomos-praxis-evidence.valid.yaml
+    - specs/examples/nomos-praxis-mapping.valid.json
+    invalid:
+    - specs/examples/nomos-praxis-evidence.invalid-praxis-producer.yaml
+    - specs/examples/nomos-praxis-evidence.invalid-regulated-unverified.yaml
+    - specs/examples/nomos-praxis-mapping.invalid-internal-field.json
+    - specs/examples/nomos-praxis-mapping.invalid-praxis-authority.json
+    - specs/examples/nomos-praxis-mapping.invalid-unapproved.json
+  readers:
+  - cli/internal/compliance/praxis_exchange.go
+  compat_fixtures:
+  - path: specs/examples/nomos-praxis-evidence.valid.yaml
+    reader: nomos-praxis-evidence
+    schema_version: nomos-praxis-evidence-exchange-v1
+  - path: specs/examples/nomos-praxis-mapping.valid.json
+    reader: nomos-praxis-mapping
+    schema_version: nomos-praxis-atom-mapping-v1
+  definition_overrides:
+    specs/examples/nomos-praxis-mapping.valid.json: '#PraxisAtomMapping'
+    specs/examples/nomos-praxis-mapping.invalid-internal-field.json: '#PraxisAtomMapping'
+    specs/examples/nomos-praxis-mapping.invalid-praxis-authority.json: '#PraxisAtomMapping'
+    specs/examples/nomos-praxis-mapping.invalid-unapproved.json: '#PraxisAtomMapping'
+- id: nomos-praxis-evidence-schema
+  path: specs/nomos-praxis-evidence.schema.json
+  stability: stable
+  version_kind: registry_declared
+  schema_version: nomos-praxis-evidence-exchange-v1
+  sha256: sha256:9d084bb4778200505c6f66aa43ef300cfe2f0d53e7ab21986f8cc97206571e83
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/nomos-praxis-evidence.valid.yaml
+    invalid:
+    - specs/examples/nomos-praxis-evidence.invalid-praxis-producer.yaml
+    - specs/examples/nomos-praxis-evidence.invalid-regulated-unverified.yaml
+  readers: []
+  compat_fixtures: []
+  note: JSON Schema mirror of nomos-praxis-evidence.cue for non-CUE consumers; must move with the CUE contract
+- id: nomos-project
+  path: specs/nomos-project.cue
+  stability: stable
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:bce8ee2333c489560946bc9fab987097d69be1df4bccd36e325f943c5c8b5878
+  definition: '#Project'
+  fixtures:
+    valid:
+    - specs/examples/nomos-project.brownfield.yaml
+    - specs/examples/nomos-project.corpus.yaml
+    - specs/examples/nomos-project.minimal.yaml
+    - specs/examples/nomos-project.regulated.yaml
+    invalid: []
+  readers:
+  - cli/internal/app/init.go
+  - cli/internal/export/cyclonedx.go
+  - cli/internal/validate/validate.go
+  compat_fixtures: []
+- id: nomos-report.schema
+  path: specs/nomos-report.schema.json
+  stability: stable
+  version_kind: pinned
+  schema_version: 0.1.0
+  sha256: sha256:d2ca19991e613ca1766de99390876c94f20e765d12e98396f2124b54141bed8c
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/nomos-report.complete.json
+    - specs/examples/nomos-report.minimal.json
+    invalid: []
+  readers:
+  - cli/internal/app/init.go
+  - cli/internal/compliance/rcp_evidence_bundle.go
+  - cli/internal/compliance/release_bundle.go
+  - cli/internal/export/cyclonedx.go
+  - cli/internal/export/spdx.go
+  - cli/internal/fidelity/evidence_manifest.go
+  - cli/internal/output/types.go
+  - cli/internal/productcheck/productcheck.go
+  - cli/internal/report/generate.go
+  - cli/internal/report/types.go
+  - cli/internal/validate/manifests.go
+  compat_fixtures: []
+- id: nomos-trace-manifest
+  path: specs/nomos-trace-manifest.cue
+  stability: experimental
+  version_kind: pattern
+  schema_version: null
+  sha256: sha256:c64bd32fa3bf57859afedb150b3b5d3cb1f21c0c04f583f480f75e4f5a3190bb
+  definition: '#NomosTraceManifest'
+  fixtures:
+    valid:
+    - specs/examples/nomos-trace-manifest.valid.yaml
+    invalid:
+    - specs/examples/nomos-trace-manifest.invalid.yaml
+  readers:
+  - cli/internal/bundle/trace.go
+  compat_fixtures: []
+  schema_version_pattern: ^0\\.[0-9]+\\.[0-9]+$
+- id: point-in-time
+  path: specs/point-in-time.cue
+  stability: stable
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:358f44ebb65872634bad2b90f259f7650fbf9b94f79fc0d3da8536f71bf253ca
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/point-in-time-atoms.valid.yaml
+    invalid: []
+  readers:
+  - cli/internal/app/pointintime_cmd.go
+  - cli/internal/bundle/trace.go
+  - cli/internal/corpus/web_source.go
+  - cli/internal/pointintime/pointintime.go
+  - cli/internal/ragexport/contract.go
+  compat_fixtures: []
+- id: portfolio-status
+  path: specs/portfolio-status.cue
+  stability: experimental
+  version_kind: pinned
+  schema_version: nomos-portfolio-status-v1
+  sha256: sha256:8a8406470463edc8b1b17749fd6b8a246069b859df78c88b430bb08e8472cb45
+  definition: '#PortfolioStatus'
+  fixtures:
+    valid:
+    - specs/examples/portfolio-status.valid.json
+    invalid:
+    - specs/examples/portfolio-status.invalid-approved-candidate.json
+    - specs/examples/portfolio-status.invalid-narrative.json
+  readers:
+  - cli/internal/portfolio/status.go
+  compat_fixtures:
+  - path: specs/examples/portfolio-status.valid.json
+    reader: portfolio-status
+    schema_version: nomos-portfolio-status-v1
+- id: provenance-gate
+  path: specs/provenance-gate.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:3a3014301309ee5c3e23af337147861d80cd29d520625cb135943f1e83007599
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: rbok-lawbook-feed
+  path: specs/rbok-lawbook-feed.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:8ae1a43dad9a59ae5372e31928f7c8116aefa32b9cfbfa346489e85f36ae3c82
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers:
+  - cli/internal/corpus/rbok_artifact_pack.go
+  - cli/internal/corpus/rbok_feed_assembly.go
+  - cli/internal/corpus/rbok_multi_feed.go
+  compat_fixtures: []
+  note: readers exist in the CLI but no committed fixture; promote to stable when a fixture lands
+- id: rbok-runtime-import-contract
+  path: specs/rbok-runtime-import-contract.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:c2742f02b53cff177df93951c3552a1d4e20bafc3dfe60c11f40bb23dd61436d
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/rbok-runtime-feed.valid.yaml
+    - specs/examples/rbok-runtime-import.valid.yaml
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: rbok-unit-ids
+  path: specs/rbok-unit-ids.cue
+  stability: experimental
+  version_kind: none
+  schema_version: null
+  sha256: sha256:a882489552d7eb0c7835a84466fc6eae00823373fce5ba1563a05407b855d246
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: source-manifest
+  path: specs/source-manifest.cue
+  stability: stable
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:44300013e3af4b2d6b4b7977459996bc60b6ffc9d14a49bbc5e76b1c285b62b7
+  definition: ''
+  fixtures:
+    valid:
+    - cli/internal/checks/testdata/valid-source-manifest.yaml
+    - cli/internal/corpus/testdata/regression/minimal/source-manifest.yaml
+    invalid: []
+  readers:
+  - cli/internal/app/app.go
+  - cli/internal/app/checks.go
+  - cli/internal/app/corpus_cmd.go
+  - cli/internal/app/init.go
+  - cli/internal/app/strict_gate.go
+  - cli/internal/compliance/release_bundle.go
+  - cli/internal/corpus/cmd/body-ledger/main.go
+  - cli/internal/corpus/manifest.go
+  - cli/internal/diagnose/diagnose.go
+  - cli/internal/validate/validate.go
+  compat_fixtures: []
+- id: source-segment-ledger
+  path: specs/source-segment-ledger.cue
+  stability: experimental
+  version_kind: none
+  schema_version: null
+  sha256: sha256:a645c1e262e5615ab1c19be99705ef1a59f4bd63848dcf0a7d34b69e438b4791
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/source-segment-ledger.valid.yaml
+    invalid:
+    - specs/examples/source-segment-ledger.invalid.yaml
+  readers: []
+  compat_fixtures: []
+- id: toc-artifact
+  path: specs/toc-artifact.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:4985f3f893e18c5a416eeb79b9b9a1fbbb607c49b4b5a1828919395f31cc2cb3
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers: []
+  compat_fixtures: []
+- id: validation-inventory
+  path: specs/validation-inventory.cue
+  stability: experimental
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:38912bf4d3d565e308cc4ef66e5e6392913fe88789865c855c846b9faecc5333
+  definition: ''
+  fixtures:
+    valid: []
+    invalid: []
+  readers:
+  - cli/internal/compliance/reconstruction_review.go
+  compat_fixtures: []
+- id: verdicts
+  path: specs/verdicts.cue
+  stability: stable
+  version_kind: default
+  schema_version: 0.1.0
+  sha256: sha256:d5c4bb0aa963b33cf69221909e5006d936251c4156a4c5c856cf2cfa70350863
+  definition: ''
+  fixtures:
+    valid:
+    - specs/examples/verdict-cases.yaml
+    invalid: []
+  readers:
+  - cli/internal/answer/answer.go
+  - cli/internal/answer/eval.go
+  - cli/internal/app/portfolio_cmd.go
+  - cli/internal/partial/partial.go
+  compat_fixtures: []
