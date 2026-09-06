@@ -31,7 +31,7 @@ SECURITY_GATE = ROOT / "scripts" / "security_process_gate.py"
 MODEL = ROOT / "docs/support-model.yaml"
 CI = ROOT / ".github/workflows/ci.yml"
 GO_MOD = ROOT / "cli/go.mod"
-REAL_TAGS = "v0.1.0-ALPHA,v0.2.0-ALPHA"
+REAL_TAGS = "v0.1.0-ALPHA,v0.2.0-ALPHA,v1.0.0-BETA.1"
 
 
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -211,7 +211,8 @@ class DriftTests(unittest.TestCase):
                 self.skipTest(f"shallow clone unavailable: {proc.stderr.strip()[:200]}")
             local_tags = subprocess.run(["git", "-C", str(clone), "tag", "-l"], text=True, capture_output=True, check=False).stdout.split()
             self.assertEqual(local_tags, [], "precondition: the shallow clone carries no tag")
-            self.assertEqual(sorted(gate_tags(clone)), ["v0.1.0-ALPHA", "v0.2.0-ALPHA"])
+            # The expected set is the SOURCE checkout's tags, not a literal: every release adds one.
+            self.assertEqual(sorted(gate_tags(clone)), sorted(source_tags))
 
     def test_measured_targets_without_record_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
