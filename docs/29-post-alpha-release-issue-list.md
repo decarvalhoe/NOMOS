@@ -39,7 +39,6 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #680 — Customer integration guide with commands replayed against fixtures (NRT-027) | — |
 | #681 — v1.0 readiness verdict, computed (NRT-028) | — |
 <!-- roadmap-queues:end -->
 

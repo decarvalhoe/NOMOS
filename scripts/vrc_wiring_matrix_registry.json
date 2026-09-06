@@ -3977,6 +3977,60 @@
           ]
         }
       ]
+    },
+    {
+      "id": "customer_integration_guide",
+      "title": "Guide d'intégration client rejoué contre les fixtures (NRT-027 #680) — `docs/48-customer-integration-guide.md` consolide docs/31/32/34/35 du point de vue de l'intégrateur, nomme chaque contrat utilisé avec sa stabilité et sa version, lie la checklist régulée sans la dupliquer ; `scripts/integration_guide_replay.py` construit le CLI, exécute chaque bloc `<!-- replay -->` comme un script bash (`set -euo pipefail`) dans un répertoire de travail jetable, exige les artefacts annoncés (`expects:`), compare la table `<!-- contracts -->` au registre NRT-023 (stabilité et version) ; commande cassée, artefact absent, stabilité non confirmée, contrat inconnu, guide vidé de ses blocs → exit 1 nommé. 7 blocs rejoués en CI : build + annonce de version, init + validate, diagnose, strict gate, chaîne corpus Recursio jusqu'au strict gate, github plan, portfolio status. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : une validation par un client ni un test de bout en bout du runtime RAG.",
+      "pillar": "P1",
+      "claim_level": "gate (le guide s'exécute contre les fixtures ; aucun client ne l'a validé)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "ci_gates": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "contains": [
+            "Customer integration guide — replayed against fixtures (NRT-027 #680)",
+            "integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md"
+          ]
+        }
+      ],
+      "sidecar": [
+        {
+          "path": "scripts/integration_guide_replay.py",
+          "contains": [
+            "def parse_guide(",
+            "def check_contracts(",
+            "def run_blocks(",
+            "ran but did not produce:",
+            "is declared",
+            "in the guide but",
+            "a guide without commands proves nothing"
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "path": "docs/48-customer-integration-guide.md",
+          "contains": [
+            "<!-- contracts -->",
+            "<!-- replay expects: out/snapshot-verify.json",
+            "customer-integration-checklist.md"
+          ]
+        }
+      ],
+      "adversarial_tests": [
+        {
+          "path": "tests/test_integration_guide_replay.py",
+          "contains": [
+            "test_broken_command_is_red_and_named",
+            "test_missing_expected_artifact_is_red",
+            "test_stability_not_confirmed_by_registry_is_red",
+            "test_unknown_contract_is_red",
+            "test_guide_without_enough_blocks_or_contracts_is_red",
+            "test_the_real_guide_runs_against_the_fixtures"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -3274,6 +3274,46 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "customer_integration_guide",
+      "title": "Guide d'intégration client rejoué contre les fixtures (NRT-027 #680) — `docs/48-customer-integration-guide.md` consolide docs/31/32/34/35 du point de vue de l'intégrateur, nomme chaque contrat utilisé avec sa stabilité et sa version, lie la checklist régulée sans la dupliquer ; `scripts/integration_guide_replay.py` construit le CLI, exécute chaque bloc `<!-- replay -->` comme un script bash (`set -euo pipefail`) dans un répertoire de travail jetable, exige les artefacts annoncés (`expects:`), compare la table `<!-- contracts -->` au registre NRT-023 (stabilité et version) ; commande cassée, artefact absent, stabilité non confirmée, contrat inconnu, guide vidé de ses blocs → exit 1 nommé. 7 blocs rejoués en CI : build + annonce de version, init + validate, diagnose, strict gate, chaîne corpus Recursio jusqu'au strict gate, github plan, portfolio status. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : une validation par un client ni un test de bout en bout du runtime RAG.",
+      "pillar": "P1",
+      "claim_level": "gate (le guide s'exécute contre les fixtures ; aucun client ne l'a validé)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "tests/test_integration_guide_replay.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/integration_guide_replay.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3313,11 +3353,11 @@
     }
   ],
   "summary": {
-    "capabilities": 61,
+    "capabilities": 62,
     "computed": {
       "real": 46,
       "partial": 0,
-      "sidecar": 13,
+      "sidecar": 14,
       "stub": 0,
       "absent": 2
     },

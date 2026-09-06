@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [680, 681]
+    product: [681]
     devops: []
     regulated: []
 
@@ -403,17 +403,17 @@ items:
       reliance: manual_review
   - issue: 680
     title: Customer integration guide with commands replayed against fixtures (NRT-027)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [676]
     regulated_tool:
       intended_use: give integrators one guide whose commands are executed against fixtures in CI and whose named contracts carry their registered stability
       impact: support
-      validation_state: planned
+      validation_state: technically_verified
       reliance: manual_review
   - issue: 681
     title: v1.0 readiness verdict, computed (NRT-028)
