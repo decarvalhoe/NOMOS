@@ -9,6 +9,7 @@ Nomos is currently in alpha. Security reports are handled as high-priority proje
 
 | Version | Released | State | Security support |
 |---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) |
 | `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA |
 
@@ -21,10 +22,11 @@ Nomos is currently in alpha. Security reports are handled as high-priority proje
 
 | Version | Released | State | Security support | End of support |
 |---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) | not applicable until tagged |
 | `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
 
-- Current candidate: `v0.2.0-ALPHA` (the CLI `Version` constant).
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
 - Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
 - Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
 - Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.

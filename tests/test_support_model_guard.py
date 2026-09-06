@@ -84,7 +84,7 @@ class RealTreeTests(unittest.TestCase):
         for name in ("model", "platforms", "toolchain", "versions", "rendered"):
             self.assertEqual(checks[name]["status"], "pass", checks[name])
         self.assertIn("v0.2.0-ALPHA", checks["versions"]["detail"]["tags"])
-        self.assertEqual(checks["versions"]["detail"]["candidate"], "v0.2.0-ALPHA")
+        self.assertEqual(checks["versions"]["detail"]["candidate"], "v1.0.0-BETA.1")
 
     def test_security_gate_renders_supported_versions_from_the_model(self) -> None:
         process = yaml.safe_load((ROOT / "docs/security/security-process.yaml").read_text(encoding="utf-8"))

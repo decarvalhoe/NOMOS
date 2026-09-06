@@ -18,9 +18,14 @@ claim_boundary: >-
   supported; response targets are declared, not measured.
 
 # Must equal the CLI `Version` constant (cli/internal/app/app.go), with a `v`.
-current_candidate: v0.2.0-ALPHA
+current_candidate: v1.0.0-BETA.1
 
 supported_versions:
+  - version: v1.0.0-BETA.1
+    released_on: 2026-09-06   # date of the CHANGELOG heading; the candidate is NOT tagged — a human decision (#720) is pending
+    state: candidate
+    security_support: none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720)
+    end_of_support: not applicable until tagged
   - version: v0.2.0-ALPHA
     released_on: 2026-09-06
     state: supported

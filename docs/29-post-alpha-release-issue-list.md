@@ -39,7 +39,7 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #719 — Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036) | — |
+| — | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan

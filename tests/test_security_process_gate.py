@@ -139,7 +139,8 @@ class StaticChecksTests(unittest.TestCase):
             self.assertEqual(process["supported_versions"]["source"], "support_model")
             model_path = root / process["supported_versions"]["support_model_ref"]
             model = yaml.safe_load(model_path.read_text(encoding="utf-8"))
-            model["supported_versions"][0]["state"] = "superseded"
+            alpha = next(v for v in model["supported_versions"] if v["version"] == "v0.2.0-ALPHA")
+            alpha["state"] = "superseded"
             model["supported_versions"].insert(0, {"version": "v0.3.0-ALPHA", "released_on": "2026-12-01", "state": "supported", "security_support": "best-effort alpha triage (current release)", "end_of_support": "until the next tagged release"})
             model_path.write_text(yaml.safe_dump(model, sort_keys=False, allow_unicode=True), encoding="utf-8")
             code, verdict, _ = run_gate(root)

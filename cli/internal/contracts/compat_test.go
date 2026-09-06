@@ -14,6 +14,8 @@ func TestSemverCompare(t *testing.T) {
 	}{
 		{"0.2.0-ALPHA", "0.1.0", 1}, {"0.2.0-ALPHA", "0.2.0", -1}, {"0.2.0", "0.2.0", 0}, {"1.0.0", "0.9.9", 1},
 		{"0.2.0-ALPHA", "0.2.0-BETA", -1}, {"v0.3.0", "0.3.0", 0}, {"0.2.1", "0.2.0-ALPHA", 1},
+		// NRT-036 (#719): the beta label orders above every alpha and below the final 1.0.0.
+		{"1.0.0-BETA.1", "0.2.0-ALPHA", 1}, {"1.0.0-BETA.1", "1.0.0", -1}, {"1.0.0-BETA.1", "1.0.0-BETA.1", 0}, {"1.0.0-BETA.2", "1.0.0-BETA.1", 1}, {"1.0.0-BETA.1", "0.9.9", 1},
 	}
 	for _, c := range cases {
 		a, err := parseSemver(c.a)

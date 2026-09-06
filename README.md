@@ -40,6 +40,7 @@ and auditable product evidence before software or AI consumes them.
 |---|---|
 | Produit | Moteur authority-to-product pour logiciels, IA et RAG gouvernés. |
 | Release | `v0.2.0-ALPHA` (2026-09-06, pre-release ; décision enregistrée dans `docs/regulated/lifecycle/release-records/`). |
+| Candidat | `v1.0.0-BETA.1` préparé (2026-09-06, verdict de readiness `ready`, approbation en attente — #720 ; rien n'est publié). |
 | Preuve actuelle | POC alpha sur un vrai corpus privé, traité en lecture seule. |
 | Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation ; puis, dans le moteur Go : gate cite-or-abstain (fidélité recalculée depuis les spans, jamais déclarée), harnais d'évaluation RAG en CI, export RAG interopérable à staleness prouvable, bench public reproductible du gate. |
 | Registre de capacités | 57 capacités déclarées dans `scripts/vrc_wiring_matrix_registry.json` ; leur statut est CALCULÉ depuis l'arbre à chaque CI (44 réelles, 11 sidecar, 2 absentes par conception, 0 écart) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). Le statut de portefeuille (`nomos portfolio status|findings`) est calculé depuis les sources machine et publié en artefact CI. |
@@ -418,10 +419,11 @@ Le support est déclaré dans `docs/support-model.yaml` et vérifié en CI par `
 
 | Version | Released | State | Security support | End of support |
 |---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) | not applicable until tagged |
 | `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
 
-- Current candidate: `v0.2.0-ALPHA` (the CLI `Version` constant).
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
 - Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
 - Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
 - Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.

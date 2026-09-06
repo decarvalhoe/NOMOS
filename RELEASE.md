@@ -1,3 +1,7 @@
+# Release v1.0.0-BETA.1 — CANDIDATE (approval pending, #720)
+
+A `v1.0.0-BETA.1` candidate is PREPARED on `main`: the readiness verdict is `ready` on the eight `docs/14` criteria and is a required gate of the candidate; the support surface is declared; the decision record is a draft with `decision: pending`. Nothing is tagged or published until the human release act under the SOP. Notes: `docs/release-v1.0.0-beta.1.md`. The section below describes the last executed release.
+
 # Release v0.2.0-ALPHA
 
 Nomos `v0.2.0-ALPHA` is the second public alpha of the canonical-first product intelligence platform. `v0.1.0-ALPHA` (2026-05-03) proved the source-to-feed chain on one private corpus; `v0.2.0-ALPHA` (2026-09-06) closes the vision/reality gap audited in `docs/45`: every capability is registered, its status is computed in CI, and every pending human decision is visible as data. Per-version detail lives in `CHANGELOG.md` and `docs/release-v0.2.0-alpha.md`.

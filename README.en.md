@@ -33,6 +33,7 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 |---|---|
 | Product | Authority-to-product engine for governed software, AI, and RAG. |
 | Release | `v0.2.0-ALPHA` (2026-09-06, pre-release; decision recorded in `docs/regulated/lifecycle/release-records/`). |
+| Candidate | `v1.0.0-BETA.1` prepared (2026-09-06, readiness verdict `ready`, approval pending — #720; nothing published). |
 | Current proof | Alpha POC on a real private corpus processed read-only. |
 | Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation; then, in the Go engine: cite-or-abstain gate (faithfulness recomputed from spans, never declared), RAG evaluation harness in CI, interoperable RAG export with provable staleness, reproducible public bench of the gate. |
 | Capability registry | 40 capabilities declared in `scripts/vrc_wiring_matrix_registry.json`; their status is COMPUTED from the tree on every CI run (32 real, 7 sidecar, 1 absent, 0 mismatch) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
@@ -393,10 +394,11 @@ Support is declared in `docs/support-model.yaml` and checked in CI by `scripts/s
 
 | Version | Released | State | Security support | End of support |
 |---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) | not applicable until tagged |
 | `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
 
-- Current candidate: `v0.2.0-ALPHA` (the CLI `Version` constant).
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
 - Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
 - Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
 - Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
