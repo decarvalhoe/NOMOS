@@ -473,7 +473,7 @@ jobs:
           git -C "$CORPUS_CHECKOUT_PATH" remote set-url --push origin DISABLED
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -607,7 +607,7 @@ jobs:
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -795,7 +795,7 @@ jobs:
           echo "path=$path" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
