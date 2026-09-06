@@ -39,7 +39,10 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #715 — Regulated-tool blocks for every closed item (NRT-032) | #716 — Evidence ledger computed and effective (NRT-033) |
+| #714 — Compatibility fixtures for every stable contract (NRT-031) | #718 — Beta support surface declared and checked (NRT-035) |
+| #717 — Readiness verdict as a required candidate gate (NRT-034) | — |
+| #719 — Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
@@ -102,6 +105,15 @@ NRT-026 #679 support model, declared and checked (DevOps, independent)
 
 NRT-029 #702 cross-consumption proof kit, NOMOS side (bundle, cartography, inventory, question set)
   -> NRT-030 #701 cross-consumption proof with the neighbouring sovereign legal RAG (external; blocks only its own claim)
+
+Beta line (docs/51), v1.0.0-BETA.1:
+NRT-031 #714 compatibility fixtures for every stable contract (C1)
+NRT-032 #715 regulated-tool blocks for every closed item (C6)
+NRT-033 #716 evidence ledger computed and effective (DevOps, C7, nonblocking input)
+NRT-035 #718 beta support surface declared and checked (DevOps, nonblocking input)
+  -> NRT-034 #717 readiness verdict as a required candidate gate (after NRT-031, NRT-032)
+  -> NRT-036 #719 beta candidate prepared, mergeable only on `ready`
+  -> #720 release v1.0.0-BETA.1 executed through the SOP (human; blocks only its own claim)
 ```
 
 Recursio is an independent, fixture-first product sequence:
@@ -958,6 +970,230 @@ cd cli && go test ./internal/portfolio/... -run Readiness -v && go run . portfol
 
 Claim impact: "v1.0 readiness is computed from the tree" — the release itself
 is #561.
+
+## v1.0.0-BETA.1 - Beta Release Candidate
+
+Goal (`docs/51`): the beta is the first pre-release of the 1.0 line, reached
+when the tree is a *stable product release candidate* in the sense of
+`docs/14` — `nomos portfolio release-readiness` answers `ready` on the eight
+criteria — and when that verdict is a required gate of the release
+candidate bundle. On 2026-09-06 the verdict is `not_ready` on three named
+checks (C1: fourteen stable contracts without a compatibility fixture; C6:
+closed items #642, #610, #611, #612 without a `regulated_tool` block; C7: the
+evidence ledger is `draft` and stale). Six autonomous items close them and
+add what a beta needs beyond the verdict; the release act stays human
+(#720). None of this is a regulated claim (plan 28).
+
+### NRT-031 - Compatibility Fixtures For Every Stable Contract
+
+GitHub mapping: `#714` (product, autonomous; no same-lane dependency;
+NRT-032 is a nonblocking input).
+
+Deliverables:
+
+- `readCompat` (`cli/internal/contracts/registry.go`) reads every stable
+  contract through a NAMED Go reader that is the engine's real loader —
+  never an ad hoc decoder — and compares the version it read with the
+  registry's `schema_version`.
+- One `compat_fixtures` entry per stable contract in
+  `specs/contract-registry.yaml`, on an existing valid fixture (reused, never
+  invented). The JSON-Schema mirror `nomos-praxis-evidence-schema` is read by
+  the `nomos-praxis-evidence` reader on the same fixture: it must move with
+  the CUE contract.
+- Tests: per reader, a fixture whose version drifted is refused
+  (`CodeCompatUnread`); an unknown reader is refused; the real-repository
+  compatibility test stays green. `docs/16` regenerated, wiring registry,
+  CHANGELOG, claim boundary.
+
+Definition of done:
+
+- `nomos contracts status` shows `compat_reads >= 1` for each of the 15
+  stable contracts; `release-readiness` C1 `met: true`.
+
+Verification:
+
+```bash
+cd cli && go test ./internal/contracts/... -v && go run . contracts status --repo-root .. && go run . portfolio release-readiness --repo-root ..
+```
+
+Claim impact: "every stable contract is read at its version by the engine" —
+no backward-compatibility promise beyond the fixture that is read.
+
+### NRT-032 - Regulated-Tool Blocks For Every Closed Item
+
+GitHub mapping: `#715` (product, autonomous; no dependency).
+
+Deliverables:
+
+- A `regulated_tool` block (`intended_use`, `impact`, `validation_state`,
+  `reliance`) for #642, #610, #611 and #612 in `docs/roadmap-lanes.yaml`,
+  faithful to what each tool does; `impact` evidence or support,
+  `validation_state: technically_verified`, `reliance` `manual_review` or
+  `supporting_use_until_validated` — never `sole_reliance_validated`.
+- `docs/47`, `docs/29`, `docs/15` regenerated.
+
+Definition of done:
+
+- Lane guard passes; `release-readiness` C6 `met: true`.
+
+Verification:
+
+```bash
+python3 scripts/roadmap_lane_guard.py --root . --emit-docs && cd cli && go run . portfolio release-readiness --repo-root ..
+```
+
+Claim impact: none — a declaration of intended use, not a validation.
+
+### NRT-033 - Evidence Ledger Computed And Effective
+
+GitHub mapping: `#716` (DevOps, autonomous; no dependency).
+
+Decision (`docs/51`): the ledger is a GENERATED index, not an approved QMS
+document. `status: effective` means "index in force, computed from the tree
+and checked in CI"; it says nothing about the effectiveness of the documents
+it indexes, whose statuses (`draft_not_effective`, `requires_evidence`, …)
+are recounted, never softened.
+
+Deliverables:
+
+- `scripts/evidence_ledger_guard.py --root . [--check | --write]`:
+  recomputes each category's `current_status` from its `expected_location`
+  (present, draft, generated by workflow, requires evidence — read from the
+  files themselves), writes `status: effective` and a dated `generated_at`,
+  keeps `claim_boundary` "Missing evidence is not assumed". `--check`
+  refuses drift, a missing location without `requires_evidence`, and a ledger
+  older than the portfolio freshness policy — staleness is a finding and the
+  regeneration a recurring DevOps action, declared as such.
+- CI step; tests (drift red, missing location red, stale red, regeneration
+  green); wiring registry, CHANGELOG, claim boundary,
+  `docs/regulated/evidence-index/README.md`.
+
+Definition of done:
+
+- `release-readiness` C7 `met: true`; `nomos portfolio status` reports the
+  ledger `fresh`.
+
+Verification:
+
+```bash
+python3 scripts/evidence_ledger_guard.py --root . --check && cd cli && go run . portfolio release-readiness --repo-root ..
+```
+
+Claim impact: "the ledger is computed and in force" — no QMS effectiveness
+claimed (plan 28).
+
+### NRT-034 - Readiness Verdict As A Required Candidate Gate
+
+GitHub mapping: `#717` (product, autonomous; depends on NRT-031 and NRT-032
+for the green flip — the wiring itself does not wait; NRT-033 is a
+nonblocking input).
+
+Deliverables:
+
+- Gate `release-readiness` in `scripts/release_candidate_gates.py`, failing
+  unless the verdict is `ready`.
+- A `v1.0.0-BETA.1` candidate spec next to the alpha spec whose `required`
+  gates include `release-readiness`; `nomos release candidate` refuses the
+  beta candidate while the verdict is `not_ready` (`CANDIDATE_GATE_FAILED`,
+  named); the candidate stays `pending`, never tool-approved.
+- Rehearsal CI assembles the beta spec and ASSERTS its refusal while C1/C6/C7
+  are open, then asserts its success — a deliberate flip, never a silent one.
+- Go/Python tests of both branches on fixtures; wiring registry
+  (`release_candidate_bundle` extended), CHANGELOG, claim boundary.
+
+Definition of done:
+
+- The alpha candidate keeps assembling; the beta candidate is refused on the
+  current tree with the gate named, and accepted on a synthetic `ready` tree.
+
+Verification:
+
+```bash
+python3 scripts/release_candidate_gates.py --only release-readiness --out /tmp/gates.json ; cd cli && go test ./internal/compliance/... -run Candidate -v
+```
+
+Claim impact: "no beta candidate is assembled on a `not_ready` verdict" —
+neither a release nor an approval.
+
+### NRT-035 - Beta Support Surface Declared And Checked
+
+GitHub mapping: `#718` (DevOps, autonomous; no dependency).
+
+Deliverables:
+
+- `docs/support-model.yaml` gains `support_surface`: supported contracts (the
+  registry's `stable` ones), covered commands and artifacts, `experimental`
+  contracts listed as such with the `docs/16` wording "may change without a
+  MAJOR notice".
+- `scripts/support_model_guard.py` checks that every `stable` contract of the
+  registry is in the surface, and that every contract named in the
+  `<!-- contracts -->` tables of `docs/48` and `docs/50` is in the surface or
+  carries `experimental` in the table; Support sections regenerated (README
+  fr/en/de, SECURITY.md). Tests: a forgotten stable contract is red; a guide
+  citing an out-of-surface contract without saying so is red.
+- Wiring registry (`support_model` extended), CHANGELOG, claim boundary.
+
+Definition of done:
+
+- Guard green on the real tree; `docs/48` and `docs/50` replays green.
+
+Verification:
+
+```bash
+python3 scripts/support_model_guard.py --root . && python3 scripts/integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md && python3 scripts/integration_guide_replay.py --root . --guide docs/50-cross-consumption-proof-kit.md
+```
+
+Claim impact: "the beta says what it supports" — never an SLA or a
+contractual guarantee.
+
+### NRT-036 - Beta Candidate Prepared, Mergeable Only On `ready`
+
+GitHub mapping: `#719` (product, autonomous; depends on NRT-031, NRT-032,
+NRT-034; NRT-033 and NRT-035 are nonblocking inputs).
+
+Deliverables:
+
+- `cli/internal/app/app.go`: `Version = "1.0.0-BETA.1"` (after
+  `1.0.0-BETA.1` is proven to order correctly in the registry's version
+  comparison).
+- `CHANGELOG.md` `## v1.0.0-BETA.1 - <merge date>` carrying what `docs/16`
+  "Release Discipline" requires: core version, supported schema versions,
+  verified adapters, reference policies, incompatible changes (none, or
+  named), migrations. `docs/release-v1.0.0-beta.1.md`, `RELEASE.md`, README
+  fr/en/de status.
+- `docs/support-model.yaml`: `current_candidate: v1.0.0-BETA.1`, an entry in
+  state `candidate`; `v0.2.0-ALPHA` stays `supported` until the tag.
+- Decision record
+  `docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml`
+  in `status: draft`, `approval_status: pending`. `docs/16` regenerated.
+- The PR's CI ASSERTS `release-readiness` = `ready` and a beta candidate
+  assembled (NRT-034): a PR on a `not_ready` tree is red by construction.
+
+Definition of done:
+
+- Support-model, claim and lane guards green; beta rehearsal green;
+  `nomos version --json` announces `1.0.0-BETA.1`.
+
+Verification:
+
+```bash
+python3 scripts/support_model_guard.py --root . && cd cli && go run . portfolio release-readiness --repo-root .. && go run . version --json
+```
+
+Claim impact: "a beta candidate exists, pending a human decision" — no tag,
+no publication, no approval by this PR.
+
+### Exit - Release `v1.0.0-BETA.1` Executed Through The SOP
+
+GitHub mapping: `#720` (regulated, human; prerequisite NRT-036 merged on a
+`ready` verdict). A human act under
+`docs/regulated/lifecycle/release-and-retirement-sop.md`: verify the
+candidate bundle (`nomos release verify`), sign the decision record, create
+the tag, publish the notes; then an autonomous follow-up PR dates the
+support model (`state: supported`, `released_on`, `v0.2.0-ALPHA` →
+`superseded`) and the changelog. It blocks only its own claim
+(`beta_release_executed`); the NQ-* position and plan 28 are independent of
+the product version.
 
 ## Release-Level Verification
 

@@ -6,6 +6,14 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
+- Autonomous plan to the beta release (docs/51, docs/29 "v1.0.0-BETA.1", docs/14 "Definition Of
+  v1.0.0-BETA.1"): the beta is decided as `v1.0.0-BETA.1`, the first pre-release of the 1.0 line,
+  reached when `nomos portfolio release-readiness` computes `ready` and that verdict gates the
+  release candidate; the gap measured on 2026-09-06 (C1: fourteen stable contracts without a
+  compatibility fixture; C6: four closed items without a regulated-tool block; C7: a draft, stale
+  evidence ledger) maps to six autonomous items NRT-031 to NRT-036 (#714 to #719) in three
+  waves, registered in the dispatch queues, with the release act kept human (#720). No beta is
+  claimed: `ready` is a verdict, a release is a signed decision.
 - Cross-consumption proof kit, NOMOS side (NRT-029 #702, docs/50): an executable guide replayed
   in CI against the pack golden corpus — canonical bundle, consumer kit, neutral export and index
   manifest, lens scope, fresh and stale `rag verify`, the consumer's import proof
