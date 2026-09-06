@@ -50,6 +50,18 @@
    régulé peut être manuel avant son outil ; un outil peut être développé avant
    validation de son intended use. Calendrier, signatures, achats et writes
    publics bloquent leurs claims, jamais le dispatcher autonome.
+8. **Ce qui se tait ment.** Leçons d'un système voisin (`docs/49` §3), encodées
+   comme interdits : un composant qui se **désactive sans le dire** (dépendance
+   absente, `except` large) est un défaut, pas une tolérance ; un **index sans
+   consommateur** (vecteurs écrits, jamais interrogés) est un caller de production
+   manquant ; un **cloisonnement par convention** (le filtre que chaque requête
+   doit poser) n'est pas un cloisonnement ; une **chaîne d'audit qui redémarre**
+   n'est pas une chaîne ; une **constante qui ne décrit plus la machine** ou le
+   modèle est une déclaration périmée ; un **défaut de bibliothèque** n'est pas un
+   choix validé ; un **pourcentage d'avancement reçu** se recompte contre la base ;
+   un **nom de modèle** ou une **source** se revérifie avant publication. Pour
+   chaque mécanique : « si ceci cesse d'agir, qu'est-ce qui le dit ? » — « rien »
+   est un finding.
 
 ## 3. Modèle de savoir (vocabulaire commun aux deux dev)
 
@@ -75,7 +87,9 @@
 ## 5. Références
 
 - **NOMOS `docs/`** : `39-canonical-knowledge-mesh-pivot` · `40-knowledge-mesh-architecture`
-  · `41-state-of-the-art-positioning` · `42-capitalization-and-improvement-plan` ;
+  · `41-state-of-the-art-positioning` · `42-capitalization-and-improvement-plan`
+  · `47-roadmap-lanes-and-risk-based-validation`
+  · `49-sovereign-legal-rag-concepts-and-collaboration` (anti-patterns du principe 8) ;
   `public-claim-boundary.md` · `08-governance-and-change.md` · `38-domain-opportunity-roadmap`.
 - **Aedifica `docs/strategy/`** : `nomos-pivot-masterplan` · `nomos-implementation-audit`
   · `hardening-discipline` · `development-approach` (compagnon de ce doc).

@@ -209,6 +209,22 @@ contracts:
   - cli/internal/corpus/source_integrity_gate.go
   compat_fixtures: []
   writers: []
+- id: domain-cartography
+  path: specs/domain-cartography.cue
+  stability: experimental
+  version_kind: pinned
+  schema_version: nomos-domain-cartography-v1
+  sha256: sha256:8e1d8149ce106cf334d9d4cfa2ba16241960889f2b4bed5b6b4ee737a3169718
+  definition: '#DomainCartography'
+  fixtures:
+    valid:
+    - specs/examples/domain-cartography.valid.yaml
+    invalid:
+    - specs/examples/domain-cartography.invalid-inferred-layer.yaml
+    - specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml
+  readers: []
+  compat_fixtures: []
+  writers: []
 - id: domain-pack
   path: specs/domain-pack.cue
   stability: stable

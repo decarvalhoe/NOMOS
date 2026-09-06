@@ -4087,6 +4087,23 @@
           ]
         }
       ]
+    },
+    {
+      "id": "domain_cartography_contract",
+      "title": "Domain cartography contract (docs/49 §2.1) — `specs/domain-cartography.cue` (nomos-domain-cartography-v1) records what a consumer domain ACTUALLY holds, sub-corpus by sub-corpus, on four layers verified independently (source, index, enrichment, graph): a layer that was not verified says so and may carry no number (fixture refused), a phantom domain owns no collection and names where its content lives (fixture refused), a transversal base is shared and never duplicated. Concept learned from a neighbouring legal RAG; contract only — it measures no retrieval or answer quality and makes no domain supported",
+      "pillar": "customer-integration",
+      "claim_level": "sidecar (CUE contract + fixtures vetted in CI; no engine reader yet)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "specs/domain-cartography.cue", "contains": ["#DomainCartography", "nomos-domain-cartography-v1", "\"not_verified\"", "never_duplicated"]},
+        {"path": "specs/examples/domain-cartography.valid.yaml", "contains": ["kind: phantom", "kind: transversal_base"]},
+        {"path": "specs/examples/domain-cartography.invalid-inferred-layer.yaml", "contains": ["verified_by: not_verified"]},
+        {"path": "specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml", "contains": ["kind: phantom"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["Domain cartography contract (docs/49)", "-d '#DomainCartography'"]}
+      ]
     }
   ]
 }

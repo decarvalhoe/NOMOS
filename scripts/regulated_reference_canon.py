@@ -602,7 +602,13 @@ def scan_committed_full_text(
             continue
         try:
             text = rp.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append({
+                "id": "NO_FULL_TEXT_SCAN_UNREADABLE",
+                "severity": "warning",
+                "path": rel,
+                "message": f"File could not be scanned for licensed sentinel sentences ({type(exc).__name__}); it is not covered by the no-full-text check.",
+            })
             continue
         for sentence in _SENTENCE_SPLIT.split(text):
             if len(sentence) < min_chars:

@@ -96,8 +96,10 @@ def _is_violating(candidate: str, norm_target: str) -> tuple[bool, str]:
     try:
         if os.path.islink(candidate):
             return True, "candidate is a symlink"
-    except OSError:
-        pass
+    except OSError as exc:
+        # A path guard that cannot inspect a candidate refuses it; it never
+        # assumes it safe (docs/43 principle 8).
+        return True, f"candidate could not be inspected ({exc}); refused rather than assumed safe"
     return False, ""
 
 

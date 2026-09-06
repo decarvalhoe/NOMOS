@@ -11,6 +11,7 @@ New readers should begin with the **claim boundary**, then the method overview. 
 | [Public claim boundary](public-claim-boundary.md) | What Nomos can and cannot claim at the current release. **Read this first.** |
 | [43 - Development doctrine](43-development-doctrine.md) | Formal cross-product development approach & principles (zero-regression, claim-boundary, no *done* without adversarial proof). NOMOS × Aedifica. |
 | [47 - Independent roadmaps and risk-based validation](47-roadmap-lanes-and-risk-based-validation.md) | Router for the independent product, DevOps and regulated-assurance roadmaps; autonomous dispatch rules and risk-based validation of regulated tooling. `active policy` |
+| [49 - Neighbouring sovereign legal RAG: concepts, anti-patterns, collaboration](49-sovereign-legal-rag-concepts-and-collaboration.md) | Analysis of a neighbouring sovereign legal RAG from two private dated documents, with no figure or finding of the third-party system reproduced: concepts integrated (domain cartography contract, parameter inventory template, inference boundary control), silent-failure anti-patterns encoded as doctrine principle 8 and a silence guard, and the collaboration brief (verification-first checklist, questions, interfaces, red lines). `analysis + plan` |
 | [Release notes v0.1.0-ALPHA](release-v0.1.0-alpha.md) | Current release scope and the publication gate. |
 | [External assessment pack](external-assessment/) | Impartial inputs for an external assessment: evidence, maturity, and neutral valuation frameworks. |
 

@@ -71,6 +71,7 @@
 | `compatibility_matrix` | P1 | real | real | ✅ | — | — |
 | `customer_integration_guide` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `release_readiness_verdict` | P1 | real | real | ✅ | — | — |
+| `domain_cartography_contract` | customer-integration | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -78,7 +79,7 @@
 
 ## Summary
 
-- capabilities: 63 (real=47, partial=0, sidecar=14, stub=0, absent=2)
+- capabilities: 64 (real=47, partial=0, sidecar=15, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
