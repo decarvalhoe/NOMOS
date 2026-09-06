@@ -65,7 +65,7 @@ jobs:
 
       - name: Gate failed — block issue closure
         if: failure() && github.event_name == 'issues'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issue = context.payload.issue;
