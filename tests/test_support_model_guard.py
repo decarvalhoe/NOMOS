@@ -64,6 +64,8 @@ def copy_tree(target: Path) -> None:
     files = ["docs/support-model.yaml", ".github/workflows/ci.yml", "cli/go.mod", "CHANGELOG.md", "cli/internal/app/app.go"] + list(model["rendered_in"])
     # Files the model points at (a response target defined elsewhere) must exist in the copy too.
     files += [t["defined_in"] for t in model["response_targets"]["targets"] if t.get("defined_in")]
+    # NRT-035: the support surface is checked against the contract registry and the guides.
+    files += ["specs/contract-registry.yaml"] + list((model.get("support_surface") or {}).get("guides") or [])
     for rel in files:
         dest = target / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -225,3 +227,58 @@ class DriftTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SurfaceTests(unittest.TestCase):
+    """NRT-035 (#718): the beta says what it supports, and the guard refuses what contradicts it."""
+
+    def _surface_problems(self, root: Path) -> list[str]:
+        code, verdict, _ = run_guard(root, "--tags", REAL_TAGS, "--write")
+        self.assertEqual(code, 1)
+        return checks_by_name(verdict)["surface"]["problems"]
+
+    def test_forgotten_stable_contract_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_tree(root)
+            model = load_model()
+            model["support_surface"]["contracts"]["stable"].remove("nomos-project")
+            write_model(root, model)
+            problems = self._surface_problems(root)
+            self.assertTrue(any("stable contract nomos-project is missing from support_surface" in p for p in problems), problems)
+
+    def test_surface_cannot_claim_more_than_the_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_tree(root)
+            model = load_model()
+            model["support_surface"]["contracts"]["stable"].append("adapter-manifest")
+            write_model(root, model)
+            problems = self._surface_problems(root)
+            self.assertTrue(any("lists adapter-manifest as supported but the registry says experimental" in p for p in problems), problems)
+
+    def test_guide_relying_on_an_out_of_surface_contract_without_saying_so_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_tree(root)
+            guide = root / "docs/48-customer-integration-guide.md"
+            text = guide.read_text(encoding="utf-8").replace("| `adapter-manifest` | experimental |", "| `adapter-manifest` | stable |", 1)
+            guide.write_text(text, encoding="utf-8")
+            problems = self._surface_problems(root)
+            self.assertTrue(any("adapter-manifest is neither in support_surface.contracts.stable nor marked experimental" in p for p in problems), problems)
+
+    def test_guide_replaying_an_uncovered_command_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_tree(root)
+            model = load_model()
+            model["support_surface"]["commands"] = [c for c in model["support_surface"]["commands"] if not c.startswith("github")]
+            write_model(root, model)
+            problems = self._surface_problems(root)
+            self.assertTrue(any("replays `nomos github plan` which support_surface.commands does not cover" in p for p in problems), problems)
+
+    def test_real_surface_is_green_and_rendered(self) -> None:
+        code, verdict, _ = run_guard(ROOT, "--tags", REAL_TAGS)
+        self.assertEqual(code, 0, verdict)
+        self.assertEqual(checks_by_name(verdict)["surface"]["problems"], [])
+        self.assertIn("Supported contracts (15 stable", (ROOT / "README.md").read_text(encoding="utf-8"))

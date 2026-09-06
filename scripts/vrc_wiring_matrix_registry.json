@@ -3763,7 +3763,7 @@
     },
     {
       "id": "support_model",
-      "title": "Support model, declared and checked (NRT-026 #679) — `docs/support-model.yaml` (nomos-support-model-v1) declares supported versions and lifecycle state, channels, response targets (declared, not measured), tested platforms, toolchain versions, explicitly unsupported surfaces (hosted service, control plane, GitHub App, production deployment, regulated approval) and the end-of-support rule; `scripts/support_model_guard.py` refuses a declaration the repository does not honour: runners must equal the CI matrix, Go language/toolchain must equal cli/go.mod, CUE and Python must equal what CI sets up, every declared version must be a git tag or the current CLI candidate, every tag must be declared, current_candidate must equal the CLI Version constant, released_on must equal the CHANGELOG heading, and the Support sections GENERATED into README fr/en/de and SECURITY.md must carry no hand edit (`--write` regenerates). The security gate renders SECURITY.md's Supported Versions from the same model. Claim: « support is declared and consistent with what CI tests » — never « contractually guaranteed »",
+      "title": "Support model, declared and checked (NRT-026 #679) — `docs/support-model.yaml` (nomos-support-model-v1) declares supported versions and lifecycle state, channels, response targets (declared, not measured), tested platforms, toolchain versions, explicitly unsupported surfaces (hosted service, control plane, GitHub App, production deployment, regulated approval) and the end-of-support rule; `scripts/support_model_guard.py` refuses a declaration the repository does not honour: runners must equal the CI matrix, Go language/toolchain must equal cli/go.mod, CUE and Python must equal what CI sets up, every declared version must be a git tag or the current CLI candidate, every tag must be declared, current_candidate must equal the CLI Version constant, released_on must equal the CHANGELOG heading, and the Support sections GENERATED into README fr/en/de and SECURITY.md must carry no hand edit (`--write` regenerates). The security gate renders SECURITY.md's Supported Versions from the same model. Claim: « support is declared and consistent with what CI tests » — never « contractually guaranteed » NRT-035 (#718) : `support_surface` déclare les 15 contrats stables (= registre, sinon rouge dans les deux sens), les commandes couvertes et les guides rejoués ; tout contrat nommé par docs/48 ou docs/50 est dans la surface ou marqué experimental dans le guide (mot de docs/16 : peut changer sans préavis MAJOR) ; toute commande rejouée par un guide est couverte. « La beta dit ce qu'elle supporte » — jamais un SLA.",
       "pillar": "devops",
       "claim_level": "sidecar (declared support checked against CI, toolchain and tags; no contractual guarantee)",
       "promotion_issue": "",
@@ -3777,7 +3777,14 @@
             "def check_toolchain(",
             "def check_versions(",
             "def check_rendered(",
-            "neither a git tag nor the current candidate"
+            "neither a git tag nor the current candidate",
+            "def check_surface(",
+            "def guide_contract_rows(",
+            "def guide_commands(",
+            "is missing from support_surface.contracts.stable",
+            "the surface cannot claim more than the registry",
+            "nor marked experimental in the guide",
+            "which support_surface.commands does not cover"
           ]
         },
         {
@@ -3785,13 +3792,16 @@
           "contains": [
             "nomos-support-model-v1",
             "declared_not_measured",
-            "unsupported_surfaces"
+            "unsupported_surfaces",
+            "support_surface:",
+            "experimental_rule:"
           ]
         },
         {
           "path": "README.md",
           "contains": [
-            "<!-- support-model:begin -->"
+            "<!-- support-model:begin -->",
+            "Supported contracts ("
           ]
         },
         {
@@ -3807,7 +3817,11 @@
             "test_go_mod_edited_without_the_model_is_red",
             "test_new_tag_not_declared_is_red",
             "test_hand_edited_support_section_is_drift",
-            "test_candidate_must_equal_the_cli_constant"
+            "test_candidate_must_equal_the_cli_constant",
+            "test_forgotten_stable_contract_is_red",
+            "test_surface_cannot_claim_more_than_the_registry",
+            "test_guide_relying_on_an_out_of_surface_contract_without_saying_so_is_red",
+            "test_guide_replaying_an_uncovered_command_is_red"
           ]
         }
       ],
