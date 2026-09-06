@@ -2730,7 +2730,7 @@
             "release verify --bundle",
             "verification accepted a tampered bundle",
             "permissions:\n  contents: read",
-            "actions/upload-artifact@v4"
+            "actions/upload-artifact@"
           ]
         }
       ],
