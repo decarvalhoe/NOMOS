@@ -195,6 +195,12 @@ class DriftTests(unittest.TestCase):
     def test_shallow_tagless_checkout_reads_the_tags_from_origin(self) -> None:
         # CI checkouts are shallow and carry no tags: the guard must still see
         # the real tag set (from origin) instead of declaring every version a ghost.
+        source_tags = subprocess.run(["git", "-C", str(ROOT), "tag", "-l", "v*"], text=True, capture_output=True, check=False).stdout.split()
+        if not source_tags:
+            # The fallback reads `origin`; a source checkout that carries no tag
+            # itself (a shallow CI checkout) cannot serve as that origin. The
+            # security job fetches the tags before running this module for real.
+            self.skipTest("source checkout carries no tag — the origin fallback cannot be proven from it")
         with tempfile.TemporaryDirectory() as tmp:
             clone = Path(tmp) / "shallow"
             proc = subprocess.run(["git", "clone", "-q", "--depth", "1", "--no-tags", "--branch", current_branch(), f"file://{ROOT}", str(clone)], text=True, capture_output=True, check=False)
