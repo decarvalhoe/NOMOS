@@ -35,7 +35,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          # The Go version is cli/go.mod's, as everywhere else in CI and as the
+          # support model declares; a hand-written pin drifted to 1.22 and only
+          # worked because the toolchain directive auto-upgraded it. setup-go v6+
+          # exports GOTOOLCHAIN=local, so a stale pin is a red job, not an upgrade.
+          go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
 
       - name: Run fidelity tests

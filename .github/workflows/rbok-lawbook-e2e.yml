@@ -48,7 +48,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          # cli/go.mod is the single source of the Go version (support model);
+          # the former '1.22' pin only worked through toolchain auto-upgrade,
+          # which setup-go v6+ disables by exporting GOTOOLCHAIN=local.
+          go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
 
       - name: Build CLI
