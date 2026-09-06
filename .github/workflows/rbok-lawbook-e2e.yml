@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout Nomos
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -65,7 +65,7 @@ jobs:
           fi
 
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/realisons-business
           ref: main
