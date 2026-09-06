@@ -1,6 +1,6 @@
 # Support
 
-Nomos v0.1.0-ALPHA is available for pilot and qualification work.
+Nomos v0.2.0-ALPHA is available for pilot and qualification work; v0.1.0-ALPHA is superseded.
 
 ## What We Can Support In Alpha
 

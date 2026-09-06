@@ -1,7 +1,7 @@
 # 15 - Nomos Product Backlog
 
 Date: 2026-09-05
-Current release target: post-`v0.1.0-ALPHA`
+Current release: `v0.2.0-ALPHA` (2026-09-06); next stage: `v1.0` stable release candidate (EPIC H)
 
 ## Backlog Rule
 

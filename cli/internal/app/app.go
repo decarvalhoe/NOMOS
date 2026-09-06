@@ -12,7 +12,7 @@ import (
 	"github.com/RBOKproject/Nomos/cli/internal/validate"
 )
 
-const Version = "0.1.0-ALPHA"
+const Version = "0.2.0-ALPHA"
 
 type commandFunc func(args []string, stdout io.Writer, stderr io.Writer) int
 

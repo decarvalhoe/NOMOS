@@ -7,7 +7,7 @@ product:
   role: regulated_baseline_owner
   execution_priority: 1
   owner: RBOK Team
-  release: v0.1.0-ALPHA
+  release: v0.2.0-ALPHA
 regulated_design:
   structure_status: installed
   current_quality_level: "NQ-2 alpha"

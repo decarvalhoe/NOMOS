@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0--ALPHA-orange">
   <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
   <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
   <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
@@ -32,7 +32,7 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 | Dimension | Current position |
 |---|---|
 | Product | Authority-to-product engine for governed software, AI, and RAG. |
-| Release | `v0.1.0-ALPHA`. |
+| Release | `v0.2.0-ALPHA` (2026-09-06, pre-release; decision recorded in `docs/regulated/lifecycle/release-records/`). |
 | Current proof | Alpha POC on a real private corpus processed read-only. |
 | Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation; then, in the Go engine: cite-or-abstain gate (faithfulness recomputed from spans, never declared), RAG evaluation harness in CI, interoperable RAG export with provable staleness, reproducible public bench of the gate. |
 | Capability registry | 40 capabilities declared in `scripts/vrc_wiring_matrix_registry.json`; their status is COMPUTED from the tree on every CI run (32 real, 7 sidecar, 1 absent, 0 mismatch) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
@@ -98,7 +98,9 @@ Nomos is designed for teams that need source-backed software behavior, source-ba
 - running read-only corpus assessments before importing customer references;
 - documenting unsupported coverage instead of silently overclaiming fidelity.
 
-## What v0.1.0-ALPHA Delivers
+## What v0.2.0-ALPHA Delivers
+
+The v0.1.0-ALPHA baseline (2026-05-03) is unchanged; v0.2.0-ALPHA (2026-09-06) adds the capabilities listed in `CHANGELOG.md` — external sources, release candidate bundle, offline Sigstore verification and non-production issuance, the Nomos/Praxis contract and gate, portfolio governance. The French README carries the detailed list.
 
 The current release provides a working CLI and evidence pipeline for canonical-first projects:
 

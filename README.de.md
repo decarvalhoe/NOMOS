@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0--ALPHA-orange">
   <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
   <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
   <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
@@ -32,7 +32,7 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Dimension | Aktueller Stand |
 |---|---|
 | Produkt | Authority-to-product Engine fuer gesteuerte Software, KI und RAG. |
-| Release | `v0.1.0-ALPHA`. |
+| Release | `v0.2.0-ALPHA` (2026-09-06, Pre-Release; Entscheidung dokumentiert in `docs/regulated/lifecycle/release-records/`). |
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
 | Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation; danach, in der Go-Engine: Cite-or-abstain Gate (Faithfulness aus den Spans neu berechnet, nie deklariert), RAG-Evaluationsharness in CI, interoperabler RAG-Export mit nachweisbarer Staleness, reproduzierbarer oeffentlicher Bench des Gates. |
 | Faehigkeitsregister | 40 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (32 real, 7 sidecar, 1 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
@@ -98,7 +98,9 @@ Nomos ist fuer Teams gedacht, die source-backed Softwareverhalten, source-backed
 - read-only Corpus-Assessments vor Kundenimporten durchfuehren;
 - nicht unterstuetzte Abdeckung dokumentieren, statt Fidelity stillschweigend zu ueberverkaufen.
 
-## Was v0.1.0-ALPHA Liefert
+## Was v0.2.0-ALPHA Liefert
+
+Die v0.1.0-ALPHA-Baseline (2026-05-03) bleibt unverändert; v0.2.0-ALPHA (2026-09-06) ergänzt die in `CHANGELOG.md` aufgeführten Fähigkeiten — externe Quellen, Release-Kandidaten-Bundle, Offline-Sigstore-Verifikation und Nicht-Produktions-Ausstellung, Nomos/Praxis-Vertrag und Gate, Portfolio-Governance. Die französische README enthält die Detailliste.
 
 Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer canonical-first Projekte:
 
