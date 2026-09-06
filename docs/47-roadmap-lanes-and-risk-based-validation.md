@@ -39,7 +39,10 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #676 — Contract stability registry and compatibility guard (NRT-023) | #678 — Security process, executable (NRT-025) |
+| #677 — Compatibility matrix, version announcement, deprecation enforcement (NRT-024) | #679 — Support model, declared and checked (NRT-026) |
+| #680 — Customer integration guide with commands replayed against fixtures (NRT-027) | — |
+| #681 — v1.0 readiness verdict, computed (NRT-028) | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
