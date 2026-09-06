@@ -51,7 +51,10 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #676 — Contract stability registry and compatibility guard (NRT-023) | #678 — Security process, executable (NRT-025) |
+| #677 — Compatibility matrix, version announcement, deprecation enforcement (NRT-024) | #679 — Support model, declared and checked (NRT-026) |
+| #680 — Customer integration guide with commands replayed against fixtures (NRT-027) | — |
+| #681 — v1.0 readiness verdict, computed (NRT-028) | — |
 <!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is
@@ -303,6 +306,36 @@ Claim impact:
 
 A computed view lifts no claim. Regulated validation, approvals and records
 remain on roadmap 28.
+
+### EPIC H - Stable Product Release Candidate (v1.0)
+
+Goal: make the eight `docs/14` v1.0 criteria checkable. Planned as NRT-023 to
+NRT-028 in [29](29-post-alpha-release-issue-list.md#v100---stable-product-release-candidate).
+
+Work:
+
+- Contract stability registry with a compatibility guard (stable contract
+  changed without bump → red; compat fixtures read by the engine).
+- Compatibility matrix and version announcement generated from the registry;
+  adapter ranges checked; deprecations enforced.
+- Security process executable: vulnerability scans as gates, expiring
+  allowlist, Dependabot, declared process file.
+- Support model declared and checked against CI matrix, toolchain and tags.
+- Customer integration guide whose commands are replayed against fixtures.
+- v1.0 readiness verdict computed, never "released".
+
+Exit gate:
+
+```text
+Every v1.0 criterion of docs/14 is a check that runs in CI and names what it
+finds; the readiness verdict is not_ready until each is met on purpose.
+```
+
+Claim impact:
+
+Stability of contracts, process and support is declared and checked. It is
+not a regulated claim: validated use, QMS effectiveness and release approval
+stay on roadmap 28.
 
 ## SFI Wave Status
 

@@ -17,8 +17,8 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: []
-    devops: []
+    product: [676, 677, 680, 681]
+    devops: [678, 679]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -373,6 +373,90 @@ items:
       impact: evidence
       validation_state: technically_verified
       reliance: supporting_use_until_validated
+  - issue: 676
+    title: Contract stability registry and compatibility guard (NRT-023)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: register every machine contract with its version and stability and refuse evidence-affecting changes made without a version bump
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 677
+    title: Compatibility matrix, version announcement, deprecation enforcement (NRT-024)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [676]
+    regulated_tool:
+      intended_use: announce what the core reads and writes, check adapter compatibility ranges and enforce deprecation dates from the contract registry
+      impact: support
+      validation_state: planned
+      reliance: manual_review
+  - issue: 680
+    title: Customer integration guide with commands replayed against fixtures (NRT-027)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [676]
+    regulated_tool:
+      intended_use: give integrators one guide whose commands are executed against fixtures in CI and whose named contracts carry their registered stability
+      impact: support
+      validation_state: planned
+      reliance: manual_review
+  - issue: 681
+    title: v1.0 readiness verdict, computed (NRT-028)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [676, 677, 680]
+    regulated_tool:
+      intended_use: compute whether the docs/14 v1.0 criteria are met from the tree and name every unmet one; never decide, tag or publish a release
+      impact: decision
+      validation_state: planned
+      reliance: manual_verification_required
+  - issue: 678
+    title: Security process, executable (NRT-025)
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: scan dependencies in CI with an expiring allowlist and a declared, validated security process file; never a security certification
+      impact: evidence
+      validation_state: planned
+      reliance: supporting_use_until_validated
+  - issue: 679
+    title: Support model, declared and checked (NRT-026)
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: declare the support model as data and keep it consistent with the CI matrix, toolchain and tags; never a contractual guarantee
+      impact: support
+      validation_state: planned
+      reliance: manual_review
   - issue: 192
     title: Acquire ISO 13485
     state: open

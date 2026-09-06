@@ -26,6 +26,7 @@ v0.2 Fidelity Closure
   -> v0.5 Evidence and release-support tooling
   -> v0.6 Nomos/Praxis Contract
   -> v0.9 Portfolio Governance (machine-readable status, no narrative)
+  -> v1.0 Stable Product Release Candidate (stability made measurable)
 ```
 
 No issue below may be used to claim certification, formal validation,
@@ -38,7 +39,10 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #676 — Contract stability registry and compatibility guard (NRT-023) | #678 — Security process, executable (NRT-025) |
+| #677 — Compatibility matrix, version announcement, deprecation enforcement (NRT-024) | #679 — Support model, declared and checked (NRT-026) |
+| #680 — Customer integration guide with commands replayed against fixtures (NRT-027) | — |
+| #681 — v1.0 readiness verdict, computed (NRT-028) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
@@ -87,6 +91,16 @@ NRT-019 #667 portfolio status contract + engine (`nomos portfolio status`)
 
 NRT-021 #669 periodic-review record index + guard (DevOps, independent sidecar)
   -> nonblocking input to NRT-020
+
+NRT-023 #676 contract stability registry + compatibility guard
+  -> NRT-024 #677 compatibility matrix, version announcement, deprecation enforcement
+  -> NRT-027 #680 customer integration guide, commands replayed against fixtures
+  -> NRT-028 #681 v1.0 readiness verdict, computed (never "released")
+  -> v1.0 product decision (release itself stays #561 / plan 28)
+
+NRT-025 #678 security process, executable (DevOps, independent)
+NRT-026 #679 support model, declared and checked (DevOps, independent)
+  -> nonblocking inputs to NRT-028
 ```
 
 Recursio is an independent, fixture-first product sequence:
@@ -732,6 +746,217 @@ cd cli && go test ./... && uv run --with pyyaml python scripts/vrc_wiring_matrix
 
 Claim impact: "the repository map has no grey zone" (docs/45 E7) becomes
 true again at v0.9; no regulated claim.
+
+## v1.0.0 - Stable Product Release Candidate
+
+Goal: turn the eight sentences of `docs/14` "Definition Of v1.0" into checks
+that run. `v1.0` is a *stability* statement about contracts, compatibility,
+security process, support model and integration guidance — each of which must
+be declared in a machine-readable form, verified in CI, and honest about what
+it does not promise. It is not a regulated claim: validated use, QMS
+effectiveness and release approval stay on plan 28.
+
+Boundary: a readiness verdict is computed, never a release. The release
+decision, tag, notes and approvals remain #561 (regulated lane).
+
+### NRT-023 - Contract Stability Registry And Compatibility Guard
+
+GitHub mapping: `#676` (product, autonomous). Production caller
+`nomos contracts status`, registered in `app.go`.
+
+Deliverables:
+
+- `specs/contract-registry.yaml` (`nomos-contract-registry-v1`): every contract
+  family under `specs/*.cue` with its current `schema_version`, stability
+  (`stable` | `experimental` | `deprecated`), the sha256 of the CUE file at that
+  version, its valid/negative fixtures, the CLI readers and writers, and for
+  `deprecated` ones `deprecated_since` and `removal_not_before`.
+- Go engine + `nomos contracts status --repo-root [--out]`: a CUE file absent
+  from the registry, a registry entry without file, a stable contract whose
+  file hash changed without a `schema_version` bump, a stable contract without
+  a valid fixture, a negative fixture that passes, a deprecated contract without
+  dates → each a named refusal (docs/16 "schema changes are evidence-affecting").
+- Compatibility fixtures: for a `stable` contract that bumped, the previous
+  version's fixture stays and must still be read by the Go reader (where one
+  exists) — the read is the proof, not the note.
+
+Definition of done:
+
+- Editing a stable CUE file without bumping turns CI red; adding a CUE file
+  without registering it turns CI red; registry and matrix of contracts
+  regenerate deterministically. Registry entry `contract_stability_registry`
+  (`real`).
+
+Verification:
+
+```bash
+cd cli && go test ./internal/contracts/... -v && go run . contracts status --repo-root ..
+```
+
+Claim impact: "contracts are versioned and their changes are caught" — not
+"contracts are final".
+
+### NRT-024 - Compatibility Matrix, Version Announcement, Deprecation Enforcement
+
+GitHub mapping: `#677` (product, autonomous; depends on NRT-023).
+
+Deliverables:
+
+- `nomos version --json` announces the core version, the schema versions it
+  reads and writes (from the contract registry), the adapter-manifest contract
+  version and the attestation/bundle format versions.
+- The compatibility matrix of `docs/16` becomes a generated section (registry →
+  Markdown, `--emit-docs`, `git diff --exit-code` in CI) instead of a
+  conceptual example.
+- Adapter manifests (`adapters/*/adapter.nomos.yaml`) are checked against the
+  core version: `compatibility.nomos_core.min_version`/`max_version` must
+  include the current core or the adapter is reported incompatible (fail-closed
+  in `nomos contracts status`).
+- Deprecation enforcement: reading a `deprecated` contract prints a warning
+  naming `removal_not_before`; a deprecated contract past that date without a
+  `MAJOR` bump is a refusal.
+
+Definition of done:
+
+- Version output, matrix and adapter compatibility are computed from the same
+  registry; a hand-edited matrix or an adapter outside the range turns CI red.
+  Registry entry `compatibility_matrix` (`real`).
+
+Verification:
+
+```bash
+cd cli && go run . version --json && go test ./internal/contracts/... -run Compat -v
+```
+
+Claim impact: "the core announces what it reads and writes; adapters declare
+and are checked against it".
+
+### NRT-025 - Security Process, Executable
+
+GitHub mapping: `#678` (DevOps, autonomous, independent).
+
+Deliverables:
+
+- `govulncheck` on `cli/` and `tools/sigstore-verifier/`, `pip-audit` (or
+  equivalent) on the Python sidecar dependencies, as CI gates.
+- `docs/security/vulnerability-allowlist.yaml`: every accepted finding carries
+  id, justification, owner, `expires_on`; an expired or undated entry turns
+  the gate red; the gate reads it, never the other way round.
+- Dependabot configuration for Go modules, GitHub Actions and Python.
+- `docs/security/security-process.yaml` (`nomos-security-process-v1`): intake
+  channel, triage targets (declared as targets), disclosure rule, supported
+  versions reference, links to the vulnerability SOP; `SECURITY.md` gains a
+  generated "Supported Versions" section from the support model (NRT-026 input,
+  nonblocking: until then the section is generated from `CHANGELOG.md`).
+
+Definition of done:
+
+- A known-vulnerable dependency pinned in a fixture module turns the gate red;
+  an allowlist entry without expiry turns it red; the process file validates.
+  Registry entry `security_process_gates` (`sidecar`).
+
+Verification:
+
+```bash
+python scripts/security_process_gate.py --root . --check
+```
+
+Claim impact: "dependencies are scanned in CI and exceptions expire" — never
+"secure" or "certified".
+
+### NRT-026 - Support Model, Declared And Checked
+
+GitHub mapping: `#679` (DevOps, autonomous, independent).
+
+Deliverables:
+
+- `docs/support-model.yaml` (`nomos-support-model-v1`): supported versions and
+  their lifecycle state, channels, response targets (declared), tested
+  platforms, toolchain versions, explicitly unsupported surfaces (hosted
+  service, control plane, App), end-of-support rule.
+- Guard: tested platforms equal the CI matrix; the Go version equals
+  `cli/go.mod`; every supported version exists as a tag or as the current
+  candidate; a generated "Support" section in `README.md` and `SECURITY.md`
+  with drift check.
+
+Definition of done:
+
+- Editing the CI matrix, `go.mod` or the tag set without updating the model
+  turns CI red; hand-editing the generated sections turns CI red. Registry
+  entry `support_model` (`sidecar`).
+
+Verification:
+
+```bash
+python scripts/support_model_guard.py --root . --check
+```
+
+Claim impact: "support is declared and consistent with what CI tests" — not
+"support is contractually guaranteed".
+
+### NRT-027 - Customer Integration Guide, Commands Replayed Against Fixtures
+
+GitHub mapping: `#680` (product, autonomous; depends on NRT-023).
+
+Deliverables:
+
+- `docs/48-customer-integration-guide.md`: one entry point consolidating the
+  user manual (34), the integration manual (35), the GitHub workflow setup
+  (31) and the App boundary (32) from the integrator's point of view; every
+  contract it relies on is named with its stability from the registry; the
+  regulated checklist (`templates/regulated/customer-integration-checklist.md`)
+  is linked, never duplicated.
+- Every command block marked `<!-- replay -->` is executed by
+  `scripts/integration_guide_replay.py` against repository fixtures in CI;
+  the expected artifacts named in the guide must exist after the run.
+
+Definition of done:
+
+- A command that stops working, or a contract named with a stability the
+  registry does not confirm, turns CI red. Registry entry
+  `customer_integration_guide` (`sidecar`).
+
+Verification:
+
+```bash
+python scripts/integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md
+```
+
+Claim impact: "the integration guide runs" — not "customers have validated it".
+
+### NRT-028 - v1.0 Readiness Verdict, Computed
+
+GitHub mapping: `#681` (product, autonomous; depends on NRT-023, NRT-024,
+NRT-027; NRT-025 and NRT-026 are nonblocking inputs).
+
+Deliverables:
+
+- `nomos portfolio release-readiness --repo-root [--out]`: maps each of the
+  eight `docs/14` v1.0 criteria to a machine check (contract registry with no
+  refusal and every stable contract with compat fixtures; unsupported-block
+  policy and strict fidelity gate `real` in the wiring matrix; adapter
+  manifests compatible; release candidate and bundle verification available;
+  every `regulated_tool` in `roadmap-lanes.yaml` with intended use, validation
+  state and reliance; evidence ledger citing versioned contracts; claim guard
+  green; security gates and support model present when delivered) and answers
+  `ready` or `not_ready` with every unmet criterion named — never `released`.
+- CI publishes the verdict with the portfolio artifacts and asserts
+  `not_ready` today, as a tripwire, until the criteria are met on purpose.
+
+Definition of done:
+
+- Each criterion has a test that breaks it and sees it named; a forged
+  `ready` file is refused on re-read; the verdict binds the status digest of
+  NRT-019. Registry entry `release_readiness_verdict` (`real`).
+
+Verification:
+
+```bash
+cd cli && go test ./internal/portfolio/... -run Readiness -v && go run . portfolio release-readiness --repo-root ..
+```
+
+Claim impact: "v1.0 readiness is computed from the tree" — the release itself
+is #561.
 
 ## Release-Level Verification
 
