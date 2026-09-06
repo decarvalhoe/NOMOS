@@ -33,6 +33,13 @@ jobs:
     name: E2E lawbook corpus feed pipeline
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Pull requests opened by Dependabot run without repository secrets, so
+    # NOMOS_CORPUS_READ_TOKEN is absent by construction and every GitHub Actions
+    # bump touching this file failed on "Verify corpus read token". The skip is
+    # named here and visible as "skipped" on the PR; the private-corpus run
+    # still happens on the push to main that follows the merge, on the weekly
+    # schedule and on manual dispatch. It never skips a human's pull request.
+    if: ${{ !(github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') }}
 
     steps:
       - name: Checkout Nomos
