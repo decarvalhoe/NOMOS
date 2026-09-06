@@ -45,7 +45,7 @@ Include:
 - whether source corpus integrity, generated evidence, credentials, CI, or release artifacts are affected;
 - any relevant logs with secrets removed.
 
-The security process is executable (NRT-025, #678): `docs/security/security-process.yaml` declares intake, triage targets (declared, not measured), disclosure and scanners; `scripts/security_process_gate.py` runs `govulncheck` on `cli/` and `tools/sigstore-verifier/` and `pip-audit` on the pinned sidecar requirements in CI, and any accepted finding lives in `docs/security/vulnerability-allowlist.yaml` with an owner and an expiry. Dependabot covers Go modules, GitHub Actions and Python. This proves that dependencies are scanned and that exceptions expire; it is not a security certification. See `docs/security/README.md`.
+The security process is executable (NRT-025, #678): `docs/security/security-process.yaml` declares intake, triage targets (declared, not measured), disclosure and scanners; `scripts/security_process_gate.py` runs `govulncheck` on `cli/` and `tools/sigstore-verifier/` and `pip-audit` on the pinned sidecar requirements in CI, and any accepted finding lives in `docs/security/vulnerability-allowlist.yaml` with an owner and an expiry. Dependabot covers Go modules, GitHub Actions, Python and the node adapter fixture. The gate also enumerates every dependency manifest tracked by git (#696) and requires each one to be scanned, watched by Dependabot, or excluded by name with a reason: a forgotten manifest is red, not invisible. This proves that dependencies are scanned, that every manifest is accounted for, and that exceptions expire; it is not a security certification. See `docs/security/README.md`.
 
 ## Security Scope
 

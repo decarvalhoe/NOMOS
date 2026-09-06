@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: []
+    product: [702]
     devops: []
     regulated: []
 
@@ -499,3 +499,37 @@ items:
     depends_on: []
     inputs: [641, 644]
     blocks_claims: [licensed_bible_processing]
+  - issue: 696
+    title: Dependency manifest coverage in the security gate
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [678]
+    regulated_tool:
+      intended_use: prove that every dependency manifest tracked by git is scanned, watched by Dependabot or excluded by name with a reason; never a security certification
+      impact: evidence
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 702
+    title: Cross-consumption proof kit, NOMOS side (NRT-029)
+    state: open
+    lane: product
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: locked
+    depends_on: [680]
+  - issue: 701
+    title: Cross-consumption proof with the neighbouring sovereign legal RAG (NRT-030)
+    state: open
+    lane: product
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    inputs: [702]
+    blocks_claims: [external_cross_consumption_proof]

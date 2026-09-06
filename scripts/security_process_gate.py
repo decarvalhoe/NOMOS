@@ -23,6 +23,12 @@ that fail closed, and nothing more:
    required-only findings are reported, never hidden.
 5. pip-audit (``--scan pip-audit``) — the declared, pinned sidecar requirements
    are audited; any known vulnerability is red unless allowlisted.
+6. manifests (#696) — every dependency manifest tracked by git (package.json,
+   pyproject.toml, go.mod, Cargo.toml, Gemfile, pom.xml, requirements*.txt) is
+   in a scanner's scope, in a Dependabot directory, or listed by name with a
+   reason under ``manifests.not_scanned``. The gate enumerates the manifests
+   itself: an unlisted one is red, a stale exclusion is red. A manifest nobody
+   scans is a manifest nobody sees.
 
 A requested scanner that is missing is a failed check, not a skipped one.
 
@@ -576,6 +582,113 @@ def check_pip_audit(root: Path, process: dict[str, Any], active: dict[str, dict[
     return check("pip-audit", problems, {"command": command, "requirements": str(requirements), "dependencies": dependencies})
 
 
+# --- 6. manifests (#696) -------------------------------------------------------------
+
+
+MANIFEST_NAMES = ("package.json", "pyproject.toml", "go.mod", "Cargo.toml", "Gemfile", "pom.xml")
+MANIFEST_REQUIREMENTS = re.compile(r"^requirements[^/]*\.txt$")
+WALK_SKIP = ("node_modules", "dist", "vendor", "__pycache__")
+
+
+def _is_manifest(name: str) -> bool:
+    return name in MANIFEST_NAMES or bool(MANIFEST_REQUIREMENTS.match(name))
+
+
+def repo_manifests(root: Path) -> tuple[list[str], str]:
+    """Dependency manifests that are PART OF THE REPOSITORY.
+
+    When ``root`` is the top level of a git work tree, the tracked files are the
+    manifests we ship — a module cache or a virtualenv inside the tree is not a
+    manifest anyone delivers. Anywhere else (a test tree, an export) every
+    non-hidden file is walked. Returns the sorted relative paths and the
+    enumeration source, which the verdict reports so nobody has to guess.
+    """
+    names: list[str] | None = None
+    source = "walk"
+    try:
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], text=True, capture_output=True, check=True).stdout.strip()
+        if top and Path(top).resolve() == root.resolve():
+            listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, check=True)
+            names = [n for n in listed.stdout.decode("utf-8", "replace").split("\0") if n]
+            source = "git ls-files"
+    except (OSError, subprocess.CalledProcessError):
+        names = None
+    if names is None:
+        names = []
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            rel = path.relative_to(root).as_posix()
+            if any(segment.startswith(".") or segment in WALK_SKIP for segment in rel.split("/")):
+                continue
+            names.append(rel)
+    found = sorted(rel for rel in names if _is_manifest(rel.rsplit("/", 1)[-1]) and (root / rel).is_file())
+    return found, source
+
+
+def check_manifests(root: Path, process: dict[str, Any]) -> dict[str, Any]:
+    """Every dependency manifest in the tree is in a scanner's scope, in a
+    Dependabot directory, or excluded by name with a reason.
+
+    The gate enumerates the manifests itself: an unlisted one is red, an
+    exclusion whose file no longer exists is red. Learned on 2026-09-06 (#696):
+    three clean scans while GitHub held 8 advisories on an unscanned fixture.
+    """
+    problems: list[str] = []
+    scanners = process.get("scanners") if isinstance(process.get("scanners"), dict) else {}
+    govuln = scanners.get("govulncheck") if isinstance(scanners.get("govulncheck"), dict) else {}
+    pip = scanners.get("pip_audit") if isinstance(scanners.get("pip_audit"), dict) else {}
+    dependabot = scanners.get("dependabot") if isinstance(scanners.get("dependabot"), dict) else {}
+    scanned_dirs = {str(module).strip("/") for module in (govuln.get("modules") or []) if isinstance(module, str)}
+    scanned_files = {str(pip.get("requirements")).strip("/")} if isinstance(pip.get("requirements"), str) else set()
+    watched_dirs: set[str] = set()
+    config = _rel(root, dependabot.get("config"))
+    if config is not None and config.is_file():
+        try:
+            loaded = load_yaml(config)
+        except yaml.YAMLError:
+            loaded = None  # named by the process check; nothing is watched then
+        for update in (loaded.get("updates") or []) if isinstance(loaded, dict) else []:
+            if isinstance(update, dict) and isinstance(update.get("directory"), str):
+                watched_dirs.add(update["directory"].strip("/"))
+
+    manifests = process.get("manifests") if isinstance(process.get("manifests"), dict) else {}
+    excluded: dict[str, str] = {}
+    for index, item in enumerate(manifests.get("not_scanned") or []):
+        if not isinstance(item, dict) or not str(item.get("path") or "").strip():
+            problems.append(f"manifests.not_scanned[{index}]: path is required")
+            continue
+        path = str(item["path"]).strip("/")
+        if len(str(item.get("reason") or "").strip()) < MIN_JUSTIFICATION:
+            problems.append(f"manifests.not_scanned: {path}: reason must say why it is not scanned (at least {MIN_JUSTIFICATION} characters)")
+        if path in excluded:
+            problems.append(f"manifests.not_scanned: {path} listed twice")
+        excluded[path] = str(item.get("reason") or "")
+        if not (root / path).is_file():
+            problems.append(f"manifests.not_scanned: {path} does not exist — remove the stale exclusion")
+
+    found, source = repo_manifests(root)
+    coverage: list[dict[str, str]] = []
+    for rel in found:
+        parent = rel.rsplit("/", 1)[0] if "/" in rel else ""
+        if rel in scanned_files or parent in scanned_dirs:
+            how = "scanner"
+        elif parent in watched_dirs:
+            how = "dependabot"
+        elif rel in excluded:
+            how = "not_scanned"
+        else:
+            how = "uncovered"
+            problems.append(f"{rel}: neither scanned, watched by Dependabot, nor listed in manifests.not_scanned with a reason")
+        coverage.append({"path": rel, "covered_by": how})
+    detail = {
+        "source": source,
+        "manifests": coverage,
+        "uncovered": [c["path"] for c in coverage if c["covered_by"] == "uncovered"],
+    }
+    return check("manifests", problems, detail)
+
+
 # --- main ---------------------------------------------------------------------------
 
 
@@ -624,6 +737,7 @@ def main() -> int:
     allowlist_check, active = check_allowlist(root, process_dict, today, Path(args.allowlist) if args.allowlist else None)
     checks.append(allowlist_check)
     checks.append(check_supported_versions(root, process_dict, args.write))
+    checks.append(check_manifests(root, process_dict))
     if "govulncheck" in scanners:
         checks.append(check_govulncheck(root, process_dict, active, resolve_govulncheck(args.govulncheck_cmd), args.go_module, args.timeout))
     if "pip-audit" in scanners:

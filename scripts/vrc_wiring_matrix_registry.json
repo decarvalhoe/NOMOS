@@ -3684,7 +3684,7 @@
     },
     {
       "id": "security_process_gates",
-      "title": "Security process, executable (NRT-025 #678) — the process is data the gate reads: `docs/security/security-process.yaml` (intake channels, triage targets declared not measured, coordinated disclosure, supported-versions source, scanners, Dependabot, allowlist policy, SOP references — every referenced file must exist), `docs/security/vulnerability-allowlist.yaml` (every accepted finding carries id, ecosystem, package, justification, owner, accepted_on, expires_on; undated, expired, over-long or duplicated entries are red), the Supported Versions section of SECURITY.md GENERATED from CHANGELOG.md (from the support model of NRT-026 once it exists; drift is red, `--write` regenerates), `govulncheck` at symbol level on cli/ and tools/sigstore-verifier/ (a CALLED vulnerability, standard library included, is red unless an unexpired allowlist entry names it; imported/required-only findings are reported, never hidden), `pip-audit --no-deps` on the pinned sidecar requirements, Dependabot for gomod/github-actions/pip. A requested scanner that is missing is a failed check. Proved: a fixture module calling golang.org/x/text@v0.3.6 turns govulncheck red (GO-2021-0113), an unexpired allowlist entry lets it through, an expired one does not; PyYAML==5.3.1 turns pip-audit red (PYSEC-2021-142). Claim: « dependencies are scanned in CI and accepted findings expire » — never « secure », never « certified »",
+      "title": "Security process, executable (NRT-025 #678) — the process is data the gate reads: `docs/security/security-process.yaml` (intake channels, triage targets declared not measured, coordinated disclosure, supported-versions source, scanners, Dependabot, allowlist policy, SOP references — every referenced file must exist), `docs/security/vulnerability-allowlist.yaml` (every accepted finding carries id, ecosystem, package, justification, owner, accepted_on, expires_on; undated, expired, over-long or duplicated entries are red), the Supported Versions section of SECURITY.md GENERATED from CHANGELOG.md (from the support model of NRT-026 once it exists; drift is red, `--write` regenerates), `govulncheck` at symbol level on cli/ and tools/sigstore-verifier/ (a CALLED vulnerability, standard library included, is red unless an unexpired allowlist entry names it; imported/required-only findings are reported, never hidden), `pip-audit --no-deps` on the pinned sidecar requirements, Dependabot for gomod/github-actions/pip. A requested scanner that is missing is a failed check. Proved: a fixture module calling golang.org/x/text@v0.3.6 turns govulncheck red (GO-2021-0113), an unexpired allowlist entry lets it through, an expired one does not; PyYAML==5.3.1 turns pip-audit red (PYSEC-2021-142). Manifest coverage (#696): the gate enumerates every dependency manifest tracked by git and requires each one to be in a scanner scope, in a Dependabot directory, or excluded by name with a reason (`manifests.not_scanned`); a forgotten manifest and a stale or unjustified exclusion are red, the verdict names how each manifest is covered, and Dependabot watches the node fixture GitHub held 8 advisories on. Claim: « dependencies are scanned in CI and accepted findings expire » — never « secure », never « certified »",
       "pillar": "devops",
       "claim_level": "sidecar (process declared and dependencies scanned; no security certification, no deployment claim)",
       "promotion_issue": "",
@@ -3698,7 +3698,9 @@
             "def check_supported_versions(",
             "def check_govulncheck(",
             "def check_pip_audit(",
-            "a requested scanner that is missing is a failed check"
+            "def check_manifests(",
+            "a requested scanner that is missing is a failed check",
+            "neither scanned, watched by Dependabot, nor listed in manifests.not_scanned"
           ]
         },
         {
@@ -3706,7 +3708,9 @@
           "contains": [
             "nomos-security-process-v1",
             "declared_not_measured",
-            "fail_on: called"
+            "fail_on: called",
+            "manifests:",
+            "not_scanned:"
           ]
         },
         {
@@ -3720,7 +3724,8 @@
           "contains": [
             "package-ecosystem: gomod",
             "package-ecosystem: github-actions",
-            "package-ecosystem: pip"
+            "package-ecosystem: pip",
+            "package-ecosystem: npm"
           ]
         },
         {
@@ -3737,7 +3742,10 @@
             "test_undated_entry_is_refused",
             "test_expired_entry_is_refused",
             "test_hand_edited_supported_versions_is_drift",
-            "test_a_missing_requested_scanner_is_a_failed_check"
+            "test_a_missing_requested_scanner_is_a_failed_check",
+            "test_unscanned_manifest_is_red",
+            "test_stale_or_unjustified_exclusion_is_red",
+            "test_real_tree_manifests_are_all_covered"
           ]
         }
       ],

@@ -39,7 +39,7 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | — |
+| #702 — Cross-consumption proof kit, NOMOS side (NRT-029) | — |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan
@@ -96,8 +96,12 @@ NRT-023 #676 contract stability registry + compatibility guard
   -> v1.0 product decision (release itself stays #561 / plan 28)
 
 NRT-025 #678 security process, executable (DevOps, independent)
+  -> #696 dependency manifest coverage in the security gate (DevOps, independent)
 NRT-026 #679 support model, declared and checked (DevOps, independent)
   -> nonblocking inputs to NRT-028
+
+NRT-029 #702 cross-consumption proof kit, NOMOS side (bundle, cartography, inventory, question set)
+  -> NRT-030 #701 cross-consumption proof with the neighbouring sovereign legal RAG (external; blocks only its own claim)
 ```
 
 Recursio is an independent, fixture-first product sequence:

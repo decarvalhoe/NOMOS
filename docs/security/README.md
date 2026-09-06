@@ -22,6 +22,16 @@ entry names it; imported-only and required-only findings are reported in the
 verdict, never hidden. `pip-audit --no-deps` audits the exact pins. A requested
 scanner that is missing is a failed check.
 
+Manifest coverage (#696): the gate enumerates every dependency manifest tracked
+by git (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Gemfile`,
+`pom.xml`, `requirements*.txt`) and requires each one to be in a scanner scope,
+in a Dependabot directory, or listed under `manifests.not_scanned` of
+`security-process.yaml` with a reason. A forgotten manifest is red; an exclusion
+whose file is gone, or whose reason is empty, is red; the verdict names how each
+manifest is covered. Learned on 2026-09-06: three clean scans while GitHub held
+8 advisories on a fixture nobody watched — a manifest nobody scans is a
+manifest nobody sees.
+
 Claim boundary: "dependencies are scanned in CI and accepted findings expire".
 Not "secure", not "certified", not a statement about any deployment. The
 regulated SOP that owns vulnerability and incident handling is
