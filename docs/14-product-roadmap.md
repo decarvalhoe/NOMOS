@@ -163,3 +163,15 @@ met on purpose; the verdict is never `released`.
 The separate regulated-assurance roadmap defines when a customer or Nomos may
 make a validated-use, QMS-effectiveness or regulated-readiness claim. Product
 `v1.0` alone does not unlock one.
+
+## Definition Of v1.0.0-BETA.1
+
+The beta is the first pre-release of the 1.0 line (`docs/51`). It exists when
+the eight criteria above are computed `ready`, when that verdict is a
+required gate of the release candidate bundle (a `not_ready` beta candidate
+is refused), when the beta support surface is declared in the support model
+and checked against what the integration guide and the cross-consumption kit
+cite, and when the candidate is prepared with its decision record pending.
+The release act itself — tag, publication, approval — is a human act under
+the release SOP (#720), never a tool output. The definitions and the order
+of the autonomous items live in `docs/29` ("v1.0.0-BETA.1") and `docs/51`.
