@@ -91,6 +91,35 @@ jobs:
           fi
           echo "tampered bundle refused, as required"
 
+      # NRT-034 (#717): the v1.0.0-BETA.1 candidate REQUIRES the release-readiness gate.
+      # Since NRT-031/032/033 closed the three gaps the verdict is `ready`, so the beta
+      # candidate must assemble here — a deliberate flip, asserted, never silent — and a
+      # forged gate evidence marking release-readiness failed must be refused by name.
+      - name: Beta candidate — assembles on a ready verdict (NRT-034 #717)
+        run: |
+          jq -e '.gates[] | select(.id == "release-readiness") | .status == "pass"' "$RUNNER_TEMP/gates.json" > /dev/null
+          "$RUNNER_TEMP/nomos" release candidate \
+            --spec docs/regulated/release/v1.0.0-BETA.1-candidate.yaml \
+            --gates "$RUNNER_TEMP/gates.json" \
+            --commit "$GITHUB_SHA" \
+            --repo-root . \
+            --out "$RUNNER_TEMP/beta-candidate"
+          jq -e '.version == "v1.0.0-BETA.1" and .approval_status == "pending" and .release_executed == false and ([.gates[].id] | index("release-readiness") != null)' \
+            "$RUNNER_TEMP/beta-candidate/candidate-manifest.json" > /dev/null
+      - name: Adversarial — a failed readiness gate refuses the beta candidate by name
+        run: |
+          jq '(.gates[] | select(.id == "release-readiness")) |= (.status = "fail" | .exit_code = 1)' "$RUNNER_TEMP/gates.json" > "$RUNNER_TEMP/gates-forged.json"
+          if "$RUNNER_TEMP/nomos" release candidate --spec docs/regulated/release/v1.0.0-BETA.1-candidate.yaml --gates "$RUNNER_TEMP/gates-forged.json" --commit "$GITHUB_SHA" --repo-root . --out "$RUNNER_TEMP/beta-forged" 2> "$RUNNER_TEMP/forged.err"; then
+            echo "::error::a beta candidate was assembled on a failed release-readiness gate"; exit 1
+          fi
+          grep -q 'CANDIDATE_GATE_FAILED: required gate "release-readiness"' "$RUNNER_TEMP/forged.err"
+          test ! -e "$RUNNER_TEMP/beta-forged/candidate-manifest.json"
+          echo "beta candidate refused on a failed readiness gate, nothing written, as required"
+      - name: Archive the beta candidate (approval pending; nothing published)
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.0.0-BETA.1-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/beta-candidate
       - name: Archive the candidate (approval pending; nothing published)
         uses: actions/upload-artifact@v7
         with:

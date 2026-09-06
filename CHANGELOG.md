@@ -6,6 +6,8 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Unreleased
 
+- NRT-034 (#717): `release-readiness` becomes a candidate gate (`scripts/release_readiness_gate.py`, gate set id `release-readiness`); the v1.0.0-BETA.1 candidate spec requires it, `nomos release candidate` refuses the beta spec by name on a not_ready verdict; the rehearsal assembles the beta candidate on the ready tree and proves the refusal on forged gate evidence. Neither a release nor an approval.
+
 - NRT-035 (#718): the support model declares the beta support surface (15 stable contracts = the registry, covered commands, replayed guides); the guard refuses a forgotten stable contract, an over-claimed one, a guide relying on an undeclared contract or replaying an uncovered command; Support sections regenerated. Never an SLA.
 
 - NRT-031 (#714): a compatibility fixture per stable contract, read by the engine's real loaders (19 reads); engine loaders extracted to `canon`, `bundle`, `corpus`, `domainpack`, `atomization`, `pointintime`, `output` and shared `docload`; body-ledger segments now serialise with the contract's field names; the body-ledger spec example is engine-emitted; the validator accepts canonical-corpus projects. Readiness criterion C1 met — the v1.0 readiness verdict is `ready` and CI asserts it (not a release: #720). Also carries the roadmap closure and claim paragraph of NRT-033 (#716) that PR #723 missed.
