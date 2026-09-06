@@ -51,9 +51,8 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| #715 — Regulated-tool blocks for every closed item (NRT-032) | #716 — Evidence ledger computed and effective (NRT-033) |
-| #714 — Compatibility fixtures for every stable contract (NRT-031) | #718 — Beta support surface declared and checked (NRT-035) |
-| #717 — Readiness verdict as a required candidate gate (NRT-034) | — |
+| #714 — Compatibility fixtures for every stable contract (NRT-031) | #716 — Evidence ledger computed and effective (NRT-033) |
+| #717 — Readiness verdict as a required candidate gate (NRT-034) | #718 — Beta support surface declared and checked (NRT-035) |
 | #719 — Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036) | — |
 <!-- roadmap-queues:end -->
 

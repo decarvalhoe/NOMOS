@@ -100,7 +100,7 @@ func TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies(t *testing.T) {
 		t.Fatalf("today's tree must be not_ready with named reasons: %s %v", r.Verdict, r.Unmet)
 	}
 	joined := strings.Join(r.Unmet, "\n")
-	if !strings.Contains(joined, "C1/stable-contracts-compat-fixtures") || !strings.Contains(joined, "C7/evidence-ledger") || !strings.Contains(joined, "C6/closed-items-have-tool: closed items without regulated_tool: #642") {
+	if !strings.Contains(joined, "C1/stable-contracts-compat-fixtures") || !strings.Contains(joined, "C7/evidence-ledger") {
 		t.Fatalf("expected the known gaps named:\n%s", joined)
 	}
 	path := filepath.Join(t.TempDir(), "readiness.json")
@@ -206,5 +206,31 @@ func TestReadinessGatherNamesMissingSources(t *testing.T) {
 	}
 	if v != VerdictNotReady {
 		t.Fatal(v)
+	}
+}
+
+
+func TestReadinessGatherNamesClosedItemsWithoutTool(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "roadmap-lanes.yaml"), []byte(`items:
+  - issue: 1
+    state: closed
+    lane: product
+  - issue: 2
+    state: open
+    lane: product
+  - issue: 3
+    state: closed
+    lane: devops
+    regulated_tool: {intended_use: x, impact: support, validation_state: technically_verified, reliance: manual_review}
+  - issue: 4
+    state: closed
+    lane: devops
+    regulated_tool: {intended_use: "", impact: support, validation_state: technically_verified, reliance: manual_review}
+`), 0o644)
+	in := gather(ReadinessOptions{RepoRoot: root, Now: readyNow, CoreVersion: "0.2.0-ALPHA", ClaimGuard: func(string) error { return nil }})
+	if strings.Join(in.ClosedWithoutTool, ",") != "#1" || strings.Join(in.ToolsMissingFields, ",") != "#4" {
+		t.Fatalf("closed-without-tool=%v missing-fields=%v", in.ClosedWithoutTool, in.ToolsMissingFields)
 	}
 }
