@@ -78,6 +78,49 @@ def validate_process(doc: Any) -> list[str]:
     for s in scanners:
         if not isinstance(s, dict) or s.get("gate") is not True:
             errs.append(f"security-process.yaml: scanner {s.get('id') if isinstance(s, dict) else s!r} must be a gate (gate: true)")
+    for i, m in enumerate(doc.get("manifests_not_scanned") or []):
+        if not isinstance(m, dict) or not str(m.get("path", "")).strip() or not str(m.get("reason", "")).strip():
+            errs.append(f"security-process.yaml: manifests_not_scanned #{i + 1} needs path and reason")
+    return errs
+
+
+MANIFEST_NAMES = ("package.json", "pyproject.toml", "go.mod", "Cargo.toml", "Gemfile", "pom.xml")
+
+
+def repo_manifests(root: Path) -> list[str]:
+    out = []
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(root).as_posix()
+        if any(seg in ("node_modules", ".git", ".venv", "dist") for seg in rel.split("/")):
+            continue
+        if p.name in MANIFEST_NAMES or (p.name.startswith("requirements") and p.suffix == ".txt"):
+            out.append(rel)
+    return sorted(out)
+
+
+def manifest_coverage(root: Path, doc: dict) -> list[str]:
+    """Every dependency manifest is scanned, watched by Dependabot, or excluded by name with a reason."""
+    scanned: set[str] = set()
+    for s in doc.get("scanners") or []:
+        for scope in (s.get("scope") or []) if isinstance(s, dict) else []:
+            scanned.add(str(scope).rstrip("/"))
+    dirs: set[str] = set()
+    dep = root / str(doc.get("dependency_updates") or "")
+    if dep.is_file():
+        for u in (yaml.safe_load(dep.read_text(encoding="utf-8")) or {}).get("updates") or []:
+            dirs.add(str(u.get("directory", "")).strip("/"))
+    excluded = {str(m.get("path")) for m in doc.get("manifests_not_scanned") or [] if isinstance(m, dict)}
+    errs = []
+    for rel in repo_manifests(root):
+        parent = rel.rsplit("/", 1)[0] if "/" in rel else ""
+        if rel in scanned or parent in scanned or parent in dirs or rel in excluded:
+            continue
+        errs.append(f"manifest {rel} is neither scanned, watched by Dependabot, nor listed in manifests_not_scanned with a reason")
+    for rel in excluded:
+        if not (root / rel).exists():
+            errs.append(f"manifests_not_scanned lists {rel}, which does not exist — remove the stale exclusion")
     return errs
 
 
@@ -190,7 +233,10 @@ def main() -> int:
     args = ap.parse_args()
     root = Path(args.root).resolve()
     today = date.fromisoformat(args.today) if args.today else date.today()
-    errs = validate_process(load_yaml(root, PROCESS))
+    process = load_yaml(root, PROCESS)
+    errs = validate_process(process)
+    if not errs:
+        errs += manifest_coverage(root, process)
     live, aerrs = live_allowlist(root, today)
     errs += aerrs
     for f in args.govulncheck:

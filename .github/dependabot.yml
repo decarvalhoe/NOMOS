@@ -16,3 +16,10 @@ updates:
   - package-ecosystem: pip
     directory: /scripts
     schedule: {interval: weekly}
+  # Fixture of the node adapter: never installed or executed by NOMOS, but GitHub
+  # reported 8 advisories on it (2026-09-06) while the scans above were clean —
+  # a manifest nobody scans is a manifest nobody sees. Kept patched by proposals.
+  - package-ecosystem: npm
+    directory: /adapters/node-typescript/fixtures/nextjs-api-ui
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 3

@@ -28,6 +28,21 @@ scanners:
     command: "pip-audit -r scripts/requirements-sidecar.txt -f json"
     gate: true
 dependency_updates: .github/dependabot.yml
+# Every dependency manifest in the tree must be covered by a scanner scope, a
+# Dependabot directory, or be listed here with a reason. The gate enumerates the
+# manifests itself; an unlisted one is red. Learned on 2026-09-06: the three
+# scans were clean while GitHub held 8 advisories on an unscanned fixture.
+manifests_not_scanned:
+  - path: adapters/python/fixtures/django-app/pyproject.toml
+    reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+  - path: adapters/python/fixtures/fastapi-service/pyproject.toml
+    reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+  - path: adapters/python/fixtures/flask-api/pyproject.toml
+    reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+  - path: cli/internal/detect/testdata/corpus/fullstack/go.mod
+    reason: stack-detection test corpus; not a module that is built or run
+  - path: cli/internal/detect/testdata/corpus/fullstack/web/package.json
+    reason: stack-detection test corpus; never installed
 allowlist: docs/security/vulnerability-allowlist.yaml
 supported_versions_source: CHANGELOG.md   # the generated section in SECURITY.md is derived from it (until the support model #679 replaces it)
 sop: docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md

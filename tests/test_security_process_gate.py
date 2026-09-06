@@ -28,7 +28,11 @@ def run(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 def copy_root(tmp: Path) -> Path:
     root = tmp / "repo"
-    for rel in ("docs/security", "SECURITY.md", "CHANGELOG.md", "docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md", ".github/dependabot.yml"):
+    for rel in ("docs/security", "SECURITY.md", "CHANGELOG.md", "docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md", ".github/dependabot.yml",
+                "cli/go.mod", "tools/sigstore-verifier/go.mod", "scripts/requirements-sidecar.txt",
+                "adapters/node-typescript/fixtures/nextjs-api-ui/package.json", "adapters/python/fixtures/django-app/pyproject.toml",
+                "adapters/python/fixtures/fastapi-service/pyproject.toml", "adapters/python/fixtures/flask-api/pyproject.toml",
+                "cli/internal/detect/testdata/corpus/fullstack/go.mod", "cli/internal/detect/testdata/corpus/fullstack/web/package.json"):
         src, dst = ROOT / rel, root / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
@@ -86,6 +90,21 @@ class SecurityGateTests(unittest.TestCase):
         r = run(self.root, "--check")
         self.assertEqual(r.returncode, 1)
         self.assertIn("must be a gate", r.stderr)
+
+    def test_unscanned_manifest_is_red(self) -> None:
+        m = self.root / "tools" / "forgotten" / "package.json"
+        m.parent.mkdir(parents=True)
+        m.write_text("{}")
+        r = run(self.root, "--check")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("manifest tools/forgotten/package.json is neither scanned, watched by Dependabot, nor listed", r.stderr)
+
+    def test_stale_manifest_exclusion_is_red(self) -> None:
+        p = self.root / "docs/security/security-process.yaml"
+        p.write_text(p.read_text(encoding="utf-8").replace("  - path: cli/internal/detect/testdata/corpus/fullstack/go.mod\n", "  - path: cli/internal/detect/testdata/corpus/gone/go.mod\n", 1), encoding="utf-8")
+        r = run(self.root, "--check")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("manifests_not_scanned lists cli/internal/detect/testdata/corpus/gone/go.mod, which does not exist", r.stderr)
 
     def test_stale_supported_versions_is_drift(self) -> None:
         p = self.root / "SECURITY.md"
