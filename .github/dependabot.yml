@@ -55,3 +55,11 @@ updates:
     labels: [lane:devops, dispatch:autonomous, area:cicd]
     commit-message:
       prefix: "build(deps)"
+    # A detection fixture models a stack; a major bump (express 5, next 16)
+    # changes what it models for no security reason and the fixture is never
+    # installed. Patches and minors keep it clear of advisories. A fix that only
+    # exists in a new major shows up as a Dependabot alert and is decided by
+    # hand (#706 and #707 were closed on this rule, 2026-09-06).
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
