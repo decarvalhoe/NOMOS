@@ -317,7 +317,7 @@ jobs:
         with:
           go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install --quiet -r scripts/requirements-sidecar.txt pyshacl
@@ -386,7 +386,7 @@ jobs:
           cache-dependency-path: |
             cli/go.sum
             tools/sigstore-verifier/go.sum
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install the scanners and the declared sidecar dependencies
