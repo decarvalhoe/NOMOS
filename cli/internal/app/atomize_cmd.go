@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/RBOKproject/Nomos/cli/internal/atomization"
-	"gopkg.in/yaml.v3"
 )
 
 // AtomizeCommand is the entry point for `nomos atomize <subcommand>`.
@@ -467,29 +466,7 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 // the two by decoding YAML to a generic value and re-encoding it as JSON, so the
 // file may be either YAML or JSON and the engine type stays free of YAML tags.
 func loadKnowledgeLens(path string) (*atomization.KnowledgeLens, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
-	}
-	var generic any
-	if err := yaml.Unmarshal(raw, &generic); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	bridged, err := json.Marshal(generic)
-	if err != nil {
-		return nil, fmt.Errorf("normalize %s: %w", path, err)
-	}
-	var lens atomization.KnowledgeLens
-	if err := json.Unmarshal(bridged, &lens); err != nil {
-		return nil, fmt.Errorf("decode %s: %w", path, err)
-	}
-	if lens.ID == "" {
-		return nil, fmt.Errorf("%s: lens is missing an id", path)
-	}
-	if lens.Include == nil && lens.Exclude == nil {
-		return nil, fmt.Errorf("%s: lens %q has no include/exclude predicate", path, lens.ID)
-	}
-	return &lens, nil
+	return atomization.LoadKnowledgeLens(path)
 }
 
 // --- validate: check atom set completeness ---

@@ -90,18 +90,17 @@ func realRoot(t *testing.T) string {
 	return filepath.Clean(filepath.Join(wd, "..", "..", ".."))
 }
 
-func TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies(t *testing.T) {
+func TestReadinessOnTheRealRepositoryIsReadyAndVerifies(t *testing.T) {
 	root := realRoot(t)
 	r, err := ComputeReadiness(ReadinessOptions{RepoRoot: root, Now: readyNow, CoreVersion: "0.2.0-ALPHA", ClaimGuard: func(string) error { return nil }})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.Verdict != VerdictNotReady || len(r.Unmet) == 0 || len(r.Criteria) != 8 || !strings.HasPrefix(r.StatusDigest, "sha256:") {
-		t.Fatalf("today's tree must be not_ready with named reasons: %s %v", r.Verdict, r.Unmet)
-	}
-	joined := strings.Join(r.Unmet, "\n")
-	if !strings.Contains(joined, "C1/stable-contracts-compat-fixtures") {
-		t.Fatalf("expected the known gaps named:\n%s", joined)
+	// Since NRT-031 (#714) every mapped check holds on this tree: the verdict is
+	// ready. That is a computed statement about the eight docs/14 criteria, not
+	// a release (#720) and not a validated-use claim.
+	if r.Verdict != VerdictReady || len(r.Unmet) != 0 || len(r.Criteria) != 8 || !strings.HasPrefix(r.StatusDigest, "sha256:") {
+		t.Fatalf("this tree must be ready with no unmet check: %s %v", r.Verdict, r.Unmet)
 	}
 	path := filepath.Join(t.TempDir(), "readiness.json")
 	raw, _ := json.MarshalIndent(r, "", "  ")
@@ -113,7 +112,7 @@ func TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies(t *testing.T) {
 		t.Fatalf("a verdict bound to another status digest must be refused: %v", err)
 	}
 	md := RenderReadinessMarkdown(r)
-	if !strings.Contains(md, "NOT_READY") || !strings.Contains(md, "C1") {
+	if !strings.Contains(md, "READY") || !strings.Contains(md, "C8") {
 		t.Fatal(md)
 	}
 }
@@ -134,30 +133,26 @@ func TestForgedReadinessIsRefused(t *testing.T) {
 		_ = os.WriteFile(p, out, 0o644)
 		return p
 	}
-	// 1. verdict flipped to ready, digest untouched → content edited
-	_, err = VerifyReadinessFile(write(func(m map[string]any) { m["verdict"] = "ready" }), "", readyNow)
+	// 1. verdict flipped, digest untouched → content edited
+	_, err = VerifyReadinessFile(write(func(m map[string]any) { m["verdict"] = "not_ready" }), "", readyNow)
 	if err == nil || !strings.Contains(err.Error(), "readiness_digest does not match") {
 		t.Fatalf("%v", err)
 	}
 	// 2. verdict flipped AND digest recomputed → contradicts criteria
 	forged := r
-	forged.Verdict = VerdictReady
+	forged.Verdict = VerdictNotReady
 	forged.ReadinessDigest = digestOf(forged)
-	_, err = VerifyReadinessFile(write(func(m map[string]any) { m["verdict"] = "ready"; m["readiness_digest"] = forged.ReadinessDigest }), "", readyNow)
+	_, err = VerifyReadinessFile(write(func(m map[string]any) { m["verdict"] = "not_ready"; m["readiness_digest"] = forged.ReadinessDigest }), "", readyNow)
 	if err == nil || !strings.Contains(err.Error(), "contradicts its own criteria") {
 		t.Fatalf("%v", err)
 	}
-	// 3. criteria all marked met AND verdict ready AND digest recomputed → unmet list disagrees
+	// 3. one check marked failed with verdict not_ready AND digest recomputed, but the unmet list left empty → lists disagree
 	forged2 := r
-	forged2.Verdict = VerdictReady
+	forged2.Verdict = VerdictNotReady
 	forged2.Criteria = append([]Criterion(nil), r.Criteria...)
-	for i := range forged2.Criteria {
-		cs := append([]Check(nil), forged2.Criteria[i].Checks...)
-		for j := range cs {
-			cs[j].OK = true
-		}
-		forged2.Criteria[i].Checks, forged2.Criteria[i].Met = cs, true
-	}
+	cs0 := append([]Check(nil), forged2.Criteria[0].Checks...)
+	cs0[0].OK = false
+	forged2.Criteria[0].Checks, forged2.Criteria[0].Met = cs0, false
 	forged2.ReadinessDigest = digestOf(forged2)
 	raw2, _ := json.Marshal(forged2)
 	p2 := filepath.Join(t.TempDir(), "r2.json")
@@ -208,7 +203,6 @@ func TestReadinessGatherNamesMissingSources(t *testing.T) {
 		t.Fatal(v)
 	}
 }
-
 
 func TestReadinessGatherNamesClosedItemsWithoutTool(t *testing.T) {
 	root := t.TempDir()

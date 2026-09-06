@@ -3824,7 +3824,7 @@
     },
     {
       "id": "contract_stability_registry",
-      "title": "Registre de stabilité des contrats (NRT-023 #676) — `specs/contract-registry.yaml` déclare pour chaque contrat machine de specs/ (36 CUE + 2 miroirs JSON Schema) sa stabilité (stable|experimental|deprecated), sa version (pinned, default, pattern, registry_declared), son sha256, ses fixtures valides/invalides, ses lecteurs Go et ses fixtures de compatibilité. `nomos contracts status` VÉRIFIE contre l'arbre : fichier de contrat non enregistré, fichier absent, hash changé sans bump accepté, version du fichier ≠ registre, contrat stable sans version ou sans fixture valide, fixture absente, dépréciation sans dates ou dépassée, fixture de compatibilité non lue par son lecteur Go (external-snapshot, praxis-evidence, praxis-mapping, portfolio-status) → refus nommé, exit 1. `--accept <id> --new-version <v>` enregistre un bump délibéré et refuse la même version ou une version que le fichier ne déclare pas. En CI sur le dépôt réel : 15 stables, 4 lectures de compatibilité. Ce que ce N'EST PAS : une preuve de justesse sémantique d'un contrat, ni une promesse de compatibilité au-delà de ce que les lecteurs lisent.",
+      "title": "Registre de stabilité des contrats (NRT-023 #676) — `specs/contract-registry.yaml` déclare pour chaque contrat machine de specs/ (36 CUE + 2 miroirs JSON Schema) sa stabilité (stable|experimental|deprecated), sa version (pinned, default, pattern, registry_declared), son sha256, ses fixtures valides/invalides, ses lecteurs Go et ses fixtures de compatibilité. `nomos contracts status` VÉRIFIE contre l'arbre : fichier de contrat non enregistré, fichier absent, hash changé sans bump accepté, version du fichier ≠ registre, contrat stable sans version ou sans fixture valide, fixture absente, dépréciation sans dates ou dépassée, fixture de compatibilité non lue par son lecteur Go (external-snapshot, praxis-evidence, praxis-mapping, portfolio-status) → refus nommé, exit 1. `--accept <id> --new-version <v>` enregistre un bump délibéré et refuse la même version ou une version que le fichier ne déclare pas. En CI sur le dépôt réel : 15 stables, 4 lectures de compatibilité. Ce que ce N'EST PAS : une preuve de justesse sémantique d'un contrat, ni une promesse de compatibilité au-delà de ce que les lecteurs lisent. NRT-031 (#714) : chaque contrat stable a une fixture de compatibilité LUE par le vrai chargeur du moteur (canon, bundle, checks, corpus, domainpack, atomization, pointintime, output, validate, compliance) — 19 lectures ; ce qui a révélé des segments de body ledger émis hors contrat (noms Go), une fixture de ledger écrite à la main dont les preuves ne se vérifiaient pas (désormais émise par le moteur), un projet en mode corpus que le validateur refusait alors que le contrat l'admet.",
       "pillar": "P1",
       "claim_level": "gate (stabilité déclarée et vérifiée ; un contrat stable ne change pas sans bump accepté)",
       "promotion_issue": "",
@@ -3850,7 +3850,46 @@
             "CONTRACT_STABLE_WITHOUT_FIXTURE",
             "CONTRACT_COMPAT_FIXTURE_UNREADABLE",
             "without an accepted schema_version bump",
-            "a bump needs a NEW schema_version"
+            "a bump needs a NEW schema_version",
+            "case \"canon-promotion\":",
+            "case \"corpus-body-ledger\":",
+            "case \"domain-pack\":",
+            "case \"verdicts\":",
+            "var KnownReaders"
+          ]
+        },
+        {
+          "path": "cli/internal/docload/docload.go",
+          "contains": [
+            "func Load(",
+            "func Normalize("
+          ]
+        },
+        {
+          "path": "cli/internal/corpus/load.go",
+          "contains": [
+            "func LoadCorpusBodyLedger(",
+            "func LoadIntegrityReportFile("
+          ]
+        },
+        {
+          "path": "cli/internal/domainpack/manifest.go",
+          "contains": [
+            "func LoadManifest("
+          ]
+        },
+        {
+          "path": "cli/internal/atomization/load.go",
+          "contains": [
+            "func LoadKnowledgeLens(",
+            "func LoadFacetedDocument("
+          ]
+        },
+        {
+          "path": "cli/internal/output/load.go",
+          "contains": [
+            "func LoadReport(",
+            "func LoadVerdictCases("
           ]
         }
       ],
@@ -3866,6 +3905,38 @@
           "path": "cli/internal/app/app.go",
           "contains": [
             "\"contracts\":     contractsCommand"
+          ]
+        },
+        {
+          "path": "cli/internal/app/pack_cmd.go",
+          "contains": [
+            "domainpack.LoadManifest(",
+            "atomization.LoadKnowledgeLens("
+          ]
+        },
+        {
+          "path": "cli/internal/app/strict_gate.go",
+          "contains": [
+            "corpus.LoadIntegrityReportFile(",
+            "corpus.LoadCorpusBodyLedger("
+          ]
+        },
+        {
+          "path": "cli/internal/app/canon_cmd.go",
+          "contains": [
+            "canon.LoadPromotionBundle("
+          ]
+        },
+        {
+          "path": "cli/internal/app/pointintime_cmd.go",
+          "contains": [
+            "pointintime.LoadAtomSet("
+          ]
+        },
+        {
+          "path": "cli/internal/app/rag_cmd.go",
+          "contains": [
+            "bundle.LoadFile("
           ]
         }
       ],
@@ -3890,7 +3961,11 @@
             "TestStableWithoutFixtureOrVersionIsRed",
             "TestDeprecationNeedsDatesAndRespectsRemoval",
             "TestCompatFixtureMustBeReadByAKnownReader",
-            "TestCompatSnapshotTamperedRecordIsRed"
+            "TestCompatSnapshotTamperedRecordIsRed",
+            "TestEveryCompatFixtureReads",
+            "TestCompatBodyLedgerWithAlteredRowIsRed",
+            "TestCompatProjectThatFailsValidationIsRed",
+            "TestCompatBundleThatFailsEngineValidationIsRed"
           ]
         },
         {
@@ -3898,6 +3973,19 @@
           "contains": [
             "test_every_registered_fixture_vets_against_its_definition",
             "test_registry_covers_every_contract_file"
+          ]
+        },
+        {
+          "path": "cli/internal/corpus/body_ledger_test.go",
+          "contains": [
+            "TestSpecExampleBodyLedgerIsAnEngineArtifactWhoseProofsVerify"
+          ]
+        },
+        {
+          "path": "cli/internal/validate/corpus_mode_test.go",
+          "contains": [
+            "TestCanonicalCorpusProjectValidates",
+            "TestCanonicalCorpusRefusals"
           ]
         }
       ]
@@ -4042,7 +4130,7 @@
     },
     {
       "id": "release_readiness_verdict",
-      "title": "Verdict de readiness v1.0 calculé (NRT-028 #681) — `nomos portfolio release-readiness` mappe les huit critères de docs/14 « Definition Of v1.0 » à des vérifications machine : registre des contrats sans refus et chaque contrat stable avec fixture de compatibilité ; strict fidelity gate et moteur des formats non supportés ; body ledger Merkle (émission, vérification) et graphe de références ; adapters compatibles (NRT-024) et enregistrés comme fixtures ; bundle canonique, candidat de release et attestation de couverture `real` ; chaque `regulated_tool` de roadmap-lanes complet et chaque item fermé porteur d'un ; ledger d'évidence effectif, versionné, frais, processus sécurité et modèle de support présents ; garde des claims publics verte (frontière de process Python, non exécutable → not_ready). Verdict `ready` ou `not_ready` avec chaque vérification non satisfaite nommée — jamais `released` ; lié au digest du statut de portefeuille (NRT-019) ; `--verify` relit un verdict et refuse digest altéré, `ready` contredit par ses critères, liste unmet incohérente, verdict inconnu, 7 critères, digest de statut périmé. En CI : `not_ready` asserté comme tripwire, fichier re-vérifié. Ce que ce N'EST PAS : une release, une approbation, un claim d'usage validé.",
+      "title": "Verdict de readiness v1.0 calculé (NRT-028 #681) — `nomos portfolio release-readiness` mappe les huit critères de docs/14 « Definition Of v1.0 » à des vérifications machine : registre des contrats sans refus et chaque contrat stable avec fixture de compatibilité ; strict fidelity gate et moteur des formats non supportés ; body ledger Merkle (émission, vérification) et graphe de références ; adapters compatibles (NRT-024) et enregistrés comme fixtures ; bundle canonique, candidat de release et attestation de couverture `real` ; chaque `regulated_tool` de roadmap-lanes complet et chaque item fermé porteur d'un ; ledger d'évidence effectif, versionné, frais, processus sécurité et modèle de support présents ; garde des claims publics verte (frontière de process Python, non exécutable → not_ready). Verdict `ready` ou `not_ready` avec chaque vérification non satisfaite nommée — jamais `released` ; lié au digest du statut de portefeuille (NRT-019) ; `--verify` relit un verdict et refuse digest altéré, `ready` contredit par ses critères, liste unmet incohérente, verdict inconnu, 7 critères, digest de statut périmé. En CI : depuis NRT-031 (#714) les huit critères tiennent et `ready` est asserté (une régression sur un critère rougit), fichier re-vérifié ; `ready` n'est ni une release (#720) ni un claim d'usage validé. Ce que ce N'EST PAS : une release, une approbation, un claim d'usage validé.",
       "pillar": "P1",
       "claim_level": "verdict (readiness v1.0 calculée depuis l'arbre ; la release reste #561)",
       "promotion_issue": "",
@@ -4053,7 +4141,7 @@
           "contains": [
             "portfolio release-readiness --repo-root .. --out",
             "nomos-release-readiness-v1",
-            ".verdict == \"not_ready\"",
+            ".verdict == \"ready\"",
             "release-readiness --repo-root .. --verify"
           ]
         }
@@ -4089,7 +4177,7 @@
           "contains": [
             "TestReadinessEvaluateAllMetIsReady",
             "TestReadinessEachCriterionBreaksAndIsNamed",
-            "TestReadinessOnTheRealRepositoryIsNotReadyAndVerifies",
+            "TestReadinessOnTheRealRepositoryIsReadyAndVerifies",
             "TestForgedReadinessIsRefused",
             "TestReadinessGatherNamesMissingSources"
           ]

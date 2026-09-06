@@ -15,6 +15,7 @@ import (
 
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
 	"github.com/RBOKproject/Nomos/cli/internal/guard"
+	"github.com/RBOKproject/Nomos/cli/internal/output"
 )
 
 type listFlag []string
@@ -755,6 +756,10 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
+	if !output.CorpusVerdictNames[*verdict] {
+		fmt.Fprintf(stderr, "corpus attest: --verdict %q is not a corpus verdict of the verdicts contract (corpus_admissible|corpus_partial|corpus_blocked)\n", *verdict)
+		return 2
+	}
 	if *snapshotPath == "" || *corpusID == "" || *projectID == "" {
 		fmt.Fprintln(stderr, "corpus attest: --snapshot, --corpus-id, and --project-id are required")
 		return 2
@@ -884,15 +889,7 @@ func corpusAttestCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 
 // readCorpusBodyLedger loads a body ledger JSON from disk (VRC-07 #553).
 func readCorpusBodyLedger(path string) (corpus.CorpusBodyLedger, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return corpus.CorpusBodyLedger{}, fmt.Errorf("read body ledger: %w", err)
-	}
-	var ledger corpus.CorpusBodyLedger
-	if err := json.Unmarshal(data, &ledger); err != nil {
-		return corpus.CorpusBodyLedger{}, fmt.Errorf("decode body ledger: %w", err)
-	}
-	return ledger, nil
+	return corpus.LoadCorpusBodyLedger(path)
 }
 
 // countFeedUnits counts the units in a feed JSON document so that

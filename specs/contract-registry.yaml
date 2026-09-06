@@ -115,7 +115,10 @@ contracts:
   - cli/internal/app/app.go
   - cli/internal/app/canon_cmd.go
   - cli/internal/canon/canon.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/canon-promotion.valid.yaml
+    reader: canon-promotion
+    schema_version: 0.1.0
   writers: []
 - id: canonical-knowledge-bundle
   path: specs/canonical-knowledge-bundle.cue
@@ -132,7 +135,10 @@ contracts:
   readers:
   - cli/internal/app/bundle_cmd.go
   - cli/internal/bundle/bundle.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/canonical-knowledge-bundle.valid.json
+    reader: canonical-knowledge-bundle
+    schema_version: ckm-bundle-v1
   writers: []
 - id: canonical-matrix
   path: specs/canonical-matrix.cue
@@ -158,7 +164,10 @@ contracts:
   - cli/internal/corpus/feed_quality_gate.go
   - cli/internal/diagnose/diagnose.go
   - cli/internal/validate/validate.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/canonical-matrix.valid.yaml
+    reader: canonical-matrix
+    schema_version: 0.1.0
   writers: []
 - id: corpus-body-ledger
   path: specs/corpus-body-ledger.cue
@@ -176,7 +185,10 @@ contracts:
   - cli/internal/app/strict_gate.go
   - cli/internal/corpus/body_ledger.go
   - cli/internal/corpus/cmd/body-ledger/main.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/corpus-body-ledger.valid.yaml
+    reader: corpus-body-ledger
+    schema_version: 0.1.0
   writers:
   - cli/internal/corpus/body_ledger.go
 - id: corpus-evidence
@@ -207,7 +219,10 @@ contracts:
   readers:
   - cli/internal/app/strict_gate.go
   - cli/internal/corpus/source_integrity_gate.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/corpus-integrity-report.valid.yaml
+    reader: corpus-integrity-report
+    schema_version: 0.1.0
   writers: []
 - id: domain-cartography
   path: specs/domain-cartography.cue
@@ -242,7 +257,10 @@ contracts:
   readers:
   - cli/internal/app/pack_cmd.go
   - cli/internal/portfolio/status.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: docs/regulated/domain-packs/eu-ai-act/pack.yaml
+    reader: domain-pack
+    schema_version: nomos-domain-pack-v1
   writers: []
 - id: evidence-contract
   path: specs/evidence-contract.cue
@@ -326,7 +344,10 @@ contracts:
   - cli/internal/ragexport/contract.go
   - cli/internal/ragexport/export.go
   - cli/internal/ragexport/lens.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/facets.atom.valid.yaml
+    reader: facets
+    schema_version: 0.1.0
   writers: []
 - id: feed-audit-report
   path: specs/feed-audit-report.cue
@@ -367,6 +388,7 @@ contracts:
   fixtures:
     valid:
     - specs/examples/knowledge-lens.valid.yaml
+    - docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/gestion-risque.lens.yaml
     invalid: []
     reader_valid:
     - path: specs/examples/knowledge-lens-candidates.valid.yaml
@@ -375,8 +397,13 @@ contracts:
   - cli/internal/app/app.go
   - cli/internal/app/atomize_cmd.go
   - cli/internal/atomization/facets.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/gestion-risque.lens.yaml
+    reader: knowledge-lens
+    schema_version: 0.1.0
   writers: []
+  definition_overrides:
+    docs/regulated/domain-packs/eu-ai-act/ai-act-lens-presets/gestion-risque.lens.yaml: '#KnowledgeLens'
 - id: nomos-domain-profile
   path: specs/nomos-domain-profile.cue
   stability: experimental
@@ -467,7 +494,10 @@ contracts:
     - specs/examples/nomos-praxis-evidence.invalid-praxis-producer.yaml
     - specs/examples/nomos-praxis-evidence.invalid-regulated-unverified.yaml
   readers: []
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/nomos-praxis-evidence.valid.yaml
+    reader: nomos-praxis-evidence
+    schema_version: nomos-praxis-evidence-exchange-v1
   note: JSON Schema mirror of nomos-praxis-evidence.cue for non-CUE consumers; must move with the CUE contract
   writers: []
 - id: nomos-project
@@ -488,7 +518,13 @@ contracts:
   - cli/internal/app/init.go
   - cli/internal/export/cyclonedx.go
   - cli/internal/validate/validate.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/nomos-project.corpus.yaml
+    reader: nomos-project
+    schema_version: 0.1.0
+  - path: specs/examples/nomos-project.minimal.yaml
+    reader: nomos-project
+    schema_version: 0.1.0
   writers: []
 - id: nomos-report.schema
   path: specs/nomos-report.schema.json
@@ -514,7 +550,10 @@ contracts:
   - cli/internal/report/generate.go
   - cli/internal/report/types.go
   - cli/internal/validate/manifests.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/nomos-report.complete.json
+    reader: nomos-report
+    schema_version: 0.1.0
   writers:
   - cli/internal/report/generate.go
 - id: nomos-trace-manifest
@@ -551,7 +590,10 @@ contracts:
   - cli/internal/corpus/web_source.go
   - cli/internal/pointintime/pointintime.go
   - cli/internal/ragexport/contract.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/point-in-time-atoms.valid.yaml
+    reader: point-in-time
+    schema_version: 0.1.0
   writers: []
 - id: portfolio-status
   path: specs/portfolio-status.cue
@@ -643,6 +685,7 @@ contracts:
     valid:
     - cli/internal/checks/testdata/valid-source-manifest.yaml
     - cli/internal/corpus/testdata/regression/minimal/source-manifest.yaml
+    - docs/canonical/source-manifest.yaml
     invalid: []
   readers:
   - cli/internal/app/app.go
@@ -655,7 +698,11 @@ contracts:
   - cli/internal/corpus/manifest.go
   - cli/internal/diagnose/diagnose.go
   - cli/internal/validate/validate.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: docs/canonical/source-manifest.yaml
+    reader: source-manifest
+    schema_version: 0.1.0
+    base_dir: .
   writers:
   - cli/internal/corpus/manifest.go
 - id: source-segment-ledger
@@ -716,5 +763,8 @@ contracts:
   - cli/internal/answer/eval.go
   - cli/internal/app/portfolio_cmd.go
   - cli/internal/partial/partial.go
-  compat_fixtures: []
+  compat_fixtures:
+  - path: specs/examples/verdict-cases.yaml
+    reader: verdicts
+    schema_version: 0.1.0
   writers: []

@@ -452,16 +452,10 @@ func applyBodyLedgerToIntegrityCheck(check *CorpusIntegrityCheck, path string) {
 	if check == nil {
 		return
 	}
-	raw, err := os.ReadFile(path)
+	ledger, err := corpus.LoadCorpusBodyLedger(path)
 	if err != nil {
 		check.Status = "fail"
-		check.Summary = appendSummary(check.Summary, fmt.Sprintf("body_ledger=fail (read %s: %v)", path, err))
-		return
-	}
-	var ledger corpus.CorpusBodyLedger
-	if err := json.Unmarshal(raw, &ledger); err != nil {
-		check.Status = "fail"
-		check.Summary = appendSummary(check.Summary, fmt.Sprintf("body_ledger=fail (parse %s: %v)", path, err))
+		check.Summary = appendSummary(check.Summary, fmt.Sprintf("body_ledger=fail (%v)", err))
 		return
 	}
 	for _, src := range ledger.Sources {
@@ -513,38 +507,7 @@ func appendSummary(existing, fragment string) string {
 //
 // Either or both report pointers may be nil if a key is absent.
 func loadIntegrityReportFile(path string) (*corpus.IntegrityReport, *corpus.FeedQualityReport, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("read %s: %w", path, err)
-	}
-	var agg struct {
-		SourceIntegrity *corpus.IntegrityReport   `json:"source_integrity"`
-		FeedQuality     *corpus.FeedQualityReport `json:"feed_quality"`
-	}
-	if err := json.Unmarshal(raw, &agg); err == nil {
-		if agg.SourceIntegrity != nil || agg.FeedQuality != nil {
-			return agg.SourceIntegrity, agg.FeedQuality, nil
-		}
-	}
-	var probe map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &probe); err != nil {
-		return nil, nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	if _, ok := probe["source_count"]; ok {
-		var r corpus.IntegrityReport
-		if err := json.Unmarshal(raw, &r); err != nil {
-			return nil, nil, fmt.Errorf("parse source integrity report %s: %w", path, err)
-		}
-		return &r, nil, nil
-	}
-	if _, ok := probe["feed_unit_count"]; ok {
-		var r corpus.FeedQualityReport
-		if err := json.Unmarshal(raw, &r); err != nil {
-			return nil, nil, fmt.Errorf("parse feed quality report %s: %w", path, err)
-		}
-		return nil, &r, nil
-	}
-	return nil, nil, fmt.Errorf("integrity report %s: shape not recognised (no source_integrity, feed_quality, source_count, or feed_unit_count keys)", path)
+	return corpus.LoadIntegrityReportFile(path)
 }
 
 // computeIntegrityFromSources walks sourceDir for *.md files, runs the typed
