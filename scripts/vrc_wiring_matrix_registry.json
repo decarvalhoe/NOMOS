@@ -2717,7 +2717,7 @@
     },
     {
       "id": "release_candidate_bundle",
-      "title": "Bundle candidat de release v0.2.0-ALPHA (#639) — `nomos release candidate` assemble, depuis un commit, un bundle vérifié sur le CONTENU et les STATUTS : artefacts requis présents ET lisibles (YAML mapping, JSON valide, Markdown titré), gates requis mesurés verts sur le MÊME commit (`scripts/release_candidate_gates.py` enregistre les codes de sortie), tous les gaps bloquants ouverts du ledger reconnus — et rien de reconnu que le ledger a fermé —, risques LUS depuis leur source mesurée (VRC-14 : 4/8 enregistré, `blocking: false`, jamais une précondition), waivers complets, déviations avec record. Toute règle violée = refus nommé (`CANDIDATE_*`), rien n'est écrit. `approval_status` est toujours `pending` : un statut approuvé, une entrée d'approbation ou `release_executed: true` sont refusés — une approbation est un acte humain sous la SOP de release (#561), jamais une sortie d'outil. `nomos release verify` rejoue hors ligne : octet d'evidence changé, entrée retirée, gates.json édité, hash/gate/approbation falsifiés dans le manifeste, fichier du tree modifié après assemblage → `CANDIDATE_TAMPERED` ou le code d'invariant. Rehearsal CI : assemble → vérifie → un octet falsifié DOIT être refusé → archive `v0.2.0-ALPHA-candidate-<sha>` en artefact de workflow, `permissions: contents: read`, aucun tag ni release. Ce que cela NE prouve PAS : la décision de release, le niveau de qualité, l'acceptabilité d'un gap. NRT-034 (#717) : le verdict de readiness v1.0 est un gate requis (`release-readiness`) du candidat v1.0.0-BETA.1 — `nomos release candidate` refuse la spec beta par nom quand le verdict n'est pas `ready` ; la répétition CI assemble le candidat beta sur l'arbre `ready` et prouve le refus sur un gate forgé ; le candidat alpha continue sans ce gate. Ni release ni approbation.",
+      "title": "Bundle candidat de release v0.2.0-ALPHA (#639) — `nomos release candidate` assemble, depuis un commit, un bundle vérifié sur le CONTENU et les STATUTS : artefacts requis présents ET lisibles (YAML mapping, JSON valide, Markdown titré), gates requis mesurés verts sur le MÊME commit (`scripts/release_candidate_gates.py` enregistre les codes de sortie), tous les gaps bloquants ouverts du ledger reconnus — et rien de reconnu que le ledger a fermé —, risques LUS depuis leur source mesurée (VRC-14 : 4/8 enregistré, `blocking: false`, jamais une précondition), waivers complets, déviations avec record. Toute règle violée = refus nommé (`CANDIDATE_*`), rien n'est écrit. `approval_status` est toujours `pending` : un statut approuvé, une entrée d'approbation ou `release_executed: true` sont refusés — une approbation est un acte humain sous la SOP de release (#561), jamais une sortie d'outil. `nomos release verify` rejoue hors ligne : octet d'evidence changé, entrée retirée, gates.json édité, hash/gate/approbation falsifiés dans le manifeste, fichier du tree modifié après assemblage → `CANDIDATE_TAMPERED` ou le code d'invariant. Rehearsal CI : assemble → vérifie → un octet falsifié DOIT être refusé → archive `v0.2.0-ALPHA-candidate-<sha>` en artefact de workflow, `permissions: contents: read`, aucun tag ni release. Ce que cela NE prouve PAS : la décision de release, le niveau de qualité, l'acceptabilité d'un gap. NRT-034 (#717) : le verdict de readiness v1.0 est un gate requis (`release-readiness`) du candidat v1.0.0-BETA.1 — `nomos release candidate` refuse la spec beta par nom quand le verdict n'est pas `ready` ; la répétition CI assemble le candidat beta sur l'arbre `ready` et prouve le refus sur un gate forgé ; le candidat alpha continue sans ce gate. Ni release ni approbation. NRT-036 (#719) : candidat v1.0.0-BETA.1 préparé — version du coeur, changelog conforme à docs/16, notes, entrée `candidate` du modèle de support, record de décision en brouillon (`decision: pending`) ; aucun tag, aucune publication, aucune approbation par l'outil (#720).",
       "pillar": "P1",
       "claim_level": "capability (bundle candidat vérifiable ; aucune release, aucune approbation, aucun claim de niveau)",
       "promotion_issue": "",
@@ -2812,6 +2812,21 @@
             "version: v1.0.0-BETA.1",
             "- release-readiness",
             "approval_status: pending"
+          ]
+        },
+        {
+          "path": "docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml",
+          "contains": [
+            "decision: pending",
+            "approval_status: pending",
+            "record_id: NOMOS-REC-REL-2026-002"
+          ]
+        },
+        {
+          "path": "docs/support-model.yaml",
+          "contains": [
+            "current_candidate: v1.0.0-BETA.1",
+            "state: candidate"
           ]
         }
       ],

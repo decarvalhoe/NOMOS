@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [719]
+    product: []
     devops: []
     regulated: []
 
@@ -606,14 +606,19 @@ items:
       reliance: supporting_use_until_validated
   - issue: 719
     title: Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
     depends_on: [714, 715, 717]
     inputs: [716, 718]
+    regulated_tool:
+      intended_use: "prepare the v1.0.0-BETA.1 release candidate (version constant, changelog, notes, support-model entry, draft decision record) on a ready readiness verdict; the tag, publication and approval remain a human act under the SOP (#720)"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 716
     title: Evidence ledger computed and effective (NRT-033)
     state: closed

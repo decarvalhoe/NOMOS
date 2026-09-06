@@ -1,0 +1,53 @@
+# Release decision record — v1.0.0-BETA.1 — DRAFT, decision PENDING (NRT-036 #719).
+#
+# This file is prepared by tooling so that the human release act (#720, under
+# docs/regulated/lifecycle/release-and-retirement-sop.md) has its inputs on one
+# page. It records NO decision: `decision: pending`, `decided_by` empty,
+# `approval_status: pending`. Only a human completes it; the tag, the GitHub
+# release and the notes follow that act, never this file.
+schema_version: "0.1.0"
+record_type: release_decision
+record_id: NOMOS-REC-REL-2026-002
+status: draft
+version: v1.0.0-BETA.1
+release_kind: pre-release (beta, first of the 1.0 line)
+decision_date: null
+decision: pending
+approval_status: pending
+decided_by: ""
+method: >-
+  To be recorded contemporaneously by the release manager under the release
+  SOP: verify the candidate bundle (nomos release verify), review the inputs
+  below, sign this record, create the tag, publish the notes. Independent
+  review: per NOMOS-REC-ROLE-2026-001 (independent_reviewer vacant at alpha;
+  the beta decision states whether the waiver is renewed).
+issue: "#720 — release v1.0.0-BETA.1 executed through the SOP (regulated lane, human)"
+sop: docs/regulated/lifecycle/release-and-retirement-sop.md
+sop_status: draft_not_effective   # recorded as-is
+candidate:
+  spec: docs/regulated/release/v1.0.0-BETA.1-candidate.yaml
+  rehearsal_workflow: .github/workflows/release-candidate-rehearsal.yml
+  manifest: "rehearsal artifact v1.0.0-BETA.1-candidate-<sha> (computed on the merge commit)"
+  approval_status_in_candidate: pending
+  required_gates: [claim-boundary-guard, vrc-wiring-matrix, roadmap-lane-guard, repeated-ci-evidence, training-competence-gate, go-vet, go-test, release-readiness]
+inputs_at_preparation:
+  prepared_on: 2026-09-06
+  readiness_verdict: "nomos portfolio release-readiness — ready, 8/8 docs/14 criteria met (NRT-028..036); ready is not a release"
+  contract_registry: "39 contracts, 15 stable, 19 compatibility reads by the engine's loaders, 3 adapters compatible with core 1.0.0-BETA.1"
+  wiring_matrix: ".vrc-wiring-matrix/wiring-matrix.json — 66 capabilities, 0 mismatch"
+  evidence_ledger: "generated index, status effective, 13 categories observed; indexed QMS/SDLC documents recounted as draft"
+  support_surface: "docs/support-model.yaml — 15 stable contracts, 21 covered commands, guides docs/48 and docs/50 replayed in CI"
+  security: "govulncheck (cli, tools/sigstore-verifier) and pip-audit gated; allowlist per docs/security/vulnerability-allowlist.yaml"
+  repeated_ci_evidence: "VRC-14 (#560) recorded as a RISK, not a precondition — see the candidate manifest"
+  praxis_gate: "blocked — Praxis reliance is not activated by this release"
+gaps_to_be_knowingly_accepted:
+  - GAP-APPROVAL-WORKFLOW
+  - GAP-TRAINING
+  - GAP-INDEPENDENT-AUDIT
+  - GAP-GITHUB-LIVE-CONFIG
+  - GAP-REPEATED-CI-EVIDENCE
+  - GAP-LICENSED-BIBLES
+claim_boundary: >-
+  A prepared record of inputs for a pending human decision. It approves
+  nothing, releases nothing, and establishes no validated-use, QMS-effectiveness
+  or regulated-readiness claim (plan 28).

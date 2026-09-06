@@ -50,9 +50,9 @@ evidence_categories:
     exists: true
     kind: directory
     generated_path: false
-    files: 7
+    files: 8
     statuses:
-      draft: 5
+      draft: 6
     unmarked: 2
 - id: EV-VAL-001
   category: validation_evidence
