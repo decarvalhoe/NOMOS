@@ -154,7 +154,7 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Download changed-paths artifact (optional)
         if: inputs.changed_paths_artifact != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.changed_paths_artifact }}
           path: ${{ runner.temp }}/changed-paths-artifact
@@ -484,7 +484,7 @@ jobs:
           python -m pip install pyyaml
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/diff
@@ -612,7 +612,7 @@ jobs:
           python-version: '3.12'
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/nomos-diff
@@ -620,7 +620,7 @@ jobs:
       # NGW-07 (#392): consume the real trace manifest produced by the
       # trace-manifest job instead of synthesising a placeholder inline.
       - name: Download trace manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.trace-manifest.outputs.trace_artifact_name }}
           path: ${{ runner.temp }}/nomos-trace
@@ -806,14 +806,14 @@ jobs:
           python -m pip install pyyaml
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/diff
         continue-on-error: true
 
       - name: Download trace manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: nomos-trace
           path: ${{ runner.temp }}/trace
