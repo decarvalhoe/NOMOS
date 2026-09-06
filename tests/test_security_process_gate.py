@@ -30,7 +30,7 @@ def copy_root(tmp: Path) -> Path:
     root = tmp / "repo"
     for rel in ("docs/security", "SECURITY.md", "CHANGELOG.md", "docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md", ".github/dependabot.yml",
                 "cli/go.mod", "tools/sigstore-verifier/go.mod", "scripts/requirements-sidecar.txt",
-                "adapters/node-typescript/fixtures/nextjs-api-ui/package.json", "adapters/python/fixtures/django-app/pyproject.toml",
+                "adapters/node-typescript/fixtures/nextjs-api-ui/package.json", "adapters/python/fixtures/django-app/pyproject.toml", "adapters/jvm/fixtures/spring-rest-service/pom.xml",
                 "adapters/python/fixtures/fastapi-service/pyproject.toml", "adapters/python/fixtures/flask-api/pyproject.toml",
                 "cli/internal/detect/testdata/corpus/fullstack/go.mod", "cli/internal/detect/testdata/corpus/fullstack/web/package.json"):
         src, dst = ROOT / rel, root / rel

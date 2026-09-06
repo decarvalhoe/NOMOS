@@ -39,6 +39,8 @@ manifests_not_scanned:
     reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
   - path: adapters/python/fixtures/flask-api/pyproject.toml
     reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+  - path: adapters/jvm/fixtures/spring-rest-service/pom.xml
+    reason: adapter detection fixture; never built or executed by NOMOS
   - path: cli/internal/detect/testdata/corpus/fullstack/go.mod
     reason: stack-detection test corpus; not a module that is built or run
   - path: cli/internal/detect/testdata/corpus/fullstack/web/package.json
