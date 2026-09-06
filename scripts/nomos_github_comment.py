@@ -265,6 +265,7 @@ def fetch_pr_comments(repo: str, pr_number: int) -> list[dict]:
     # gh --paginate concatenates JSON arrays; if the server returned
     # multiple chunks, fall back to a per-line parse.
     comments: list[dict] = []
+    skipped_lines = 0
     for line in out.splitlines():
         line = line.strip()
         if not line:
@@ -272,9 +273,12 @@ def fetch_pr_comments(repo: str, pr_number: int) -> list[dict]:
         try:
             chunk = json.loads(line)
         except json.JSONDecodeError:
+            skipped_lines += 1
             continue
         if isinstance(chunk, list):
             comments.extend(chunk)
+    if skipped_lines and not comments:
+        raise ValueError(f"gh --paginate output could not be parsed as JSON ({skipped_lines} line(s) skipped); refusing to report zero comments silently")
     return comments
 
 

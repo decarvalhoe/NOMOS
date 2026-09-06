@@ -53,6 +53,12 @@ for deterministic pre-generation filtering over facet applicability metadata.
 `canon-promotion.cue` defines the optional CKM-03 guardrail contract for
 customer-confidential user-promoted canon and its certificate evidence.
 
+`domain-cartography.cue` defines the optional consumer-facing domain cartography
+contract (docs/48 §2.1): what a domain actually holds, sub-corpus by sub-corpus,
+on four layers verified independently; a layer nobody verified says so and may
+carry no number, a phantom domain owns no collection, a transversal base is
+shared and never duplicated. It measures no retrieval or answer quality.
+
 The business-operations example profile demonstrates the same CKM mechanics for
 non-AEC business bibles through `business_bible` sources and `nature: metier`
 facet metadata.

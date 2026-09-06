@@ -6,6 +6,11 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
+- Concepts learned from a neighbouring sovereign legal RAG (docs/48): domain cartography
+  contract `specs/domain-cartography.cue` with fixtures vetted in CI (an unverified layer
+  carries no number, a phantom domain owns no collection), parameter inventory template,
+  inference-boundary control in the AI/RAG governance baseline, doctrine principle 8
+  « ce qui se tait ment », and a silence guard over the sidecar scripts.
 - Support model, declared and checked (NRT-026 #679): `docs/support-model.yaml` and
   `scripts/support_model_guard.py` — tested platforms equal the CI matrix, Go versions equal
   `cli/go.mod`, every declared version is a tag or the current candidate, every tag is

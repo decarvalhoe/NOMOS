@@ -1,0 +1,51 @@
+# Parameter inventory — docs/48 §2.2.
+#
+# Every parameter that changes the behaviour of a consumer system (a RAG stack,
+# an extraction pipeline, a serving layer) is listed with its REAL value and a
+# status that says how it got that value. A default is not a choice: it is a
+# value nobody has challenged on this corpus. An obsolete constant is a value
+# the code still reads but that no longer describes the machine or the model.
+#
+# The template is consumer-facing (customer-integration). NOMOS's own
+# equivalents are the capability registry (expected vs computed status), the
+# support model (declared vs what CI tests) and the versioned thresholds of the
+# eval harness and the public bench.
+#
+# Claim boundary: an inventory proves that values are known and dated. It does
+# not prove they are optimal, and a `validated` status is only as good as the
+# measurement or incident record it points at.
+schema_version: nomos-parameter-inventory-template-v1
+record_type: parameter_inventory
+system_id: <consumer system id>
+as_of: <YYYY-MM-DD>
+claim_boundary: >-
+  Inventory of real parameter values and of how each value was obtained; no
+  optimality, performance or compliance claim.
+status_semantics:
+  validated: measured or adjusted after an experiment or an incident on THIS corpus; evidence required
+  default: library or literature default, never challenged on this corpus; a candidate for calibration
+  config: deployment-specific setting (URI, port, path); not a tuning parameter
+  obsolete: still read by the code but no longer describing the machine, the model or the corpus; to remove or update
+components:
+  - component_id: <component>
+    role: <one sentence>
+    module: <path or unit>
+    parameters:
+      - name: <PARAMETER>
+        value: <real value read from code or configuration, with file:line>
+        status: default            # validated | default | config | obsolete
+        evidence:
+          kind: none               # measurement | incident | decision | none
+          ref: <report, incident id, ADR or commit; required unless status is default or config>
+          date: <YYYY-MM-DD>
+        impact_if_changed: <what moves, in which direction, with the known incident if any>
+        owner: <role>
+    gotchas:
+      - <a failure mode already observed, and its symptom>
+silent_failure_review:
+  # docs/48 §3 — every component is asked the same question: if this stops
+  # working, does anything say so? "no" is a finding, not a note.
+  - component_id: <component>
+    disabled_silently_when: <missing dependency, broad except, unqueried index...>
+    detection: none              # none | log | metric | gate
+    finding_ref: <issue or CAPA id, required when detection is none>

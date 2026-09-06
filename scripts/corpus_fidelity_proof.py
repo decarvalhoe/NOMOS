@@ -123,7 +123,10 @@ def scan_markdown(corpus: Path) -> dict[str, Any]:
     }
 
 
-def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str]]:
+def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str], list[dict[str, str]]]:
+    """Returns (nodes, readable feed files, unreadable feed files). A feed file
+    that cannot be parsed is NEVER skipped silently (docs/43 principle 8): it
+    is returned as an unreadable entry and the proof records a blocking finding."""
     candidates = [
         artifacts_dir / "rbok-lawbook-feed.json",
         *sorted(artifacts_dir.glob("*-feed.json")),
@@ -132,6 +135,7 @@ def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str
     seen: set[Path] = set()
     nodes: list[dict[str, Any]] = []
     feed_files: list[str] = []
+    unreadable: list[dict[str, str]] = []
     for path in candidates:
         path = path.resolve()
         if path in seen or not path.exists():
@@ -139,7 +143,11 @@ def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str
         seen.add(path)
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, ValueError) as exc:
+            unreadable.append({"file": path.name, "error": f"{type(exc).__name__}: {exc}"})
+            continue
+        if not isinstance(data, dict):
+            unreadable.append({"file": path.name, "error": "feed document is not a JSON object"})
             continue
         feed_files.append(path.name)
         if isinstance(data.get("nodes"), list):
@@ -147,7 +155,7 @@ def load_feed_nodes(artifacts_dir: Path) -> tuple[list[dict[str, Any]], list[str
         for feed in data.get("feeds", []):
             if isinstance(feed, dict) and isinstance(feed.get("nodes"), list):
                 nodes.extend(n for n in feed["nodes"] if isinstance(n, dict))
-    return nodes, feed_files
+    return nodes, feed_files, unreadable
 
 
 def node_has_span(node: dict[str, Any]) -> bool:
@@ -320,8 +328,17 @@ def main() -> int:
         feed = {}
     else:
         scan = scan_markdown(corpus)
-        nodes, feed_files = load_feed_nodes(artifacts_dir)
+        nodes, feed_files, unreadable = load_feed_nodes(artifacts_dir)
         feed = feed_summary(nodes, feed_files)
+        feed["unreadable_feed_files"] = unreadable
+        for entry in unreadable:
+            add_finding(
+                findings,
+                "FEED_FILE_UNREADABLE",
+                "critical",
+                f"Feed file could not be read as a JSON object and is excluded from the proof: {entry['file']}",
+                detail=entry,
+            )
         findings.extend(evaluate(scan, feed, artifacts_dir))
 
     blocking = sum(1 for finding in findings if finding["blocking"])

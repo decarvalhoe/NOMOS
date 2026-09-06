@@ -1,0 +1,110 @@
+# Valid domain cartography (docs/48 §2.1). SYNTHETIC counts — the shape is the
+# point: every layer is verified on its own, a phantom domain owns nothing, a
+# transversal base is shared and never duplicated, a layer nobody verified
+# says so and carries no number.
+schema_version: nomos-domain-cartography-v1
+cartography_id: example-construction-ch
+as_of: "2026-09-06"
+claim_boundary: >-
+  Verified inventory of presence and coverage per layer; no retrieval-quality,
+  answer-quality or support claim. Synthetic example.
+domains:
+  - id: construction-ch
+    title: Droit de la construction (CH)
+    jurisdiction: CH
+    kind: own_corpus
+    subcorpora:
+      - id: federal-texts
+        title: Textes fédéraux (LAT, OAT, LPE...)
+        source_authority: Fedlex ELI
+        unit_kind: texts
+        unit_count: 12
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-09-06"
+            count: 12
+            coverage_ratio: 1.0
+            source_ref: documents.json
+          index:
+            layer: index
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 11000
+            source_ref: qdrant count(doc_title)
+          enrichment:
+            layer: enrichment
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 11000
+            coverage_ratio: 1.0
+            source_ref: named vector present
+          graph:
+            layer: graph
+            verified_by: not_verified
+            note: graph setup never run for this corpus
+      - id: cantonal-case-law
+        title: Jurisprudence cantonale (CDAP)
+        source_authority: cantonal court, public decisions
+        unit_kind: decisions
+        unit_count: 6800
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-09-06"
+            count: 6800
+          index:
+            layer: index
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 790000
+          enrichment:
+            layer: enrichment
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 0
+            coverage_ratio: 0.0
+            note: no enrichment pass yet — reported, not hidden
+          graph:
+            layer: graph
+            verified_by: not_verified
+  - id: voisinage-ch
+    title: Droit du voisinage (CH)
+    jurisdiction: CH
+    kind: phantom
+    hosted_in: [construction-ch, civil-ch]
+    note: real legal domain, no technical collection of its own
+  - id: civil-code-ch
+    title: Code civil (CH) — socle transversal
+    jurisdiction: CH
+    kind: transversal_base
+    shared_with: [construction-ch, affaires-ch, penal-ch]
+    never_duplicated: true
+    subcorpora:
+      - id: cc
+        title: Code civil suisse
+        source_authority: Fedlex ELI
+        unit_kind: texts
+        unit_count: 1
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-09-06"
+            count: 1
+          index:
+            layer: index
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 3200
+          enrichment:
+            layer: enrichment
+            verified_by: not_verified
+          graph:
+            layer: graph
+            verified_by: direct_query
+            verified_at: "2026-09-06"
+            count: 3200
+            source_ref: MATCH (a:Article) count

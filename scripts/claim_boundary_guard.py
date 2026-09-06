@@ -427,7 +427,10 @@ def find_duplicate_claims(root: Path) -> list[tuple[Path, int, str, str]]:
     for path in iter_scoped_files(root):
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
-        except OSError:
+        except OSError as exc:
+            # An in-scope file the guard cannot read is a finding, not a skip
+            # (docs/43 principle 8): an unscanned file would be a false green.
+            violations.append((path, 0, f"file could not be read and was not scanned ({exc})", ""))
             continue
         seen: list[tuple[int, set[str]]] = []
         for lineno, text in _claim_paragraphs(lines):
@@ -467,7 +470,10 @@ def scan(root: Path) -> list[tuple[Path, int, str, str]]:
     for path in iter_scoped_files(root):
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
-        except OSError:
+        except OSError as exc:
+            # An in-scope file the guard cannot read is a finding, not a skip
+            # (docs/43 principle 8): an unscanned file would be a false green.
+            violations.append((path, 0, f"file could not be read and was not scanned ({exc})", ""))
             continue
         section_deferred = False
         for lineno, line in enumerate(lines, start=1):

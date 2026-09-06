@@ -3895,141 +3895,20 @@
       ]
     },
     {
-      "id": "compatibility_matrix",
-      "title": "Matrice de compatibilité générée, annonce de version, dépréciations appliquées (NRT-024 #677) — `nomos version --json` annonce la version du coeur, chaque contrat du registre avec sa version, sa stabilité et si un lecteur/écrivain Go est déclaré, les formats émis (statut de contrat, candidat de release, prédicats d'attestation…) et le verdict de chaque adapter ; `cli/internal/contracts/compat.go` compare `adapters/*/adapter.nomos.yaml` au coeur courant (min/max nomos_core, version du contrat de manifeste, minimums/maximums de schémas, clé de schéma inconnue, manifeste illisible → `ADAPTER_INCOMPATIBLE`/`ADAPTER_MANIFEST_UNREADABLE`, fail-closed dans `nomos contracts status`) ; la section « Compatibility Matrix » de docs/16 est générée depuis le même registre (`--emit-docs`), `--check-docs` exit 4 et `git diff --exit-code` en CI sur dérive ; un contrat `deprecated` est AVERTI avec sa date de retrait et refusé au-delà (registre). Ce que ce N'EST PAS : une promesse de compatibilité au-delà des déclarations comparées ; `writes` n'est vrai que là où un écrivain Go est identifié au registre.",
-      "pillar": "P1",
-      "claim_level": "gate (le coeur annonce ce qu'il lit et écrit ; les adapters se déclarent et sont vérifiés ; matrice générée, jamais éditée)",
-      "promotion_issue": "",
-      "expected": "real",
-      "ci_gates": [
-        {
-          "path": ".github/workflows/ci.yml",
-          "contains": [
-            "Compatibility — version announcement, adapters in range, matrix generated (NRT-024 #677)",
-            "version --json --repo-root ..",
-            "nomos-version-announcement-v1",
-            "contracts status --repo-root .. --check-docs",
-            "git -C .. diff --exit-code docs/16-versioning-policy.md"
-          ]
-        }
-      ],
-      "engine": [
-        {
-          "path": "cli/internal/contracts/compat.go",
-          "contains": [
-            "func CheckAdapters(",
-            "func Announce(",
-            "func RenderMatrix(",
-            "func CheckDocs(",
-            "func DeprecationWarnings(",
-            "ADAPTER_INCOMPATIBLE",
-            "COMPATIBILITY_MATRIX_DRIFT",
-            "requires core >=",
-            "is not a schema the core knows"
-          ]
-        }
-      ],
-      "production_callers": [
-        {
-          "path": "cli/internal/app/version_cmd.go",
-          "contains": [
-            "contracts.Announce("
-          ]
-        },
-        {
-          "path": "cli/internal/app/contracts_cmd.go",
-          "contains": [
-            "contracts.Announce(",
-            "contracts.EmitDocs(",
-            "contracts.CheckDocs(",
-            "WARNING —"
-          ]
-        }
-      ],
-      "specs": [
-        {
-          "path": "docs/16-versioning-policy.md",
-          "contains": [
-            "<!-- compatibility-matrix:begin -->",
-            "GENERATED from specs/contract-registry.yaml and adapters/*/adapter.nomos.yaml"
-          ]
-        },
-        {
-          "path": "specs/contract-registry.yaml",
-          "contains": [
-            "adapters_must_include_core_version",
-            "writers_declared_where_identified"
-          ]
-        }
-      ],
-      "adversarial_tests": [
-        {
-          "path": "cli/internal/contracts/compat_test.go",
-          "contains": [
-            "TestAdapterOutsideRangeIsRed",
-            "TestAdapterManifestContractAndSchemasAreChecked",
-            "TestAdapterSchemaMaxBelowShippedIsRed",
-            "TestMatrixIsDeterministicAndDriftIsRed",
-            "TestDeprecatedContractIsWarnedAndAnnounced",
-            "TestEveryDeprecatedContractIsWarned",
-            "TestRealAdaptersAreCompatibleWithTheRealCore",
-            "TestSemverRejectsTrailingGarbageAndOrdersReleasesAbovePreReleases"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "customer_integration_guide",
-      "title": "Guide d'intégration client rejoué contre les fixtures (NRT-027 #680) — `docs/48-customer-integration-guide.md` consolide docs/31/32/34/35 du point de vue de l'intégrateur, nomme chaque contrat utilisé avec sa stabilité et sa version, lie la checklist régulée sans la dupliquer ; `scripts/integration_guide_replay.py` construit le CLI, exécute chaque bloc `<!-- replay -->` comme un script bash (`set -euo pipefail`) dans un répertoire de travail jetable, exige les artefacts annoncés (`expects:`), compare la table `<!-- contracts -->` au registre NRT-023 (stabilité et version) ; commande cassée, artefact absent, stabilité non confirmée, contrat inconnu, guide vidé de ses blocs → exit 1 nommé. 7 blocs rejoués en CI : build + annonce de version, init + validate, diagnose, strict gate, chaîne corpus Recursio jusqu'au strict gate, github plan, portfolio status. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : une validation par un client ni un test de bout en bout du runtime RAG.",
-      "pillar": "P1",
-      "claim_level": "gate (le guide s'exécute contre les fixtures ; aucun client ne l'a validé)",
+      "id": "domain_cartography_contract",
+      "title": "Domain cartography contract (docs/48 §2.1) — `specs/domain-cartography.cue` (nomos-domain-cartography-v1) records what a consumer domain ACTUALLY holds, sub-corpus by sub-corpus, on four layers verified independently (source, index, enrichment, graph): a layer that was not verified says so and may carry no number (fixture refused), a phantom domain owns no collection and names where its content lives (fixture refused), a transversal base is shared and never duplicated. Concept learned from a neighbouring legal RAG; contract only — it measures no retrieval or answer quality and makes no domain supported",
+      "pillar": "customer-integration",
+      "claim_level": "sidecar (CUE contract + fixtures vetted in CI; no engine reader yet)",
       "promotion_issue": "",
       "expected": "sidecar",
-      "ci_gates": [
-        {
-          "path": ".github/workflows/ci.yml",
-          "contains": [
-            "Customer integration guide — replayed against fixtures (NRT-027 #680)",
-            "integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md"
-          ]
-        }
-      ],
       "sidecar": [
-        {
-          "path": "scripts/integration_guide_replay.py",
-          "contains": [
-            "def parse_guide(",
-            "def check_contracts(",
-            "def run_blocks(",
-            "ran but did not produce:",
-            "is declared",
-            "in the guide but",
-            "a guide without commands proves nothing"
-          ]
-        }
+        {"path": "specs/domain-cartography.cue", "contains": ["#DomainCartography", "nomos-domain-cartography-v1", "\"not_verified\"", "never_duplicated"]},
+        {"path": "specs/examples/domain-cartography.valid.yaml", "contains": ["kind: phantom", "kind: transversal_base"]},
+        {"path": "specs/examples/domain-cartography.invalid-inferred-layer.yaml", "contains": ["verified_by: not_verified"]},
+        {"path": "specs/examples/domain-cartography.invalid-phantom-owns-corpus.yaml", "contains": ["kind: phantom"]}
       ],
-      "specs": [
-        {
-          "path": "docs/48-customer-integration-guide.md",
-          "contains": [
-            "<!-- contracts -->",
-            "<!-- replay expects: out/snapshot-verify.json",
-            "customer-integration-checklist.md"
-          ]
-        }
-      ],
-      "adversarial_tests": [
-        {
-          "path": "tests/test_integration_guide_replay.py",
-          "contains": [
-            "test_broken_command_is_red_and_named",
-            "test_missing_expected_artifact_is_red",
-            "test_stability_not_confirmed_by_registry_is_red",
-            "test_unknown_contract_is_red",
-            "test_guide_without_enough_blocks_or_contracts_is_red",
-            "test_the_real_guide_runs_against_the_fixtures"
-          ]
-        }
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["Domain cartography contract (docs/48)", "-d '#DomainCartography'"]}
       ]
     },
     {

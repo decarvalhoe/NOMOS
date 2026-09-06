@@ -12,7 +12,11 @@ Nomos must treat AI output as assistance, not authority. Product law requires so
 - low-confidence output becomes `needs_review`, not product law;
 - model/provider/version and prompt templates are recorded when relevant;
 - RAG answers preserve citations and refusal behavior;
-- human review status is retained for critical or ambiguous units.
+- human review status is retained for critical or ambiguous units;
+- the inference boundary is declared per data class (docs/48 §2.3): public
+  corpora may be screened through external model APIs for model selection,
+  customer, privileged or witness-related data never leave the deployment, and
+  the two flows are never mixed in one pipeline run.
 
 `scripts/regulated_rag_answer_evidence.py` emits
 `.regulated-evidence-pack/rag-answer-evidence.json` from
