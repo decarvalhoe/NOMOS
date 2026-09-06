@@ -17,8 +17,8 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [714, 717, 719]
-    devops: [716, 718]
+    product: [717, 719]
+    devops: [718]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -576,14 +576,19 @@ items:
       reliance: manual_review
   - issue: 714
     title: Compatibility fixtures for every stable contract (NRT-031)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
     depends_on: []
     inputs: [715]
+    regulated_tool:
+      intended_use: "read every stable contract's compatibility fixture through the engine's real loader and refuse a version the registry does not declare; a compatibility check on named fixtures, not a backward-compatibility promise"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
   - issue: 717
     title: Readiness verdict as a required candidate gate (NRT-034)
     state: open
@@ -606,13 +611,18 @@ items:
     inputs: [716, 718]
   - issue: 716
     title: Evidence ledger computed and effective (NRT-033)
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
     depends_on: []
+    regulated_tool:
+      intended_use: "compute the evidence-ledger index from the tree (observed statuses per category), keep it in force and fresh in CI, and refuse declarations the files contradict; an index, never a QMS effectiveness statement"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
   - issue: 718
     title: Beta support surface declared and checked (NRT-035)
     state: open

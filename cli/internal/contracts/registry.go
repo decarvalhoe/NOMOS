@@ -20,8 +20,16 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/RBOKproject/Nomos/cli/internal/atomization"
+	"github.com/RBOKproject/Nomos/cli/internal/bundle"
+	"github.com/RBOKproject/Nomos/cli/internal/canon"
+	"github.com/RBOKproject/Nomos/cli/internal/checks"
 	"github.com/RBOKproject/Nomos/cli/internal/compliance"
 	"github.com/RBOKproject/Nomos/cli/internal/corpus"
+	"github.com/RBOKproject/Nomos/cli/internal/domainpack"
+	"github.com/RBOKproject/Nomos/cli/internal/output"
+	"github.com/RBOKproject/Nomos/cli/internal/pointintime"
+	"github.com/RBOKproject/Nomos/cli/internal/validate"
 )
 
 const (
@@ -64,6 +72,9 @@ type CompatFixture struct {
 	Path          string `yaml:"path" json:"path"`
 	Reader        string `yaml:"reader" json:"reader"`
 	SchemaVersion string `yaml:"schema_version" json:"schema_version"`
+	// BaseDir resolves relative paths inside the fixture (source manifests);
+	// repo-relative, default: the fixture's directory.
+	BaseDir string `yaml:"base_dir,omitempty" json:"base_dir,omitempty"`
 }
 
 // ReaderFixture is a fixture a named reader (script or engine) accepts or
@@ -286,17 +297,26 @@ func Verify(root string, now time.Time) (Report, error) {
 	return rep, nil
 }
 
-// readCompat exercises the Go reader that owns the fixture's contract.
+// readCompat exercises the Go reader that owns the fixture's contract — the
+// engine's real loader, never an ad hoc decoder — and compares the version it
+// read with the registry's declared version where the document carries one.
 func readCompat(root string, cf CompatFixture) error {
 	full := filepath.Join(root, filepath.FromSlash(cf.Path))
+	unread := func(err error) error { return refuse(CodeCompatUnread, "%s via %s: %v", cf.Path, cf.Reader, err) }
+	version := func(got string) error {
+		if got != cf.SchemaVersion {
+			return refuse(CodeCompatUnread, "%s: read version %q, registry expects %q", cf.Path, got, cf.SchemaVersion)
+		}
+		return nil
+	}
 	switch cf.Reader {
 	case "external-snapshot":
 		env, records, err := corpus.LoadExternalSnapshot(full, "")
 		if err != nil {
-			return refuse(CodeCompatUnread, "%s via %s: %v", cf.Path, cf.Reader, err)
+			return unread(err)
 		}
-		if env.Format != cf.SchemaVersion {
-			return refuse(CodeCompatUnread, "%s: format %q, registry expects %q", cf.Path, env.Format, cf.SchemaVersion)
+		if err := version(env.Format); err != nil {
+			return err
 		}
 		if _, err := corpus.VerifyExternalSnapshot(env, records); err != nil {
 			return refuse(CodeCompatUnread, "%s: %v", cf.Path, err)
@@ -304,19 +324,15 @@ func readCompat(root string, cf CompatFixture) error {
 	case "nomos-praxis-evidence":
 		ex, err := compliance.LoadPraxisExchange(full)
 		if err != nil {
-			return refuse(CodeCompatUnread, "%s via %s: %v", cf.Path, cf.Reader, err)
+			return unread(err)
 		}
-		if ex.SchemaVersion != cf.SchemaVersion {
-			return refuse(CodeCompatUnread, "%s: schema_version %q, registry expects %q", cf.Path, ex.SchemaVersion, cf.SchemaVersion)
-		}
+		return version(ex.SchemaVersion)
 	case "nomos-praxis-mapping":
 		m, err := compliance.LoadPraxisMapping(full)
 		if err != nil {
-			return refuse(CodeCompatUnread, "%s via %s: %v", cf.Path, cf.Reader, err)
+			return unread(err)
 		}
-		if m.SchemaVersion != cf.SchemaVersion {
-			return refuse(CodeCompatUnread, "%s: schema_version %q, registry expects %q", cf.Path, m.SchemaVersion, cf.SchemaVersion)
-		}
+		return version(m.SchemaVersion)
 	case "portfolio-status":
 		raw, err := os.ReadFile(full)
 		if err != nil {
@@ -330,11 +346,106 @@ func readCompat(root string, cf CompatFixture) error {
 		if err := json.Unmarshal(raw, &st); err != nil || st.SchemaVersion != cf.SchemaVersion || st.StatusDigest == "" {
 			return refuse(CodeCompatUnread, "%s via %s: not a %s document (%v)", cf.Path, cf.Reader, cf.SchemaVersion, err)
 		}
+	case "canon-promotion":
+		b, err := canon.LoadPromotionBundle(full)
+		if err != nil {
+			return unread(err)
+		}
+		if len(b.Atoms) == 0 {
+			return unread(fmt.Errorf("bundle carries no atoms"))
+		}
+	case "canonical-knowledge-bundle":
+		b, _, err := bundle.LoadFile(full)
+		if err != nil {
+			return unread(err)
+		}
+		if err := version(b.SchemaVersion); err != nil {
+			return err
+		}
+		if err := b.Validate(); err != nil {
+			return unread(err)
+		}
+	case "canonical-matrix":
+		m, err := checks.ParseMatrixFile(full)
+		if err != nil {
+			return unread(err)
+		}
+		return version(m.SchemaVersion)
+	case "corpus-body-ledger":
+		l, err := corpus.LoadCorpusBodyLedger(full)
+		if err != nil {
+			return unread(err)
+		}
+		if err := corpus.VerifyCorpusBodyLedgerProofs(l); err != nil {
+			return unread(err)
+		}
+	case "corpus-integrity-report":
+		si, fq, err := corpus.LoadIntegrityReportFile(full)
+		if err != nil {
+			return unread(err)
+		}
+		if si == nil && fq == nil {
+			return unread(fmt.Errorf("neither a source-integrity nor a feed-quality report"))
+		}
+	case "domain-pack":
+		m, err := domainpack.LoadManifest(full)
+		if err != nil {
+			return unread(err)
+		}
+		return version(m.SchemaVersion)
+	case "facets":
+		if _, err := atomization.LoadFacetedDocument(full); err != nil {
+			return unread(err)
+		}
+	case "knowledge-lens":
+		if _, err := atomization.LoadKnowledgeLens(full); err != nil {
+			return unread(err)
+		}
+	case "nomos-project":
+		res := validate.ValidateFile(full)
+		if !res.Valid || res.ManifestType != "nomos-project" {
+			return unread(fmt.Errorf("validate: type %q valid=%v errors=%d", res.ManifestType, res.Valid, len(res.Errors)))
+		}
+	case "nomos-report":
+		r, err := output.LoadReport(full)
+		if err != nil {
+			return unread(err)
+		}
+		return version(r.SchemaVersion)
+	case "point-in-time":
+		doc, err := pointintime.LoadAtomSet(full)
+		if err != nil {
+			return unread(err)
+		}
+		return version(doc.SchemaVersion)
+	case "source-manifest":
+		base := filepath.Dir(full)
+		if cf.BaseDir != "" {
+			base = filepath.Join(root, filepath.FromSlash(cf.BaseDir))
+		}
+		res, err := checks.CheckSources(full, base)
+		if err != nil {
+			return unread(err)
+		}
+		if !res.Valid {
+			return unread(fmt.Errorf("source manifest does not pass the sources check"))
+		}
+	case "verdicts":
+		doc, err := output.LoadVerdictCases(full)
+		if err != nil {
+			return unread(err)
+		}
+		return version(doc.SchemaVersion)
 	default:
-		return refuse(CodeCompatUnknownReader, "%s: reader %q is not a known Go reader (external-snapshot, nomos-praxis-evidence, nomos-praxis-mapping, portfolio-status)", cf.Path, cf.Reader)
+		return refuse(CodeCompatUnknownReader, "%s: reader %q is not a known Go reader (%s)", cf.Path, cf.Reader, strings.Join(KnownReaders, ", "))
 	}
 	return nil
 }
+
+// KnownReaders names every engine loader readCompat can exercise.
+var KnownReaders = []string{"canon-promotion", "canonical-knowledge-bundle", "canonical-matrix", "corpus-body-ledger", "corpus-integrity-report",
+	"domain-pack", "external-snapshot", "facets", "knowledge-lens", "nomos-praxis-evidence", "nomos-praxis-mapping", "nomos-project",
+	"nomos-report", "point-in-time", "portfolio-status", "source-manifest", "verdicts"}
 
 // AcceptBump records a deliberate contract change: the registry entry takes the
 // new version and the file's current hash. For pinned/default kinds the file

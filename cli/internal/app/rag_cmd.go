@@ -116,14 +116,9 @@ func (in ragInputs) validate(name string, stderr io.Writer) int {
 // format, the sha256 of its bytes as content hash, its generated_at.
 func (in ragInputs) load(prefix string, stderr io.Writer) ([]ragexport.Input, *corpus.Feed, int) {
 	if strings.TrimSpace(*in.bundle) != "" {
-		raw, err := os.ReadFile(*in.bundle)
+		b, raw, err := bundle.LoadFile(*in.bundle)
 		if err != nil {
-			fmt.Fprintf(stderr, "%s: read bundle: %v\n", prefix, err)
-			return nil, nil, 1
-		}
-		var b bundle.Bundle
-		if err := json.Unmarshal(raw, &b); err != nil {
-			fmt.Fprintf(stderr, "%s: decode bundle %s: %v\n", prefix, *in.bundle, err)
+			fmt.Fprintf(stderr, "%s: %v\n", prefix, err)
 			return nil, nil, 1
 		}
 		if len(b.Feeds) == 0 {

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -17,6 +15,8 @@ import (
 
 	"github.com/RBOKproject/Nomos/cli/internal/atomization"
 	"github.com/RBOKproject/Nomos/cli/internal/bundle"
+	"github.com/RBOKproject/Nomos/cli/internal/docload"
+	"github.com/RBOKproject/Nomos/cli/internal/domainpack"
 )
 
 // packCommand is `nomos pack`: the domain-pack gate (VRC-21 #564, doc 45 §5
@@ -41,37 +41,9 @@ func packCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 
 // --- manifest mirror (strict: an out-of-contract field fails the decode) ----
 
-type packManifest struct {
-	SchemaVersion string `yaml:"schema_version"`
-	PackID        string `yaml:"pack_id"`
-	DomainProfile string `yaml:"domain_profile"`
-	ProfileRef    string `yaml:"profile_ref"`
-	ClaimBoundary string `yaml:"claim_boundary"`
-	Vocabularies  struct {
-		File string   `yaml:"file"`
-		Axes []string `yaml:"axes"`
-	} `yaml:"vocabularies"`
-	Ontology struct {
-		File string `yaml:"file"`
-	} `yaml:"ontology"`
-	SourceRegister struct {
-		File     string `yaml:"file"`
-		Contract string `yaml:"contract"`
-	} `yaml:"source_register"`
-	LensPresets []struct {
-		ID   string `yaml:"id"`
-		File string `yaml:"file"`
-	} `yaml:"lens_presets"`
-	GoldenCorpus struct {
-		Root      string   `yaml:"root"`
-		Documents []string `yaml:"documents"`
-	} `yaml:"golden_corpus"`
-	Scorecard []struct {
-		Area   string `yaml:"area"`
-		Status string `yaml:"status"`
-		Note   string `yaml:"note"`
-	} `yaml:"scorecard"`
-}
+// packManifest is the domain-pack manifest; the type and its strict loader live in
+// the engine (cli/internal/domainpack) so the contract registry reads the same way.
+type packManifest = domainpack.Manifest
 
 type packVocabularyFile struct {
 	RecordType     string            `yaml:"record_type"`
@@ -154,18 +126,9 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 
 	// Rung 1 — manifest: strict parse (unknown fields = mechanics smuggled
 	// around the contract → fail), exact schema, well-formed identifiers.
-	raw, err := os.ReadFile(*manifestPath)
+	m, err := domainpack.LoadManifest(*manifestPath)
 	if err != nil {
-		return packFail(stderr, "manifest", "read %s: %v", *manifestPath, err)
-	}
-	var m packManifest
-	dec := yaml.NewDecoder(bytes.NewReader(raw))
-	dec.KnownFields(true)
-	if err := dec.Decode(&m); err != nil {
-		return packFail(stderr, "manifest", "strict parse %s: %v", *manifestPath, err)
-	}
-	if m.SchemaVersion != "nomos-domain-pack-v1" {
-		return packFail(stderr, "manifest", "schema_version %q is not nomos-domain-pack-v1", m.SchemaVersion)
+		return packFail(stderr, "manifest", "%v", err)
 	}
 	if !packIDRe.MatchString(m.PackID) || !packIDRe.MatchString(m.DomainProfile) {
 		return packFail(stderr, "manifest", "pack_id %q / domain_profile %q must match %s", m.PackID, m.DomainProfile, packIDRe)
@@ -442,53 +405,16 @@ func packValidateCommand(args []string, stdout io.Writer, stderr io.Writer) int 
 // loadPackLensFile bridges a YAML lens preset into the engine's KnowledgeLens
 // (the same yaml→json normalization the atomize command applies).
 func loadPackLensFile(path string) (atomization.KnowledgeLens, error) {
-	raw, err := os.ReadFile(path)
+	lens, err := atomization.LoadKnowledgeLens(path)
 	if err != nil {
-		return atomization.KnowledgeLens{}, fmt.Errorf("read: %w", err)
+		return atomization.KnowledgeLens{}, err
 	}
-	var generic any
-	if err := yaml.Unmarshal(raw, &generic); err != nil {
-		return atomization.KnowledgeLens{}, fmt.Errorf("parse: %w", err)
-	}
-	bridged, err := json.Marshal(normalizeYAML(generic))
-	if err != nil {
-		return atomization.KnowledgeLens{}, fmt.Errorf("normalize: %w", err)
-	}
-	var lens atomization.KnowledgeLens
-	if err := json.Unmarshal(bridged, &lens); err != nil {
-		return atomization.KnowledgeLens{}, fmt.Errorf("decode: %w", err)
-	}
-	if lens.ID == "" {
-		return atomization.KnowledgeLens{}, fmt.Errorf("lens has no id")
-	}
-	return lens, nil
+	return *lens, nil
 }
 
 // normalizeYAML converts yaml.v3's map[any]any trees into json-encodable
 // map[string]any trees.
-func normalizeYAML(v any) any {
-	switch t := v.(type) {
-	case map[any]any:
-		out := make(map[string]any, len(t))
-		for k, val := range t {
-			out[fmt.Sprintf("%v", k)] = normalizeYAML(val)
-		}
-		return out
-	case map[string]any:
-		out := make(map[string]any, len(t))
-		for k, val := range t {
-			out[k] = normalizeYAML(val)
-		}
-		return out
-	case []any:
-		for i := range t {
-			t[i] = normalizeYAML(t[i])
-		}
-		return t
-	default:
-		return v
-	}
-}
+func normalizeYAML(v any) any { return docload.Normalize(v) }
 
 // lensOpenAxisTerms collects every open-axis term a lens references across
 // its include/exclude predicates, keyed by axis.

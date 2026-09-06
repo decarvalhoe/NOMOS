@@ -265,3 +265,87 @@ func TestCompatPortfolioStatusWithoutDigestIsRed(t *testing.T) {
 	err := readCompat("/", CompatFixture{Path: filepath.ToSlash(filepath.Join(dir, "st.json")), Reader: "portfolio-status", SchemaVersion: "nomos-portfolio-status-v1"})
 	wantCode(t, err, CodeCompatUnread, "not a nomos-portfolio-status-v1 document")
 }
+
+// TestEveryCompatFixtureReads reports every compatibility fixture that its
+// named engine reader refuses — all of them at once, not fail-first — so a
+// registry change shows the whole picture.
+func TestEveryCompatFixtureReads(t *testing.T) {
+	root := repoRoot(t)
+	reg, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var problems []string
+	stable := 0
+	for _, c := range reg.Contracts {
+		if c.Stability == "stable" {
+			stable++
+			if len(c.CompatFixtures) == 0 {
+				problems = append(problems, c.ID+": stable without a compatibility fixture")
+			}
+		}
+		for _, cf := range c.CompatFixtures {
+			if err := readCompat(root, cf); err != nil {
+				problems = append(problems, c.ID+": "+err.Error())
+			}
+		}
+	}
+	if len(problems) > 0 {
+		t.Fatalf("%d compatibility problem(s) over %d stable contract(s):\n  %s", len(problems), stable, strings.Join(problems, "\n  "))
+	}
+}
+
+func copyTo(t *testing.T, src string, mutate func(string) string) string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(repoRoot(t), src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(t.TempDir(), filepath.Base(src))
+	_ = os.WriteFile(p, []byte(mutate(string(raw))), 0o644)
+	return filepath.ToSlash(p)
+}
+
+func TestCompatBodyLedgerWithAlteredRowIsRed(t *testing.T) {
+	p := copyTo(t, "specs/examples/corpus-body-ledger.valid.yaml", func(s string) string {
+		return strings.Replace(s, "admitted_count: 2", "admitted_count: 2\n", 1) + "" // no-op keeps YAML valid
+	})
+	// alter a row after proof generation: bump the first size_bytes
+	raw, _ := os.ReadFile(p)
+	s := string(raw)
+	i := strings.Index(s, "size_bytes: ")
+	s = s[:i] + "size_bytes: 1" + s[i+len("size_bytes: "):]
+	_ = os.WriteFile(p, []byte(s), 0o644)
+	err := readCompat("/", CompatFixture{Path: p, Reader: "corpus-body-ledger", SchemaVersion: "0.1.0"})
+	wantCode(t, err, CodeCompatUnread, "altered after proof generation")
+}
+
+func TestCompatProjectThatFailsValidationIsRed(t *testing.T) {
+	p := copyTo(t, "specs/examples/nomos-project.minimal.yaml", func(s string) string {
+		return strings.Replace(s, "risk_level:", "risk_level: banana #", 1)
+	})
+	err := readCompat("/", CompatFixture{Path: p, Reader: "nomos-project", SchemaVersion: "0.1.0"})
+	wantCode(t, err, CodeCompatUnread, "valid=false")
+}
+
+func TestCompatBundleThatFailsEngineValidationIsRed(t *testing.T) {
+	p := copyTo(t, "specs/examples/canonical-knowledge-bundle.valid.json", func(s string) string {
+		i := strings.Index(s, `"feeds"`)
+		j := strings.Index(s[i:], "[")
+		// empty the feeds array: find its matching close by scanning depth
+		depth, k := 0, i+j
+		for ; k < len(s); k++ {
+			if s[k] == '[' {
+				depth++
+			} else if s[k] == ']' {
+				depth--
+				if depth == 0 {
+					break
+				}
+			}
+		}
+		return s[:i+j] + "[]" + s[k+1:]
+	})
+	err := readCompat("/", CompatFixture{Path: p, Reader: "canonical-knowledge-bundle", SchemaVersion: "ckm-bundle-v1"})
+	wantCode(t, err, CodeCompatUnread, "at least one feed")
+}
