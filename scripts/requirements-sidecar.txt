@@ -1,0 +1,8 @@
+# Python dependencies of the NOMOS sidecars and tests (NRT-025 #678).
+# CI installs from this file and pip-audit audits it; keep it the single list.
+pyyaml>=6.0
+pyshacl>=0.30
+rdflib>=7.0
+jsonschema>=4.19
+pytest>=8.0
+yamllint>=1.35

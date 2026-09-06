@@ -4,11 +4,14 @@ Nomos is currently in alpha. Security reports are handled as high-priority proje
 
 ## Supported Versions
 
+<!-- supported-versions:begin -->
+<!-- GENERATED from CHANGELOG.md by scripts/security_process_gate.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Version | Security support |
 |---|---|
-| `v0.2.0-ALPHA` | Best-effort alpha triage |
-| `v0.1.0-ALPHA` | Superseded; not supported |
-| `< v0.1.0-ALPHA` | Not supported |
+| `v0.2.0-ALPHA` (2026-09-06) | Best-effort alpha triage |
+| `v0.1.0-ALPHA` (2026-05-03) | Superseded; not supported |
+| earlier | Not supported |
+<!-- supported-versions:end -->
 
 ## Reporting A Vulnerability
 

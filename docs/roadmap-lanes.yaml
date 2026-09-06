@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: [676, 677, 680, 681]
-    devops: [678, 679]
+    devops: [679]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -431,17 +431,17 @@ items:
       reliance: manual_verification_required
   - issue: 678
     title: Security process, executable (NRT-025)
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
     regulated_tool:
       intended_use: scan dependencies in CI with an expiring allowlist and a declared, validated security process file; never a security certification
       impact: evidence
-      validation_state: planned
+      validation_state: technically_verified
       reliance: supporting_use_until_validated
   - issue: 679
     title: Support model, declared and checked (NRT-026)

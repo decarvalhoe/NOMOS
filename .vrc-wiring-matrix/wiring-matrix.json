@@ -3058,6 +3058,46 @@
         "sidecar": [],
         "stub_markers": []
       }
+    },
+    {
+      "id": "security_process_gates",
+      "title": "Processus de sécurité exécutable (NRT-025 #678) — `docs/security/security-process.yaml` déclare intake, cibles de délai par sévérité, règle de divulgation coordonnée, scanners et rôle propriétaire ; `scripts/security_process_gate.py --check` rougit sur champ manquant ou scanner non gated ; govulncheck (cli/, tools/sigstore-verifier/) et pip-audit (scripts/requirements-sidecar.txt) tournent à chaque run CI et leurs sorties JSON passent par le gate : toute finding non couverte par une entrée d'allowlist complète (id, écosystème, paquet, justification, owner, accepted_on, expires_on) et non expirée → exit 1 nommé ; entrée expirée ou sans date → exit 1 ; section « Supported Versions » de SECURITY.md générée depuis CHANGELOG.md, dérive → exit 4. Dependabot propose, ne merge jamais. Sidecar Python : aucun moteur Go. Ce que ce N'EST PAS : une certification de sécurité, un pentest, ni une mesure des délais déclarés.",
+      "pillar": "P1",
+      "claim_level": "gate (scans et allowlist expirante en CI ; cibles déclarées, non mesurées ; aucun claim de sécurité)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [
+          {
+            "path": "tests/test_security_process_gate.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/security_process_gate.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3096,11 +3136,11 @@
     }
   ],
   "summary": {
-    "capabilities": 57,
+    "capabilities": 58,
     "computed": {
       "real": 44,
       "partial": 0,
-      "sidecar": 11,
+      "sidecar": 12,
       "stub": 0,
       "absent": 2
     },

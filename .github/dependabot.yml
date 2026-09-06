@@ -1,0 +1,18 @@
+# NRT-025 (#678) — dependency update proposals. Every proposal still goes through
+# CI, the vulnerability gate and review; Dependabot never merges.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /cli
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+  - package-ecosystem: gomod
+    directory: /tools/sigstore-verifier
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+  - package-ecosystem: pip
+    directory: /scripts
+    schedule: {interval: weekly}

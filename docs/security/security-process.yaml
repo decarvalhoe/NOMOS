@@ -1,0 +1,37 @@
+# NRT-025 (#678) — the security process as data, validated by
+# scripts/security_process_gate.py. Targets below are DECLARED targets; nothing
+# here measures that they were met, and nothing here is a certification.
+schema_version: nomos-security-process-v1
+owner_role: security_owner            # assignee per docs/regulated/operations/records/2026-06-11-role-assignment-record.yaml
+intake:
+  channel: "GitHub security advisory (private) or the maintainers' private contact; never a public issue before triage"
+  acknowledgement_target_days: 3
+  triage_target_days: 7
+  fix_or_mitigation_target_days_by_severity:
+    critical: 14
+    high: 30
+    medium: 90
+    low: next_minor
+disclosure:
+  rule: coordinated
+  embargo_max_days: 90
+  credit: on_request
+scanners:
+  - id: govulncheck
+    ecosystem: go
+    scope: [cli, tools/sigstore-verifier]
+    command: "govulncheck -json ./..."
+    gate: true
+  - id: pip-audit
+    ecosystem: python
+    scope: [scripts/requirements-sidecar.txt]
+    command: "pip-audit -r scripts/requirements-sidecar.txt -f json"
+    gate: true
+dependency_updates: .github/dependabot.yml
+allowlist: docs/security/vulnerability-allowlist.yaml
+supported_versions_source: CHANGELOG.md   # the generated section in SECURITY.md is derived from it (until the support model #679 replaces it)
+sop: docs/regulated/security-privacy/vulnerability-and-incident-management-sop.md
+claim_boundary: >-
+  Declared process and CI gates: dependencies are scanned on every run and
+  every accepted finding expires. This is not a security certification, a
+  penetration test, or a statement that the software is secure.

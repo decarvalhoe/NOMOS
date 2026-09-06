@@ -326,3 +326,36 @@ jobs:
           python scripts/vrc_wiring_matrix.py --root .
           git diff --exit-code .vrc-wiring-matrix
       - run: python -m unittest discover -s tests -v
+
+  security:
+    name: "Security gates — govulncheck, pip-audit, allowlist with expiry (NRT-025 #678)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/sigstore-verifier/go.mod
+          cache-dependency-path: |
+            cli/go.sum
+            tools/sigstore-verifier/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet pyyaml pip-audit
+      - name: "govulncheck — cli/ and tools/sigstore-verifier/ (findings are data for the gate, not a silent pass)"
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          (cd cli && govulncheck -json ./... > ../govulncheck-cli.json)
+          (cd tools/sigstore-verifier && govulncheck -json ./... > ../../govulncheck-tools.json)
+      - name: "pip-audit — scripts/requirements-sidecar.txt"
+        run: pip-audit -r scripts/requirements-sidecar.txt -f json -o pip-audit.json || true
+      - name: "Security process gate — process valid, SECURITY.md generated, no unaccepted or expired finding"
+        run: python scripts/security_process_gate.py --root . --check --govulncheck govulncheck-cli.json --govulncheck govulncheck-tools.json --pip-audit pip-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scans
+          path: |
+            govulncheck-cli.json
+            govulncheck-tools.json
+            pip-audit.json
