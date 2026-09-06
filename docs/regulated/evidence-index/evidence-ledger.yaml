@@ -1,5 +1,5 @@
 schema_version: 0.1.0
-generated_at: '2026-09-06'
+generated_at: '2026-09-07'
 status: effective
 claim_boundary: Evidence ledger baseline only. Missing evidence is not assumed.
 evidence_categories:
@@ -52,7 +52,8 @@ evidence_categories:
     generated_path: false
     files: 8
     statuses:
-      draft: 6
+      draft: 5
+      recorded: 1
     unmarked: 2
 - id: EV-VAL-001
   category: validation_evidence

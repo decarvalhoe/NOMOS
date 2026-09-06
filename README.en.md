@@ -32,8 +32,7 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 | Dimension | Current position |
 |---|---|
 | Product | Authority-to-product engine for governed software, AI, and RAG. |
-| Release | `v0.2.0-ALPHA` (2026-09-06, pre-release; decision recorded in `docs/regulated/lifecycle/release-records/`). |
-| Candidate | `v1.0.0-BETA.1` prepared (2026-09-06, readiness verdict `ready`, approval pending — #720; nothing published). |
+| Release | `v1.0.0-BETA.1` (2026-09-07, beta pre-release; decision recorded in `docs/regulated/lifecycle/release-records/`). `v0.2.0-ALPHA` (2026-09-06) is superseded. |
 | Current proof | Alpha POC on a real private corpus processed read-only. |
 | Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation; then, in the Go engine: cite-or-abstain gate (faithfulness recomputed from spans, never declared), RAG evaluation harness in CI, interoperable RAG export with provable staleness, reproducible public bench of the gate. |
 | Capability registry | 40 capabilities declared in `scripts/vrc_wiring_matrix_registry.json`; their status is COMPUTED from the tree on every CI run (32 real, 7 sidecar, 1 absent, 0 mismatch) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
@@ -394,17 +393,17 @@ Support is declared in `docs/support-model.yaml` and checked in CI by `scripts/s
 
 | Version | Released | State | Security support | End of support |
 |---|---|---|---|---|
-| `v1.0.0-BETA.1` | 2026-09-06 | candidate | none until tagged — candidate prepared on a `ready` readiness verdict, approval pending (#720) | not applicable until tagged |
-| `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) | until the next tagged release |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 | 2026-09-07 |
 | `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
 
 - Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
-- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what pre-release support covers and what requires project-specific work).
 - Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
 - Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
 - Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
-- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); the alpha proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
-- End of support: An alpha version is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: A pre-release (alpha or beta) is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
 - Supported contracts (15 stable, per specs/contract-registry.yaml): `canon-promotion`, `canonical-knowledge-bundle`, `canonical-matrix`, `corpus-body-ledger`, `corpus-integrity-report`, `domain-pack`, `external-snapshot`, `facets`, `knowledge-lens`, `nomos-praxis-evidence-schema`, `nomos-project`, `nomos-report.schema`, `point-in-time`, `source-manifest`, `verdicts`. Contracts registered as experimental in specs/contract-registry.yaml may change without a MAJOR notice (docs/16); they are listed as such where a guide relies on them and are not part of the supported surface.
 - Covered commands: `nomos version`, `nomos contracts status`, `nomos init`, `nomos validate`, `nomos diagnose`, `nomos strict`, `nomos corpus scan`, `nomos corpus feed`, `nomos corpus body-ledger`, `nomos corpus attest`, `nomos corpus snapshot`, `nomos github plan`, `nomos portfolio status`, `nomos portfolio release-readiness`, `nomos bundle`, `nomos rag export`, `nomos rag manifest`, `nomos rag delta`, `nomos rag verify`, `nomos answer gate`, `nomos answer eval`.
 - Guides replayed in CI: docs/48-customer-integration-guide.md, docs/50-cross-consumption-proof-kit.md.
