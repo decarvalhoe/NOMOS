@@ -1,0 +1,93 @@
+# NRT-026 (#679) — the support model, declared as data and CHECKED in CI.
+#
+# scripts/support_model_guard.py refuses a declaration the repository does not
+# honour: tested_platforms.runners must equal the CI matrix, toolchain.go must
+# equal cli/go.mod, CUE and Python must equal what ci.yml sets up, every
+# declared version must be a git tag or the current CLI candidate, every tag
+# must be declared, released_on must equal the CHANGELOG heading, and the
+# Support sections generated into the files of `rendered_in` must carry no
+# hand edit (`--write` regenerates them). scripts/security_process_gate.py
+# renders SECURITY.md's Supported Versions table from this same model.
+#
+# Claim boundary: support is declared and consistent with what CI tests. It is
+# not a contractual guarantee, an SLA, or a statement about any deployment.
+schema_version: nomos-support-model-v1
+claim_boundary: >-
+  Support is declared here and checked against what CI actually tests. It is
+  not a contractual guarantee, an SLA, or a statement that any deployment is
+  supported; response targets are declared, not measured.
+
+# Must equal the CLI `Version` constant (cli/internal/app/app.go), with a `v`.
+current_candidate: v0.2.0-ALPHA
+
+supported_versions:
+  - version: v0.2.0-ALPHA
+    released_on: 2026-09-06
+    state: supported
+    security_support: best-effort alpha triage (current release)
+    end_of_support: until the next tagged release
+  - version: v0.1.0-ALPHA
+    released_on: 2026-05-03
+    state: superseded
+    security_support: none — superseded by v0.2.0-ALPHA
+    end_of_support: 2026-09-06
+
+end_of_support_rule: >-
+  An alpha version is supported until the next tagged release; only the newest
+  tag receives security triage. No version outside this list is supported, and
+  no version becomes supported by being listed here without a tag.
+
+channels:
+  - kind: github_issues
+    ref: https://github.com/decarvalhoe/NOMOS/issues
+    scope: bugs, questions, integration
+  - kind: github_private_advisory
+    ref: https://github.com/decarvalhoe/NOMOS/security/advisories/new
+    scope: vulnerabilities (docs/security/security-process.yaml)
+  - kind: support_guide
+    ref: SUPPORT.md
+    scope: what alpha support covers and what requires project-specific work
+
+response_targets:
+  # Declared targets. No measurement record backs them; the day one exists,
+  # `status` becomes `measured` and the guard will require its reference.
+  status: declared_not_measured
+  targets:
+    - channel: github_issues
+      first_response_within_days: 10
+    - channel: github_private_advisory
+      defined_in: docs/security/security-process.yaml
+
+tested_platforms:
+  source: ".github/workflows/ci.yml — jobs.corpus-cross-platform.strategy.matrix.os"
+  runners: [ubuntu-latest, macos-latest, windows-latest]
+
+toolchain:
+  go:
+    source: cli/go.mod
+    language_version: "1.24.1"
+    toolchain_version: go1.26.6
+  cue:
+    source: ".github/workflows/ci.yml — cue-lang/setup-cue"
+    version: v0.16.1
+  python:
+    source: ".github/workflows/ci.yml — actions/setup-python"
+    versions: ["3.12"]
+
+unsupported_surfaces:
+  - surface: hosted service
+    reason: Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.
+  - surface: control plane
+    reason: archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.
+  - surface: GitHub App
+    reason: readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.
+  - surface: production deployment
+    reason: customer-owned (docs/regulated/customer-integration); the alpha proves the method, not a deployment.
+  - surface: regulated validation package approval
+    reason: regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).
+
+rendered_in:
+  - README.md
+  - README.en.md
+  - README.de.md
+  - SECURITY.md

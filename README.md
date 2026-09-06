@@ -380,6 +380,7 @@ python scripts/roadmap_lane_guard.py --root .             # aucune attente humai
 python scripts/vrc_wiring_matrix.py --root .             # matrice de câblage : registre et arbre en lockstep
 python scripts/cite_or_abstain_bench.py --root .         # bench public : le résultat publié se rejoue
 python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit   # processus sécurité : scans réels, allowlist à expiration
+python scripts/support_model_guard.py --root . --check     # modèle de support : matrice CI, go.mod, tags, sections générées
 bash scripts/ckm-non-regression.sh             # harnais CKM-00 : CLI, CUE, Python, e2e, RBOK, gate cite-or-abstain
 powershell -File scripts/e2e.ps1
 ```
@@ -407,6 +408,27 @@ Nomos n'embarque pas de signature keyless Sigstore : l'attestation est signée l
 | `v0.1.0-ALPHA` (2026-05-03) | Livrée : chaîne canonical corpus, strict fidelity gate, POC RBOK, baseline documentaire regulated-readiness. |
 | `v0.2.0-ALPHA` (2026-09-06) | Livrée : clôture vision/réalité (`docs/45`), vagues v0.2–v0.6 et v0.9 de `docs/29` (fidélité portable, références, bundle candidat, contrat Praxis, gouvernance de portefeuille), Sigstore hors production. |
 | `v1.0` | Ouverte (#676–#681) : registre de stabilité des contrats, matrice de compatibilité, processus sécurité, modèle de support, guide d'intégration rejoué, verdict de readiness calculé. La release elle-même reste un acte régulé (#561). |
+
+## Support
+
+Le support est déclaré dans `docs/support-model.yaml` et vérifié en CI par `scripts/support_model_guard.py` (plateformes = matrice CI, Go = `cli/go.mod`, versions = tags ou candidat courant, dates = CHANGELOG) ; la section ci-dessous est générée depuis ce modèle.
+
+<!-- support-model:begin -->
+<!-- GENERATED from docs/support-model.yaml by scripts/support_model_guard.py --write; do not edit by hand, CI fails on drift -->
+
+| Version | Released | State | Security support | End of support |
+|---|---|---|---|---|
+| `v0.2.0-ALPHA` | 2026-09-06 | supported | best-effort alpha triage (current release) | until the next tagged release |
+| `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
+
+- Current candidate: `v0.2.0-ALPHA` (the CLI `Version` constant).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what alpha support covers and what requires project-specific work).
+- Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
+- Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
+- Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); the alpha proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: An alpha version is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+<!-- support-model:end -->
 
 ## Gouvernance
 

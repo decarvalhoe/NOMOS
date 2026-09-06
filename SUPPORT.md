@@ -2,6 +2,8 @@
 
 Nomos v0.2.0-ALPHA is available for pilot and qualification work; v0.1.0-ALPHA is superseded.
 
+Support is declared in `docs/support-model.yaml` and checked in CI (NRT-026, #679): tested platforms equal the CI matrix, the Go versions equal `cli/go.mod`, every listed version is a tag or the current candidate, and the generated Support sections of the READMEs and `SECURITY.md` carry no hand edit. Declared, not contractually guaranteed.
+
 ## What We Can Support In Alpha
 
 - understanding the canonical-first method;

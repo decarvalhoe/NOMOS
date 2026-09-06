@@ -6,6 +6,11 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
+- Support model, declared and checked (NRT-026 #679): `docs/support-model.yaml` and
+  `scripts/support_model_guard.py` — tested platforms equal the CI matrix, Go versions equal
+  `cli/go.mod`, every declared version is a tag or the current candidate, every tag is
+  declared, dates match the changelog; Support sections generated into the READMEs and
+  `SECURITY.md`, whose Supported Versions table now renders from the same model.
 - Security process, executable (NRT-025 #678): `docs/security/security-process.yaml`
   and an expiring `vulnerability-allowlist.yaml` read by `scripts/security_process_gate.py`;
   `govulncheck` (called vulnerabilities, standard library included) and `pip-audit` on the
