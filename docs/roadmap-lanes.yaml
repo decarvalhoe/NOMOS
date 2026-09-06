@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [717, 719]
+    product: [719]
     devops: []
     regulated: []
 
@@ -591,14 +591,19 @@ items:
       reliance: supporting_use_until_validated
   - issue: 717
     title: Readiness verdict as a required candidate gate (NRT-034)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
-    claim_state: locked
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
     depends_on: [714, 715]
     inputs: [716]
+    regulated_tool:
+      intended_use: "require the computed v1.0 readiness verdict as a gate of the beta release candidate so that no beta candidate is assembled on a not_ready tree; a gate on a candidate, never a release or an approval"
+      impact: decision
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
   - issue: 719
     title: Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036)
     state: open

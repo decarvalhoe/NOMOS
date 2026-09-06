@@ -30,6 +30,8 @@ GATES: list[tuple[str, list[str], Path]] = [
     ("training-competence-gate", [PY, "scripts/training_competence_gate.py", "--root", "."], ROOT),
     ("go-vet", ["go", "vet", "./..."], ROOT / "cli"),
     ("go-test", ["go", "test", "./..."], ROOT / "cli"),
+    # NRT-034 (#717): the v1.0 readiness verdict, ready or the beta candidate is refused.
+    ("release-readiness", [PY, "scripts/release_readiness_gate.py", "--root", "."], ROOT),
 ]
 
 

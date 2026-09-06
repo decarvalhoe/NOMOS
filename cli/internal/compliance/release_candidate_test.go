@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -377,4 +378,40 @@ func TestCandidateZipTamperIsRefused(t *testing.T) {
 		os.WriteFile(filepath.Join(repo, "nomos-report.json"), []byte(`{"ok":"later"}`), 0o644)
 		wantCode(t, VerifyCandidateManifest(m, repo), CodeCandidateTampered)
 	})
+}
+
+// NRT-034 (#717): a spec that REQUIRES the release-readiness gate is refused
+// while the verdict is not ready (gate failed or absent), and assembles when
+// the gate passed on the same commit.
+func TestBetaCandidateRequiresTheReadinessGate(t *testing.T) {
+	withGate := func(status string, code int) func(map[string]string) {
+		return func(files map[string]string) {
+			files["spec.yaml"] = strings.Replace(goodSpec, "required: [g1, g2]", "required: [g1, g2, release-readiness]", 1)
+			files["gates.json"] = `{"schema_version":"nomos-release-candidate-gates-v1","commit":"abc123","measured_at":"2026-09-05T00:00:00Z","gates":[` +
+				`{"id":"g1","command":"x","exit_code":0,"status":"pass"},{"id":"g2","command":"y","exit_code":0,"status":"pass"},` +
+				`{"id":"release-readiness","command":"python3 scripts/release_readiness_gate.py --root .","exit_code":` + fmt.Sprint(code) + `,"status":"` + status + `"}]}`
+		}
+	}
+	repo, spec, gates := writeCandidateFixture(t, withGate("fail", 1))
+	_, err := assemble(t, repo, spec, gates)
+	wantMessage(t, err, CodeCandidateGateFailed, `required gate "release-readiness": status "fail", exit 1`)
+
+	repo, spec, gates = writeCandidateFixture(t, func(files map[string]string) {
+		files["spec.yaml"] = strings.Replace(goodSpec, "required: [g1, g2]", "required: [g1, g2, release-readiness]", 1)
+	})
+	_, err = assemble(t, repo, spec, gates)
+	wantMessage(t, err, CodeCandidateGateMissing, `required gate "release-readiness" has no evidence`)
+
+	repo, spec, gates = writeCandidateFixture(t, withGate("pass", 0))
+	m, err := assemble(t, repo, spec, gates)
+	if err != nil {
+		t.Fatalf("beta-like candidate must assemble when the readiness gate passed: %v", err)
+	}
+	found := false
+	for _, g := range m.Gates {
+		found = found || g.ID == "release-readiness"
+	}
+	if !found || m.ApprovalStatus != "pending" {
+		t.Fatalf("manifest must carry the gate and stay pending: %+v", m.Gates)
+	}
 }
