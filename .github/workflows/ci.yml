@@ -274,7 +274,7 @@ jobs:
         run: |
           cue vet specs/domain-cartography.cue specs/examples/domain-cartography.valid.yaml -d '#DomainCartography'
           # NRT-029 (#702): the cartography the cross-consumption kit (docs/50) declares for itself.
-          cue vet specs/domain-cartography.cue docs/regulated/domain-packs/built-environment/cross-consumption/cartography.yaml -d '#DomainCartography'
+          cue vet specs/domain-cartography.cue docs/cross-consumption-kit/cartography.yaml -d '#DomainCartography'
           for bad in specs/examples/domain-cartography.invalid-*.yaml; do
             if cue vet specs/domain-cartography.cue "$bad" -d '#DomainCartography'; then
               echo "::error::$bad passed the domain cartography contract"; exit 1

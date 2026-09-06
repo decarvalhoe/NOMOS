@@ -18,7 +18,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "parameter_inventory_check.py"
-KIT_INVENTORY = ROOT / "docs/regulated/domain-packs/built-environment/cross-consumption/parameter-inventory.yaml"
+KIT_INVENTORY = ROOT / "docs/cross-consumption-kit/parameter-inventory.yaml"
 TEMPLATE = ROOT / "templates/regulated/parameter-inventory.yaml"
 
 

@@ -115,10 +115,10 @@ components:
       - the verdict field gates.scorer_configured is false on every run without the NLI sidecar — reported, never hidden
   - component_id: answer-eval
     role: replays the golden question set and compares the aggregate metrics to the versioned floors
-    module: cli/internal/answer (nomos answer eval) with cross-consumption/thresholds.yaml
+    module: cli/internal/answer (nomos answer eval) with docs/cross-consumption-kit/thresholds.yaml
     parameters:
       - name: min_mean_citation_recall_precision_faithfulness
-        value: "0.95 / 0.95 / 0.95 (cross-consumption/thresholds.yaml)"
+        value: "0.95 / 0.95 / 0.95 (docs/cross-consumption-kit/thresholds.yaml)"
         status: default
         evidence:
           kind: none

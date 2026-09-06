@@ -3449,27 +3449,27 @@
             "missing": []
           },
           {
-            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/answers.yaml",
+            "path": "docs/cross-consumption-kit/answers.yaml",
             "ok": true,
             "missing": []
           },
           {
-            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/eval-corpus.yaml",
+            "path": "docs/cross-consumption-kit/eval-corpus.yaml",
             "ok": true,
             "missing": []
           },
           {
-            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/thresholds.yaml",
+            "path": "docs/cross-consumption-kit/thresholds.yaml",
             "ok": true,
             "missing": []
           },
           {
-            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/cartography.yaml",
+            "path": "docs/cross-consumption-kit/cartography.yaml",
             "ok": true,
             "missing": []
           },
           {
-            "path": "docs/regulated/domain-packs/built-environment/cross-consumption/parameter-inventory.yaml",
+            "path": "docs/cross-consumption-kit/parameter-inventory.yaml",
             "ok": true,
             "missing": []
           },

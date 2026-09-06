@@ -225,7 +225,7 @@ grep -q 'body_hash' out/import-verdict-tampered.json
 
 ### 3.3 Les réponses citent ce que le bundle contient, ou s'abstiennent
 
-Les enregistrements de réponse du kit (`cross-consumption/answers.yaml`)
+Les enregistrements de réponse du kit (`docs/cross-consumption-kit/answers.yaml`)
 passent `nomos answer gate` : quatre réponses ancrées mot pour mot dans un
 chunk du bundle sont citées, la question hors corpus est un refus explicite
 — le gate s'abstient, il n'invente pas. Puis chaque citation (`chunk_id`,
@@ -236,7 +236,7 @@ corpus rend les fixtures rouges au lieu de les laisser mentir.
 <!-- replay expects: out/answer-gate.json, out/citations-verdict.json -->
 
 ```bash
-KIT="$REPO/docs/regulated/domain-packs/built-environment/cross-consumption"
+KIT="$REPO/docs/cross-consumption-kit"
 "$NOMOS" answer gate --fixtures "$KIT/answers.yaml" > out/answer-gate.json
 python3 -c 'import json; v=json.load(open("out/answer-gate.json")); assert v["status"]=="pass" and v["cited"]==4 and v["abstained"]==1, (v["status"], v["cited"], v["abstained"])'
 python3 "$REPO/scripts/cross_consumption_import_check.py" --manifest out/manifest.json --index out/consumer-index.jsonl \
@@ -248,7 +248,7 @@ python3 "$REPO/scripts/cross_consumption_import_check.py" --manifest out/manifes
 <!-- replay expects: out/answer-eval.json -->
 
 ```bash
-KIT="$REPO/docs/regulated/domain-packs/built-environment/cross-consumption"
+KIT="$REPO/docs/cross-consumption-kit"
 "$NOMOS" answer eval --corpus "$KIT/eval-corpus.yaml" --thresholds "$KIT/thresholds.yaml" > out/answer-eval.json
 python3 -c 'import json; v=json.load(open("out/answer-eval.json")); assert v["status"]=="pass" and v["failed_answers"]==0, v'
 ```
@@ -257,11 +257,11 @@ python3 -c 'import json; v=json.load(open("out/answer-eval.json")); assert v["st
 
 ### 4.1 Inventaire de paramètres et cartographie de domaine
 
-L'inventaire (`cross-consumption/parameter-inventory.yaml`, template
+L'inventaire (`docs/cross-consumption-kit/parameter-inventory.yaml`, template
 `docs/49` §2.2) nomme chaque paramètre du chemin exercé avec sa valeur réelle
 et son statut : les seuils du gate et du harnais sont `default`, et un
 `validated` sans preuve datée est refusé. La cartographie
-(`cross-consumption/cartography.yaml`, contrat `docs/49` §2.1, `cue vet` en
+(`docs/cross-consumption-kit/cartography.yaml`, contrat `docs/49` §2.1, `cue vet` en
 CI) déclare ce que le kit tient, couche par couche ; ses comptes sont
 **recomptés contre le manifeste** à chaque rejeu, et la couche graphe dit
 qu'elle n'est pas vérifiée au lieu de porter un chiffre.
@@ -269,7 +269,7 @@ qu'elle n'est pas vérifiée au lieu de porter un chiffre.
 <!-- replay expects: out/inventory-verdict.json, out/cartography-verdict.json -->
 
 ```bash
-KIT="$REPO/docs/regulated/domain-packs/built-environment/cross-consumption"
+KIT="$REPO/docs/cross-consumption-kit"
 python3 "$REPO/scripts/parameter_inventory_check.py" --inventory "$KIT/parameter-inventory.yaml" \
   --report out/inventory-verdict.json > /dev/null
 KIT="$KIT" python3 - <<'PY'

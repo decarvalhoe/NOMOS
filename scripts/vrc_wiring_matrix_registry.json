@@ -4124,16 +4124,16 @@
         {"path": "docs/50-cross-consumption-proof-kit.md", "contains": ["out/bundle.json -->", "<!-- replay expects: out/import-verdict-tampered.json -->", "<!-- replay expects: out/answer-gate.json, out/citations-verdict.json -->", "<!-- replay expects: out/inventory-verdict.json, out/cartography-verdict.json -->", "<!-- contracts -->"]},
         {"path": "scripts/cross_consumption_import_check.py", "contains": ["def check_index(", "def check_citations(", "def digest_of(", "the index is not the export"]},
         {"path": "scripts/parameter_inventory_check.py", "contains": ["def check_inventory(", "a validated parameter needs evidence", "detection is none and no finding is referenced"]},
-        {"path": "docs/regulated/domain-packs/built-environment/cross-consumption/answers.yaml", "contains": ["KIT-ABSTAIN", "acceptable_refusal"]},
-        {"path": "docs/regulated/domain-packs/built-environment/cross-consumption/eval-corpus.yaml", "contains": ["expected_chunk_ids"]},
-        {"path": "docs/regulated/domain-packs/built-environment/cross-consumption/thresholds.yaml", "contains": ["min_mean_context_recall"]},
-        {"path": "docs/regulated/domain-packs/built-environment/cross-consumption/cartography.yaml", "contains": ["federal-texts-fedlex-eli", "verified_by: not_verified", "kind: phantom"]},
-        {"path": "docs/regulated/domain-packs/built-environment/cross-consumption/parameter-inventory.yaml", "contains": ["status: default", "silent_failure_review"]},
+        {"path": "docs/cross-consumption-kit/answers.yaml", "contains": ["KIT-ABSTAIN", "acceptable_refusal"]},
+        {"path": "docs/cross-consumption-kit/eval-corpus.yaml", "contains": ["expected_chunk_ids"]},
+        {"path": "docs/cross-consumption-kit/thresholds.yaml", "contains": ["min_mean_context_recall"]},
+        {"path": "docs/cross-consumption-kit/cartography.yaml", "contains": ["federal-texts-fedlex-eli", "verified_by: not_verified", "kind: phantom"]},
+        {"path": "docs/cross-consumption-kit/parameter-inventory.yaml", "contains": ["status: default", "silent_failure_review"]},
         {"path": "tests/test_cross_consumption_import_check.py", "contains": ["test_altered_embedding_text_moves_the_digest", "test_unreadable_line_is_named_not_skipped", "test_citation_of_an_unknown_chunk_is_red", "test_the_kit_guide_replays_against_the_fixtures"]},
         {"path": "tests/test_parameter_inventory_check.py", "contains": ["test_validated_without_dated_evidence_is_red", "test_the_template_itself_is_refused_as_placeholders"]}
       ],
       "ci_gates": [
-        {"path": ".github/workflows/ci.yml", "contains": ["Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)", "docs/50-cross-consumption-proof-kit.md", "cross-consumption/cartography.yaml -d '#DomainCartography'"]}
+        {"path": ".github/workflows/ci.yml", "contains": ["Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)", "docs/50-cross-consumption-proof-kit.md", "cross-consumption-kit/cartography.yaml -d '#DomainCartography'"]}
       ]
     }
   ]
