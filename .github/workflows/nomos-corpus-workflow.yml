@@ -358,7 +358,7 @@ jobs:
 
       - name: Upload no-impact trace artifact
         if: steps.inspect.outputs.impacted == 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-trace
           path: |
@@ -373,7 +373,7 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Upload nomos-diff artifact
         if: steps.inspect.outputs.impacted == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-diff
           path: ${{ steps.plan.outputs.plan_path }}
@@ -417,7 +417,7 @@ jobs:
 
       - name: Upload diagnostics artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-diagnostics
           path: ${{ runner.temp }}/nomos-diagnostics
@@ -570,7 +570,7 @@ jobs:
           python3 "$NOMOS_CHECKOUT_PATH/scripts/nomos_trace_manifest.py" "${args[@]}"
 
       - name: Upload trace manifest artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-trace
           path: |
@@ -706,7 +706,7 @@ jobs:
             > "$RUNNER_TEMP/nomos-publish-plan.json"
 
       - name: Upload publish plan artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-publish-plan
           path: |
