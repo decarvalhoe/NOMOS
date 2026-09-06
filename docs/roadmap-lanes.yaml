@@ -17,7 +17,7 @@ selection_policy:
     autonomous_only: true
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
-    product: [715, 714, 717, 719]
+    product: [714, 717, 719]
     devops: [716, 718]
     regulated: []
 
@@ -222,6 +222,11 @@ items:
       response_digest binds the substrate's raw output and is evidence for a
       reader who retained it, not a self-check. None of the three is a
       signature, and the record says so in its own claim boundary.
+    regulated_tool:
+      intended_use: bind a rule-execution request to its persisted result by hash so a result cannot be replayed or altered apart from the request that produced it; the rule itself is computed by an external substrate, never by NOMOS
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
   - issue: 610
     title: Define the Recursio web-source contract
     state: closed
@@ -237,6 +242,11 @@ items:
       (Go), validated fail-closed by manifest, feed and `nomos check`; undecided
       is recordable, never admitted. Robots/licence decisions of a real site
       remain outside the contract.
+    regulated_tool:
+      intended_use: "define the machine contract a web crawler (Recursio) must satisfy to hand NOMOS a captured page: URL, capture time, content and normalised hashes, robots and licence decisions; a definition of shape, not a judgement on any site"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 611
     title: Verify immutable external corpus snapshots
     state: closed
@@ -251,6 +261,11 @@ items:
       Envelope + JSONL, Merkle root recomputed on verify (body-ledger machinery);
       immutable or refused; counts checked; import loses nothing and writes no
       manifest from a refused snapshot; strict gate section external-snapshot.
+    regulated_tool:
+      intended_use: "verify that an external corpus snapshot is immutable and complete before import: record count, per-record hashes and a recomputed root; NOMOS never reads a mutable view"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
   - issue: 612
     title: Recursio to Nomos offline E2E fixture
     state: closed
@@ -260,6 +275,11 @@ items:
     evidence_state: present
     claim_state: bounded
     depends_on: [610, 611]
+    regulated_tool:
+      intended_use: replay offline the Recursio-to-NOMOS chain on a synthetic fixture site so that a changed byte is detected end to end; a fixture harness, not a capture of any real site
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 643
     title: Static SKOS authoring and distribution
     state: closed
@@ -542,13 +562,18 @@ items:
   # wave order; same-lane dependencies are the only hard ones.
   - issue: 715
     title: Regulated-tool blocks for every closed item (NRT-032)
-    state: open
+    state: closed
     lane: product
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: locked
     depends_on: []
+    regulated_tool:
+      intended_use: "declare, for every closed roadmap item, what the delivered tool is for, its impact class, its validation state and the bounded reliance it allows; a declaration read by the readiness verdict, not a validation"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 714
     title: Compatibility fixtures for every stable contract (NRT-031)
     state: open
