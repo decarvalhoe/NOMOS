@@ -72,7 +72,30 @@ scanners:
     fail_on: any
   dependabot:
     config: .github/dependabot.yml
-    ecosystems: [gomod, github-actions, pip]
+    ecosystems: [gomod, github-actions, pip, npm]
+
+# #696 — every dependency manifest tracked by git (package.json, pyproject.toml,
+# go.mod, Cargo.toml, Gemfile, pom.xml, requirements*.txt) is in a scanner scope
+# above, in a Dependabot directory, or listed here by name with a reason. The
+# gate enumerates the manifests itself: an unlisted one is red, an exclusion
+# whose file is gone is red. Learned on 2026-09-06: the three scans were clean
+# while GitHub held 8 advisories on the node fixture nobody watched.
+manifests:
+  not_scanned:
+    - path: adapters/python/fixtures/django-app/pyproject.toml
+      reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+    - path: adapters/python/fixtures/fastapi-service/pyproject.toml
+      reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+    - path: adapters/python/fixtures/flask-api/pyproject.toml
+      reason: adapter detection fixture with loose lower bounds; never installed or executed by NOMOS
+    - path: adapters/jvm/fixtures/spring-rest-service/pom.xml
+      reason: adapter detection fixture; never built or executed by NOMOS
+    - path: cli/internal/detect/testdata/corpus/fullstack/go.mod
+      reason: stack-detection test corpus; not a module that is built or run
+    - path: cli/internal/detect/testdata/corpus/fullstack/web/package.json
+      reason: stack-detection test corpus; never installed
+    - path: tests/fixtures/security/vulnerable-go-module/go.mod
+      reason: deliberately vulnerable fixture that proves the govulncheck check turns red; never built into anything shipped
 
 allowlist:
   path: docs/security/vulnerability-allowlist.yaml

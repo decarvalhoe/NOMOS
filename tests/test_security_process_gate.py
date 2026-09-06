@@ -11,7 +11,11 @@ refusals (doctrine §2.3):
   vulnerable symbol turns govulncheck red (GO-2021-0113), an unexpired
   allowlist entry lets it through, an expired one does not;
 * a known-vulnerable Python pin turns pip-audit red (PYSEC-2021-142);
-* a requested scanner that is missing is a failed check, never a skip.
+* a requested scanner that is missing is a failed check, never a skip;
+* (#696) every dependency manifest tracked by git is scanned, watched by
+  Dependabot, or excluded by name with a reason: a forgotten manifest is red,
+  a stale or unjustified exclusion is red, a manifest inside a hidden cache is
+  not ours, and the real tree names how each of its manifests is covered.
 """
 
 from __future__ import annotations
@@ -65,6 +69,9 @@ def copy_security_tree(target: Path) -> None:
     model_ref = process["supported_versions"].get("support_model_ref")
     if model_ref and (ROOT / model_ref).is_file():
         files.append(model_ref)
+    # #696: the excluded manifests travel with the tree, otherwise every
+    # exclusion would be stale (and red) in the copy.
+    files += [item["path"] for item in (process.get("manifests") or {}).get("not_scanned") or []]
     for rel in sorted(set(files)):
         dest = target / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -278,6 +285,68 @@ class PipAuditTests(unittest.TestCase):
         code, verdict, stderr = run_gate(ROOT, "--scan", "pip-audit")
         self.assertEqual(code, 0, stderr)
         self.assertEqual(checks_by_name(verdict)["pip-audit"]["status"], "pass")
+
+
+class ManifestCoverageTests(unittest.TestCase):
+    """#696 — a manifest nobody scans is a manifest nobody sees: every tracked
+    dependency manifest is scanned, watched by Dependabot, or excluded by name."""
+
+    def test_real_tree_manifests_are_all_covered(self) -> None:
+        code, verdict, stderr = run_gate(ROOT)
+        self.assertEqual(code, 0, stderr)
+        result = checks_by_name(verdict)["manifests"]
+        self.assertEqual(result["status"], "pass", result["problems"])
+        self.assertEqual(result["detail"]["source"], "git ls-files")
+        self.assertEqual(result["detail"]["uncovered"], [])
+        covered = {m["path"]: m["covered_by"] for m in result["detail"]["manifests"]}
+        self.assertEqual(covered.get("adapters/node-typescript/fixtures/nextjs-api-ui/package.json"), "dependabot", "the fixture GitHub held 8 advisories on is watched, not forgotten")
+        self.assertEqual(covered.get("cli/go.mod"), "scanner")
+        self.assertEqual(covered.get("scripts/requirements-sidecar.txt"), "scanner")
+        self.assertEqual(covered.get("tests/fixtures/security/vulnerable-go-module/go.mod"), "not_scanned")
+
+    def test_unscanned_manifest_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_security_tree(root)
+            forgotten = root / "tools" / "forgotten" / "package.json"
+            forgotten.parent.mkdir(parents=True)
+            forgotten.write_text("{}\n", encoding="utf-8")
+            code, verdict, stderr = run_gate(root)
+            self.assertEqual(code, 1, stderr)
+            result = checks_by_name(verdict)["manifests"]
+            self.assertEqual(result["detail"]["source"], "walk")
+            self.assertEqual(result["detail"]["uncovered"], ["tools/forgotten/package.json"])
+            self.assertTrue(any(p.startswith("tools/forgotten/package.json: neither scanned") for p in result["problems"]), result["problems"])
+
+    def test_manifest_inside_a_hidden_cache_is_not_ours(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_security_tree(root)
+            cached = root / ".tools" / "cache" / "gomod" / "x@v1" / "go.mod"
+            cached.parent.mkdir(parents=True)
+            cached.write_text("module x\n", encoding="utf-8")
+            code, verdict, stderr = run_gate(root)
+            self.assertEqual(code, 0, stderr)
+            paths = [m["path"] for m in checks_by_name(verdict)["manifests"]["detail"]["manifests"]]
+            self.assertNotIn(".tools/cache/gomod/x@v1/go.mod", paths)
+
+    def test_stale_or_unjustified_exclusion_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_security_tree(root)
+            process_path = root / "docs/security/security-process.yaml"
+            process = yaml.safe_load(process_path.read_text(encoding="utf-8"))
+            entries = process["manifests"]["not_scanned"]
+            orphaned = entries[0]["path"]
+            entries[0]["path"] = "adapters/gone/pyproject.toml"
+            entries[1]["reason"] = "n/a"
+            process_path.write_text(yaml.safe_dump(process, sort_keys=False, allow_unicode=True), encoding="utf-8")
+            code, verdict, stderr = run_gate(root)
+            self.assertEqual(code, 1, stderr)
+            problems = checks_by_name(verdict)["manifests"]["problems"]
+            self.assertTrue(any("adapters/gone/pyproject.toml does not exist" in p for p in problems), problems)
+            self.assertTrue(any("reason must say why" in p for p in problems), problems)
+            self.assertTrue(any(p.startswith(orphaned + ": neither scanned") for p in problems), "the manifest whose exclusion went stale is uncovered, and named")
 
 
 if __name__ == "__main__":

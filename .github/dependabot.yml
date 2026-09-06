@@ -40,3 +40,18 @@ updates:
     labels: [lane:devops, dispatch:autonomous, area:cicd]
     commit-message:
       prefix: "build(deps)"
+  # #696 — the node adapter detection fixture is never installed or executed by
+  # NOMOS, but GitHub held 8 open advisories on it (2026-09-06) while the three
+  # scans above were clean: a manifest nobody watches is a manifest nobody sees.
+  # Version updates keep it patched; the manifest-coverage check of the gate
+  # (docs/security/security-process.yaml → manifests) is what makes this entry
+  # required rather than optional.
+  - package-ecosystem: npm
+    directory: /adapters/node-typescript/fixtures/nextjs-api-ui
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels: [lane:devops, dispatch:autonomous, area:cicd]
+    commit-message:
+      prefix: "build(deps)"

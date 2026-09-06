@@ -6,6 +6,14 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
+- Dependency manifest coverage in the security gate (#696): `scripts/security_process_gate.py`
+  enumerates every dependency manifest tracked by git (`package.json`, `pyproject.toml`,
+  `go.mod`, `pom.xml`, `requirements*.txt`, …) and requires each one to be in a scanner
+  scope, in a Dependabot directory, or excluded by name with a reason under
+  `manifests.not_scanned` of `docs/security/security-process.yaml`; a forgotten manifest and
+  a stale or unjustified exclusion are red, and the verdict names how each manifest is
+  covered. Dependabot now watches the node adapter fixture that GitHub held 8 open advisories
+  on while every scan was clean; the fixture's `next` pin moves to `15.5.21`.
 - Concepts learned from a neighbouring sovereign legal RAG (docs/49): domain cartography
   contract `specs/domain-cartography.cue` with fixtures vetted in CI (an unverified layer
   carries no number, a phantom domain owns no collection), parameter inventory template,

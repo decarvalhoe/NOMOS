@@ -243,9 +243,11 @@ NOMOS produit un bundle canonique des textes fédéraux suisses de la
 construction, le voisin l'ingère en conservant identités et empreintes,
 répond à un jeu de questions annoté, et les réponses passent `nomos answer
 gate` ; la mesure est publiée datée, avec la cartographie §2.1 du domaine et
-l'inventaire §2.2 des paramètres du chemin exercé. Dispatch : `external`, une
-issue à ouvrir par le propriétaire quand la collaboration est décidée ; rien
-n'est créé ni promis avant.
+l'inventaire §2.2 des paramètres du chemin exercé. Dispatch : `external`
+(#701, NRT-030) pour la preuve conjointe, qui attend le partenaire ; la moitié
+NOMOS — bundle, cartographie, inventaire, jeu de questions, kit consommateur —
+est `autonomous` (#702, NRT-029) et se livre sans lui. Rien n'est promis au
+partenaire avant les préalables de §4.1.
 
 ### 4.6 Registre des risques
 
@@ -266,9 +268,13 @@ la doctrine, le guard de silence et le correctif de la preuve de fidélité, ce
 doc. Aucune capacité `real` n'est revendiquée : un contrat sans lecteur est un
 `sidecar`.
 
-Attend le propriétaire : la décision d'ouvrir la collaboration, l'issue
-`external` de §4.5, et l'éventuelle entrée du domaine juridique dans la matrice
-de pilotes, aujourd'hui `blocked` faute de périmètre client.
+Décidé le 2026-09-06 (décision déléguée à l'agent par le propriétaire) : la
+collaboration est ouverte en deux issues — #702 (NRT-029, `autonomous`) livre
+la moitié NOMOS de la preuve croisée de §4.5 sans dépendre du partenaire ;
+#701 (NRT-030, `external`) porte la preuve conjointe, ses préalables de §4.1 et
+ses lignes rouges de §4.4, et ne bloque que sa propre claim. L'entrée du domaine
+juridique dans la matrice de pilotes reste `blocked` tant que #701 n'a pas
+livré une mesure datée : un périmètre client ne se déclare pas avant la preuve.
 
 Ce que NOMOS retient pour lui, au-delà du partenaire : la question de §2.2 —
 « si ceci cesse d'agir, qu'est-ce qui le dit ? » — vaut pour chaque mécanique
