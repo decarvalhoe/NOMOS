@@ -85,6 +85,19 @@ jobs:
           grep -q '"schema_version": "nomos-contract-status-v1"' "$RUNNER_TEMP/contracts-status.json"
           test "$(jq '.compat_reads' "$RUNNER_TEMP/contracts-status.json")" -ge 4
           test "$(jq '.by_stability.stable' "$RUNNER_TEMP/contracts-status.json")" -ge 10
+      # NRT-024 (#677): the core ANNOUNCES what it reads and writes; adapters are checked
+      # against it (out of range → contracts status is red); the compatibility matrix of
+      # docs/16 is generated from the same registry — a hand edit is drift.
+      - name: "Compatibility — version announcement, adapters in range, matrix generated (NRT-024 #677)"
+        working-directory: cli
+        run: |
+          go run . version --json --repo-root .. > "$RUNNER_TEMP/version.json"
+          test "$(jq -r '.schema_version' "$RUNNER_TEMP/version.json")" = "nomos-version-announcement-v1"
+          test "$(jq -r '.core_version' "$RUNNER_TEMP/version.json")" = "$(go run . version)"
+          test "$(jq '[.adapters[] | select(.verdict != "compatible")] | length' "$RUNNER_TEMP/version.json")" = "0"
+          test "$(jq '.adapters | length' "$RUNNER_TEMP/version.json")" -ge 3
+          go run . contracts status --repo-root .. --check-docs --out "$RUNNER_TEMP/contracts-status.json"
+          git -C .. diff --exit-code docs/16-versioning-policy.md
       - name: Upload portfolio status
         uses: actions/upload-artifact@v4
         with:

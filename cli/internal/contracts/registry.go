@@ -93,6 +93,7 @@ type Contract struct {
 	} `yaml:"fixtures" json:"fixtures"`
 	DefinitionOverrides map[string]string `yaml:"definition_overrides,omitempty" json:"definition_overrides,omitempty"`
 	Readers             []string          `yaml:"readers" json:"readers"`
+	Writers             []string          `yaml:"writers,omitempty" json:"writers,omitempty"`
 	CompatFixtures      []CompatFixture   `yaml:"compat_fixtures" json:"compat_fixtures"`
 	DeprecatedSince     string            `yaml:"deprecated_since,omitempty" json:"deprecated_since,omitempty"`
 	RemovalNotBefore    string            `yaml:"removal_not_before,omitempty" json:"removal_not_before,omitempty"`
@@ -149,6 +150,7 @@ type Report struct {
 	ByStability   map[string]int `json:"by_stability"`
 	CompatReads   int            `json:"compat_reads"`
 	Rows          []Row          `json:"contracts"`
+	Warnings      []string       `json:"warnings"`
 	ClaimBoundary string         `json:"claim_boundary"`
 }
 
@@ -239,6 +241,7 @@ func Verify(root string, now time.Time) (Report, error) {
 		for f := range c.DefinitionOverrides {
 			all = append(all, f)
 		}
+		all = append(all, c.Writers...)
 		for _, f := range all {
 			if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(f))); err != nil {
 				return rep, refuse(CodeFixtureMissing, "%s: fixture %s: %v", c.ID, f, err)
@@ -277,6 +280,10 @@ func Verify(root string, now time.Time) (Report, error) {
 	}
 	sort.Slice(rep.Rows, func(i, j int) bool { return rep.Rows[i].ID < rep.Rows[j].ID })
 	rep.Total = len(rep.Rows)
+	rep.Warnings = DeprecationWarnings(r)
+	if rep.Warnings == nil {
+		rep.Warnings = []string{}
+	}
 	return rep, nil
 }
 
