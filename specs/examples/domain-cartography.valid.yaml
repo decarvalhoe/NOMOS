@@ -1,4 +1,4 @@
-# Valid domain cartography (docs/48 §2.1). SYNTHETIC counts — the shape is the
+# Valid domain cartography (docs/49 §2.1). SYNTHETIC counts — the shape is the
 # point: every layer is verified on its own, a phantom domain owns nothing, a
 # transversal base is shared and never duplicated, a layer nobody verified
 # says so and carries no number.

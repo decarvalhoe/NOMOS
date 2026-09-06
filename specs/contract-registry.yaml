@@ -195,7 +195,7 @@ contracts:
   stability: experimental
   version_kind: pinned
   schema_version: nomos-domain-cartography-v1
-  sha256: sha256:45349c8f1f6a749100711be7cb92c560fcdb53b07f5ff77cc2e77c48482aaefb
+  sha256: sha256:8e1d8149ce106cf334d9d4cfa2ba16241960889f2b4bed5b6b4ee737a3169718
   definition: '#DomainCartography'
   fixtures:
     valid:

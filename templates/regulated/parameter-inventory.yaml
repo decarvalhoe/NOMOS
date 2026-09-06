@@ -1,4 +1,4 @@
-# Parameter inventory — docs/48 §2.2.
+# Parameter inventory — docs/49 §2.2.
 #
 # Every parameter that changes the behaviour of a consumer system (a RAG stack,
 # an extraction pipeline, a serving layer) is listed with its REAL value and a
@@ -43,7 +43,7 @@ components:
     gotchas:
       - <a failure mode already observed, and its symptom>
 silent_failure_review:
-  # docs/48 §3 — every component is asked the same question: if this stops
+  # docs/49 §3 — every component is asked the same question: if this stops
   # working, does anything say so? "no" is a finding, not a note.
   - component_id: <component>
     disabled_silently_when: <missing dependency, broad except, unqueried index...>

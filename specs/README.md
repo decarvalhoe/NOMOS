@@ -54,7 +54,7 @@ for deterministic pre-generation filtering over facet applicability metadata.
 customer-confidential user-promoted canon and its certificate evidence.
 
 `domain-cartography.cue` defines the optional consumer-facing domain cartography
-contract (docs/48 §2.1): what a domain actually holds, sub-corpus by sub-corpus,
+contract (docs/49 §2.1): what a domain actually holds, sub-corpus by sub-corpus,
 on four layers verified independently; a layer nobody verified says so and may
 carry no number, a phantom domain owns no collection, a transversal base is
 shared and never duplicated. It measures no retrieval or answer quality.

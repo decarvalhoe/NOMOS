@@ -1,4 +1,4 @@
-"""Silence guard — docs/43 principle 8, docs/48 §3: « ce qui se tait ment ».
+"""Silence guard — docs/43 principle 8, docs/49 §3: « ce qui se tait ment ».
 
 An exception handler in `scripts/` that catches an error and leaves no trace —
 no raise, no message, no recorded problem, no error value returned — is the

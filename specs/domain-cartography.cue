@@ -2,11 +2,11 @@ package nomos
 
 import "strings"
 
-// Domain cartography — docs/48 §2.1.
+// Domain cartography — docs/49 §2.1.
 //
 // What a consumer domain ACTUALLY holds, sub-corpus by sub-corpus, layer by
 // layer, each layer verified independently. The rule this contract enforces is
-// the one learned from a neighbouring legal RAG (docs/48): a layer is never
+// the one learned from a neighbouring legal RAG (docs/49): a layer is never
 // inferred from another. A text can be indexed and not enriched, enriched and
 // not linked to the graph, present in the source manifest and absent from the
 // index. A layer that was not verified says so and carries no number.

@@ -268,9 +268,9 @@ jobs:
               echo "::error::$bad passed the portfolio status contract"; exit 1
             fi
           done
-      # docs/48 §2.1: the domain cartography contract — a layer nobody verified
+      # docs/49 §2.1: the domain cartography contract — a layer nobody verified
       # may carry no number, a phantom domain owns no collection.
-      - name: "Domain cartography contract (docs/48)"
+      - name: "Domain cartography contract (docs/49)"
         run: |
           cue vet specs/domain-cartography.cue specs/examples/domain-cartography.valid.yaml -d '#DomainCartography'
           for bad in specs/examples/domain-cartography.invalid-*.yaml; do

@@ -1,4 +1,4 @@
-# 48 — Un RAG juridique souverain voisin : concepts intégrés, anti-patterns appris, collaboration préparée
+# 49 — Un RAG juridique souverain voisin : concepts intégrés, anti-patterns appris, collaboration préparée
 
 > Sources : deux documents privés datés du 2026-09-05, partagés par le
 > propriétaire de NOMOS — un inventaire technique des composants et de leurs

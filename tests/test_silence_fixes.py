@@ -1,5 +1,5 @@
 """docs/43 principle 8 — the silent handlers fixed under the silence guard
-(docs/48 §3) now say something. The proofs are the refusals:
+(docs/49 §3) now say something. The proofs are the refusals:
 
 * an audit export manifest that exists but cannot be read is never
   reinitialised silently: the export stops;

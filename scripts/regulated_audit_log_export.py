@@ -163,7 +163,7 @@ def load_manifest(path: Path) -> dict[str, Any]:
         except (json.JSONDecodeError, OSError) as exc:
             # An audit export manifest that exists but cannot be read is never
             # reinitialised silently: that would erase the export chain
-            # (docs/43 principle 8, the audit-chain lesson of docs/48).
+            # (docs/43 principle 8, the audit-chain lesson of docs/49).
             raise ValueError(
                 f"audit export manifest {path} exists but cannot be read ({exc}); "
                 "refusing to reinitialise the export chain silently — repair or move the manifest"

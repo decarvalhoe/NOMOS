@@ -50,7 +50,7 @@
    régulé peut être manuel avant son outil ; un outil peut être développé avant
    validation de son intended use. Calendrier, signatures, achats et writes
    publics bloquent leurs claims, jamais le dispatcher autonome.
-8. **Ce qui se tait ment.** Leçons d'un système voisin (`docs/48` §3), encodées
+8. **Ce qui se tait ment.** Leçons d'un système voisin (`docs/49` §3), encodées
    comme interdits : un composant qui se **désactive sans le dire** (dépendance
    absente, `except` large) est un défaut, pas une tolérance ; un **index sans
    consommateur** (vecteurs écrits, jamais interrogés) est un caller de production

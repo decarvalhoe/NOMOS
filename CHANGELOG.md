@@ -6,7 +6,7 @@ All notable changes to Nomos are tracked here. The project uses explicit alpha/b
 
 ### Added
 
-- Concepts learned from a neighbouring sovereign legal RAG (docs/48): domain cartography
+- Concepts learned from a neighbouring sovereign legal RAG (docs/49): domain cartography
   contract `specs/domain-cartography.cue` with fixtures vetted in CI (an unverified layer
   carries no number, a phantom domain owns no collection), parameter inventory template,
   inference-boundary control in the AI/RAG governance baseline, doctrine principle 8
