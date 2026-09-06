@@ -72,6 +72,7 @@
 | `customer_integration_guide` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `release_readiness_verdict` | P1 | real | real | ✅ | — | — |
 | `domain_cartography_contract` | customer-integration | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `cross_consumption_proof_kit` | customer-integration | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -79,7 +80,7 @@
 
 ## Summary
 
-- capabilities: 64 (real=47, partial=0, sidecar=15, stub=0, absent=2)
+- capabilities: 65 (real=47, partial=0, sidecar=16, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

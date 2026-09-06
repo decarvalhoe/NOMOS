@@ -4112,6 +4112,29 @@
       "ci_gates": [
         {"path": ".github/workflows/ci.yml", "contains": ["Domain cartography contract (docs/49)", "-d '#DomainCartography'"]}
       ]
+    },
+    {
+      "id": "cross_consumption_proof_kit",
+      "title": "Cross-consumption proof kit, NOMOS side (NRT-029 #702, docs/50) — the half of the cross-consumption proof that ships without the partner, REPLAYED in CI against the pack golden corpus: canonical bundle emitted and passed through the consumer kit (attestation digest recomputed), neutral export and index manifest with the pack document facets, a lens preset excluding at the base level, `rag verify` green on the fresh corpus and red on a modified copy with a reindexing plan, a simulated consumer's index proven to be the export by `scripts/cross_consumption_import_check.py` (every chunk present once with the manifest's source_hash / embedding_hash / body_hash, per-source counts, the index digest recomputed from the consumer's own records; neutral, langchain and hashes-only shapes; a tampered chunk refused; citations of answer records resolved against the manifest), four answer records cited and one acceptable refusal abstained by `nomos answer gate`, the golden set under versioned floors, a parameter inventory checked by `scripts/parameter_inventory_check.py` (the gate and harness thresholds are `default`, and say so) and a domain cartography vetted by CUE and recounted against the manifest. Federal texts stay hash-only connector receipts. Proves identity and fingerprint preservation on this toolchain against this corpus; nothing about a partner's ingestion, retrieval or answers (#701)",
+      "pillar": "customer-integration",
+      "claim_level": "sidecar (executable guide + Python checks replayed in CI; the engine commands it exercises are their own capabilities)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "sidecar": [
+        {"path": "docs/50-cross-consumption-proof-kit.md", "contains": ["out/bundle.json -->", "<!-- replay expects: out/import-verdict-tampered.json -->", "<!-- replay expects: out/answer-gate.json, out/citations-verdict.json -->", "<!-- replay expects: out/inventory-verdict.json, out/cartography-verdict.json -->", "<!-- contracts -->"]},
+        {"path": "scripts/cross_consumption_import_check.py", "contains": ["def check_index(", "def check_citations(", "def digest_of(", "the index is not the export"]},
+        {"path": "scripts/parameter_inventory_check.py", "contains": ["def check_inventory(", "a validated parameter needs evidence", "detection is none and no finding is referenced"]},
+        {"path": "docs/cross-consumption-kit/answers.yaml", "contains": ["KIT-ABSTAIN", "acceptable_refusal"]},
+        {"path": "docs/cross-consumption-kit/eval-corpus.yaml", "contains": ["expected_chunk_ids"]},
+        {"path": "docs/cross-consumption-kit/thresholds.yaml", "contains": ["min_mean_context_recall"]},
+        {"path": "docs/cross-consumption-kit/cartography.yaml", "contains": ["federal-texts-fedlex-eli", "verified_by: not_verified", "kind: phantom"]},
+        {"path": "docs/cross-consumption-kit/parameter-inventory.yaml", "contains": ["status: default", "silent_failure_review"]},
+        {"path": "tests/test_cross_consumption_import_check.py", "contains": ["test_altered_embedding_text_moves_the_digest", "test_unreadable_line_is_named_not_skipped", "test_citation_of_an_unknown_chunk_is_red", "test_the_kit_guide_replays_against_the_fixtures"]},
+        {"path": "tests/test_parameter_inventory_check.py", "contains": ["test_validated_without_dated_evidence_is_red", "test_the_template_itself_is_refused_as_placeholders"]}
+      ],
+      "ci_gates": [
+        {"path": ".github/workflows/ci.yml", "contains": ["Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)", "docs/50-cross-consumption-proof-kit.md", "cross-consumption-kit/cartography.yaml -d '#DomainCartography'"]}
+      ]
     }
   ]
 }

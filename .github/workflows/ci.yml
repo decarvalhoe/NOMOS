@@ -273,6 +273,8 @@ jobs:
       - name: "Domain cartography contract (docs/49)"
         run: |
           cue vet specs/domain-cartography.cue specs/examples/domain-cartography.valid.yaml -d '#DomainCartography'
+          # NRT-029 (#702): the cartography the cross-consumption kit (docs/50) declares for itself.
+          cue vet specs/domain-cartography.cue docs/cross-consumption-kit/cartography.yaml -d '#DomainCartography'
           for bad in specs/examples/domain-cartography.invalid-*.yaml; do
             if cue vet specs/domain-cartography.cue "$bad" -d '#DomainCartography'; then
               echo "::error::$bad passed the domain cartography contract"; exit 1
@@ -342,6 +344,14 @@ jobs:
       # the stability the registry confirms. A guide that stops working is red.
       - name: "Customer integration guide — replayed against fixtures (NRT-027 #680)"
         run: python scripts/integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md
+      # NRT-029 (#702): the cross-consumption proof kit runs the same way — bundle,
+      # consumer kit, export, manifest, lens scope, fresh and stale verify, the
+      # consumer's import proof (digest recomputed from its own records), a
+      # tampered index refused, answers gated and cross-checked against the
+      # manifest, the golden set under its versioned floors, the parameter
+      # inventory checked and the cartography recounted against the manifest.
+      - name: "Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)"
+        run: python scripts/integration_guide_replay.py --root . --guide docs/50-cross-consumption-proof-kit.md
       - name: "SKOS static distribution — deterministic build + round-trip (#643)"
         run: python scripts/skos_distribution.py --root . --check --verify
       - name: Attestation claim-boundary guard
