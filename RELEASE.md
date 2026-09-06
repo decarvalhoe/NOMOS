@@ -1,6 +1,6 @@
-# Release v0.1.0-ALPHA
+# Release v0.2.0-ALPHA
 
-Nomos `v0.1.0-ALPHA` is the first public alpha release candidate for the canonical-first product intelligence platform.
+Nomos `v0.2.0-ALPHA` is the second public alpha of the canonical-first product intelligence platform. `v0.1.0-ALPHA` (2026-05-03) proved the source-to-feed chain on one private corpus; `v0.2.0-ALPHA` (2026-09-06) closes the vision/reality gap audited in `docs/45`: every capability is registered, its status is computed in CI, and every pending human decision is visible as data. Per-version detail lives in `CHANGELOG.md` and `docs/release-v0.2.0-alpha.md`.
 
 ## Release Intent
 
@@ -17,7 +17,7 @@ It is not intended to be sold or represented as a certified regulated platform. 
 
 ## Delivered Capabilities
 
-| Area | v0.1.0-ALPHA status |
+| Area | v0.2.0-ALPHA status (v0.1.0-ALPHA baseline unchanged unless noted) |
 |---|---|
 | CLI project diagnosis | Implemented |
 | Corpus scan, manifest, diff, sidecar validation | Implemented |
@@ -75,7 +75,7 @@ GitHub Actions gates:
 
 ## Claim Boundary
 
-`v0.1.0-ALPHA` currently produces corpus feeds, fidelity proof reports, and attestations. Artifact generation is not, by itself, a proof of source-to-feed fidelity.
+`v0.2.0-ALPHA` produces corpus feeds, fidelity proof reports, attestations, release candidate bundles, portfolio status and findings. Artifact generation is not, by itself, a proof of source-to-feed fidelity.
 
 Full source-to-feed fidelity is **not yet proven** at the platform level. The blocking proof chain is being implemented under epic `#337` (Source-to-feed integrity and semantic feed hygiene) and depends in particular on:
 
@@ -101,11 +101,11 @@ No public document, attestation, or release artifact may upgrade an artifact-gen
 - Licensed reference standards may be tracked by intake record, but their full text must be handled according to license terms and may not be redistributed.
 - RAG metadata is generated, but production vector-store ingestion, retrieval evaluation, and LLM behavior control remain integration work.
 - Customer validation remains customer-specific and must be performed against intended use, deployment context, risk, and SOPs.
-- Open follow-up issues remain for stronger RBOK proof (`#314`), Nomos/Praxis atom mapping (`#320`), licensed reference acquisition/review (`#192`, `#193`, `#194`), and public/licensed bible processing (`#196`).
+- Open regulated items remain: repeated CI evidence (`#560`, 4/8), release SOP execution (`#561` — this release records the owner's decision, see the release record), competence records (`#562`), licensed reference acquisition/review (`#192`, `#193`, `#194`, `#196`), production Sigstore issuance (`#638`). The Praxis activation gate is `blocked` (11 unmet requirements) and the portfolio reports 23 open findings on the release commit.
 
 ## Release Decision
 
-Release as `v0.1.0-ALPHA` if:
+Release as `v0.2.0-ALPHA` if:
 
 - `main` contains this release documentation;
 - all GitHub required checks are green;

@@ -6,7 +6,8 @@ Nomos is currently in alpha. Security reports are handled as high-priority proje
 
 | Version | Security support |
 |---|---|
-| `v0.1.0-ALPHA` | Best-effort alpha triage |
+| `v0.2.0-ALPHA` | Best-effort alpha triage |
+| `v0.1.0-ALPHA` | Superseded; not supported |
 | `< v0.1.0-ALPHA` | Not supported |
 
 ## Reporting A Vulnerability
@@ -20,6 +21,8 @@ Include:
 - expected impact;
 - whether source corpus integrity, generated evidence, credentials, CI, or release artifacts are affected;
 - any relevant logs with secrets removed.
+
+Dependency vulnerability scanning in CI, an expiring allowlist and Dependabot are planned as NRT-025 (#678); until then there is no automated scan — say so, do not assume it.
 
 ## Security Scope
 
@@ -36,4 +39,4 @@ Security-sensitive areas include:
 
 ## Current Alpha Boundary
 
-Nomos v0.1.0-ALPHA is not a hosted security boundary and does not claim production security certification. Customer deployments must perform their own threat modeling, access-control design, secret management, logging, backup, vulnerability management, and validation.
+Nomos v0.2.0-ALPHA is not a hosted security boundary and does not claim production security certification. Customer deployments must perform their own threat modeling, access-control design, secret management, logging, backup, vulnerability management, and validation.

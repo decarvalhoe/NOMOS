@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0--ALPHA-orange">
   <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
   <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
   <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
@@ -39,13 +39,13 @@ and auditable product evidence before software or AI consumes them.
 | Dimension | Position actuelle |
 |---|---|
 | Produit | Moteur authority-to-product pour logiciels, IA et RAG gouvernés. |
-| Release | `v0.1.0-ALPHA`. |
+| Release | `v0.2.0-ALPHA` (2026-09-06, pre-release ; décision enregistrée dans `docs/regulated/lifecycle/release-records/`). |
 | Preuve actuelle | POC alpha sur un vrai corpus privé, traité en lecture seule. |
 | Point fort déjà prouvé | Trajectoire source -> structure -> noeuds canoniques -> TOC -> feed/RAG source-backed -> body ledger -> strict gate -> attestation ; puis, dans le moteur Go : gate cite-or-abstain (fidélité recalculée depuis les spans, jamais déclarée), harnais d'évaluation RAG en CI, export RAG interopérable à staleness prouvable, bench public reproductible du gate. |
-| Registre de capacités | 40 capacités déclarées dans `scripts/vrc_wiring_matrix_registry.json` ; leur statut est CALCULÉ depuis l'arbre à chaque CI (32 réelles, 7 sidecar, 1 absente, 0 écart) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Registre de capacités | 57 capacités déclarées dans `scripts/vrc_wiring_matrix_registry.json` ; leur statut est CALCULÉ depuis l'arbre à chaque CI (44 réelles, 11 sidecar, 2 absentes par conception, 0 écart) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). Le statut de portefeuille (`nomos portfolio status|findings`) est calculé depuis les sources machine et publié en artefact CI. |
 | Roadmaps | Produit, DevOps et assurance régulée avancent indépendamment (ADR-VRC-0004). Seules les issues `dispatch:autonomous` entrent dans le dispatcher ; calendrier, signatures, achats et écritures publiques bloquent leur claim, jamais le développement — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
 | Limite assumée | L'alpha prouve un POC source-to-feed borné ; elle ne revendique pas encore une fidélité universelle ou une validation réglementaire client. Le bench public mesure le gate sur neuf items, pas un produit. |
-| Prochain durcissement | Files autonomes indépendantes produit et DevOps, ordonnées par `docs/roadmap-lanes.yaml` (tableau généré dans `docs/47`, vérifié en CI). La seule capacité `absent` est l'émission Sigstore keyless : verify offline #637, émission non-prod #645, activation production/Rekor #638 séparée. |
+| Prochain durcissement | Vague v1.0 ouverte (#676–#681) : registre de stabilité des contrats, matrice de compatibilité générée, processus sécurité exécutable, modèle de support vérifié, guide d'intégration rejoué, verdict de readiness calculé — jamais « released » ; la release reste un acte régulé (#561). Les deux capacités `absent` sont l'émission Sigstore production (#638) et le control-plane retiré (ADR-0007). |
 | Claim boundary | Pas un eQMS certifié, pas un système GxP validé, pas une certification réglementaire. |
 
 ## Documentation Et Integration
@@ -122,9 +122,9 @@ Nomos est conçu pour les équipes qui ont besoin de comportements logiciels, r�
 - exécuter des assessments de corpus en lecture seule avant import client ;
 - documenter explicitement les limites au lieu de sur-vendre une fidélité non prouvée.
 
-## Ce Que Livre v0.1.0-ALPHA
+## Ce Que Livre v0.2.0-ALPHA
 
-La release actuelle fournit une CLI et une chaîne d'evidence fonctionnelle pour les projets canonical-first :
+La baseline v0.1.0-ALPHA (2026-05-03) fournit une CLI et une chaîne d'evidence fonctionnelle pour les projets canonical-first :
 
 - diagnostic de repository et contrôles d'admission projet ;
 - commandes `strict`, `corpus scan`, `diff`, `manifest`, `validate-sidecar`, `feed`, `body-ledger` et `attest` ;
@@ -141,7 +141,7 @@ La release actuelle fournit une CLI et une chaîne d'evidence fonctionnelle pour
 - squelette documentaire regulated-by-design, templates d'evidence et control records ;
 - workflows CI pour Go, CUE, corpus, RBOK lawbook E2E, runtime E2E, fidelity proof reports, documentation régulée et evidence pack.
 
-Depuis l'alpha, le moteur a gagné les capacités suivantes. Chacune est une entrée du registre de capacités dont le statut est calculé en CI depuis les ancres de l'arbre (moteur, appelant de production, test adversarial, gate CI) ; une capacité volontairement hors core est comptée `sidecar`, jamais `real` — c'est une topologie, pas son état de livraison ou de validation régulée :
+Depuis la première alpha, le moteur a gagné les capacités suivantes (v0.2.0-ALPHA, 2026-09-06). Chacune est une entrée du registre de capacités dont le statut est calculé en CI depuis les ancres de l'arbre (moteur, appelant de production, test adversarial, gate CI) ; une capacité volontairement hors core est comptée `sidecar`, jamais `real` — c'est une topologie, pas son état de livraison ou de validation régulée :
 
 - **gate cite-or-abstain dans le moteur** (`nomos answer gate`, VRC-10) : fidélité recalculée depuis le texte des spans retrouvés, jamais prise d'un score déclaré ; citation falsifiée, span sans texte ou réponse sans source → abstention forcée ; `trust_tier` par réponse ; second juge NLI enfichable (`--scorer-cmd`, le plus strict gagne, fail-closed, aucun modèle dans le moteur) ; le sidecar d'évidence Python consomme ce verdict au lieu d'en produire un ;
 - **harnais d'évaluation RAG** (`nomos answer eval`, VRC-13) : corpus doré, seuils versionnés, `context_recall`, `context_precision` pondérée par le rang et `noise_sensitivity` ; une régression sous le plancher bloque la PR ;
@@ -151,6 +151,10 @@ Depuis l'alpha, le moteur a gagné les capacités suivantes. Chacune est une ent
 - **preuve et attestation** : signature ECDSA P-256 DSSE, preuves Merkle du body ledger émises et vérifiées, `claim_coverage` calculée dans l'attestation, prédicat supply-chain in-toto, evidence packs en BOM CycloneDX/SPDX recoupés avec le ledger ;
 - **packs de domaine et adaptateurs** : `nomos pack validate` sur contrat déclaratif, kits de capacité par adaptateur, adaptateurs PDF et DOCX nés numériques (échelle de claims explicite), connecteur suisse live (fetch réel, hash réel) ;
 - **gardes de vérité** : matrice de câblage calculée (VRC-00), guard claim-boundary sur les mots « signé / Sigstore / certifié », guard de couplage core/pack, sidecar HHEM et kits de retrieval/conformité de référence (comptés `sidecar`).
+- **sources externes** : contrat web-source (#610), snapshot externe immuable vérifié et importé (#611), E2E hors ligne Recursio → NOMOS avec attestation portant le type web et la couverture du snapshot (#612) ; vraies références publiques capturées hash-only avec artefacts retenus hors dépôt (#644) ; revue de licence et no-full-text réel (#641) ;
+- **release et Sigstore** : bundle candidat vérifié sur contenu et statuts, approbation jamais inventée, rehearsal CI sans publication (#639) ; vérification hors ligne de bundles Sigstore fournis et émission keyless contre services injectés non-production, derrière une frontière de process (ADR-0005, #637, #645) ; l'émission production reste interdite (#638) ;
+- **Nomos/Praxis** : contrat d'echange d'evidence, fixture de mapping d'atomes, gate d'activation calculé — `blocked` aujourd'hui, jamais `activated` (#660–#662) ;
+- **gouvernance de portefeuille** : `nomos portfolio status|findings|reviews|projects` calculés depuis les sources machine, index des records de revue, control-plane tranché par ADR-0007 (#667–#670) ; vocabulaires SKOS authored et distribués de façon déterministe (#643).
 
 ## Preuves Du POC Alpha
 
@@ -399,10 +403,9 @@ Nomos n'embarque pas de signature keyless Sigstore : l'attestation est signée l
 
 | Version | Cible |
 |---|---|
-| `v0.1.0-ALPHA` | Prouver la chaîne canonical corpus, le strict fidelity gate, le POC RBOK et la baseline documentaire regulated-readiness. |
-| `v0.2.x` | Durcir l'atomisation portable au-delà du Markdown RBOK, améliorer la couverture YAML/JSON structurée et adapters documentaires, et étendre les validation packs. |
-| `v0.3.x` | Stabiliser les contrats adapters, l'export evidence, le workflow validation client et les interfaces de gouvernance RAG. |
-| `v1.0` | Release candidate production-grade avec support model, compatibility policy, evidence de validation et claim boundary audité. |
+| `v0.1.0-ALPHA` (2026-05-03) | Livrée : chaîne canonical corpus, strict fidelity gate, POC RBOK, baseline documentaire regulated-readiness. |
+| `v0.2.0-ALPHA` (2026-09-06) | Livrée : clôture vision/réalité (`docs/45`), vagues v0.2–v0.6 et v0.9 de `docs/29` (fidélité portable, références, bundle candidat, contrat Praxis, gouvernance de portefeuille), Sigstore hors production. |
+| `v1.0` | Ouverte (#676–#681) : registre de stabilité des contrats, matrice de compatibilité, processus sécurité, modèle de support, guide d'intégration rejoué, verdict de readiness calculé. La release elle-même reste un acte régulé (#561). |
 
 ## Gouvernance
 

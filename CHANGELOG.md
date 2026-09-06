@@ -1,6 +1,67 @@
 # Changelog
 
-All notable changes to Nomos are tracked here. The project uses explicit alpha/beta labels until the public API, evidence contracts, and support model are stable enough for a `v1.0` release.
+All notable changes to Nomos are tracked here. The project uses explicit alpha/beta labels until the public API, evidence contracts, and support model are stable enough for a `v1.0` release (planned as NRT-023..028 in `docs/29`).
+
+## v0.2.0-ALPHA - 2026-09-06
+
+Second public alpha. Everything below is a registered capability whose status
+is computed in CI from the tree (`.vrc-wiring-matrix/`): 57 capabilities,
+44 `real`, 11 `sidecar`, 2 `absent` by design, 0 mismatch. The release
+decision is recorded in
+`docs/regulated/lifecycle/release-records/v0.2.0-ALPHA-release-decision.yaml`;
+the release notes are `docs/release-v0.2.0-alpha.md`.
+
+### Added
+
+- Vision-Reality Closure (epic #545): generated wiring matrix and claim-boundary
+  guard as CI gates; production callers for every engine capability; cite-or-abstain,
+  canon promotion and point-in-time moved into the Go engine; RAG eval harness with
+  context metrics; public cite-or-abstain bench with dated, replayed results;
+  domain-pack contract and gate with a second vertical (EU AI Act); PDF/DOCX/HTML
+  adapters behind capability kits; Swiss live connector; evidence packs as
+  CycloneDX/SPDX BOM; deterministic cross-reference graph; facet SHACL validation.
+- Rule execution behind a versioned external process boundary with request,
+  results and response digests (#642).
+- Web-source contract (#610), immutable external snapshot verifier/importer
+  (#611) and the offline Recursio → NOMOS end-to-end fixture (#612) with the
+  attestation binding the web source type and snapshot coverage.
+- Release candidate bundle `nomos release candidate|verify`: content and status
+  validated, approvals never invented, VRC-14 recorded as a risk, CI rehearsal
+  archiving `v0.2.0-ALPHA-candidate` without publishing (#639).
+- Offline Sigstore bundle verification `nomos attest verify-sigstore` and keyless
+  issuance against injected non-production services `nomos attest sign-sigstore`,
+  both behind the process boundary of ADR-0005 (`tools/sigstore-verifier`);
+  production issuance remains forbidden (#637, #645).
+- Static SKOS authoring and deterministic distribution of the facet
+  vocabularies (#643).
+- Nomos/Praxis evidence exchange contract, atom mapping fixture and computed
+  activation gate — `blocked` today, never `activated` (#660, #661, #662).
+- Portfolio governance: `nomos portfolio status|findings|reviews|projects`
+  computed from committed machine sources; review-record index and guard;
+  control-plane decision executed (ADR-0007) (#667–#670).
+- Licence review and real no-full-text gate (#641); real public references
+  captured hash-only with retained artifacts (#644); competence gate aligned to
+  the template without fabricating records (#640).
+- Independent roadmaps by lane with an executable registry
+  (`docs/roadmap-lanes.yaml`, ADR-VRC-0004) and generated queue tables.
+
+### Changed
+
+- `nomos version` reports `0.2.0-ALPHA`.
+- `control-plane/` removed: the multi-project view lives in `nomos portfolio
+  projects`; registry and storage had no consumer (ADR-0007 supersedes ADR-0006).
+- The candidate bundle spec, the Praxis activation record and the portfolio
+  status make every pending human decision visible instead of narrated.
+
+### Known open items (recorded, not hidden)
+
+- Regulated lane: #560 (4/8 consecutive green runs), #561 (release SOP
+  execution — this release records the owner's decision), #562 (competence
+  records), #192/#193/#194/#196 (licensed references), #638 (production
+  Sigstore), #576 (umbrella).
+- Portfolio findings on this commit: 23, including 3 management-review actions
+  overdue since July 2026 and the 11 unmet Praxis activation requirements;
+  the evidence ledger is dated 2026-05-02 and reported stale.
 
 ## v0.1.0-ALPHA - 2026-05-03
 
