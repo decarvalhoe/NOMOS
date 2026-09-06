@@ -379,6 +379,7 @@ python scripts/claim_boundary_guard.py --root .          # aucun « signé / Sig
 python scripts/roadmap_lane_guard.py --root .             # aucune attente humaine/externe dans la file autonome
 python scripts/vrc_wiring_matrix.py --root .             # matrice de câblage : registre et arbre en lockstep
 python scripts/cite_or_abstain_bench.py --root .         # bench public : le résultat publié se rejoue
+python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit   # processus sécurité : scans réels, allowlist à expiration
 bash scripts/ckm-non-regression.sh             # harnais CKM-00 : CLI, CUE, Python, e2e, RBOK, gate cite-or-abstain
 powershell -File scripts/e2e.ps1
 ```

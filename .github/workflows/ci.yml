@@ -46,7 +46,7 @@ jobs:
       # #618: the gate re-derives the Knowledge Lens verdicts with an independent
       # Python re-implementation of the consumer kit's semantics; it needs PyYAML.
       - name: Python deps for the RAG gate's independent lens check
-        run: python3 -m pip install --quiet pyyaml
+        run: python3 -m pip install --quiet -r ../scripts/requirements-sidecar.txt
       - name: "RAG interop export gate (#614, #616, #618)"
         run: bash ../scripts/rag-export-gate.sh
       # VRC-46 (#582): the public cite-or-abstain bench replays its published
@@ -278,7 +278,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install --quiet pyyaml pyshacl jsonschema
+      - run: pip install --quiet -r scripts/requirements-sidecar.txt pyshacl
       # VRC-44 (#580): facet vocabularies are emitted as SKOS/RDF + NOMOS
       # predicates and validated with standard SHACL shapes. This recorded run
       # uses pySHACL; the graph/shapes are inspectable outside NOMOS, but no
@@ -326,3 +326,40 @@ jobs:
           python scripts/vrc_wiring_matrix.py --root .
           git diff --exit-code .vrc-wiring-matrix
       - run: python -m unittest discover -s tests -v
+
+  security:
+    name: Security process gate (NRT-025)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: |
+            cli/go.sum
+            tools/sigstore-verifier/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the scanners and the declared sidecar dependencies
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+          python -m pip install --quiet -r scripts/requirements-sidecar.txt pip-audit
+      # NRT-025 (#678): the security process is data the gate reads — process file,
+      # expiring allowlist, generated Supported Versions section — and the declared
+      # scanners run for real: a vulnerability the code CALLS (standard library
+      # included) or a vulnerable Python pin is red unless an unexpired allowlist
+      # entry names it. A requested scanner that is missing is a failed check.
+      - name: "Security process gate — process, allowlist, supported versions, govulncheck, pip-audit (NRT-025 #678)"
+        run: python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit --report "$RUNNER_TEMP/security-gate.json"
+      # The proofs: a fixture module that calls a vulnerable symbol turns the gate
+      # red, a vulnerable pin turns it red, undated or expired allowlist entries
+      # turn it red (tests.test_security_process_gate).
+      - name: "Security gate proofs — the fixtures turn it red (NRT-025 #678)"
+        run: python -m unittest tests.test_security_process_gate -v
+      - name: Upload security gate verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-gate-${{ github.sha }}
+          path: ${{ runner.temp }}/security-gate.json

@@ -1,0 +1,42 @@
+# NRT-025 (#678) — Dependabot version updates for every ecosystem the security
+# process declares (docs/security/security-process.yaml → scanners.dependabot).
+# Security updates were already active on the repository (see PR #657); this
+# file makes the version-update cadence explicit and reviewable.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /cli
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [lane:devops, dispatch:autonomous, area:cicd]
+    commit-message:
+      prefix: "build(deps)"
+  - package-ecosystem: gomod
+    directory: /tools/sigstore-verifier
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [lane:devops, dispatch:autonomous, area:cicd]
+    commit-message:
+      prefix: "build(deps)"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [lane:devops, dispatch:autonomous, area:cicd]
+    commit-message:
+      prefix: "build(deps)"
+  - package-ecosystem: pip
+    directory: /scripts
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [lane:devops, dispatch:autonomous, area:cicd]
+    commit-message:
+      prefix: "build(deps)"

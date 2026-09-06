@@ -2,6 +2,17 @@
 
 All notable changes to Nomos are tracked here. The project uses explicit alpha/beta labels until the public API, evidence contracts, and support model are stable enough for a `v1.0` release (planned as NRT-023..028 in `docs/29`).
 
+## Unreleased
+
+### Added
+
+- Security process, executable (NRT-025 #678): `docs/security/security-process.yaml`
+  and an expiring `vulnerability-allowlist.yaml` read by `scripts/security_process_gate.py`;
+  `govulncheck` (called vulnerabilities, standard library included) and `pip-audit` on the
+  pinned sidecar requirements as a CI job; Dependabot for Go modules, GitHub Actions and
+  Python; the Supported Versions section of `SECURITY.md` generated from the changelog.
+  The `toolchain go1.26.6` directive remediates the called standard-library findings.
+
 ## v0.2.0-ALPHA - 2026-09-06
 
 Second public alpha. Everything below is a registered capability whose status

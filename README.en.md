@@ -353,6 +353,7 @@ python scripts/claim_boundary_guard.py --root .          # no "signed / Sigstore
 python scripts/roadmap_lane_guard.py --root .             # no human/external wait in the autonomous queue
 python scripts/vrc_wiring_matrix.py --root .             # wiring matrix: registry and tree in lockstep
 python scripts/cite_or_abstain_bench.py --root .         # public bench: the published result replays
+python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit   # security process: real scans, expiring allowlist
 bash scripts/ckm-non-regression.sh             # CKM-00 harness: CLI, CUE, Python, e2e, RBOK, cite-or-abstain gate
 powershell -File scripts/e2e.ps1
 ```

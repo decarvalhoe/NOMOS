@@ -2,6 +2,8 @@ module github.com/RBOKproject/Nomos/tools/sigstore-verifier
 
 go 1.25.8
 
+toolchain go1.26.6
+
 require (
 	github.com/sigstore/rekor v1.5.3
 	github.com/sigstore/sigstore-go v1.3.0
