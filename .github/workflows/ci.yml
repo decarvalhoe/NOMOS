@@ -357,9 +357,20 @@ jobs:
       # turn it red (tests.test_security_process_gate).
       - name: "Security gate proofs — the fixtures turn it red (NRT-025 #678)"
         run: python -m unittest tests.test_security_process_gate -v
+      # NRT-026 (#679): the support model is declared and CHECKED — runners equal
+      # the CI matrix, Go versions equal cli/go.mod, every declared version is a
+      # tag or the current candidate, every tag is declared, generated Support
+      # sections carry no hand edit. Tags are fetched because the checkout is shallow.
+      - name: "Support model — declared and checked against CI, toolchain and tags (NRT-026 #679)"
+        run: |
+          git fetch --tags --quiet origin
+          python scripts/support_model_guard.py --root . --check --report "$RUNNER_TEMP/support-model.json"
+          python -m unittest tests.test_support_model_guard -v
       - name: Upload security gate verdict
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: security-gate-${{ github.sha }}
-          path: ${{ runner.temp }}/security-gate.json
+          path: |
+            ${{ runner.temp }}/security-gate.json
+            ${{ runner.temp }}/support-model.json

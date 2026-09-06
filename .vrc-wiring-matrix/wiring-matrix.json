@@ -3117,6 +3117,60 @@
         ],
         "stub_markers": []
       }
+    },
+    {
+      "id": "support_model",
+      "title": "Support model, declared and checked (NRT-026 #679) — `docs/support-model.yaml` (nomos-support-model-v1) declares supported versions and lifecycle state, channels, response targets (declared, not measured), tested platforms, toolchain versions, explicitly unsupported surfaces (hosted service, control plane, GitHub App, production deployment, regulated approval) and the end-of-support rule; `scripts/support_model_guard.py` refuses a declaration the repository does not honour: runners must equal the CI matrix, Go language/toolchain must equal cli/go.mod, CUE and Python must equal what CI sets up, every declared version must be a git tag or the current CLI candidate, every tag must be declared, current_candidate must equal the CLI Version constant, released_on must equal the CHANGELOG heading, and the Support sections GENERATED into README fr/en/de and SECURITY.md must carry no hand edit (`--write` regenerates). The security gate renders SECURITY.md's Supported Versions from the same model. Claim: « support is declared and consistent with what CI tests » — never « contractually guaranteed »",
+      "pillar": "devops",
+      "claim_level": "sidecar (declared support checked against CI, toolchain and tags; no contractual guarantee)",
+      "promotion_issue": "",
+      "expected": "sidecar",
+      "computed": "sidecar",
+      "mismatch": false,
+      "reasons": [
+        "implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately)"
+      ],
+      "drift": [],
+      "checks": {
+        "engine": [],
+        "production_callers": [],
+        "adversarial_tests": [],
+        "ci_gates": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "sidecar": [
+          {
+            "path": "scripts/support_model_guard.py",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "docs/support-model.yaml",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "README.md",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "SECURITY.md",
+            "ok": true,
+            "missing": []
+          },
+          {
+            "path": "tests/test_support_model_guard.py",
+            "ok": true,
+            "missing": []
+          }
+        ],
+        "stub_markers": []
+      }
     }
   ],
   "generic_checks": [
@@ -3155,11 +3209,11 @@
     }
   ],
   "summary": {
-    "capabilities": 58,
+    "capabilities": 59,
     "computed": {
       "real": 44,
       "partial": 0,
-      "sidecar": 12,
+      "sidecar": 13,
       "stub": 0,
       "absent": 2
     },

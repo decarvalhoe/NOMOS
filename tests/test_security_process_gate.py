@@ -62,6 +62,9 @@ def copy_security_tree(target: Path) -> None:
     files += [process["supported_versions"]["changelog_ref"], process["scanners"]["pip_audit"]["requirements"], process["allowlist"]["path"]]
     files += list(process["sops"].values())
     files.append("docs/security/security-process.yaml")
+    model_ref = process["supported_versions"].get("support_model_ref")
+    if model_ref and (ROOT / model_ref).is_file():
+        files.append(model_ref)
     for rel in sorted(set(files)):
         dest = target / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -107,7 +110,8 @@ class StaticChecksTests(unittest.TestCase):
             security = root / "SECURITY.md"
             text = security.read_text(encoding="utf-8")
             self.assertIn("| `v0.2.0-ALPHA` |", text)
-            security.write_text(text.replace("Supported — best-effort alpha triage", "Fully supported with SLA"), encoding="utf-8")
+            self.assertIn("best-effort alpha triage (current release)", text)
+            security.write_text(text.replace("best-effort alpha triage (current release)", "fully supported with an SLA"), encoding="utf-8")
             code, verdict, stderr = run_gate(root)
             self.assertEqual(code, 1, stderr)
             drift = checks_by_name(verdict)["supported_versions"]
@@ -116,16 +120,38 @@ class StaticChecksTests(unittest.TestCase):
             # --write repairs it from the source, then the check passes again.
             code, verdict, stderr = run_gate(root, "--write")
             self.assertEqual(code, 0, stderr)
-            self.assertIn("Supported — best-effort alpha triage", security.read_text(encoding="utf-8"))
+            self.assertIn("best-effort alpha triage (current release)", security.read_text(encoding="utf-8"))
 
-    def test_supported_versions_follow_the_changelog(self) -> None:
+    def test_supported_versions_follow_the_support_model(self) -> None:
+        # NRT-026 (#679): the model is the source; a new version declared there
+        # invalidates the rendered table until --write regenerates it.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             copy_security_tree(root)
+            process = yaml.safe_load((root / "docs/security/security-process.yaml").read_text(encoding="utf-8"))
+            self.assertEqual(process["supported_versions"]["source"], "support_model")
+            model_path = root / process["supported_versions"]["support_model_ref"]
+            model = yaml.safe_load(model_path.read_text(encoding="utf-8"))
+            model["supported_versions"][0]["state"] = "superseded"
+            model["supported_versions"].insert(0, {"version": "v0.3.0-ALPHA", "released_on": "2026-12-01", "state": "supported", "security_support": "best-effort alpha triage (current release)", "end_of_support": "until the next tagged release"})
+            model_path.write_text(yaml.safe_dump(model, sort_keys=False, allow_unicode=True), encoding="utf-8")
+            code, verdict, _ = run_gate(root)
+            self.assertEqual(code, 1, "a new version in the support model must invalidate the rendered section")
+            code, verdict, stderr = run_gate(root, "--write")
+            self.assertEqual(code, 0, stderr)
+            text = (root / "SECURITY.md").read_text(encoding="utf-8")
+            self.assertIn("| `v0.3.0-ALPHA` | 2026-12-01 | supported | best-effort alpha triage (current release) |", text)
+            self.assertIn("| `v0.2.0-ALPHA` | 2026-09-06 | superseded |", text)
+
+    def test_changelog_source_renders_when_no_support_model_is_declared(self) -> None:
+        # The fallback path (source: changelog) still renders from the release headings.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_security_tree(root)
+            process_path = root / "docs/security/security-process.yaml"
+            process_path.write_text(process_path.read_text(encoding="utf-8").replace("source: support_model", "source: changelog", 1), encoding="utf-8")
             changelog = root / "CHANGELOG.md"
             changelog.write_text("## v0.3.0-ALPHA - 2026-12-01\n\n- next\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
-            code, verdict, _ = run_gate(root)
-            self.assertEqual(code, 1, "a new release in the changelog must invalidate the rendered section")
             code, verdict, stderr = run_gate(root, "--write")
             self.assertEqual(code, 0, stderr)
             text = (root / "SECURITY.md").read_text(encoding="utf-8")

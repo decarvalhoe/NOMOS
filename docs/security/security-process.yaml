@@ -50,7 +50,7 @@ supported_versions:
   # `support_model` and the gate reads `supported_versions:` from it
   # (schema nomos-support-model-v1, entries: version, released_on, state,
   # security_support). Nonblocking input, never a dependency.
-  source: changelog
+  source: support_model
   changelog_ref: CHANGELOG.md
   support_model_ref: docs/support-model.yaml
   rendered_in:

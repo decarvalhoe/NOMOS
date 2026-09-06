@@ -66,6 +66,7 @@
 | `control_plane_archive` | P1 | absent | absent | ✅ | — | — |
 | `portfolio_findings_index` | P1 | real | real | ✅ | — | — |
 | `security_process_gates` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `support_model` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -73,7 +74,7 @@
 
 ## Summary
 
-- capabilities: 58 (real=44, partial=0, sidecar=12, stub=0, absent=2)
+- capabilities: 59 (real=44, partial=0, sidecar=13, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0
