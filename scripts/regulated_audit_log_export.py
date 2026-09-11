@@ -1,27 +1,47 @@
 #!/usr/bin/env python3
-"""regulated_audit_log_export.py — Export GitHub audit log events.
+"""regulated_audit_log_export.py — Export organisation audit log events.
 
 Usage:
     python3 scripts/regulated_audit_log_export.py \
         --org RBOKproject \
         --output .regulated-audit-logs/ \
-        [--token $GITHUB_TOKEN] \
         [--since 2026-04-26] \
         [--until 2026-05-03] \
         [--dry-run]
 
-Exports GitHub organization audit log events to JSON files with
-SHA-256 integrity hashes. Designed for regulated evidence retention.
+Exports organisation audit log events to JSON files with SHA-256
+integrity hashes. Designed for regulated evidence retention.
+
+The events are read through the forge provider (`scripts/forge_provider.py`,
+selected by `NOMOS_FORGE_PROVIDER` / `NOMOS_FORGE_URL` /
+`NOMOS_FORGE_TOKEN_FILE`). The organisation audit log is a GitHub concept:
+on another forge the provider refuses (`NotSupported`) and the script exits
+non-zero with that message — it never writes an empty export as if the log
+had been read. `--token` / `--api-url` keep their meaning as an explicit
+GitHub configuration that bypasses the environment.
 """
 
 import argparse
 import hashlib
 import json
-import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import (  # noqa: E402
+    GITHUB_DEFAULT_URL,
+    ForgeError,
+    GitHubProvider,
+    Provider,
+    provider_from_env,
+)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -30,11 +50,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--org", required=True, help="GitHub organization name")
     parser.add_argument("--output", required=True, help="Output directory for exports")
-    parser.add_argument("--token", default=os.environ.get("GITHUB_TOKEN", ""), help="GitHub token")
+    parser.add_argument(
+        "--token",
+        default="",
+        help="Explicit GitHub token (with read:audit_log); otherwise the forge provider "
+        "is resolved from NOMOS_FORGE_* / GITHUB_TOKEN",
+    )
     parser.add_argument("--since", help="Start date (YYYY-MM-DD), default: 7 days ago")
     parser.add_argument("--until", help="End date (YYYY-MM-DD), default: today")
     parser.add_argument("--dry-run", action="store_true", help="Print plan without exporting")
-    parser.add_argument("--api-url", default="https://api.github.com", help="GitHub API base URL")
+    parser.add_argument("--api-url", default="", help="GitHub API base URL (only with --token)")
     return parser.parse_args(argv)
 
 
@@ -57,61 +82,27 @@ def compute_sha256(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def fetch_audit_log(org: str, token: str, api_url: str, since: str, until: str) -> list[dict[str, Any]]:
-    """Fetch audit log events from GitHub API.
+def resolve_provider(token: str = "", api_url: str = "", provider: Provider | None = None) -> Provider:
+    """Injected provider first; then an explicit GitHub token; then the environment.
 
-    Returns a list of audit log entries. Handles pagination via cursors.
-    Requires organization admin or audit log read permissions.
+    Une configuration absente lève `ForgeConfigError` (doctrine §2.8) :
+    l'export ne se fait jamais « à vide » en silence.
     """
-    try:
-        import urllib.request
-        import urllib.error
-    except ImportError:
-        print("ERROR: urllib required for API calls", file=sys.stderr)
-        return []
-
-    events: list[dict[str, Any]] = []
-    url = f"{api_url}/orgs/{org}/audit-log?include=all&per_page=100&phrase=created:{since}..{until}"
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {token}",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-
-    while url:
-        req = urllib.request.Request(url, headers=headers)
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                page_data = json.loads(resp.read().decode("utf-8"))
-                if isinstance(page_data, list):
-                    events.extend(page_data)
-                else:
-                    break
-
-                # Check for pagination via Link header
-                link_header = resp.headers.get("Link", "")
-                url = extract_next_link(link_header)
-        except urllib.error.HTTPError as e:
-            print(f"ERROR: GitHub API returned {e.code}: {e.reason}", file=sys.stderr)
-            if e.code == 403:
-                print("HINT: Token may lack audit_log:read scope or org admin access.", file=sys.stderr)
-            break
-        except urllib.error.URLError as e:
-            print(f"ERROR: Network error: {e.reason}", file=sys.stderr)
-            break
-
-    return events
+    if provider is not None:
+        return provider
+    if token:
+        return GitHubProvider(api_url or GITHUB_DEFAULT_URL, token)
+    return provider_from_env()
 
 
-def extract_next_link(link_header: str) -> str | None:
-    """Extract 'next' URL from GitHub Link header."""
-    if not link_header:
-        return None
-    for part in link_header.split(","):
-        if 'rel="next"' in part:
-            url = part.split(";")[0].strip().strip("<>")
-            return url
-    return None
+def fetch_audit_log(org: str, since: str, until: str, provider: Provider) -> list[dict[str, Any]]:
+    """Fetch audit log events through the provider (pagination handled there).
+
+    Requires organisation admin or audit log read permissions; a refusal
+    (HTTP 403, or a forge without an organisation audit log) surfaces as
+    `ForgeError` to the caller — it is not swallowed into an empty list.
+    """
+    return provider.export_org_audit_log(org, since=since, until=until)
 
 
 def write_export(events: list[dict[str, Any]], output_dir: Path, since: str, until: str) -> dict[str, Any]:
@@ -188,11 +179,14 @@ def main(argv: list[str] | None = None) -> int:
         print("  [DRY RUN] No export performed.")
         return 0
 
-    if not args.token:
-        print("ERROR: --token or GITHUB_TOKEN environment variable is required.", file=sys.stderr)
+    try:
+        provider = resolve_provider(args.token, args.api_url)
+        events = fetch_audit_log(args.org, since, until, provider)
+    except ForgeError as exc:
+        print(f"ERROR: audit log export refused: {exc}", file=sys.stderr)
+        if getattr(exc, "status", None) == 403:
+            print("HINT: Token may lack read:audit_log scope or org admin access.", file=sys.stderr)
         return 1
-
-    events = fetch_audit_log(args.org, args.token, args.api_url, since, until)
     print(f"  Events fetched: {len(events)}")
 
     result = write_export(events, output_dir, since, until)

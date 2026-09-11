@@ -74,8 +74,8 @@ privileged. NOMOS was measured against that direction the same day:
 
 | Slice | Content | State on 2026-09-11 |
 |---|---|---|
-| 0 | Forge mirror reconciled with GitHub `main` by merge | pull request opened on the forge |
-| 1 | `forge_provider.py` + migration of the sticky PR comment and the CI evidence collector | in progress |
-| 2 | Migration of the regulated scripts, the publisher and the lane guard | planned |
-| 3 | Opposable gates under `.forgejo/workflows/` without marketplace steps | planned |
+| 0 | Forge mirror reconciled with GitHub `main` by merge | done (forge PR #2, GitHub PR #742, 2026-09-11) |
+| 1 | `forge_provider.py` + migration of the sticky PR comment and the CI evidence collector | done (GitHub PR #740, #737 closed) |
+| 2 | Migration of the regulated scripts, the publisher, the lane guard and the issue/label tooling; `push_and_pr.sh` removed | delivered (#736) |
+| 3 | Opposable gates under `.forgejo/workflows/portes.yml` without marketplace steps | forge PR #3 (#738) |
 | 4 | Provider-qualified tracker identifiers in the roadmap registry | planned |

@@ -18,6 +18,8 @@ guard = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 sys.modules["roadmap_lane_guard"] = guard
 SPEC.loader.exec_module(guard)
+sys.path.insert(0, str(ROOT / "scripts"))
+import forge_provider  # noqa: E402
 
 
 def registry() -> dict:
@@ -327,24 +329,61 @@ class RegistryTruthTests(unittest.TestCase):
         self.assertTrue(any("unknown role" in f for f in failures), failures)
         self.assertTrue(any("a note is required" in f for f in failures), failures)
 
-    def test_verify_github_reports_unreachable_rather_than_passing(self) -> None:
-        # Without network the check must FAIL loudly, never silently pass: the
-        # absence of an answer is not agreement.
-        import os
-        from unittest import mock
-
-        data = {"items": [{"issue": 1, "state": "open"}]}
-        env = {**os.environ, "PATH": ""}
-        with mock.patch.dict(os.environ, env, clear=True):
-            problems = guard.verify_github(data)
+    def test_verify_tracker_reports_unreachable_rather_than_passing(self) -> None:
+        # Without an answer the check must FAIL loudly, never silently pass:
+        # the absence of an answer is not agreement.
+        fake = forge_provider.FakeProvider()  # no issue seeded → 404
+        problems = guard.verify_tracker({"items": [{"issue": 1, "state": "open"}]}, fake, "o/r")
         self.assertEqual(len(problems), 1)
-        self.assertIn("GitHub unreachable", problems[0])
+        self.assertIn("tracker unreachable", problems[0])
+        self.assertEqual(fake.calls, [("get_issue", {"repo": "o/r", "number": 1})])
 
-    def test_verify_github_names_a_state_mismatch(self) -> None:
-        from unittest import mock
+    def test_verify_tracker_names_a_state_mismatch(self) -> None:
+        fake = forge_provider.FakeProvider()
+        fake.seed_issues("o/r", [{"number": 7, "title": "x", "state": "closed"}])
+        problems = guard.verify_tracker({"items": [{"issue": 7, "state": "open"}]}, fake, "o/r")
+        self.assertEqual(problems, ["issue #7: registry says 'open', tracker says 'closed'"])
 
-        fake = mock.Mock()
-        fake.stdout = "CLOSED\n"
-        with mock.patch.object(guard.subprocess, "run", return_value=fake):
-            problems = guard.verify_github({"items": [{"issue": 7, "state": "open"}]})
-        self.assertEqual(problems, ["issue #7: registry says 'open', GitHub says 'closed'"])
+    def test_verify_tracker_agrees_when_states_match(self) -> None:
+        fake = forge_provider.FakeProvider()
+        fake.seed_issues("o/r", [{"number": 7, "title": "x", "state": "closed"}])
+        self.assertEqual(guard.verify_tracker({"items": [{"issue": 7, "state": "closed"}]}, fake, "o/r"), [])
+
+    def _run_cli(self, env: dict, *args: str):
+        import os
+        import subprocess
+
+        base = {k: v for k, v in os.environ.items() if not k.startswith(("NOMOS_FORGE_", "GITHUB_", "GH_"))}
+        base["PATH"] = "/nonexistent"
+        base.update(env)
+        return subprocess.run(
+            [sys.executable, str(ROOT / "scripts/roadmap_lane_guard.py"), "--root", str(ROOT), *args],
+            capture_output=True, text=True, check=False, env=base,
+        )
+
+    def test_verify_tracker_without_repo_names_the_variable(self) -> None:
+        import json
+
+        result = self._run_cli({"NOMOS_FORGE_PROVIDER": "fake"}, "--verify-tracker")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        verdict = json.loads(result.stdout)
+        self.assertEqual(verdict["status"], "error")
+        self.assertIn("NOMOS_FORGE_REPO", verdict["failures"][0])
+
+    def test_verify_tracker_without_provider_names_the_variable(self) -> None:
+        import json
+
+        result = self._run_cli({"NOMOS_FORGE_REPO": "o/r"}, "--verify-tracker")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("NOMOS_FORGE_PROVIDER", json.loads(result.stdout)["failures"][0])
+
+    def test_verify_github_is_a_deprecated_alias(self) -> None:
+        import json
+
+        result = self._run_cli({"NOMOS_FORGE_PROVIDER": "fake", "NOMOS_FORGE_REPO": "o/r"}, "--verify-github")
+        self.assertIn("deprecated", result.stderr)
+        self.assertIn("--verify-tracker", result.stderr)
+        # The fake tracker knows no issue: every item is unreachable, hence a failure.
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        verdict = json.loads(result.stdout)
+        self.assertTrue(all("tracker unreachable" in f for f in verdict["failures"]), verdict["failures"][:3])

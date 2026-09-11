@@ -15,11 +15,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env, repo_from_env  # noqa: E402
 
 
 DEFAULT_REGISTRY = Path("docs/roadmap-lanes.yaml")
@@ -335,12 +343,15 @@ def emit_docs(root: Path, registry: dict[str, Any]) -> list[str]:
     return problems
 
 
-def verify_github(registry: dict[str, Any]) -> list[str]:
-    """Compare each item's declared state with GitHub. Network; not for CI.
+def verify_tracker(registry: dict[str, Any], provider: Provider, repo: str) -> list[str]:
+    """Compare each item's declared state with the tracker. Network; not for CI.
 
     The guard above validates the registry's internal consistency and nothing
     else, so it stayed green while two closed issues sat at the head of their
-    queues. This is the check that would have noticed.
+    queues. This is the check that would have noticed. The tracker is read
+    through the forge provider (`repo` = `owner/name`); an unreachable
+    tracker is a failure, never a pass — the absence of an answer is not
+    agreement.
     """
     problems: list[str] = []
     for item in registry.get("items") or []:
@@ -348,20 +359,14 @@ def verify_github(registry: dict[str, Any]) -> list[str]:
             continue
         issue = item["issue"]
         try:
-            out = subprocess.run(
-                ["gh", "issue", "view", str(issue), "--json", "state", "--jq", ".state"],
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=60,
-            ).stdout.strip().lower()
-        except (OSError, subprocess.SubprocessError) as exc:
-            problems.append(f"issue #{issue}: GitHub unreachable ({exc})")
+            live = provider.get_issue(repo, issue)["state"]
+        except (ForgeError, ValueError) as exc:
+            problems.append(f"issue #{issue}: tracker unreachable ({exc})")
             continue
         declared = str(item.get("state", "")).lower()
-        if out != declared:
+        if live != declared:
             problems.append(
-                f"issue #{issue}: registry says {declared!r}, GitHub says {out!r}"
+                f"issue #{issue}: registry says {declared!r}, tracker says {live!r}"
             )
     return problems
 
@@ -376,11 +381,28 @@ def main() -> int:
         help="Regenerate the queue tables in the roadmap docs from the registry.",
     )
     parser.add_argument(
+        "--verify-tracker",
+        action="store_true",
+        help="Compare declared item states with the tracker through the forge provider "
+        "(network; not for CI). The repository comes from --repo or NOMOS_FORGE_REPO.",
+    )
+    parser.add_argument(
         "--verify-github",
         action="store_true",
-        help="Compare declared item states with GitHub (network; not for CI).",
+        help="Deprecated alias of --verify-tracker.",
+    )
+    parser.add_argument(
+        "--repo",
+        default="",
+        help="Tracker repository as owner/name (default: NOMOS_FORGE_REPO).",
     )
     args = parser.parse_args()
+    if args.verify_github:
+        print(
+            "notice: --verify-github is deprecated, use --verify-tracker (ADR-0006)",
+            file=sys.stderr,
+        )
+        args.verify_tracker = True
     root = Path(args.root).resolve()
     path = Path(args.registry)
     if not path.is_absolute():
@@ -393,8 +415,15 @@ def main() -> int:
     failures = validate(registry)
     if args.emit_docs:
         failures.extend(emit_docs(root, registry))
-    if args.verify_github:
-        failures.extend(verify_github(registry))
+    if args.verify_tracker:
+        try:
+            repo = repo_from_env(explicit=args.repo)
+            provider = provider_from_env()
+        except ForgeError as exc:
+            # Configuration absente : erreur nommée, pas de vérification « sautée ».
+            print(json.dumps({"status": "error", "registry": str(path), "failures": [str(exc)]}, indent=2))
+            return 2
+        failures.extend(verify_tracker(registry, provider, repo))
     try:
         registry_path = path.resolve().relative_to(root).as_posix()
     except ValueError:

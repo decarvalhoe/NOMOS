@@ -1,15 +1,29 @@
 #!/usr/bin/env python3
+"""Create tracker issues from the Nomos product backlog (docs/15).
+
+Issues are listed and created through the forge provider
+(`scripts/forge_provider.py`, selected by `NOMOS_FORGE_PROVIDER` /
+`NOMOS_FORGE_URL` / `NOMOS_FORGE_TOKEN_FILE`). A missing configuration is
+an error (docs/43 §2.8); `--dry-run` still lists existing issues so the
+plan is honest about what would be skipped.
+"""
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
-import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 
 EPIC_RE = re.compile(r"^## EPIC (E\d+) - (.+)$")
@@ -164,77 +178,54 @@ def parse_sections(lines: list[str], start: int, stop_prefixes: tuple[str, ...])
     return data, i
 
 
-def gh_json(args: list[str]) -> list[dict]:
-    result = subprocess.run(
-        ["gh", *args],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    return json.loads(result.stdout or "[]")
+def sync_issues(
+    repo: str, epics: list[Epic], issues: list[Issue], provider: Provider, dry_run: bool = False
+) -> dict[str, int]:
+    """Create the missing epics and issues (by exact title) through the provider."""
+    existing = {item["title"] for item in provider.list_issues(repo, state="all")}
+
+    created = 0
+    skipped = 0
+
+    for entry in [*epics, *issues]:
+        title = entry.issue_title
+        if title in existing:
+            print(f"SKIP {title}")
+            skipped += 1
+            continue
+        if dry_run:
+            print(f"DRYRUN {title}")
+        else:
+            issue = provider.create_issue(repo, title, entry.body())
+            print(f"CREATED {title} -> {issue['url'] or issue['number']}")
+            existing.add(title)
+        created += 1
+
+    print(f"SUMMARY created={created} skipped={skipped} epics={len(epics)} issues={len(issues)}")
+    return {"created": created, "skipped": skipped}
 
 
-def gh_create_issue(repo: str, title: str, body: str) -> str:
-    result = subprocess.run(
-        ["gh", "issue", "create", "--repo", repo, "--title", title, "--body", body],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    return result.stdout.strip()
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Create GitHub issues from the Nomos product backlog.")
-    parser.add_argument("--repo", required=True, help="GitHub repository, e.g. RBOKproject/Nomos")
+def main(argv: list[str] | None = None, provider: Provider | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Create tracker issues from the Nomos product backlog.")
+    parser.add_argument("--repo", required=True, help="Repository as owner/name, e.g. RBOKproject/Nomos")
     parser.add_argument(
         "--backlog",
         default="docs/15-product-backlog.md",
         help="Path to the backlog markdown file",
     )
     parser.add_argument("--dry-run", action="store_true", help="Print the issues that would be created")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     backlog_path = Path(args.backlog)
     epics, issues = parse_backlog(backlog_path)
 
-    existing = {
-        item["title"]
-        for item in gh_json(["issue", "list", "--repo", args.repo, "--state", "all", "--limit", "500", "--json", "title"])
-    }
-
-    created = 0
-    skipped = 0
-
-    for epic in epics:
-        title = epic.issue_title
-        if title in existing:
-            print(f"SKIP {title}")
-            skipped += 1
-            continue
-        if args.dry_run:
-            print(f"DRYRUN {title}")
-        else:
-            url = gh_create_issue(args.repo, title, epic.body())
-            print(f"CREATED {title} -> {url}")
-            existing.add(title)
-        created += 1
-
-    for issue in issues:
-        title = issue.issue_title
-        if title in existing:
-            print(f"SKIP {title}")
-            skipped += 1
-            continue
-        if args.dry_run:
-            print(f"DRYRUN {title}")
-        else:
-            url = gh_create_issue(args.repo, title, issue.body())
-            print(f"CREATED {title} -> {url}")
-            existing.add(title)
-        created += 1
-
-    print(f"SUMMARY created={created} skipped={skipped} epics={len(epics)} issues={len(issues)}")
+    try:
+        forge = provider if provider is not None else provider_from_env()
+        sync_issues(args.repo, epics, issues, forge, dry_run=args.dry_run)
+    except ForgeError as exc:
+        # Configuration absente ou refus de la forge : dit, jamais tu.
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
     return 0
 
 

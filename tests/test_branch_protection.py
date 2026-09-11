@@ -1,17 +1,53 @@
-"""Tests for regulated_branch_protection.py config parsing and verification logic."""
+"""Tests for regulated_branch_protection.py config parsing and verification logic.
+
+The live side is a `FakeProvider` from scripts/forge_provider.py: no `gh`
+binary, no network. Doctrine §2.8: a missing provider configuration must
+make the CLI fail with the variable's name, never verify nothing and pass.
+"""
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 # Add scripts to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+sys.path.insert(0, str(SCRIPTS))
 
+import forge_provider as fp  # noqa: E402
 import regulated_branch_protection as bp  # noqa: E402
+
+REPO = "TestOrg/TestRepo"
+COMPLIANT = {
+    "required_pull_request_reviews": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews": True,
+    },
+    "required_status_checks": {"contexts": ["CI"], "checks": []},
+    "enforce_admins": {"enabled": True},
+    "allow_force_pushes": {"enabled": False},
+    "allow_deletions": {"enabled": False},
+    "required_linear_history": {"enabled": True},
+}
+
+
+def fake_with(live: dict | None) -> fp.FakeProvider:
+    """A fake forge holding `live` as the protection of TestOrg/TestRepo@main (or nothing)."""
+    fake = fp.FakeProvider()
+    if live is not None:
+        fake.seed_branch_protection(REPO, "main", live)
+    return fake
+
+
+def _clean_env(**extra: str) -> dict[str, str]:
+    """No forge configuration at all, and no `gh` reachable on PATH."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("NOMOS_FORGE_", "GITHUB_", "GH_"))}
+    env["PATH"] = "/nonexistent"
+    env.update(extra)
+    return env
 
 
 SAMPLE_CONFIG = {
@@ -73,117 +109,96 @@ class TestLoadRepoConfig(unittest.TestCase):
 
 
 class TestVerifyBranch(unittest.TestCase):
-    """Test verify logic with mocked gh api responses."""
+    """Verify logic against a fake forge seeded with live protection payloads."""
 
     def _rule(self):
         return SAMPLE_CONFIG["branch_rules"][0]
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_fully_compliant(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": {
-                "required_approving_review_count": 1,
-                "dismiss_stale_reviews": True,
-            },
-            "required_status_checks": {"contexts": ["CI"], "checks": []},
-            "enforce_admins": {"enabled": True},
-            "allow_force_pushes": {"enabled": False},
-            "allow_deletions": {"enabled": False},
-            "required_linear_history": {"enabled": True},
-        }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_fully_compliant(self):
+        fake = fake_with(COMPLIANT)
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake)
         self.assertEqual(len(findings), 0)
+        self.assertEqual(fake.calls, [("get_branch_protection", {"repo": REPO, "branch": "main"})])
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_no_protection(self, mock_api):
-        mock_api.return_value = None
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_no_protection(self):
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(None))
         self.assertTrue(any(f["control"] == "BRANCH-PROTECTION-EXISTS" for f in findings))
         self.assertTrue(any(f["blocking"] for f in findings))
+        # The provider's reason is carried into the finding, not dropped.
+        self.assertIn("no branch protection for TestOrg/TestRepo@main", findings[0]["message"])
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_no_pr_required(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": None,
-            "allow_force_pushes": {"enabled": False},
-            "allow_deletions": {"enabled": False},
-            "required_linear_history": {"enabled": True},
-            "enforce_admins": {"enabled": True},
-        }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_refusal_by_the_forge_is_a_blocking_finding(self):
+        fake = fake_with(None)
+        fake.fail("get_branch_protection", fp.NotSupported("gitlab: branch protection is not supported"))
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake)
+        self.assertEqual(findings[0]["control"], "BRANCH-PROTECTION-EXISTS")
+        self.assertIn("not supported", findings[0]["message"])
+
+    def test_no_pr_required(self):
+        live = {**COMPLIANT, "required_pull_request_reviews": None, "required_status_checks": None}
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
         self.assertTrue(any(f["control"] == "REQUIRE-PR" for f in findings))
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_force_push_allowed(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": {
-                "required_approving_review_count": 1,
-                "dismiss_stale_reviews": True,
-            },
-            "allow_force_pushes": {"enabled": True},
-            "allow_deletions": {"enabled": False},
-            "required_linear_history": {"enabled": True},
-            "enforce_admins": {"enabled": True},
-            "required_status_checks": {"contexts": ["CI"]},
-        }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_force_push_allowed(self):
+        live = {**COMPLIANT, "allow_force_pushes": {"enabled": True}}
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
         self.assertTrue(any(f["control"] == "NO-FORCE-PUSH" for f in findings))
         self.assertTrue(any(f["blocking"] for f in findings))
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_deletion_allowed(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": {
-                "required_approving_review_count": 1,
-                "dismiss_stale_reviews": True,
-            },
-            "allow_force_pushes": {"enabled": False},
-            "allow_deletions": {"enabled": True},
-            "required_linear_history": {"enabled": True},
-            "enforce_admins": {"enabled": True},
-            "required_status_checks": {"contexts": ["CI"]},
-        }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_deletion_allowed(self):
+        live = {**COMPLIANT, "allow_deletions": {"enabled": True}}
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
         self.assertTrue(any(f["control"] == "NO-DELETION" for f in findings))
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_missing_status_check(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": {
-                "required_approving_review_count": 1,
-                "dismiss_stale_reviews": True,
-            },
-            "allow_force_pushes": {"enabled": False},
-            "allow_deletions": {"enabled": False},
-            "required_linear_history": {"enabled": True},
-            "enforce_admins": {"enabled": True},
-            "required_status_checks": {"contexts": ["other-check"], "checks": []},
-        }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+    def test_missing_status_check(self):
+        live = {**COMPLIANT, "required_status_checks": {"contexts": ["other-check"], "checks": []}}
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
         self.assertTrue(any(f["control"] == "STATUS-CHECK-CONTEXT" for f in findings))
 
-    @patch("regulated_branch_protection.gh_api")
-    def test_insufficient_reviews(self, mock_api):
-        mock_api.return_value = {
-            "required_pull_request_reviews": {
-                "required_approving_review_count": 0,
-                "dismiss_stale_reviews": True,
-            },
-            "allow_force_pushes": {"enabled": False},
-            "allow_deletions": {"enabled": False},
-            "required_linear_history": {"enabled": True},
-            "enforce_admins": {"enabled": True},
-            "required_status_checks": {"contexts": ["CI"]},
+    def test_insufficient_reviews(self):
+        live = {
+            **COMPLIANT,
+            "required_pull_request_reviews": {"required_approving_review_count": 0, "dismiss_stale_reviews": True},
         }
-        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule())
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
         self.assertTrue(any(f["control"] == "REVIEW-COUNT" for f in findings))
+
+    def test_forgejo_shaped_protection_reports_unmapped_controls(self):
+        # What Forgejo cannot express (linear history) is absent from the
+        # normalised payload and must surface as a finding, not a pass.
+        live = fp.forgejo_protection_to_common(
+            {"enable_push": False, "required_approvals": 1, "dismiss_stale_approvals": True,
+             "enable_status_check": True, "status_check_contexts": ["CI"], "apply_to_admins": True}
+        )
+        findings = bp.verify_branch("TestOrg", "TestRepo", self._rule(), fake_with(live))
+        self.assertEqual([f["control"] for f in findings], ["LINEAR-HISTORY"])
+        self.assertFalse(findings[0]["blocking"])
+
+
+class TestApplyBranch(unittest.TestCase):
+    def test_apply_puts_the_common_payload_through_the_provider(self):
+        fake = fp.FakeProvider()
+        ok, detail = bp.apply_branch("TestOrg", "TestRepo", SAMPLE_CONFIG["branch_rules"][0], fake)
+        self.assertEqual((ok, detail), (True, ""))
+        op, kwargs = fake.calls[0]
+        self.assertEqual((op, kwargs["repo"], kwargs["branch"]), ("put_branch_protection", REPO, "main"))
+        payload = kwargs["payload"]
+        self.assertEqual(payload["required_pull_request_reviews"]["required_approving_review_count"], 1)
+        self.assertEqual(payload["required_status_checks"], {"strict": True, "contexts": ["CI"]})
+        self.assertTrue(payload["enforce_admins"])
+        self.assertTrue(payload["required_linear_history"])
+
+    def test_refusal_is_reported_not_masked(self):
+        fake = fp.FakeProvider()
+        fake.fail("put_branch_protection", fp.NotSupported("forgejo: cannot express required_linear_history"))
+        ok, detail = bp.apply_branch("TestOrg", "TestRepo", SAMPLE_CONFIG["branch_rules"][0], fake)
+        self.assertFalse(ok)
+        self.assertIn("required_linear_history", detail)
 
 
 class TestFindingStructure(unittest.TestCase):
-    @patch("regulated_branch_protection.gh_api")
-    def test_finding_fields(self, mock_api):
-        mock_api.return_value = None
-        findings = bp.verify_branch("O", "R", SAMPLE_CONFIG["branch_rules"][0])
+    def test_finding_fields(self):
+        findings = bp.verify_branch("O", "R", SAMPLE_CONFIG["branch_rules"][0], fp.FakeProvider())
         for f in findings:
             self.assertIn("control", f)
             self.assertIn("branch", f)
@@ -193,7 +208,42 @@ class TestFindingStructure(unittest.TestCase):
             self.assertIn("remediation", f)
 
 
+class TestCLIProviderConfiguration(unittest.TestCase):
+    """Adversarial: without a forge configuration the CLI must not verify nothing and pass."""
+
+    def _run(self, env: dict[str, str], *args: str) -> subprocess.CompletedProcess:
+        yaml = __import__("yaml", fromlist=[""])
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(SAMPLE_CONFIG, f)
+            config = f.name
+        try:
+            return subprocess.run(
+                [sys.executable, str(SCRIPTS / "regulated_branch_protection.py"), "--config", config, *args],
+                capture_output=True, text=True, check=False, env=env,
+            )
+        finally:
+            os.unlink(config)
+
+    def test_missing_configuration_names_the_variable_and_fails(self):
+        result = self._run(_clean_env(), "--verify")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("NOMOS_FORGE_PROVIDER", result.stderr)
+        self.assertNotIn("ALL CHECKS PASSED", result.stdout)
+
+    def test_forgejo_without_url_names_the_url_variable(self):
+        result = self._run(_clean_env(NOMOS_FORGE_PROVIDER="forgejo", NOMOS_FORGE_TOKEN="t"), "--verify")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("NOMOS_FORGE_URL", result.stderr)
+
+    def test_fake_provider_with_no_protection_is_a_blocking_failure(self):
+        result = self._run(_clean_env(NOMOS_FORGE_PROVIDER="fake"), "--verify", "--format", "json")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["findings"][0]["control"], "BRANCH-PROTECTION-EXISTS")
+
+
 class TestPrintFindings(unittest.TestCase):
+
     def test_json_format(self):
         import io
         old_stdout = sys.stdout
