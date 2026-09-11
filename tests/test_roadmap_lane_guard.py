@@ -333,21 +333,23 @@ class RegistryTruthTests(unittest.TestCase):
         # Without an answer the check must FAIL loudly, never silently pass:
         # the absence of an answer is not agreement.
         fake = forge_provider.FakeProvider()  # no issue seeded → 404
-        problems = guard.verify_tracker({"items": [{"issue": 1, "state": "open"}]}, fake, "o/r")
+        problems = guard.verify_tracker({"items": [{"issue": 1, "state": "open"}]}, {"github": (fake, "o/r")})
         self.assertEqual(len(problems), 1)
-        self.assertIn("tracker unreachable", problems[0])
+        self.assertIn("issue #1 (github): tracker unreachable", problems[0])
         self.assertEqual(fake.calls, [("get_issue", {"repo": "o/r", "number": 1})])
 
     def test_verify_tracker_names_a_state_mismatch(self) -> None:
         fake = forge_provider.FakeProvider()
         fake.seed_issues("o/r", [{"number": 7, "title": "x", "state": "closed"}])
-        problems = guard.verify_tracker({"items": [{"issue": 7, "state": "open"}]}, fake, "o/r")
-        self.assertEqual(problems, ["issue #7: registry says 'open', tracker says 'closed'"])
+        problems = guard.verify_tracker({"items": [{"issue": 7, "state": "open"}]}, {"github": (fake, "o/r")})
+        self.assertEqual(problems, ["issue #7 (github): registry says 'open', tracker says 'closed'"])
 
     def test_verify_tracker_agrees_when_states_match(self) -> None:
         fake = forge_provider.FakeProvider()
         fake.seed_issues("o/r", [{"number": 7, "title": "x", "state": "closed"}])
-        self.assertEqual(guard.verify_tracker({"items": [{"issue": 7, "state": "closed"}]}, fake, "o/r"), [])
+        self.assertEqual(
+            guard.verify_tracker({"items": [{"issue": 7, "state": "closed"}]}, {"github": (fake, "o/r")}), []
+        )
 
     def _run_cli(self, env: dict, *args: str):
         import os
@@ -387,3 +389,195 @@ class RegistryTruthTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         verdict = json.loads(result.stdout)
         self.assertTrue(all("tracker unreachable" in f for f in verdict["failures"]), verdict["failures"][:3])
+
+
+class TrackerQualificationTests(unittest.TestCase):
+    """ADR-0006 FN-4 (#739): every identifier names its tracker.
+
+    `#N` used to mean "GitHub issue N" by construction. With two trackers during
+    the transition (GitHub, the sovereign forge) the registry must say which
+    forge each number belongs to, and the verification must read each item on
+    THAT forge — a missing configuration is a named failure, not a skipped item.
+    """
+
+    def test_shipped_registry_announces_1_1_0_and_a_default_tracker(self) -> None:
+        data = registry()
+        self.assertEqual(data["schema_version"], "1.1.0")
+        self.assertEqual(data["default_tracker"], "github")
+        # The worked example: the four forge-neutrality items are explicit.
+        explicit = sorted(item["issue"] for item in data["items"] if "tracker" in item)
+        self.assertEqual(explicit, [736, 737, 738, 739])
+        self.assertTrue(all(item.get("tracker", "github") == "github" for item in data["items"]))
+
+    def test_default_tracker_applies_to_items_without_the_field(self) -> None:
+        data = registry()
+        item = next(item for item in data["items"] if "tracker" not in item)
+        self.assertEqual(guard.item_tracker(data, item), "github")
+        data["default_tracker"] = "forgejo"
+        self.assertEqual(guard.item_tracker(data, item), "forgejo")
+        self.assertEqual(guard.validate(data), [])
+        # A registry that says nothing at all is a GitHub registry (1.0.0 reading).
+        self.assertEqual(guard.item_tracker({}, {"issue": 1}), "github")
+
+    def test_explicit_tracker_is_validated(self) -> None:
+        data = registry()
+        item = next(item for item in data["items"] if "tracker" not in item)
+        item["tracker"] = "forgejo"
+        self.assertEqual(guard.validate(data), [])
+        self.assertEqual(guard.item_tracker(data, item), "forgejo")
+        self.assertEqual(sorted(guard.registry_trackers(data)), ["forgejo", "github"])
+
+    def test_unknown_tracker_is_refused(self) -> None:
+        data = registry()
+        data["items"][0]["tracker"] = "bitbucket"
+        data["umbrella_issues"][0]["tracker"] = "sourcehut"
+        data["default_tracker"] = "jira"
+        failures = guard.validate(data)
+        issue = data["items"][0]["issue"]
+        self.assertTrue(any(f"issue #{issue}: unknown tracker 'bitbucket'" in f for f in failures), failures)
+        self.assertTrue(any("umbrella issue #545: unknown tracker 'sourcehut'" in f for f in failures), failures)
+        self.assertTrue(any("default_tracker 'jira' is not one of" in f for f in failures), failures)
+
+    def test_schema_1_0_0_is_still_read_but_cannot_carry_tracker_fields(self) -> None:
+        # Backward compatibility (docs/16 §3): a 1.0.0 registry is a GitHub
+        # registry. Using the 1.1.0 fields without announcing 1.1.0 is refused,
+        # otherwise the version would stop meaning anything.
+        data = registry()
+        data["schema_version"] = "1.0.0"
+        del data["default_tracker"]
+        for item in data["items"]:
+            item.pop("tracker", None)
+        self.assertEqual(guard.validate(data), [])
+        data["default_tracker"] = "github"
+        failures = guard.validate(data)
+        self.assertTrue(any("schema_version 1.0.0 cannot carry default_tracker" in f for f in failures), failures)
+        data["schema_version"] = "2.0.0"
+        failures = guard.validate(data)
+        self.assertTrue(any("schema_version '2.0.0' is not one of 1.0.0, 1.1.0" in f for f in failures), failures)
+        del data["schema_version"]
+        failures = guard.validate(data)
+        self.assertTrue(any("schema_version None is not one of" in f for f in failures), failures)
+
+    def test_queue_table_qualifies_an_item_hosted_off_the_default_tracker(self) -> None:
+        data = registry()
+        lane = nonempty_lane(data)
+        head = data["selection_policy"]["dispatch_queues"][lane][0]
+        item = next(item for item in data["items"] if item["issue"] == head)
+        item["tracker"] = "forgejo"
+        table = guard.render_queue_table(data)
+        self.assertIn(f"#{head} (forgejo) — ", table)
+        # Items on the default tracker keep the bare `#N` — no drift in the docs.
+        others = [i for i in data["selection_policy"]["dispatch_queues"][lane] if i != head]
+        for issue in others:
+            self.assertIn(f"#{issue} — ", table)
+            self.assertNotIn(f"#{issue} (", table)
+
+    def test_verify_tracker_reads_each_item_on_its_own_tracker(self) -> None:
+        github = forge_provider.FakeProvider()
+        github.seed_issues("o/nomos", [{"number": 1, "title": "gh", "state": "open"}])
+        forgejo = forge_provider.FakeProvider()
+        forgejo.seed_issues("rbok/nomos", [{"number": 1, "title": "forge", "state": "closed"}])
+        data = {
+            "schema_version": "1.1.0",
+            "default_tracker": "github",
+            "items": [
+                {"issue": 1, "state": "open"},
+                {"issue": 1, "state": "closed", "tracker": "forgejo"},
+            ],
+        }
+        bindings = {"github": (github, "o/nomos"), "forgejo": (forgejo, "rbok/nomos")}
+        self.assertEqual(guard.verify_tracker(data, bindings), [])
+        # Each provider was asked exactly for its own item, in its own repository.
+        self.assertEqual(github.calls, [("get_issue", {"repo": "o/nomos", "number": 1})])
+        self.assertEqual(forgejo.calls, [("get_issue", {"repo": "rbok/nomos", "number": 1})])
+        # The same numbers, swapped: the mismatch names the tracker.
+        data["items"][0]["state"] = "closed"
+        data["items"][1]["state"] = "open"
+        self.assertEqual(
+            guard.verify_tracker(data, bindings),
+            [
+                "issue #1 (github): registry says 'closed', tracker says 'open'",
+                "issue #1 (forgejo): registry says 'open', tracker says 'closed'",
+            ],
+        )
+
+    def test_missing_tracker_configuration_fails_by_name_never_silently(self) -> None:
+        # Adversarial: the forgejo item must NOT vanish from the report because
+        # nobody configured the forge; it must fail, naming the tracker and the
+        # missing variable.
+        github = forge_provider.FakeProvider()
+        github.seed_issues("o/nomos", [{"number": 5, "title": "gh", "state": "open"}])
+        data = {
+            "schema_version": "1.1.0",
+            "default_tracker": "github",
+            "items": [
+                {"issue": 5, "state": "open"},
+                {"issue": 9, "state": "open", "tracker": "forgejo"},
+            ],
+        }
+        problems = guard.verify_tracker(data, {"github": (github, "o/nomos")})
+        self.assertEqual(problems, ["issue #9 (forgejo): tracker not configured"])
+        error = forge_provider.ForgeConfigError("NOMOS_FORGE_FORGEJO_URL missing")
+        problems = guard.verify_tracker(data, {"github": (github, "o/nomos"), "forgejo": error})
+        self.assertEqual(problems, ["issue #9 (forgejo): NOMOS_FORGE_FORGEJO_URL missing"])
+
+    def test_bind_trackers_reports_the_missing_variable_per_secondary_tracker(self) -> None:
+        data = {
+            "schema_version": "1.1.0",
+            "default_tracker": "github",
+            "items": [
+                {"issue": 5, "state": "open"},
+                {"issue": 9, "state": "open", "tracker": "forgejo"},
+                {"issue": 3, "state": "open", "tracker": "gitlab"},
+            ],
+        }
+        env = {"NOMOS_FORGE_PROVIDER": "github", "GITHUB_TOKEN": "ghs_x", "NOMOS_FORGE_REPO": "o/nomos"}
+        bindings = guard.bind_trackers(data, env, which=lambda _: None)
+        self.assertEqual(set(bindings), {"github", "forgejo", "gitlab"})
+        provider, repo = bindings["github"]
+        self.assertEqual((provider.name, repo), ("github", "o/nomos"))
+        self.assertIsInstance(bindings["forgejo"], forge_provider.ForgeConfigError)
+        self.assertEqual(str(bindings["forgejo"]), "NOMOS_FORGE_FORGEJO_REPO missing")
+        self.assertEqual(str(bindings["gitlab"]), "NOMOS_FORGE_GITLAB_REPO missing")
+        # Repo given, URL still absent: the next missing variable is named.
+        env["NOMOS_FORGE_FORGEJO_REPO"] = "rbok/nomos"
+        self.assertEqual(str(guard.bind_trackers(data, env, which=lambda _: None)["forgejo"]), "NOMOS_FORGE_FORGEJO_URL missing")
+        env["NOMOS_FORGE_FORGEJO_URL"] = "https://forge.example"
+        self.assertEqual(
+            str(guard.bind_trackers(data, env, which=lambda _: None)["forgejo"]),
+            "NOMOS_FORGE_FORGEJO_TOKEN_FILE or NOMOS_FORGE_FORGEJO_TOKEN missing",
+        )
+        env["NOMOS_FORGE_FORGEJO_TOKEN"] = "t"
+        provider, repo = guard.bind_trackers(data, env, which=lambda _: None)["forgejo"]
+        self.assertEqual((provider.name, repo), ("forgejo", "rbok/nomos"))
+        # End to end: the failures carry the tracker and the variable.
+        problems = guard.verify_tracker(data, guard.bind_trackers(data, env, which=lambda _: None))
+        self.assertIn("issue #3 (gitlab): NOMOS_FORGE_GITLAB_REPO missing", problems)
+
+    def test_bind_trackers_secondary_github_keeps_its_fallbacks(self) -> None:
+        # Primary is the forge; GitHub items are read with GITHUB_TOKEN, or `gh`.
+        data = {"schema_version": "1.1.0", "default_tracker": "forgejo",
+                "items": [{"issue": 1, "state": "open"}, {"issue": 2, "state": "open", "tracker": "github"}]}
+        env = {"NOMOS_FORGE_PROVIDER": "forgejo", "NOMOS_FORGE_URL": "https://forge.example",
+               "NOMOS_FORGE_TOKEN": "t", "NOMOS_FORGE_REPO": "rbok/nomos"}
+        bindings = guard.bind_trackers(data, env, which=lambda _: None)
+        self.assertEqual(bindings["forgejo"][1], "rbok/nomos")
+        self.assertEqual(str(bindings["github"]), "NOMOS_FORGE_GITHUB_REPO missing")
+        env["NOMOS_FORGE_GITHUB_REPO"] = "o/nomos"
+        self.assertIn("GITHUB_TOKEN, GH_TOKEN or the `gh` binary missing", str(guard.bind_trackers(data, env, which=lambda _: None)["github"]))
+        env["GITHUB_TOKEN"] = "ghs_x"
+        provider, repo = guard.bind_trackers(data, env, which=lambda _: None)["github"]
+        self.assertEqual((provider.name, repo, provider.uses_gh), ("github", "o/nomos", False))
+        del env["GITHUB_TOKEN"]
+        provider, _ = guard.bind_trackers(data, env, which=lambda _: "/usr/bin/gh")["github"]
+        self.assertTrue(provider.uses_gh)
+
+    def test_bind_trackers_primary_configuration_is_still_required(self) -> None:
+        data = {"schema_version": "1.1.0", "items": [{"issue": 1, "state": "open"}]}
+        with self.assertRaises(forge_provider.ForgeConfigError):
+            guard.bind_trackers(data, {"NOMOS_FORGE_PROVIDER": "fake"}, which=lambda _: None)
+        # The fake primary serves every tracker in memory (tests only).
+        data["items"].append({"issue": 2, "state": "open", "tracker": "forgejo"})
+        bindings = guard.bind_trackers(data, {"NOMOS_FORGE_PROVIDER": "fake", "NOMOS_FORGE_REPO": "o/r"}, which=lambda _: None)
+        self.assertEqual({k: v[1] for k, v in bindings.items()}, {"github": "o/r", "forgejo": "o/r"})
+        self.assertTrue(all(v[0].name == "fake" for v in bindings.values()))
