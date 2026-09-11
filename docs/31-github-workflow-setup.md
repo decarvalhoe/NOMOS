@@ -150,6 +150,13 @@ Notes:
   corpus repository. The publisher (`scripts/nomos_github_publish.py`)
   treats path guard violations and unauthorised mutations as hard
   failures.
+- When the publisher actually opens the pull request (mode
+  `pull_request` without `--dry-run`), it authenticates through the
+  forge provider (`scripts/forge_provider.py`, docs/35 « Fournisseur De
+  Forge »): expose `NOMOS_OUTPUT_WRITE_TOKEN` to that step as
+  `NOMOS_FORGE_TOKEN` (or through `NOMOS_FORGE_TOKEN_FILE`), never as the
+  job's default `GITHUB_TOKEN`. A missing token makes the step fail with
+  the variable's name; it never skips the PR silently.
 - NGW-04 declares `NOMOS_OUTPUT_WRITE_TOKEN` as `required: false` so
   callers using `mode: artifact_only` do not need to provision it.
   The publisher (NGW-05, `#390`) elevates the requirement when the
