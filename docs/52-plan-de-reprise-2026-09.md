@@ -49,7 +49,7 @@ Ce que l'inventaire a trouvé et qui n'était écrit nulle part :
 
 | Direction | Source | Conséquence pour ce plan |
 |---|---|---|
-| La forge souveraine est le dépôt de référence ; GitLab doit marcher ; GitHub n'est pas privilégié | exigence d'organisation du 11.09.2026, ADR-0006 | la neutralité de forge est le chantier produit/devops de la reprise |
+| Un seul dépôt de référence, `github.com/decarvalhoe/NOMOS` ; toute autre copie est un fork ; l'outillage ne privilégie aucun fournisseur (Forgejo, GitLab, GitHub) | décision d'Eric du 11.09.2026, ADR-0006 §1 amendé | la neutralité de forge est le chantier produit/devops de la reprise ; la forge est un fork aval synchronisé |
 | Roadmaps indépendantes, files autonomes | ADR-VRC-0004, `docs/47` | les tranches entrent dans la lane `devops` comme items `dispatch:autonomous` |
 | Pas de *done* sans preuve adversariale ; ce qui se tait ment | `docs/43` §2.3 et §2.8 | chaque tranche livre un test qui échoue sans le correctif, et un garde plutôt qu'une constante |
 | La release est un acte humain | `docs/51` B5, #720 | rien ici ne tague ni ne publie |
@@ -97,9 +97,10 @@ montre la commande qui l'a prouvé.
   sur des fixtures, `upload-artifact` 4→7 et `vitest` 3→4 avec CI verte.
   **Acte de l'opérateur** : la fusion de PR GitHub est hors des droits de
   l'agent dans cette session.
-- Trancher l'identité du dépôt : soit transférer `decarvalhoe/NOMOS` vers
-  l'organisation `RBOKproject` sur GitHub, soit corriger les 273 références.
-  Décision d'Eric ; le plan ne présume rien.
+- Identité du dépôt : tranchée le 2026-09-11 — `decarvalhoe/NOMOS` est le
+  dépôt de référence, transféré depuis l'organisation ; `RBOKproject/NOMOS`
+  redirige, le chemin de module Go reste valide. Le manifeste pointe sur le
+  dépôt de référence.
 - Coquilles `sdk/`, `policies/`, `references/`, `examples/` : déclarées,
   pas remplies (REP-1, #747). Les tableaux d'arborescence des trois README
   disent ce que chaque dossier contient ; `sdk/README.md` et
@@ -117,10 +118,14 @@ Ils bloquent des claims, jamais le dispatcher (`docs/47`).
 
 ## 3. Conduite
 
-- **Où l'on développe** : PR sur GitHub tant que les portes opposables y
-  tournent (`ci.yml` et ses gardes), fusion quand la CI est verte et la revue
-  faite ; miroir sur la forge après fusion. Quand FN-3 est livrée, la forge
-  devient le lieu des PR et GitHub un miroir.
+- **Où l'on développe** : le dépôt de référence est `github.com/decarvalhoe/NOMOS`
+  (transféré depuis l'organisation, l'ancien nom redirige). Les PR de fond
+  s'ouvrent sur GitHub et y sont fusionnées quand la CI est verte et la revue
+  faite. La forge `RBOKproject/nomos` est un fork aval : son `main` suit GitHub
+  par avance rapide (`synchro-amont.yml`, toutes les heures et à la demande) ;
+  elle héberge les PR qui ne concernent qu'elle (`.forgejo/**`) et rejoue les
+  portes sur chaque push et PR. Un commit posé sur `main` de la forge hors de
+  GitHub arrête la synchronisation, bruyamment.
 - **Identité** : sur la forge, l'agent écrit sous `agent-claude` (auteur ≠
   valideur) ; sur GitHub, sous le compte de l'opérateur.
 - **Preuve** : chaque PR cite les commandes exécutées et ce qui n'a pas été
