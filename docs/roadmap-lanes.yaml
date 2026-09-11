@@ -1,4 +1,9 @@
-schema_version: "1.0.0"
+schema_version: "1.1.0"
+# 1.1.0 (ADR-0006 FN-4, #739): identifiers are provider-qualified. `default_tracker`
+# names the forge that hosts every item without a `tracker` field; an item may
+# override it with `tracker: github | forgejo | gitlab`. Additive (docs/16 §3):
+# a 1.0.0 registry is still read, with every item on GitHub.
+default_tracker: github
 decision_ref: docs/adr/0004-independent-roadmaps-risk-based-validation.md
 policy_ref: docs/47-roadmap-lanes-and-risk-based-validation.md
 claim_boundary: >-
@@ -661,7 +666,11 @@ items:
   # Forge neutrality (ADR-0006, docs/52) — the sovereign forge is the
   # repository of reference; every sidecar that talks to a forge goes through
   # scripts/forge_provider.py. Tooling only: no regulated claim, no release.
+  # Worked example of the qualified identifier (FN-4): these four items were
+  # opened on GitHub and say so explicitly. Every other item relies on
+  # `default_tracker`; an item opened on the forge would carry `tracker: forgejo`.
   - issue: 737
+    tracker: github
     title: Forge neutrality FN-1 — forge_provider boundary, sticky PR comment and CI evidence collector migrated
     state: open
     lane: devops
@@ -671,6 +680,7 @@ items:
     claim_state: bounded
     depends_on: []
   - issue: 736
+    tracker: github
     title: Forge neutrality FN-2 — regulated scripts, publisher and lane guard migrated to the provider
     state: open
     lane: devops
@@ -680,6 +690,7 @@ items:
     claim_state: bounded
     depends_on: [737]
   - issue: 738
+    tracker: github
     title: Forge neutrality FN-3 — opposable gates under .forgejo/workflows without marketplace steps
     state: open
     lane: devops
@@ -689,6 +700,7 @@ items:
     claim_state: bounded
     depends_on: []
   - issue: 739
+    tracker: github
     title: Forge neutrality FN-4 — provider-qualified tracker identifiers in the roadmap registry
     state: open
     lane: devops

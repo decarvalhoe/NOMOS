@@ -8,7 +8,9 @@ repository from recreating the false blockers removed by ADR-VRC-0004:
 * hard dependencies target autonomous work in the same lane;
 * passive, human and external facts are inputs/claim gates, never task blockers;
 * tooling intended for regulated use declares intended use, impact, validation
-  state and bounded reliance.
+  state and bounded reliance;
+* every identifier is provider-qualified (ADR-0006 FN-4): an item is `#N` on
+  the tracker named by its `tracker` field, or by `default_tracker` otherwise.
 """
 
 from __future__ import annotations
@@ -17,7 +19,9 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+import os
+import shutil
+from typing import Any, Callable
 
 import yaml
 
@@ -27,10 +31,31 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from forge_provider import ForgeError, Provider, provider_from_env, repo_from_env  # noqa: E402
+from forge_provider import (  # noqa: E402
+    ENV_TOKEN,
+    ENV_TOKEN_FILE,
+    GITHUB_DEFAULT_URL,
+    ForgeConfigError,
+    ForgeError,
+    Provider,
+    make_provider,
+    provider_from_env,
+    read_token,
+    repo_from_env,
+    resolve_provider_name,
+)
 
 
 DEFAULT_REGISTRY = Path("docs/roadmap-lanes.yaml")
+# Versions du registre que ce guard sait lire (docs/16 §3 : un champ optionnel
+# ajouté = MINOR). 1.0.0 : identifiants GitHub implicites. 1.1.0 : `tracker` par
+# item et `default_tracker` (ADR-0006 FN-4). Un registre 1.0.0 reste lu, tous
+# ses items sur GitHub ; il ne peut pas porter les champs de 1.1.0 sans
+# annoncer sa version, sinon la version ne dit plus rien.
+SCHEMA_VERSIONS = ("1.0.0", "1.1.0")
+TRACKER_SCHEMA_VERSION = "1.1.0"
+TRACKERS = ("github", "forgejo", "gitlab")
+DEFAULT_TRACKER = "github"
 LANES = {"product", "devops", "regulated"}
 DISPATCH = {"autonomous", "passive", "human", "external"}
 UMBRELLA_ROLES = {"epic", "parent"}
@@ -54,11 +79,65 @@ TOOL_RELIANCE = {
 }
 
 
+def item_tracker(registry: dict[str, Any], item: dict[str, Any]) -> str:
+    """Tracker d'un item : son champ `tracker`, sinon `default_tracker`, sinon GitHub.
+
+    Renvoie la valeur telle que déclarée (une valeur inconnue est refusée par
+    `validate`, pas maquillée ici).
+    """
+    tracker = item.get("tracker")
+    if tracker is None:
+        tracker = registry.get("default_tracker", DEFAULT_TRACKER)
+    return str(tracker)
+
+
+def validate_trackers(registry: dict[str, Any]) -> list[str]:
+    """Version du schéma et qualification des identifiants (1.1.0)."""
+    failures: list[str] = []
+    version = registry.get("schema_version")
+    if version not in SCHEMA_VERSIONS:
+        failures.append(
+            f"schema_version {version!r} is not one of {', '.join(SCHEMA_VERSIONS)}"
+        )
+    default = registry.get("default_tracker")
+    if default is not None and default not in TRACKERS:
+        failures.append(
+            f"default_tracker {default!r} is not one of {', '.join(TRACKERS)}"
+        )
+    qualified: list[str] = []
+    if default is not None:
+        qualified.append("default_tracker")
+    entries = [
+        (f"issue #{item.get('issue')}", item)
+        for item in registry.get("items") or []
+        if isinstance(item, dict)
+    ] + [
+        (f"umbrella issue #{umbrella.get('issue')}", umbrella)
+        for umbrella in registry.get("umbrella_issues") or []
+        if isinstance(umbrella, dict)
+    ]
+    for label, entry in entries:
+        if "tracker" not in entry:
+            continue
+        qualified.append(f"{label}.tracker")
+        if entry["tracker"] not in TRACKERS:
+            failures.append(
+                f"{label}: unknown tracker {entry['tracker']!r}; expected one of {', '.join(TRACKERS)}"
+            )
+    if qualified and version in SCHEMA_VERSIONS and version != TRACKER_SCHEMA_VERSION:
+        failures.append(
+            f"schema_version {version} cannot carry {qualified[0]}; "
+            f"tracker qualification requires schema_version {TRACKER_SCHEMA_VERSION}"
+        )
+    return failures
+
+
 def validate(registry: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     items = registry.get("items")
     if not isinstance(items, list) or not items:
         return ["items: at least one roadmap item is required"]
+    failures.extend(validate_trackers(registry))
 
     by_issue: dict[int, dict[str, Any]] = {}
     for index, item in enumerate(items):
@@ -296,12 +375,18 @@ def render_queue_table(registry: dict[str, Any]) -> str:
     product = [int(i) for i in queues.get("product") or []]
     devops = [int(i) for i in queues.get("devops") or []]
 
+    default = str(registry.get("default_tracker", DEFAULT_TRACKER))
+
     def cell(issue: int | None) -> str:
         if issue is None:
             return "—"
         item = by_issue.get(issue)
         title = str(item.get("title", "")).strip() if item else "(not declared)"
-        return f"#{issue} — {title}"
+        # `#N` alone means the default tracker; an item hosted elsewhere says
+        # so, otherwise a reader would look it up on the wrong forge.
+        tracker = item_tracker(registry, item) if item else default
+        qualifier = "" if tracker == default else f" ({tracker})"
+        return f"#{issue}{qualifier} — {title}"
 
     rows = []
     for index in range(max(len(product), len(devops), 1)):
@@ -343,30 +428,152 @@ def emit_docs(root: Path, registry: dict[str, Any]) -> list[str]:
     return problems
 
 
-def verify_tracker(registry: dict[str, Any], provider: Provider, repo: str) -> list[str]:
-    """Compare each item's declared state with the tracker. Network; not for CI.
+# Liaison d'un tracker : le fournisseur qui le sert et le dépôt `owner/name`
+# où vivent ses issues — ou l'erreur de configuration qui empêche de le lire.
+Binding = tuple[Provider, str]
+
+
+def registry_trackers(registry: dict[str, Any]) -> list[str]:
+    """Trackers utilisés par au moins un item, dans l'ordre de première apparition."""
+    seen: list[str] = []
+    for item in registry.get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        tracker = item_tracker(registry, item)
+        if tracker not in seen:
+            seen.append(tracker)
+    return seen
+
+
+def _tracker_var(tracker: str, suffix: str) -> str:
+    return f"NOMOS_FORGE_{tracker.upper()}_{suffix}"
+
+
+def bind_tracker(
+    tracker: str,
+    environ: dict[str, str],
+    *,
+    primary: str,
+    primary_repo: str,
+    which: Callable[[str], str | None] | None = None,
+    **kw: Any,
+) -> Binding:
+    """Construit le fournisseur d'un tracker depuis l'environnement.
+
+    Le fournisseur principal (`NOMOS_FORGE_PROVIDER`, variables nues
+    `NOMOS_FORGE_URL`/`_TOKEN_FILE`/`_TOKEN`, dépôt `--repo` ou
+    `NOMOS_FORGE_REPO`) sert le tracker qui porte son nom. Tout autre tracker
+    est configuré par ses variables préfixées : `NOMOS_FORGE_FORGEJO_URL`,
+    `NOMOS_FORGE_FORGEJO_TOKEN_FILE` (ou `_TOKEN`) et `NOMOS_FORGE_FORGEJO_REPO`
+    — idem `GITHUB`, `GITLAB`. GitHub garde ses replis (GITHUB_TOKEN, GH_TOKEN,
+    binaire `gh`). Le principal `fake` sert tous les trackers en mémoire
+    (tests). Une variable absente lève `ForgeConfigError` qui la nomme.
+    """
+    which = which or shutil.which
+    if primary == "fake":
+        repo = environ.get(_tracker_var(tracker, "REPO"), "").strip() or primary_repo
+        return make_provider("fake"), repo
+    if tracker == primary:
+        return provider_from_env(environ, which=which, **kw), primary_repo
+
+    repo_var = _tracker_var(tracker, "REPO")
+    repo = environ.get(repo_var, "").strip()
+    if not repo:
+        raise ForgeConfigError(f"{repo_var} missing")
+    url_var = _tracker_var(tracker, "URL")
+    url = environ.get(url_var, "").strip()
+    token_file_var = _tracker_var(tracker, "TOKEN_FILE")
+    token_var = _tracker_var(tracker, "TOKEN")
+    # Vue de l'environnement pour `read_token` : les variables préfixées prennent
+    # la place des variables nues, rien d'autre ne fuit du principal.
+    view = {
+        ENV_TOKEN_FILE: environ.get(token_file_var, ""),
+        ENV_TOKEN: environ.get(token_var, ""),
+        "GITHUB_TOKEN": environ.get("GITHUB_TOKEN", ""),
+        "GH_TOKEN": environ.get("GH_TOKEN", ""),
+    }
+    try:
+        token = read_token(view, *(("GITHUB_TOKEN", "GH_TOKEN") if tracker == "github" else ()))
+    except ForgeConfigError as exc:
+        raise ForgeConfigError(str(exc).replace(ENV_TOKEN_FILE, token_file_var)) from exc
+    if tracker == "github":
+        gh_path = None if token else which("gh")
+        if not token and not gh_path:
+            raise ForgeConfigError(
+                f"{token_file_var}, {token_var}, GITHUB_TOKEN, GH_TOKEN or the `gh` binary missing"
+            )
+        return make_provider("github", base_url=url or GITHUB_DEFAULT_URL, token=token, gh_path=gh_path, **kw), repo
+    if not url:
+        raise ForgeConfigError(f"{url_var} missing")
+    if not token:
+        raise ForgeConfigError(f"{token_file_var} or {token_var} missing")
+    return make_provider(tracker, base_url=url, token=token, **kw), repo
+
+
+def bind_trackers(
+    registry: dict[str, Any],
+    environ: dict[str, str] | None = None,
+    *,
+    explicit_repo: str = "",
+    **kw: Any,
+) -> dict[str, Binding | ForgeError]:
+    """Une liaison par tracker du registre ; l'erreur nommée quand elle manque.
+
+    Le fournisseur principal et son dépôt doivent être configurés (erreur
+    levée, comme avant FN-4) ; un tracker secondaire mal configuré n'arrête pas
+    la vérification des autres : ses items recevront chacun un échec nommé.
+    """
+    env = dict(os.environ if environ is None else environ)
+    primary = resolve_provider_name(env)
+    primary_repo = repo_from_env(env, explicit=explicit_repo)
+    bindings: dict[str, Binding | ForgeError] = {}
+    for tracker in registry_trackers(registry):
+        try:
+            bindings[tracker] = bind_tracker(
+                tracker, env, primary=primary, primary_repo=primary_repo, **kw
+            )
+        except ForgeConfigError as exc:
+            bindings[tracker] = exc
+    return bindings
+
+
+def verify_tracker(
+    registry: dict[str, Any], bindings: dict[str, Binding | ForgeError]
+) -> list[str]:
+    """Compare each item's declared state with ITS tracker. Network; not for CI.
 
     The guard above validates the registry's internal consistency and nothing
     else, so it stayed green while two closed issues sat at the head of their
-    queues. This is the check that would have noticed. The tracker is read
-    through the forge provider (`repo` = `owner/name`); an unreachable
-    tracker is a failure, never a pass — the absence of an answer is not
-    agreement.
+    queues. This is the check that would have noticed. Each item is read on
+    the tracker its identifier names, through that tracker's provider and
+    repository (`bindings[tracker] = (provider, "owner/name")`). A tracker
+    without a binding, a binding that is an error, or an unreachable tracker
+    is a failure naming the item and the tracker — never a pass: the absence
+    of an answer is not agreement.
     """
     problems: list[str] = []
     for item in registry.get("items") or []:
         if not isinstance(item, dict) or not isinstance(item.get("issue"), int):
             continue
         issue = item["issue"]
+        tracker = item_tracker(registry, item)
+        binding = bindings.get(tracker)
+        if binding is None:
+            problems.append(f"issue #{issue} ({tracker}): tracker not configured")
+            continue
+        if isinstance(binding, ForgeError):
+            problems.append(f"issue #{issue} ({tracker}): {binding}")
+            continue
+        provider, repo = binding
         try:
             live = provider.get_issue(repo, issue)["state"]
         except (ForgeError, ValueError) as exc:
-            problems.append(f"issue #{issue}: tracker unreachable ({exc})")
+            problems.append(f"issue #{issue} ({tracker}): tracker unreachable ({exc})")
             continue
         declared = str(item.get("state", "")).lower()
         if live != declared:
             problems.append(
-                f"issue #{issue}: registry says {declared!r}, tracker says {live!r}"
+                f"issue #{issue} ({tracker}): registry says {declared!r}, tracker says {live!r}"
             )
     return problems
 
@@ -383,8 +590,11 @@ def main() -> int:
     parser.add_argument(
         "--verify-tracker",
         action="store_true",
-        help="Compare declared item states with the tracker through the forge provider "
-        "(network; not for CI). The repository comes from --repo or NOMOS_FORGE_REPO.",
+        help="Compare declared item states with their trackers through the forge provider "
+        "(network; not for CI). The primary provider (NOMOS_FORGE_PROVIDER) reads its "
+        "own tracker from --repo or NOMOS_FORGE_REPO; any other tracker named by the "
+        "registry is configured by NOMOS_FORGE_<TRACKER>_URL, _TOKEN_FILE (or _TOKEN) "
+        "and _REPO, and its items fail by name when that configuration is missing.",
     )
     parser.add_argument(
         "--verify-github",
@@ -417,13 +627,14 @@ def main() -> int:
         failures.extend(emit_docs(root, registry))
     if args.verify_tracker:
         try:
-            repo = repo_from_env(explicit=args.repo)
-            provider = provider_from_env()
+            bindings = bind_trackers(registry, explicit_repo=args.repo)
         except ForgeError as exc:
-            # Configuration absente : erreur nommée, pas de vérification « sautée ».
+            # Configuration principale absente : erreur nommée, pas de
+            # vérification « sautée ». Un tracker secondaire manquant est
+            # rapporté item par item par verify_tracker.
             print(json.dumps({"status": "error", "registry": str(path), "failures": [str(exc)]}, indent=2))
             return 2
-        failures.extend(verify_tracker(registry, provider, repo))
+        failures.extend(verify_tracker(registry, bindings))
     try:
         registry_path = path.resolve().relative_to(root).as_posix()
     except ValueError:

@@ -78,4 +78,4 @@ privileged. NOMOS was measured against that direction the same day:
 | 1 | `forge_provider.py` + migration of the sticky PR comment and the CI evidence collector | done (GitHub PR #740, #737 closed) |
 | 2 | Migration of the regulated scripts, the publisher, the lane guard and the issue/label tooling; `push_and_pr.sh` removed | delivered (#736) |
 | 3 | Opposable gates under `.forgejo/workflows/portes.yml` without marketplace steps | forge PR #3 (#738) |
-| 4 | Provider-qualified tracker identifiers in the roadmap registry | planned |
+| 4 | Provider-qualified tracker identifiers in the roadmap registry (`schema_version` 1.1.0, `default_tracker`, `tracker` per item, `--verify-tracker` one provider per tracker) | delivered (#739) |

@@ -228,3 +228,34 @@ func TestReadinessGatherNamesClosedItemsWithoutTool(t *testing.T) {
 		t.Fatalf("closed-without-tool=%v missing-fields=%v", in.ClosedWithoutTool, in.ToolsMissingFields)
 	}
 }
+
+// Le registre 1.1.0 (ADR-0006 FN-4) ajoute `default_tracker` et `tracker` par
+// item ; le lecteur ne vérifie pas la version et ignore les champs inconnus,
+// donc ses comptes ne bougent pas — ce test le fige.
+func TestReadinessGatherReadsTrackerQualifiedRegistry(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "roadmap-lanes.yaml"), []byte(`schema_version: "1.1.0"
+default_tracker: github
+items:
+  - issue: 1
+    tracker: forgejo
+    state: closed
+    lane: product
+  - issue: 2
+    tracker: github
+    state: closed
+    lane: devops
+    regulated_tool: {intended_use: x, impact: support, validation_state: technically_verified, reliance: manual_review}
+  - issue: 3
+    state: open
+    lane: product
+`), 0o644)
+	in := gather(ReadinessOptions{RepoRoot: root, Now: readyNow, CoreVersion: "0.2.0-ALPHA", ClaimGuard: func(string) error { return nil }})
+	if in.RoadmapErr != nil {
+		t.Fatalf("a 1.1.0 registry must be read: %v", in.RoadmapErr)
+	}
+	if strings.Join(in.ClosedWithoutTool, ",") != "#1" || len(in.ToolsMissingFields) != 0 {
+		t.Fatalf("closed-without-tool=%v missing-fields=%v", in.ClosedWithoutTool, in.ToolsMissingFields)
+	}
+}

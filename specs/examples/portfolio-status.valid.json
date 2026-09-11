@@ -33,7 +33,7 @@
     "available": true,
     "source": {
       "path": "docs/roadmap-lanes.yaml",
-      "sha256": "sha256:a63c8f1953cb976c1a7e850902e8018120b409bf5898338eecb62cd9e758646f",
+      "sha256": "sha256:9a6864c22f20246d751ca8d5081b73fde981c2b8ec41066b9df88893ed3b148b",
       "freshness": "undated"
     },
     "lanes": {
@@ -281,6 +281,6 @@
   },
   "sections_unavailable": 0,
   "sections_stale": 1,
-  "status_digest": "sha256:508865185abee986529f05d0c79d11c02d5ff5118f9b94f630531501342da0f5",
+  "status_digest": "sha256:7bbce7d2082eaa15489ea26afbcba0282e438839b77adb9f8bbf0249f0a4e523",
   "claim_boundary": "A computed view of committed machine sources: registry and generated matrix, roadmap lanes, evidence-ledger gaps, CAPA and review records, repeated-CI index, Praxis gate verdict, competence files, domain packs, public-source snapshots, optional release candidate. It creates no evidence, approves nothing and lifts no claim; an unavailable or stale source is shown as such, never hidden."
 }
