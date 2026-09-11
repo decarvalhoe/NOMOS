@@ -1,0 +1,151 @@
+name: Convention — contrôle de sortie
+
+# LA GARDE EST ICI, PAS DANS LE TICKET.
+#
+# `controle-pr.yml` vérifie la FORME d'une pull request : étiquettes présentes,
+# sections « Vérifié » et « NON vérifié » renseignées, origine déclarée. Il ne
+# regarde jamais ce que la PR touche. Tout le fond reposait donc sur le ticket —
+# `## Périmètre autorisé`, `## Hors périmètre bloqué`, `## Autorisation de
+# prise` — c'est-à-dire sur trois sections qu'un humain devait rédiger avant
+# qu'un agent puisse commencer.
+#
+# Le résultat était mesurable le 2026-08-10 : 37 tickets prêts, 6 autorisés. Le
+# travail n'attendait pas une capacité, il attendait une permission.
+#
+# Ce contrôle inverse la charge. Les bornes sont déclarées UNE FOIS PAR DÉPÔT
+# dans `.forgejo/perimetre-agent.yml`, et vérifiées sur ce que la PR a
+# réellement fait. Un agent n'a plus besoin d'être autorisé pour commencer : il
+# a besoin d'être dans les bornes pour fusionner. C'est un contrôle de fait, pas
+# d'intention — et un fait se vérifie sans réunion.
+#
+# Une seule implémentation, volontairement : le même `perimetre.mjs` tourne sur
+# le poste de l'agent et ici. Deux implémentations divergeraient — le 2026-08-10,
+# une classe POSIX interprétée différemment par Node et par grep laissait passer
+# en local un mot de passe que la CI aurait refusé. Un agent ne doit jamais
+# découvrir en CI une règle qu'il ne pouvait pas éprouver avant de pousser.
+#
+# Contraintes de l'instance : aucun `uses:` (pas d'accès marketplace), checkout
+# manuel par git + GIT_ASKPASS, `ubuntu-latest` pour disposer de Node.
+
+on:
+  pull_request:
+    # `edited` est indispensable : ce contrôle exige que les chemins sensibles
+    # soient nommés dans la DESCRIPTION. Sans ce déclencheur, l'auteur corrige la
+    # description exactement comme demandé et rien ne se relance — le contrôle
+    # reste rouge sur un défaut déjà réparé. Constaté le 2026-08-10 sur
+    # `yhb-master#7`, la première PR que ce workflow ait jamais examinée.
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  perimetre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Préflight
+        run: |
+          set -eu
+          for bin in git node; do
+            command -v "$bin" >/dev/null 2>&1 || { echo "Outil requis '$bin' absent" >&2; exit 1; }
+          done
+          node -e 'const [m]=process.versions.node.split(".").map(Number); if (m<18) { console.error("Node >= 18 requis"); process.exit(1); }'
+
+      - name: Checkout de la base et de la tête
+        env:
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+
+          askpass="$(mktemp)"
+          trap 'rm -f "$askpass"' EXIT
+          cat > "$askpass" <<'ASKPASS'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$GIT_TOKEN" ;;
+          esac
+          ASKPASS
+          chmod 700 "$askpass"
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+
+          git config --global --add safe.directory "$PWD" || true
+          rm -rf .git
+          git init -q .
+          git config --local advice.detachedHead false
+          git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
+
+          # Les deux côtés sont nécessaires : le contrôle porte sur le diff, donc
+          # sur la base autant que sur la tête. Un clone superficiel d'un seul
+          # côté ne permettrait pas de calculer l'ancêtre commun.
+          git fetch --quiet --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          git fetch --quiet --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/ci/head"
+          git checkout -q --detach --force "$PR_HEAD_SHA"
+          git --no-pager log -1 --format='tête %H %s'
+
+      - name: Le dépôt déclare-t-il son périmètre ?
+        run: |
+          set -eu
+          if [ ! -f .forgejo/perimetre-agent.yml ]; then
+            echo "Ce dépôt ne déclare aucun périmètre agent."
+            echo
+            echo "Sans .forgejo/perimetre-agent.yml, aucun agent ne sait où il a le droit"
+            echo "d'aller, et la garde retombe sur les tickets — c'est-à-dire sur une"
+            echo "permission humaine à redemander à chaque fois."
+            echo
+            echo "Copier le modèle du kit :"
+            echo "  conventions-agentiques/perimetre-agent.yml.modele → .forgejo/perimetre-agent.yml"
+            exit 1
+          fi
+          if [ ! -f .forgejo/perimetre.mjs ]; then
+            echo "Le vérificateur .forgejo/perimetre.mjs est absent de ce dépôt." >&2
+            echo "Il est déposé par conventions-agentiques/appliquer.sh en même temps" >&2
+            echo "que ce workflow, pour que le poste et la CI partagent la même règle." >&2
+            exit 1
+          fi
+
+      - name: Contrôle du périmètre
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: node .forgejo/perimetre.mjs verifier --base "origin/${BASE_REF}"
+
+      - name: Justification des chemins sensibles
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          CORPS: ${{ toJSON(github.event.pull_request.body) }}
+        shell: sh
+        run: |
+          set -u
+          # Un chemin sensible n'est pas interdit : il doit être nommé dans la
+          # description. Exiger la justification sans dire lequel manque ferait
+          # perdre un aller-retour, donc on liste précisément.
+          sensibles=$(node .forgejo/perimetre.mjs verifier --base "origin/${BASE_REF}" \
+                      | sed -n 's/^  ! \([^ ]*\) .*$/\1/p')
+          [ -n "$sensibles" ] || { echo "Aucun chemin sensible touché."; exit 0; }
+
+          corps=$(printf '%s' "$CORPS" | sed 's/\\r//g; s/\\n/\n/g')
+          manquants=""
+          for f in $sensibles; do
+            if printf '%s' "$corps" | grep -qF "$f"; then
+              echo "ok     $f justifié dans la description"
+            else
+              echo "ECHEC  $f touché mais non mentionné dans la description"
+              manquants="$manquants $f"
+            fi
+          done
+
+          if [ -n "$manquants" ]; then
+            echo
+            echo "Ces chemins sont modifiables, mais leur modification doit être dite."
+            echo "Ajouter à la description de la PR pourquoi chacun est touché :"
+            for f in $manquants; do echo "  - $f"; done
+            exit 1
+          fi
