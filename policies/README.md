@@ -1,10 +1,14 @@
 # Policies
 
-Policies define executable rules for Nomos gates.
+This area is reserved for a future declarative policy framework for Nomos gates.
 
-## Current Role
+## Status in `v1.0.0-BETA.1`
 
-Policies support:
+No executable policy lives here in `v1.0.0-BETA.1`: this directory holds this README and nothing else, and nothing in it is read by the CLI or by CI. The gates NOMOS actually enforces are code: the guards and gates in `scripts/` (run by CI and by `.forgejo/portes.sh`) and the fidelity and compliance engines in `cli/`. This status is computed from the tree by `scripts/unshipped_surfaces_guard.py`: the root READMEs may not describe policies as executable or operational while this directory stays README-only.
+
+## Intended Future Role
+
+A policy framework here would support:
 
 - release gates;
 - strict checks;

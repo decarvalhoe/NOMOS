@@ -99,9 +99,13 @@ montre la commande qui l'a prouvé.
 - Trancher l'identité du dépôt : soit transférer `decarvalhoe/NOMOS` vers
   l'organisation `RBOKproject` sur GitHub, soit corriger les 273 références.
   Décision d'Eric ; le plan ne présume rien.
-- Coquilles `sdk/`, `policies/`, `references/`, `examples/` : soit les
-  remplir, soit les déclarer explicitement « surface non livrée » dans le
-  README (le claim boundary y gagne). Proposition : déclarer, ne pas remplir.
+- Coquilles `sdk/`, `policies/`, `references/`, `examples/` : déclarées,
+  pas remplies (REP-1, #747). Les tableaux d'arborescence des trois README
+  disent ce que chaque dossier contient ; `sdk/README.md` et
+  `policies/README.md` parlent de `v1.0.0-BETA.1` ; le garde
+  `scripts/unshipped_surfaces_guard.py` calcule depuis l'arbre quels dossiers
+  ne contiennent qu'un README et rougit toute prose qui les dit livrés, ainsi
+  que l'absence de la ligne `sdk/` dans un tableau d'arborescence.
 
 ### Vague 4 — Ce qui reste humain ou externe (inchangé)
 
