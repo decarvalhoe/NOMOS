@@ -28,9 +28,10 @@ import forge_provider as fp  # noqa: E402
 class _Response(io.BytesIO):
     """Réponse minimale compatible `with urlopen(...) as resp`."""
 
-    def __init__(self, payload, status: int = 200) -> None:
+    def __init__(self, payload, status: int = 200, headers: dict | None = None) -> None:
         super().__init__(json.dumps(payload).encode("utf-8"))
         self.status = status
+        self.headers = dict(headers or {})
 
     def __enter__(self):
         return self
@@ -57,8 +58,12 @@ class StubOpener:
             payload = self.routes[key]
         else:
             raise AssertionError(f"unexpected request {req.get_method()} {key}")
+        if isinstance(payload, BaseException):
+            raise payload
         if callable(payload):
             payload = payload(req)
+        if isinstance(payload, _Response):
+            return payload
         return _Response(payload)
 
 
@@ -505,6 +510,422 @@ class FakeProviderTests(unittest.TestCase):
         with self.assertRaises(fp.ForgeError) as ctx:
             fake.get_json("/missing")
         self.assertEqual(ctx.exception.status, 404)
+
+
+# ---------------------------------------------------------------------------
+# Deuxième tranche (FN-2) : issues, taxonomie, pull requests, protection,
+# environnements, journal d'audit — formes de requête GitHub et Forgejo.
+# ---------------------------------------------------------------------------
+
+
+def _http_404(url: str) -> urllib.error.HTTPError:
+    return urllib.error.HTTPError(url, 404, "Not Found", hdrs=None, fp=None)
+
+
+class GitHubSecondSliceRestTests(unittest.TestCase):
+    BASE = "https://api.github.com/repos/o/r"
+
+    def _provider(self, routes, **kw):
+        opener = StubOpener(routes, **kw)
+        return fp.GitHubProvider(token="ghs_secret", opener=opener), opener
+
+    def test_get_issue_is_normalised(self):
+        provider, opener = self._provider(
+            {f"{self.BASE}/issues/7": {"number": 7, "title": "t", "state": "closed", "html_url": "u"}}
+        )
+        issue = provider.get_issue("o/r", 7)
+        self.assertEqual((issue["number"], issue["state"], issue["url"]), (7, "closed", "u"))
+        self.assertEqual(opener.requests[0].get_method(), "GET")
+
+    def test_list_issues_drops_pull_requests(self):
+        provider, _ = self._provider(
+            {
+                f"{self.BASE}/issues?state=all&per_page=100&page=1": [
+                    {"number": 1, "title": "issue", "state": "open", "html_url": "a"},
+                    {"number": 2, "title": "pr", "state": "open", "html_url": "b", "pull_request": {}},
+                ]
+            }
+        )
+        titles = [i["title"] for i in provider.list_issues("o/r")]
+        self.assertEqual(titles, ["issue"])
+
+    def test_create_issue_posts_title_and_body(self):
+        provider, opener = self._provider(
+            {f"{self.BASE}/issues": {"number": 3, "title": "T", "state": "open", "html_url": "u"}}
+        )
+        self.assertEqual(provider.create_issue("o/r", "T", "B")["number"], 3)
+        req = opener.requests[0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertEqual(json.loads(req.data.decode("utf-8")), {"title": "T", "body": "B"})
+
+    def test_edit_issue_adds_labels_then_sets_milestone(self):
+        issue = {"number": 3, "title": "T", "state": "open", "html_url": "u"}
+        provider, opener = self._provider(
+            {f"{self.BASE}/issues/3/labels": [], f"{self.BASE}/issues/3": lambda req: issue}
+        )
+        provider.edit_issue("o/r", 3, add_labels=["type:epic"], milestone=12)
+        methods = [r.get_method() for r in opener.requests]
+        self.assertEqual(methods, ["POST", "PATCH", "GET"])
+        self.assertEqual(json.loads(opener.requests[0].data.decode("utf-8")), {"labels": ["type:epic"]})
+        self.assertEqual(json.loads(opener.requests[1].data.decode("utf-8")), {"milestone": 12})
+
+    def test_labels_create_and_update_encode_the_name(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/labels": {"id": 1, "name": "area:spec", "color": "0052CC"},
+                f"{self.BASE}/labels/area%3Aspec": {"id": 1, "name": "area:spec", "color": "0052cc"},
+            }
+        )
+        created = provider.create_label("o/r", "area:spec", "#0052CC", "d")
+        self.assertEqual(created["color"], "0052cc")
+        self.assertEqual(json.loads(opener.requests[0].data.decode("utf-8"))["color"], "0052cc")
+        provider.update_label("o/r", "area:spec", description="new")
+        self.assertEqual(opener.requests[1].get_method(), "PATCH")
+        self.assertEqual(json.loads(opener.requests[1].data.decode("utf-8")), {"description": "new"})
+
+    def test_milestones_use_number_as_id(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/milestones?state=all&per_page=100&page=1": [
+                    {"number": 4, "title": "v0.1", "state": "open"}
+                ],
+                f"{self.BASE}/milestones": {"number": 5, "title": "v0.2", "state": "open"},
+            }
+        )
+        self.assertEqual(provider.list_milestones("o/r")[0]["id"], 4)
+        self.assertEqual(provider.create_milestone("o/r", "v0.2", "d")["id"], 5)
+        self.assertEqual(
+            json.loads(opener.requests[1].data.decode("utf-8")), {"title": "v0.2", "description": "d"}
+        )
+
+    def test_pull_request_create_and_update(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/pulls": {"number": 9, "title": "t", "html_url": "p"},
+                f"{self.BASE}/pulls/9": {"number": 9, "title": "t2", "html_url": "p"},
+            }
+        )
+        created = provider.create_pull_request("o/r", head="nomos/x", base="main", title="t", body="b")
+        self.assertEqual((created["number"], created["url"]), (9, "p"))
+        self.assertEqual(
+            json.loads(opener.requests[0].data.decode("utf-8")),
+            {"head": "nomos/x", "base": "main", "title": "t", "body": "b"},
+        )
+        self.assertEqual(provider.update_pull_request("o/r", 9, title="t2")["title"], "t2")
+        self.assertEqual(opener.requests[1].get_method(), "PATCH")
+        self.assertEqual(json.loads(opener.requests[1].data.decode("utf-8")), {"title": "t2"})
+
+    def test_branch_protection_get_and_put(self):
+        live = {"enforce_admins": {"enabled": True}}
+        provider, opener = self._provider({f"{self.BASE}/branches/main/protection": lambda req: live})
+        self.assertEqual(provider.get_branch_protection("o/r", "main"), live)
+        provider.put_branch_protection("o/r", "main", {"enforce_admins": True})
+        self.assertEqual([r.get_method() for r in opener.requests], ["GET", "PUT"])
+        self.assertEqual(json.loads(opener.requests[1].data.decode("utf-8")), {"enforce_admins": True})
+
+    def test_missing_protection_is_a_404_forge_error(self):
+        url = f"{self.BASE}/branches/main/protection"
+        provider, _ = self._provider({url: _http_404(url)})
+        with self.assertRaises(fp.ForgeError) as ctx:
+            provider.get_branch_protection("o/r", "main")
+        self.assertEqual(ctx.exception.status, 404)
+
+    def test_environment_get_and_put(self):
+        env = {"name": "regulated-release", "protection_rules": []}
+        provider, opener = self._provider({f"{self.BASE}/environments/regulated-release": lambda req: env})
+        self.assertEqual(provider.get_environment("o/r", "regulated-release")["name"], "regulated-release")
+        provider.put_environment("o/r", "regulated-release", {"prevent_self_review": True})
+        self.assertEqual([r.get_method() for r in opener.requests], ["GET", "PUT"])
+
+    def test_audit_log_follows_link_header(self):
+        first = "https://api.github.com/orgs/Org/audit-log?include=all&per_page=100&phrase=created:2026-01-01..2026-01-07"
+        second = "https://api.github.com/orgs/Org/audit-log?after=abc"
+        provider, opener = self._provider(
+            {
+                first: _Response([{"action": "a"}], headers={"Link": f'<{second}>; rel="next"'}),
+                second: _Response([{"action": "b"}]),
+            }
+        )
+        events = provider.export_org_audit_log("Org", since="2026-01-01", until="2026-01-07")
+        self.assertEqual([e["action"] for e in events], ["a", "b"])
+        self.assertEqual(len(opener.requests), 2)
+
+
+class GitHubSecondSliceGhFallbackTests(unittest.TestCase):
+    def _runner(self, outputs):
+        calls = []
+
+        def run(cmd, **kwargs):
+            calls.append((cmd, kwargs))
+            spec = outputs.pop(0)
+            return subprocess.CompletedProcess(cmd, spec.get("rc", 0), spec.get("out", ""), spec.get("err", ""))
+
+        return run, calls
+
+    def test_put_branch_protection_sends_json_on_stdin(self):
+        run, calls = self._runner([{"out": "{}"}])
+        provider = fp.GitHubProvider(token=None, gh_path="/usr/bin/gh", runner=run)
+        provider.put_branch_protection("o/r", "main", {"enforce_admins": True})
+        cmd, kwargs = calls[0]
+        self.assertEqual(cmd[:5], ["/usr/bin/gh", "api", "-X", "PUT", "repos/o/r/branches/main/protection"])
+        self.assertEqual(json.loads(kwargs["input"]), {"enforce_admins": True})
+
+    def test_audit_log_uses_paginate_and_slurp(self):
+        run, calls = self._runner([{"out": json.dumps([[{"action": "a"}], [{"action": "b"}]])}])
+        provider = fp.GitHubProvider(token=None, gh_path="/usr/bin/gh", runner=run)
+        events = provider.export_org_audit_log("Org", since="2026-01-01", until="2026-01-07")
+        self.assertEqual([e["action"] for e in events], ["a", "b"])
+        self.assertEqual(calls[0][0][:4], ["/usr/bin/gh", "api", "--paginate", "--slurp"])
+        self.assertTrue(calls[0][0][4].startswith("orgs/Org/audit-log?"))
+
+    def test_create_pull_request_goes_through_gh_api(self):
+        run, calls = self._runner([{"out": json.dumps({"number": 2, "html_url": "p"})}])
+        provider = fp.GitHubProvider(token=None, gh_path="/usr/bin/gh", runner=run)
+        self.assertEqual(provider.create_pull_request("o/r", head="h", base="b", title="t", body="x")["number"], 2)
+        self.assertEqual(calls[0][0][3:5], ["POST", "repos/o/r/pulls"])
+
+
+class ForgejoSecondSliceTests(unittest.TestCase):
+    BASE = "https://forge.example/api/v1/repos/o/r"
+    RAW_PROTECTION = {
+        "branch_name": "main",
+        "enable_push": False,
+        "required_approvals": 1,
+        "dismiss_stale_approvals": True,
+        "enable_status_check": True,
+        "status_check_contexts": ["CI"],
+        "block_on_outdated_branch": True,
+        "apply_to_admins": True,
+    }
+
+    def _provider(self, routes, **kw):
+        opener = StubOpener(routes, **kw)
+        return fp.ForgejoProvider("https://forge.example", "fj_secret", opener=opener), opener
+
+    def test_protection_is_normalised_to_the_common_shape(self):
+        provider, _ = self._provider({f"{self.BASE}/branch_protections/main": self.RAW_PROTECTION})
+        common = provider.get_branch_protection("o/r", "main")
+        self.assertEqual(common["required_pull_request_reviews"]["required_approving_review_count"], 1)
+        self.assertTrue(common["required_pull_request_reviews"]["dismiss_stale_reviews"])
+        self.assertEqual(common["required_status_checks"], {"strict": True, "contexts": ["CI"]})
+        self.assertEqual(common["enforce_admins"], {"enabled": True})
+        self.assertEqual(common["allow_force_pushes"], {"enabled": False})
+        # Sans équivalent Forgejo : absent, donc signalé par le comparateur.
+        self.assertNotIn("required_linear_history", common)
+
+    def test_push_enabled_means_no_pull_request_requirement(self):
+        common = fp.forgejo_protection_to_common({"enable_push": True, "required_approvals": 2})
+        self.assertIsNone(common["required_pull_request_reviews"])
+
+    def test_put_creates_when_missing_and_patches_when_present(self):
+        one = f"{self.BASE}/branch_protections/main"
+        provider, opener = self._provider(
+            {one: _http_404(one), f"{self.BASE}/branch_protections": self.RAW_PROTECTION}
+        )
+        payload = {"required_pull_request_reviews": {"required_approving_review_count": 1},
+                   "required_status_checks": {"strict": True, "contexts": ["CI"]},
+                   "enforce_admins": True}
+        provider.put_branch_protection("o/r", "main", payload)
+        self.assertEqual([r.get_method() for r in opener.requests], ["GET", "POST"])
+        sent = json.loads(opener.requests[1].data.decode("utf-8"))
+        self.assertEqual(sent["branch_name"], "main")
+        self.assertFalse(sent["enable_push"])
+        self.assertEqual(sent["required_approvals"], 1)
+        self.assertEqual(sent["status_check_contexts"], ["CI"])
+        self.assertTrue(sent["apply_to_admins"])
+
+        provider, opener = self._provider({one: lambda req: self.RAW_PROTECTION})
+        provider.put_branch_protection("o/r", "main", payload)
+        self.assertEqual([r.get_method() for r in opener.requests], ["GET", "PATCH"])
+
+    def test_put_refuses_what_forgejo_cannot_express(self):
+        provider, opener = self._provider({})
+        with self.assertRaises(fp.NotSupported) as ctx:
+            provider.put_branch_protection("o/r", "main", {"required_linear_history": True, "lock_branch": True})
+        self.assertIn("required_linear_history", str(ctx.exception))
+        self.assertIn("lock_branch", str(ctx.exception))
+        self.assertEqual(opener.requests, [])
+
+    def test_labels_are_resolved_to_ids_for_issue_edit(self):
+        issue = {"number": 9, "title": "t", "state": "open", "html_url": "u"}
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/labels?limit=50&page=1": [{"id": 3, "name": "type:epic", "color": "#5319E7"}],
+                f"{self.BASE}/issues/9/labels": [],
+                f"{self.BASE}/issues/9": lambda req: issue,
+            }
+        )
+        provider.edit_issue("o/r", 9, add_labels=["type:epic"], milestone=12)
+        self.assertEqual([r.get_method() for r in opener.requests], ["GET", "POST", "PATCH", "GET"])
+        self.assertEqual(json.loads(opener.requests[1].data.decode("utf-8")), {"labels": [3]})
+        self.assertEqual(json.loads(opener.requests[2].data.decode("utf-8")), {"milestone": 12})
+        self.assertEqual(provider.list_labels("o/r")[0]["color"], "5319e7")
+
+    def test_unknown_label_is_a_named_error(self):
+        provider, _ = self._provider({f"{self.BASE}/labels?limit=50&page=1": []})
+        with self.assertRaises(fp.ForgeError) as ctx:
+            provider.edit_issue("o/r", 9, add_labels=["nope"])
+        self.assertIn("nope", str(ctx.exception))
+
+    def test_create_and_update_label_send_hash_colour(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/labels": {"id": 4, "name": "n", "color": "#0e8a16"},
+                f"{self.BASE}/labels?limit=50&page=1": [{"id": 4, "name": "n", "color": "#0e8a16"}],
+                f"{self.BASE}/labels/4": {"id": 4, "name": "n", "color": "#ffffff"},
+            }
+        )
+        provider.create_label("o/r", "n", "0E8A16", "d")
+        self.assertEqual(json.loads(opener.requests[0].data.decode("utf-8"))["color"], "#0e8a16")
+        self.assertEqual(provider.update_label("o/r", "n", color="ffffff")["color"], "ffffff")
+        self.assertEqual(opener.requests[-1].get_method(), "PATCH")
+
+    def test_milestones_use_id_and_issues_list_only_issues(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/milestones?state=all&limit=50&page=1": [{"id": 12, "title": "v0.1", "state": "open"}],
+                f"{self.BASE}/issues?state=all&type=issues&limit=50&page=1": [
+                    {"number": 1, "title": "i", "state": "closed", "html_url": "u"}
+                ],
+                f"{self.BASE}/issues": {"number": 2, "title": "n", "state": "open", "html_url": "u2"},
+            }
+        )
+        self.assertEqual(provider.list_milestones("o/r")[0]["id"], 12)
+        self.assertEqual(provider.list_issues("o/r")[0]["state"], "closed")
+        self.assertEqual(provider.create_issue("o/r", "n", "b")["number"], 2)
+
+    def test_pull_request_create_and_update(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/pulls": {"number": 5, "title": "t", "html_url": "p"},
+                f"{self.BASE}/pulls/5": {"number": 5, "title": "t", "html_url": "p"},
+            }
+        )
+        self.assertEqual(provider.create_pull_request("o/r", head="h", base="main", title="t", body="b")["url"], "p")
+        self.assertEqual(
+            json.loads(opener.requests[0].data.decode("utf-8")),
+            {"head": "h", "base": "main", "title": "t", "body": "b"},
+        )
+        provider.update_pull_request("o/r", 5, body="b2")
+        self.assertEqual(opener.requests[1].get_method(), "PATCH")
+
+    def test_github_only_concepts_are_refused_without_network(self):
+        provider, opener = self._provider({})
+        with self.assertRaises(fp.NotSupported):
+            provider.get_environment("o/r", "regulated-release")
+        with self.assertRaises(fp.NotSupported):
+            provider.put_environment("o/r", "regulated-release", {})
+        with self.assertRaises(fp.NotSupported) as ctx:
+            provider.export_org_audit_log("Org", since="a", until="b")
+        self.assertIn("audit log", str(ctx.exception))
+        self.assertEqual(opener.requests, [])
+
+
+class GitLabSecondSliceTests(unittest.TestCase):
+    BASE = "https://gitlab.example/api/v4/projects/o%2Fr"
+
+    def _provider(self, routes, **kw):
+        opener = StubOpener(routes, **kw)
+        return fp.GitLabProvider("https://gitlab.example", "glpat_secret", opener=opener), opener
+
+    def test_issue_iid_and_state_are_normalised(self):
+        provider, _ = self._provider(
+            {f"{self.BASE}/issues/4": {"iid": 4, "title": "t", "state": "opened", "web_url": "w"}}
+        )
+        issue = provider.get_issue("o/r", 4)
+        self.assertEqual((issue["number"], issue["state"], issue["url"]), (4, "open", "w"))
+
+    def test_create_issue_uses_description(self):
+        provider, opener = self._provider(
+            {f"{self.BASE}/issues": {"iid": 5, "title": "t", "state": "opened", "web_url": "w"}}
+        )
+        provider.create_issue("o/r", "t", "b")
+        self.assertEqual(json.loads(opener.requests[0].data.decode("utf-8")), {"title": "t", "description": "b"})
+
+    def test_merge_request_create_and_update(self):
+        provider, opener = self._provider(
+            {
+                f"{self.BASE}/merge_requests": {"iid": 3, "title": "t", "web_url": "m"},
+                f"{self.BASE}/merge_requests/3": {"iid": 3, "title": "t2", "web_url": "m"},
+            }
+        )
+        created = provider.create_pull_request("o/r", head="src", base="main", title="t", body="b")
+        self.assertEqual((created["number"], created["url"]), (3, "m"))
+        self.assertEqual(
+            json.loads(opener.requests[0].data.decode("utf-8")),
+            {"source_branch": "src", "target_branch": "main", "title": "t", "description": "b"},
+        )
+        provider.update_pull_request("o/r", 3, title="t2")
+        self.assertEqual(opener.requests[1].get_method(), "PUT")
+
+    def test_taxonomy_and_protection_are_refused_without_network(self):
+        provider, opener = self._provider({})
+        for call in (
+            lambda: provider.list_labels("o/r"),
+            lambda: provider.create_label("o/r", "n", "fff"),
+            lambda: provider.update_label("o/r", "n", color="fff"),
+            lambda: provider.list_milestones("o/r"),
+            lambda: provider.create_milestone("o/r", "t"),
+            lambda: provider.edit_issue("o/r", 1, add_labels=["x"]),
+            lambda: provider.get_branch_protection("o/r", "main"),
+            lambda: provider.put_branch_protection("o/r", "main", {}),
+            lambda: provider.get_environment("o/r", "e"),
+            lambda: provider.export_org_audit_log("Org", since="a", until="b"),
+        ):
+            with self.assertRaises(fp.NotSupported):
+                call()
+        self.assertEqual(opener.requests, [])
+
+
+class RepoFromEnvTests(unittest.TestCase):
+    def test_explicit_wins_then_env_then_named_error(self):
+        self.assertEqual(fp.repo_from_env({"NOMOS_FORGE_REPO": "a/b"}, explicit="c/d"), "c/d")
+        self.assertEqual(fp.repo_from_env({"NOMOS_FORGE_REPO": "a/b"}), "a/b")
+        with self.assertRaises(fp.ForgeConfigError) as ctx:
+            fp.repo_from_env({})
+        self.assertIn("NOMOS_FORGE_REPO", str(ctx.exception))
+        with self.assertRaises(ValueError):
+            fp.repo_from_env({"NOMOS_FORGE_REPO": "not-a-repo"})
+
+
+class FakeSecondSliceTests(unittest.TestCase):
+    def test_issues_labels_milestones_and_pull_requests_round_trip(self):
+        fake = fp.FakeProvider()
+        fake.seed_issues("o/r", [{"number": 7, "title": "seven", "state": "closed"}])
+        self.assertEqual(fake.get_issue("o/r", 7)["state"], "closed")
+        created = fake.create_issue("o/r", "new", "body")
+        self.assertEqual(created["number"], 8)
+        self.assertEqual([i["title"] for i in fake.list_issues("o/r")], ["seven", "new"])
+        label = fake.create_label("o/r", "type:epic", "#5319E7", "d")
+        self.assertEqual(label["color"], "5319e7")
+        fake.update_label("o/r", "type:epic", color="000000")
+        self.assertEqual(fake.list_labels("o/r")[0]["color"], "000000")
+        milestone = fake.create_milestone("o/r", "v1", "d")
+        fake.edit_issue("o/r", 8, add_labels=["type:epic"], milestone=milestone["id"])
+        self.assertEqual(fake.get_issue("o/r", 8)["raw"]["labels"], ["type:epic"])
+        self.assertEqual(fake.get_issue("o/r", 8)["raw"]["milestone"], milestone["id"])
+        pr = fake.create_pull_request("o/r", head="h", base="b", title="t", body="x")
+        self.assertEqual(fake.update_pull_request("o/r", pr["number"], title="t2")["title"], "t2")
+        self.assertEqual(
+            [op for op, _ in fake.calls][:4],
+            ["get_issue", "create_issue", "list_issues", "create_label"],
+        )
+
+    def test_protection_environment_audit_and_failures(self):
+        fake = fp.FakeProvider()
+        with self.assertRaises(fp.ForgeError) as ctx:
+            fake.get_branch_protection("o/r", "main")
+        self.assertEqual(ctx.exception.status, 404)
+        fake.put_branch_protection("o/r", "main", {"enforce_admins": True})
+        self.assertEqual(fake.get_branch_protection("o/r", "main"), {"enforce_admins": True})
+        fake.seed_environment("o/r", "rel", {"prevent_self_review": True})
+        self.assertTrue(fake.get_environment("o/r", "rel")["prevent_self_review"])
+        fake.audit_events["Org"] = [{"action": "a"}]
+        self.assertEqual(fake.export_org_audit_log("Org", since="s", until="u"), [{"action": "a"}])
+        fake.fail("put_environment", fp.NotSupported("fake: refused"))
+        with self.assertRaises(fp.NotSupported):
+            fake.put_environment("o/r", "rel", {})
+        self.assertEqual(fake.calls[-1][0], "put_environment")
 
 
 if __name__ == "__main__":
