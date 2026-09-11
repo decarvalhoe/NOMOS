@@ -69,9 +69,44 @@ helper may be manually checked; a blocking gate needs traceability,
 adversarial tests and an approved validation record before a regulated process
 relies on it alone.
 
+## Tracker Qualification
+
+Since registry `schema_version` 1.1.0 (ADR-0006 FN-4, #739) an issue number
+is qualified by the forge that hosts it. `default_tracker` names the tracker
+of every item without a `tracker` field; an item hosted elsewhere carries
+`tracker: github | forgejo | gitlab`. A 1.0.0 registry is still read, with
+every item on GitHub; it cannot carry the 1.1.0 fields without announcing
+1.1.0.
+
+```yaml
+schema_version: "1.1.0"
+default_tracker: github
+items:
+  - issue: 739            # #739 on the default tracker
+    title: Forge neutrality FN-4 — provider-qualified tracker identifiers
+    tracker: github       # optional; explicit here as the worked example
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [737]
+```
+
+The generated queue tables print a bare `#N` for the default tracker and
+`#N (forgejo)` for an item hosted on another forge, so a number is never
+looked up on the wrong forge. `scripts/roadmap_lane_guard.py --verify-tracker`
+reads each item on its own tracker through `scripts/forge_provider.py`: the
+primary provider (`NOMOS_FORGE_PROVIDER`, `NOMOS_FORGE_REPO`) serves the
+tracker of its name, any other tracker is configured by
+`NOMOS_FORGE_<TRACKER>_URL`, `_TOKEN_FILE` (or `_TOKEN`) and `_REPO`, and an
+item whose tracker is not configured fails by name
+(`issue #N (forgejo): NOMOS_FORGE_FORGEJO_URL missing`) — never a silent skip.
+
 ## Issue Hygiene
 
-Use GitHub labels mirroring the registry:
+Use tracker labels mirroring the registry, on whichever forge hosts the item:
 
 - lane: `lane:product`, `lane:devops`, `lane:regulated`;
 - dispatch: `dispatch:autonomous`, `dispatch:passive`, `dispatch:human`,

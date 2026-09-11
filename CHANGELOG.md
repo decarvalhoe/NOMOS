@@ -2,6 +2,10 @@
 
 All notable changes to Nomos are tracked here. The project uses explicit alpha/beta labels until the public API, evidence contracts, and support model are stable enough for a `v1.0` release (planned as NRT-023..028 in `docs/29`).
 
+## Unreleased
+
+- Roadmap registry `docs/roadmap-lanes.yaml` schema `1.1.0` (ADR-0006 FN-4, #739): identifiers are provider-qualified — top-level `default_tracker` and optional per-item `tracker` (`github | forgejo | gitlab`); `scripts/roadmap_lane_guard.py --verify-tracker` reads each item on its own tracker (one provider per tracker, a missing configuration fails by item name), `--verify-github` stays as a deprecated alias. Additive per `docs/16` §3: a `1.0.0` registry is still read with every item on GitHub, no migration needed; the Go readiness and status loaders ignore the new fields. Tooling only: no regulated claim, no release.
+
 ## v1.0.0-BETA.1 - 2026-09-07
 
 First pre-release of the 1.0 line. Released on 2026-09-07 by the repository owner's decision, recorded in `docs/regulated/lifecycle/release-records/v1.0.0-BETA.1-release-decision.yaml` (#720); the candidate was prepared on 2026-09-06 on a `ready` readiness verdict (#719). What `docs/16` "Release Discipline" requires:

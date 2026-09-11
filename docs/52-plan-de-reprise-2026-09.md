@@ -128,5 +128,5 @@ Ils bloquent des claims, jamais le dispatcher (`docs/47`).
 |---|---|
 | Les workflows GitHub, une fois sur la forge, saturent les runners en échouant (`uses:` interdit) | ils échouaient déjà sur la forge depuis `12906aea` ; FN-3 les remplace au lieu de les réparer |
 | Un provider qui échoue en silence masque une non-publication | erreur nommée obligatoire (ADR-0006 §3), testée avec `fake` |
-| Deux trackers (GitHub, forge) pendant la transition | FN-4 qualifie chaque identifiant ; d'ici là, les items restent sur GitHub où le guard sait les vérifier |
+| Deux trackers (GitHub, forge) pendant la transition | FN-4 qualifie chaque identifiant (`default_tracker`, `tracker` par item, schéma 1.1.0) et `--verify-tracker` lit chaque item sur sa propre forge ; un tracker non configuré échoue par nom d'item |
 | Le registre de roadmap et les docs générées divergent | `roadmap_lane_guard.py` regénère les tables et échoue sur toute dérive |
