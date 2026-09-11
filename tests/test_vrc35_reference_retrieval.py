@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -48,7 +49,7 @@ def emit_real_bundle(tmp: Path) -> Path:
 def run_kit(bundle: Path, harness: Path) -> tuple[int, dict]:
     result = subprocess.run(
         [
-            "python", str(SCRIPT),
+            sys.executable, str(SCRIPT),
             "--bundle", str(bundle),
             "--harness", str(harness),
             "--presets-dir", str(PRESETS),
