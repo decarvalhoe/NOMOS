@@ -82,7 +82,7 @@ Ce que l'inventaire a trouvé et qui n'était écrit nulle part :
 |---|---|---|---|
 | FN-1 | #737 | `scripts/forge_provider.py` (`github`/`forgejo`/`gitlab`/`fake`) ; migration du commentaire collant de PR et du collecteur d'evidence CI ; tests sans binaire ni réseau | — |
 | FN-2 | #736 | migration des scripts regulated, du publisher, du lane guard ; suppression de `push_and_pr.sh` (script de bootstrap mort) | FN-1 |
-| FN-3 | #738 | portes opposables sous `.forgejo/workflows/` sans `uses:` marketplace ; contextes exigés sur `main` de la forge | — |
+| FN-3 | #738 | portes opposables sous `.forgejo/workflows/portes.yml` + `.forgejo/portes.sh` sans `uses:` marketplace (livré le 2026-09-11, voir `docs/07` « Où tournent les portes ») ; contextes exigés sur `main` de la forge : acte de l'administrateur | — |
 | FN-4 | #739 | champ `tracker` par item du registre de roadmap ; `--verify-tracker` via le provider ; bump `schema_version` du contrat | FN-1 |
 
 Ordre de la file `devops` : FN-1, FN-3, FN-2, FN-4. Une tranche est *done*

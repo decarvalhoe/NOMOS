@@ -128,6 +128,24 @@ lorsqu'un flag `--corpus-integrity-*` est fourni à `nomos strict` :
 
 La projection CUE est `#CorpusIntegrityCheck` dans `specs/corpus-integrity-report.cue`. La méthode complète, le catalogue de finding-codes et la procédure de revue opérateur vivent dans [`docs/21-source-feed-integrity-engine.md`](21-source-feed-integrity-engine.md). La règle de phrase réservée pour `full_fidelity_proven` (phrase écrivable uniquement pour les builds dont le rapport d'intégrité corpus est présent et passant) vit dans [`docs/public-claim-boundary.md`](public-claim-boundary.md). Épopée parente : `#337`.
 
+## Où Tournent Les Portes
+
+Depuis le 2026-09-11 (ADR-0006, FN-3 #738), les portes du dépôt lui-même
+tournent à deux endroits, avec les mêmes commandes :
+
+| Surface | Fichier | Contenu | Particularité |
+|---|---|---|---|
+| GitHub | `.github/workflows/ci.yml` | sept jobs (Go, Sigstore, corpus multi-OS, CUE, YAML, Python, sécurité) | étapes `actions/*` du marketplace |
+| Forge souveraine | `.forgejo/workflows/portes.yml` | une tâche séquentielle : Go vet + test, module Sigstore, matrice de câblage, compteurs README, claim boundary, modèle de support, ledger d'evidence, registre de roadmap, suite unittest | aucun `uses:` ; checkout par git, Go téléchargé depuis go.dev et vérifié par SHA-256, dépendances Python épinglées |
+
+Ce que la forge ne joue pas encore : la matrice corpus macOS/Windows, `cue vet`
+(pas de binaire CUE dans l'image), la porte de sécurité `govulncheck`/`pip-audit`
+et la publication (`bundle-release.yml`). Tant qu'une porte n'existe que sur
+GitHub, GitHub reste le lieu de fusion pour ce qu'elle protège (ADR-0006 §1).
+La porte de la forge est rouge à la première commande qui échoue ; sa preuve
+adversariale (une dérive volontaire des compteurs README refusée) est
+consignée dans la PR FN-3 de la forge.
+
 ## Rapport De Couverture
 
 Chemin recommandé :

@@ -1,0 +1,166 @@
+name: Portes — moteur et sidecars
+
+# FN-3 (#738, ADR-0006) : les portes opposables de NOMOS jouées sur la forge
+# souveraine, sans aucune étape `uses:` (les runners n'ont pas d'accès au
+# marketplace). Tout ce qui, sur GitHub, passe par actions/checkout,
+# actions/setup-go et actions/setup-python est fait ici à la main :
+# checkout par git + GIT_ASKPASS (même motif que controle-sortie.yml), puis
+# `.forgejo/portes.sh` — toolchain Go téléchargé depuis go.dev et vérifié par
+# sa somme SHA-256, dépendances Python épinglées, et les portes elles-mêmes.
+#
+# Le fond est dans le script, pas ici : du code enfermé dans un YAML n'a pas
+# de banc possible. `bash .forgejo/portes.sh` se rejoue tel quel sur un poste
+# ou dans un conteneur. Ce que ci.yml de GitHub étale sur sept jobs est ici
+# l'enchaînement des mêmes commandes ; la porte est rouge à la première qui
+# échoue. Ce fichier ne remplace pas ci.yml tant que GitHub héberge une porte
+# (ADR-0006 §4) : il rend la forge capable de refuser une fusion par elle-même.
+#
+# L'API de la forge ne rend pas les logs de job : la dernière étape publie le
+# journal des portes en commentaire collant de la PR (marqueur
+# `<!-- portes:journal -->`), avec le seul GITHUB_TOKEN du run.
+#
+# Ce que ce workflow ne fait PAS : publier (bundle-release.yml reste sur le
+# fournisseur qui héberge la release), signer, ni utiliser un autre secret.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  # Doit rester égal à `toolchain` de cli/go.mod ; la somme vient de
+  # https://go.dev/dl/?mode=json&include=all (fichier go<version>.linux-amd64.tar.gz).
+  GO_VERSION: "1.26.6"
+  GO_SHA256: "708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89"
+  CGO_ENABLED: "1"
+
+jobs:
+  portes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Préflight — outils de l'image
+        run: |
+          set -u
+          manque=0
+          for bin in git curl tar python3 gcc; do
+            if command -v "$bin" >/dev/null 2>&1; then echo "ok     $bin"; else echo "ABSENT $bin"; manque=1; fi
+          done
+          if [ "$manque" = 1 ] && command -v apt-get >/dev/null 2>&1; then
+            echo "Installation des outils manquants par apt-get (image du runner)."
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq >/dev/null && apt-get install -y -qq git curl tar python3 gcc ca-certificates >/dev/null
+          fi
+          for bin in git curl tar python3 gcc; do
+            command -v "$bin" >/dev/null 2>&1 || { echo "Outil requis '$bin' absent et non installable" >&2; exit 1; }
+          done
+          python3 --version
+
+      - name: Checkout de la révision à juger
+        env:
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          EVENEMENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+          askpass="$(mktemp)"
+          trap 'rm -f "$askpass"' EXIT
+          cat > "$askpass" <<'ASKPASS'
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$GIT_TOKEN" ;;
+          esac
+          ASKPASS
+          chmod 700 "$askpass"
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+
+          git config --global --add safe.directory "$PWD" || true
+          rm -rf .git
+          git init -q .
+          git config --local advice.detachedHead false
+          git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
+          if [ "$EVENEMENT" = "pull_request" ]; then
+            git fetch --quiet --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/ci/head"
+            cible="$PR_HEAD_SHA"
+          else
+            git fetch --quiet --no-tags origin "$PUSH_SHA"
+            cible="$PUSH_SHA"
+          fi
+          # Les tags v* sont nécessaires au modèle de support (support_model_guard
+          # recoupe les versions déclarées avec les tags) ; sans eux la porte est
+          # rouge sur un faux « git tags unavailable » — vu au 3e run sur la forge.
+          git fetch --quiet origin '+refs/tags/v*:refs/tags/v*'
+          git checkout -q --detach --force "$cible"
+          git --no-pager log -1 --format='révision %H %s'
+          echo "tags v* : $(git tag -l 'v*' | tr '\n' ' ')"
+
+      - name: Portes (.forgejo/portes.sh)
+        run: bash .forgejo/portes.sh
+
+      - name: Journal des portes en commentaire collant de la PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run: |
+          set -u
+          journal="${RUNNER_TEMP:-/tmp}/portes.log"
+          [ -f "$journal" ] || { echo "aucun journal (portes.sh n'a pas démarré)" > "$journal"; }
+          python3 - <<'PY'
+          import json, os, urllib.request
+          api, jeton = os.environ["API"], os.environ["JETON"]
+          pr, sha, run = os.environ["PR_NUMBER"], os.environ["HEAD_SHA"], os.environ["RUN_URL"]
+          journal = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"), "portes.log")
+          lignes = open(journal, encoding="utf-8", errors="replace").read().splitlines()
+          resume = [l for l in lignes if l.startswith(("===", "ok  ", "ROUGE", "***"))]
+          detail = lignes[-60:]
+          marqueur = "<!-- portes:journal -->"
+          corps = "\n".join([
+              marqueur,
+              f"**Portes — moteur et sidecars** · révision `{sha[:10]}` · [run]({run})",
+              "",
+              "```",
+              *resume[-40:],
+              "```",
+              "<details><summary>Dernières lignes du journal</summary>",
+              "",
+              "```",
+              *detail,
+              "```",
+              "</details>",
+          ])
+          def appel(methode, url, data=None):
+              req = urllib.request.Request(url, method=methode, data=json.dumps(data).encode() if data else None,
+                                           headers={"Authorization": f"token {jeton}", "Content-Type": "application/json", "Accept": "application/json"})
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  return json.loads(r.read() or b"null")
+          existant = None
+          page = 1
+          while True:
+              lot = appel("GET", f"{api}/issues/{pr}/comments?page={page}&limit=50")
+              if not lot: break
+              for c in lot:
+                  if (c.get("body") or "").startswith(marqueur): existant = c
+              if len(lot) < 50: break
+              page += 1
+          if existant:
+              appel("PATCH", f"{api}/issues/comments/{existant['id']}", {"body": corps})
+              print(f"commentaire {existant['id']} mis à jour")
+          else:
+              c = appel("POST", f"{api}/issues/{pr}/comments", {"body": corps})
+              print(f"commentaire {c.get('id')} créé")
+          PY
