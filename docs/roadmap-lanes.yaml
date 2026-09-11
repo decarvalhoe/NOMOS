@@ -23,7 +23,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: []
-    devops: [737, 738, 736, 739]
+    devops: [738]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -672,23 +672,33 @@ items:
   - issue: 737
     tracker: github
     title: Forge neutrality FN-1 — forge_provider boundary, sticky PR comment and CI evidence collector migrated
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: partial
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
+    regulated_tool:
+      intended_use: "route every sidecar call to a forge API through one provider boundary (github, forgejo, gitlab, fake) so that tooling never depends on a single vendor CLI; a missing credential is a named error, never a silent no-op; tooling only, no regulated claim"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 736
     tracker: github
     title: Forge neutrality FN-2 — regulated scripts, publisher and lane guard migrated to the provider
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [737]
+    regulated_tool:
+      intended_use: "carry the branch-protection, release-environment, QMS-audit, audit-log-export and publication scripts through the provider boundary with their comparison logic unchanged; controls a forge cannot express are reported as findings, never assumed; tooling only, no regulated claim"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 738
     tracker: github
     title: Forge neutrality FN-3 — opposable gates under .forgejo/workflows without marketplace steps
@@ -702,10 +712,15 @@ items:
   - issue: 739
     tracker: github
     title: Forge neutrality FN-4 — provider-qualified tracker identifiers in the roadmap registry
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: planned
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: [737]
+    regulated_tool:
+      intended_use: "qualify every roadmap identifier by its tracker so that a forge item is never mistaken for a github.com issue and the verifier resolves one provider per tracker; a missing tracker configuration is a named per-item failure; tooling only, no regulated claim"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review

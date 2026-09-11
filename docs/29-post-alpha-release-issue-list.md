@@ -39,10 +39,7 @@ operating controls, or claim-boundary clarity only.
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | #737 — Forge neutrality FN-1 — forge_provider boundary, sticky PR comment and CI evidence collector migrated |
 | — | #738 — Forge neutrality FN-3 — opposable gates under .forgejo/workflows without marketplace steps |
-| — | #736 — Forge neutrality FN-2 — regulated scripts, publisher and lane guard migrated to the provider |
-| — | #739 — Forge neutrality FN-4 — provider-qualified tracker identifiers in the roadmap registry |
 <!-- roadmap-queues:end -->
 
 Regulated items #560/#561/#562/#192/#193/#194/#196/#638 are tracked by plan

@@ -51,10 +51,7 @@ below is generated from it and checked for drift in CI:
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | #737 — Forge neutrality FN-1 — forge_provider boundary, sticky PR comment and CI evidence collector migrated |
 | — | #738 — Forge neutrality FN-3 — opposable gates under .forgejo/workflows without marketplace steps |
-| — | #736 — Forge neutrality FN-2 — regulated scripts, publisher and lane guard migrated to the provider |
-| — | #739 — Forge neutrality FN-4 — provider-qualified tracker identifiers in the roadmap registry |
 <!-- roadmap-queues:end -->
 
 Non-dispatchable regulated work is visible in the same registry: #560 is
