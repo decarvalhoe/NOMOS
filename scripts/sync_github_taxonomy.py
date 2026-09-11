@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
+"""Seed the tracker taxonomy (labels, milestones, issue assignments) of the Nomos backlog.
+
+Every write goes through the forge provider (`scripts/forge_provider.py`,
+selected by `NOMOS_FORGE_PROVIDER` / `NOMOS_FORGE_URL` /
+`NOMOS_FORGE_TOKEN_FILE`). The repository comes from `--repo` or
+`NOMOS_FORGE_REPO`. A missing configuration is an error (docs/43 §2.8); a
+forge that does not support labels or milestones refuses explicitly.
+"""
 
 from __future__ import annotations
 
-import json
-import subprocess
+import argparse
 import sys
 from dataclasses import dataclass
+from pathlib import Path
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env, repo_from_env  # noqa: E402
 
 
-REPO = "RBOKproject/Nomos"
+DEFAULT_REPO = "RBOKproject/Nomos"
+EPIC_MILESTONE = "v1.0 Productized Platform"
 
 
 @dataclass(frozen=True)
@@ -107,80 +124,90 @@ ISSUE_CONFIG = {
 STARTED_ISSUES = {11, 12, 13, 14, 15, 18}
 
 
-def run(*args: str, capture_output: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(args, check=True, text=True, capture_output=capture_output)
-
-
-def gh_json(*args: str):
-    result = run("gh", *args)
-    return json.loads(result.stdout or "[]")
-
-
-def ensure_labels() -> None:
-    existing = {item["name"] for item in gh_json("label", "list", "--repo", REPO, "--limit", "200", "--json", "name")}
+def ensure_labels(repo: str, provider: Provider) -> None:
+    """Create the missing labels; realign colour/description of the existing ones."""
+    existing = {item["name"]: item for item in provider.list_labels(repo)}
     for label in LABELS:
-        if label.name in existing:
+        current = existing.get(label.name)
+        if current is None:
+            provider.create_label(repo, label.name, label.color, label.description)
+            print(f"LABEL created {label.name}")
             continue
-        run(
-            "gh", "label", "create",
-            label.name,
-            "--repo", REPO,
-            "--color", label.color,
-            "--description", label.description,
-            capture_output=False,
-        )
+        if current["color"] != label.color.lower() or current["description"] != label.description:
+            provider.update_label(repo, label.name, color=label.color, description=label.description)
+            print(f"LABEL updated {label.name}")
 
 
-def ensure_milestones() -> dict[str, int]:
-    existing = {
-        item["title"]: item["number"]
-        for item in gh_json("api", f"repos/{REPO}/milestones?state=all&per_page=100")
-    }
+def ensure_milestones(repo: str, provider: Provider) -> dict[str, int]:
+    """Create the missing milestones; return title → identifier for assignments."""
+    existing = {item["title"]: item["id"] for item in provider.list_milestones(repo, state="all")}
     for title, description in MILESTONES:
         if title in existing:
             continue
-        run(
-            "gh", "api", f"repos/{REPO}/milestones",
-            "--method", "POST",
-            "-f", f"title={title}",
-            "-f", f"description={description}",
-            capture_output=False,
-        )
-    return {
-        item["title"]: item["number"]
-        for item in gh_json("api", f"repos/{REPO}/milestones?state=all&per_page=100")
-    }
+        created = provider.create_milestone(repo, title, description)
+        existing[title] = created["id"]
+        print(f"MILESTONE created {title}")
+    return existing
 
 
-def sync_epics(milestones: dict[str, int]) -> None:
+def _milestone_id(milestones: dict[str, int], title: str) -> int:
+    if title not in milestones:
+        # Un jalon inconnu est une erreur nommée, pas une affectation ignorée.
+        raise ForgeError(f"milestone {title!r} does not exist; run ensure_milestones first")
+    return int(milestones[title])
+
+
+def sync_epics(repo: str, milestones: dict[str, int], provider: Provider) -> None:
     for issue_number, area_label in EPIC_TO_LABEL.items():
-        run(
-            "gh", "issue", "edit", issue_number,
-            "--repo", REPO,
-            "--add-label", "type:epic",
-            "--add-label", "status:seeded",
-            "--add-label", area_label,
-            "--milestone", "v1.0 Productized Platform",
-            capture_output=False,
+        provider.edit_issue(
+            repo,
+            int(issue_number),
+            add_labels=["type:epic", "status:seeded", area_label],
+            milestone=_milestone_id(milestones, EPIC_MILESTONE),
         )
 
 
-def sync_backlog_issues(milestones: dict[str, int]) -> None:
+def sync_backlog_issues(repo: str, milestones: dict[str, int], provider: Provider) -> None:
     for issue_number, (milestone, labels) in ISSUE_CONFIG.items():
-        cmd = ["gh", "issue", "edit", str(issue_number), "--repo", REPO, "--milestone", milestone]
-        for label in labels:
-            cmd.extend(["--add-label", label])
+        add_labels = list(labels)
         if issue_number in STARTED_ISSUES:
-            cmd.extend(["--add-label", "status:in-progress"])
-        run(*cmd, capture_output=False)
+            add_labels.append("status:in-progress")
+        provider.edit_issue(
+            repo,
+            int(issue_number),
+            add_labels=add_labels,
+            milestone=_milestone_id(milestones, milestone),
+        )
 
 
-def main() -> int:
-    ensure_labels()
-    milestones = ensure_milestones()
-    sync_epics(milestones)
-    sync_backlog_issues(milestones)
-    print("GitHub taxonomy sync completed.")
+def sync_taxonomy(repo: str, provider: Provider) -> None:
+    ensure_labels(repo, provider)
+    milestones = ensure_milestones(repo, provider)
+    sync_epics(repo, milestones, provider)
+    sync_backlog_issues(repo, milestones, provider)
+
+
+def main(argv: list[str] | None = None, provider: Provider | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Seed the tracker taxonomy of the Nomos backlog.")
+    parser.add_argument(
+        "--repo",
+        default="",
+        help=f"Repository as owner/name (default: NOMOS_FORGE_REPO, then {DEFAULT_REPO})",
+    )
+    args = parser.parse_args(argv)
+
+    try:
+        try:
+            repo = repo_from_env(explicit=args.repo)
+        except ForgeError:
+            repo = DEFAULT_REPO
+        forge = provider if provider is not None else provider_from_env()
+        sync_taxonomy(repo, forge)
+    except ForgeError as exc:
+        # Configuration absente ou refus de la forge : dit, jamais tu.
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    print(f"Taxonomy sync completed on {repo} via {forge.name}.")
     return 0
 
 

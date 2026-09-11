@@ -237,21 +237,31 @@ d'identification. `fake` est un fournisseur en memoire reserve aux tests. Une
 configuration incomplete leve une erreur nommee ; aucun script ne se
 desactive en silence (docs/43 §2.8).
 
-Aujourd'hui, seuls deux usages passent par cet adaptateur : le commentaire
-sticky sur la PR/MR source (`scripts/nomos_github_comment.py`, mode
-`notify.source_pr_comment`) et la collecte d'evidence CI repetee
-(`scripts/repeated_ci_evidence.py --collect`, lecture seule ; non supportee
-sur GitLab, l'adaptateur le refuse explicitement). Sur GitLab, le commentaire
-est une note de merge request et l'`iid` de la MR tient lieu de numero.
+Tous les scripts sidecar qui parlent a une forge passent par cet adaptateur
+(ADR-0006, tranches FN-1 et FN-2) :
 
-Les scripts suivants appellent encore `gh` directement et restent a migrer :
-`scripts/regulated_branch_protection.py`, `scripts/regulated_release_env.py`,
-`scripts/regulated_github_qms_audit.py`, `scripts/nomos_github_publish.py`,
-`scripts/roadmap_lane_guard.py --verify-github`,
-`.github/workflows/bundle-release.yml`, ainsi que l'outillage d'issues et de
-taxonomie (`scripts/create_github_issue_list.py`,
-`scripts/sync_github_taxonomy.py`). Aucune neutralite de forge n'est
-revendiquee au-dela des deux usages ci-dessus.
+| Script | Operations | GitHub | Forgejo | GitLab |
+|---|---|---|---|---|
+| `scripts/nomos_github_comment.py` | commentaire sticky sur la PR/MR source | oui | oui | note de MR (`iid` = numero) |
+| `scripts/repeated_ci_evidence.py --collect` | lecture des runs/artefacts Actions | oui | oui | refuse (`NotSupported`) |
+| `scripts/nomos_github_publish.py` (mode `pull_request`, sans `--dry-run`) | ouverture de la PR/MR | oui | oui | merge request |
+| `scripts/roadmap_lane_guard.py --verify-tracker` | etat des issues du registre (`--repo` ou `NOMOS_FORGE_REPO`) | oui | oui | oui |
+| `scripts/create_github_issue_list.py` | lister et creer des issues | oui | oui | oui |
+| `scripts/sync_github_taxonomy.py` | etiquettes, jalons, edition d'issues | oui | oui (etiquettes par identifiant) | refuse |
+| `scripts/regulated_branch_protection.py` | lire/appliquer la protection de branche | oui | normalisee vers la forme GitHub ; l'historique lineaire, le verrouillage et les restrictions de push sont signales comme ecarts en lecture et refuses en ecriture | refuse |
+| `scripts/regulated_release_env.py` | environnements de deploiement | oui | refuse (concept GitHub) | refuse |
+| `scripts/regulated_github_qms_audit.py` (sans `--offline`) | lectures generiques (rulesets, protection, environnements, securite) | oui | 404 enregistre en `api_detail` | refus enregistre en `api_detail` |
+| `scripts/regulated_audit_log_export.py` | journal d'audit d'organisation | oui (jeton `read:audit_log`) | refuse | refuse |
+
+Un refus est toujours dit : finding bloquant, `api_detail` renseigne ou
+sortie non nulle, jamais un rapport « tout va bien » sur une forge qui ne
+sait pas repondre. `--verify-github` du lane guard survit comme alias
+deprecie de `--verify-tracker` et l'annonce sur stderr.
+
+Reste hors de l'adaptateur, au niveau des workflows :
+`.github/workflows/bundle-release.yml` publie les releases avec `gh release`
+(tranche FN-3, publication de release sur la forge qui l'heberge). Aucune
+neutralite de forge n'est revendiquee au-dela du tableau ci-dessus.
 
 ## Contrat D'output Pour Application
 

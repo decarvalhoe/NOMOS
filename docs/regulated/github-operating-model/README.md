@@ -93,7 +93,9 @@ The current tools can automate:
 - repository-local evidence hashing;
 - ALCOA+ oriented evidence inventory;
 - issue-form, PR-template, CODEOWNERS and workflow presence checks;
-- live GitHub settings evidence collection when `gh api` has sufficient access;
+- live GitHub settings evidence collection when the forge provider
+  (`scripts/forge_provider.py`: a token, or `gh` on GitHub Actions) has
+  sufficient access;
 - scheduled evidence-pack artifact upload.
 
 The current tools cannot yet automate:

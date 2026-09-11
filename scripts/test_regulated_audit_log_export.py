@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """Tests for regulated_audit_log_export.py."""
 
+import contextlib
+import io
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent))
-from regulated_audit_log_export import (
+from forge_provider import FakeProvider, GitHubProvider, NotSupported  # noqa: E402
+from regulated_audit_log_export import (  # noqa: E402
     compute_sha256,
-    extract_next_link,
+    fetch_audit_log,
     load_manifest,
     parse_args,
     resolve_date_range,
+    resolve_provider,
     write_export,
     main,
 )
+
+_NO_FORGE_ENV = {"NOMOS_FORGE_PROVIDER": "", "NOMOS_FORGE_URL": "", "NOMOS_FORGE_TOKEN": "",
+                 "NOMOS_FORGE_TOKEN_FILE": "", "GITHUB_TOKEN": "", "GH_TOKEN": "", "GITHUB_REPOSITORY": ""}
 
 
 def test_resolve_date_range_defaults():
@@ -45,21 +53,19 @@ def test_compute_sha256_deterministic():
     assert compute_sha256(data) == compute_sha256(data)
 
 
-def test_extract_next_link_present():
-    header = '<https://api.github.com/next?page=2>; rel="next", <https://api.github.com/last>; rel="last"'
-    result = extract_next_link(header)
-    assert result == "https://api.github.com/next?page=2"
+def test_fetch_audit_log_goes_through_the_provider():
+    fake = FakeProvider()
+    fake.audit_events["Org"] = [{"action": "repo.create"}]
+    events = fetch_audit_log("Org", "2026-04-01", "2026-04-07", fake)
+    assert events == [{"action": "repo.create"}]
+    assert fake.calls == [("export_org_audit_log", {"org": "Org", "since": "2026-04-01", "until": "2026-04-07"})]
 
 
-def test_extract_next_link_absent():
-    header = '<https://api.github.com/last>; rel="last"'
-    result = extract_next_link(header)
-    assert result is None
-
-
-def test_extract_next_link_empty():
-    assert extract_next_link("") is None
-    assert extract_next_link(None) is None
+def test_explicit_token_builds_a_github_provider():
+    provider = resolve_provider("ghp_x", "https://ghe.example/api/v3")
+    assert isinstance(provider, GitHubProvider)
+    assert provider.base_url == "https://ghe.example/api/v3"
+    assert not provider.uses_gh
 
 
 def test_write_export():
@@ -139,10 +145,35 @@ def test_main_dry_run():
     assert code == 0
 
 
-def test_main_no_token():
-    with patch.dict("os.environ", {"GITHUB_TOKEN": ""}, clear=False):
-        code = main(["--org", "TestOrg", "--output", "/tmp/test-audit"])
-        assert code == 1
+def test_main_without_forge_configuration_names_the_variable():
+    stderr = io.StringIO()
+    with patch.dict("os.environ", _NO_FORGE_ENV, clear=False), contextlib.redirect_stderr(stderr):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            code = main(["--org", "TestOrg", "--output", tmpdir])
+            assert code == 1
+            assert not list(Path(tmpdir).iterdir())  # nothing written « à vide »
+    assert "NOMOS_FORGE_PROVIDER" in stderr.getvalue()
+
+
+def test_main_refuses_on_a_forge_without_an_audit_log():
+    env = {**_NO_FORGE_ENV, "NOMOS_FORGE_PROVIDER": "forgejo",
+           "NOMOS_FORGE_URL": "https://forge.example", "NOMOS_FORGE_TOKEN": "t"}
+    stderr = io.StringIO()
+    with patch.dict("os.environ", env, clear=False), contextlib.redirect_stderr(stderr):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            code = main(["--org", "TestOrg", "--output", tmpdir])
+            assert code == 1
+            assert not list(Path(tmpdir).iterdir())
+    assert "not supported" in stderr.getvalue()
+
+
+def test_main_exports_through_the_fake_provider():
+    with patch.dict("os.environ", {**_NO_FORGE_ENV, "NOMOS_FORGE_PROVIDER": "fake"}, clear=False):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            code = main(["--org", "TestOrg", "--output", tmpdir, "--since", "2026-04-01", "--until", "2026-04-07"])
+            assert code == 0
+            manifest = json.loads((Path(tmpdir) / "export-manifest.json").read_text())
+            assert manifest["exports"][0]["event_count"] == 0
 
 
 def test_retention_policy_valid_yaml():

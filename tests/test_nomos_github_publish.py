@@ -1,9 +1,12 @@
 """Tests for scripts/nomos_github_publish.py (NGW-005, #390).
 
-The publisher is exercised entirely in dry-run mode; tests must never make
-a real ``git push`` or ``gh`` API call. Subprocess shell-outs are intercepted
-either through the ``run_command`` parameter on the publisher entry points
-or via ``unittest.mock.patch`` over ``nomos_github_publish._run_subprocess``.
+The publisher is exercised in dry-run mode, plus a real-run PR path against
+the in-memory ``FakeProvider``; tests must never make a real ``git push`` or
+forge API call. Git shell-outs are intercepted through the ``run_command``
+parameter or via ``unittest.mock.patch`` over
+``nomos_github_publish._run_subprocess``; the forge goes through the
+injected provider. Doctrine §2.8: a real run without a forge configuration
+fails with the variable's name, it never skips the PR silently.
 """
 
 from __future__ import annotations
@@ -25,7 +28,16 @@ SCRIPT_PATH = os.path.join(SCRIPTS_DIR, "nomos_github_publish.py")
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
+import forge_provider as fp  # noqa: E402
 import nomos_github_publish as publisher  # noqa: E402
+
+
+def _clean_env(**extra: str) -> dict[str, str]:
+    """No forge configuration at all, and no `gh` reachable on PATH."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("NOMOS_FORGE_", "GITHUB_", "GH_"))}
+    env["PATH"] = "/nonexistent"
+    env.update(extra)
+    return env
 
 
 def _symlink_or_skip(testcase: unittest.TestCase, source: str, link_name: str) -> None:
@@ -331,7 +343,59 @@ class PullRequestPlanTests(unittest.TestCase):
         self.assertEqual(plan["mode"], "pull_request")
         self.assertEqual(plan["branch"], "nomos/rbok-lawbook/pr-99")
         self.assertIn("[nomos-generated]", plan["commit_message"])
-        self.assertNotIn("gh_pr_create", plan)
+        self.assertNotIn("pull_request", plan)
+
+    def test_real_run_opens_the_pr_through_the_provider(self) -> None:
+        fake = fp.FakeProvider()
+        with mock.patch.object(publisher, "_run_subprocess") as run_mock:
+            plan = publisher.publish_pull_request(
+                workflow_id="rbok-lawbook",
+                branch_strategy="per_pr",
+                source_sha="deadbeef" * 5,
+                source_pr_number=99,
+                source_ref="feat/x",
+                target_repo="owner/output",
+                target_branch="main",
+                target_path="rbok-lawbook",
+                outputs_dir="",
+                trace_manifest="",
+                commit_subject="Refresh outputs",
+                dry_run=False,
+                provider=fake,
+            )
+        run_mock.assert_not_called()
+        self.assertEqual(
+            fake.calls,
+            [(
+                "create_pull_request",
+                {
+                    "repo": "owner/output",
+                    "head": "nomos/rbok-lawbook/pr-99",
+                    "base": "main",
+                    "title": "Refresh outputs",
+                    "body": plan["commit_message"],
+                },
+            )],
+        )
+        self.assertEqual(plan["pull_request"], {"provider": "fake", "number": 1, "url": "fake://owner/output/pulls/1"})
+
+    def test_real_run_without_forge_configuration_raises_a_named_error(self) -> None:
+        with mock.patch.dict(os.environ, _clean_env(), clear=True):
+            with self.assertRaises(fp.ForgeConfigError) as ctx:
+                publisher.publish_pull_request(
+                    workflow_id="rbok-lawbook",
+                    branch_strategy="fixed",
+                    source_sha="deadbeef" * 5,
+                    source_pr_number=None,
+                    source_ref="",
+                    target_repo="owner/output",
+                    target_branch="main",
+                    target_path="rbok-lawbook",
+                    outputs_dir="",
+                    trace_manifest="",
+                    dry_run=False,
+                )
+        self.assertIn("NOMOS_FORGE_PROVIDER", str(ctx.exception))
 
 
 class CLITests(unittest.TestCase):
@@ -379,6 +443,45 @@ class CLITests(unittest.TestCase):
             self.assertEqual(payload["mode"], "artifact_only")
             self.assertTrue(payload["dry_run"])
             self.assertIn("feed.json", payload["prepared_files"])
+
+    def _pr_argv(self, paths: dict[str, str]) -> list[str]:
+        return [
+            sys.executable,
+            SCRIPT_PATH,
+            "--config", paths["config"],
+            "--workflow-id", "rbok-lawbook",
+            "--diff-plan", paths["diff"],
+            "--outputs-dir", paths["outputs"],
+            "--trace-manifest", paths["trace"],
+            "--mode", "pull_request",
+            "--target-repo", "owner/output",
+            "--target-branch", "main",
+            "--target-path", "rbok-lawbook",
+            "--source-sha", "deadbeef" * 5,
+        ]
+
+    def test_cli_pull_request_without_forge_configuration_fails_and_names_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._make_minimal_inputs(tmp)
+            result = subprocess.run(
+                self._pr_argv(paths), capture_output=True, text=True, check=False, env=_clean_env()
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("pull request not opened", result.stderr)
+            self.assertIn("NOMOS_FORGE_PROVIDER", result.stderr)
+            self.assertEqual(result.stdout.strip(), "")
+
+    def test_cli_pull_request_real_run_uses_the_configured_provider(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._make_minimal_inputs(tmp)
+            result = subprocess.run(
+                self._pr_argv(paths), capture_output=True, text=True, check=False,
+                env=_clean_env(NOMOS_FORGE_PROVIDER="fake"),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["pull_request"]["provider"], "fake")
+            self.assertEqual(payload["branch"], "nomos/rbok-lawbook")
 
     def test_cli_exits_nonzero_on_path_violation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

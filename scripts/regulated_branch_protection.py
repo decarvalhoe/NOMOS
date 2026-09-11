@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 """
-Verify and optionally apply GitHub branch protection rules.
+Verify and optionally apply branch protection rules.
 
 Reads the declarative config from
   docs/regulated/github-operating-model/branch-protection-config.yaml
-and compares it against the live GitHub repository settings via `gh api`.
+and compares it against the live repository settings read through the
+forge provider (`scripts/forge_provider.py`, selected by
+`NOMOS_FORGE_PROVIDER` / `NOMOS_FORGE_URL` / `NOMOS_FORGE_TOKEN_FILE`).
+The comparison works on the common (GitHub-shaped) protection payload;
+Forgejo protections are normalised to it by the provider, and the
+controls a forge cannot express are reported as findings rather than
+assumed satisfied. A missing provider configuration is an error
+(docs/43 §2.8), never a silent pass.
 
 Usage:
   python3 scripts/regulated_branch_protection.py --verify
@@ -14,7 +21,6 @@ Usage:
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -22,6 +28,14 @@ try:
     import yaml
 except ImportError:
     yaml = None  # handled at runtime
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 
 CONFIG_PATH = "docs/regulated/github-operating-model/branch-protection-config.yaml"
@@ -40,36 +54,32 @@ def load_config(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def gh_api(endpoint: str, method: str = "GET", data: dict | None = None) -> dict | None:
-    """Call the GitHub API via `gh api`."""
-    cmd = ["gh", "api", endpoint, "--method", method]
-    if data is not None:
-        cmd.extend(["--input", "-"])
+def resolve_provider(provider: Provider | None = None) -> Provider:
+    """Le fournisseur injecté prime ; sinon il est résolu depuis l'environnement.
+
+    Une configuration absente lève `ForgeConfigError` (doctrine §2.8) : la
+    vérification n'est jamais « sautée » en silence.
+    """
+    return provider if provider is not None else provider_from_env()
+
+
+def read_live_protection(
+    owner: str, repo: str, branch: str, provider: Provider | None = None
+) -> tuple[dict | None, str]:
+    """Live protection payload for `branch`, or (None, reason) when it cannot be read."""
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            input=json.dumps(data) if data else None,
-            timeout=30,
-        )
-        if result.returncode != 0:
-            return None
-        if result.stdout.strip():
-            return json.loads(result.stdout)
-        return {}
-    except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
-        return None
+        return resolve_provider(provider).get_branch_protection(f"{owner}/{repo}", branch), ""
+    except ForgeError as exc:
+        return None, str(exc)
 
 
-def verify_branch(owner: str, repo: str, rule: dict) -> list[dict]:
+def verify_branch(owner: str, repo: str, rule: dict, provider: Provider | None = None) -> list[dict]:
     """Verify a single branch protection rule. Returns findings."""
     branch = rule["branch"]
     protection = rule["protection"]
     findings = []
 
-    endpoint = f"/repos/{owner}/{repo}/branches/{branch}/protection"
-    live = gh_api(endpoint)
+    live, reason = read_live_protection(owner, repo, branch, provider)
 
     if live is None:
         findings.append({
@@ -77,7 +87,10 @@ def verify_branch(owner: str, repo: str, rule: dict) -> list[dict]:
             "branch": branch,
             "severity": "critical",
             "blocking": True,
-            "message": f"Cannot read branch protection for {branch}. Either not configured or insufficient permissions.",
+            "message": (
+                f"Cannot read branch protection for {branch}. Either not configured or "
+                f"insufficient permissions ({reason})."
+            ),
             "remediation": f"Configure branch protection for {branch} in repository settings.",
         })
         return findings
@@ -205,8 +218,8 @@ def verify_branch(owner: str, repo: str, rule: dict) -> list[dict]:
     return findings
 
 
-def apply_branch(owner: str, repo: str, rule: dict) -> bool:
-    """Apply branch protection to a single branch. Returns success."""
+def apply_branch(owner: str, repo: str, rule: dict, provider: Provider | None = None) -> tuple[bool, str]:
+    """Apply branch protection to a single branch. Returns (success, detail)."""
     branch = rule["branch"]
     protection = rule["protection"]
 
@@ -235,20 +248,25 @@ def apply_branch(owner: str, repo: str, rule: dict) -> bool:
             "contexts": checks.get("contexts", []),
         }
 
-    endpoint = f"/repos/{owner}/{repo}/branches/{branch}/protection"
-    result = gh_api(endpoint, method="PUT", data=payload)
-    return result is not None
+    try:
+        resolve_provider(provider).put_branch_protection(f"{owner}/{repo}", branch, payload)
+    except ForgeError as exc:
+        # Un refus (forge qui ne sait pas exprimer la règle, droits
+        # insuffisants) est rapporté tel quel, jamais maquillé en succès.
+        return False, str(exc)
+    return True, ""
 
 
-def verify_all(config: dict) -> list[dict]:
+def verify_all(config: dict, provider: Provider | None = None) -> list[dict]:
     """Verify all branch rules and return findings."""
     repo_cfg = config.get("repository", {})
     owner = repo_cfg.get("owner", "")
     repo = repo_cfg.get("name", "")
     all_findings = []
 
+    forge = resolve_provider(provider)
     for rule in config.get("branch_rules", []):
-        findings = verify_branch(owner, repo, rule)
+        findings = verify_branch(owner, repo, rule, forge)
         all_findings.extend(findings)
 
     return all_findings
@@ -276,10 +294,10 @@ def print_findings(findings: list[dict], fmt: str = "text") -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Verify/apply GitHub branch protection")
+    parser = argparse.ArgumentParser(description="Verify/apply branch protection through the forge provider")
     parser.add_argument("--config", default=CONFIG_PATH, help="Config YAML path")
     parser.add_argument("--verify", action="store_true", help="Verify current settings")
-    parser.add_argument("--apply", action="store_true", help="Apply settings via gh api")
+    parser.add_argument("--apply", action="store_true", help="Apply settings through the forge provider")
     parser.add_argument("--confirm", action="store_true", help="Required with --apply")
     parser.add_argument("--format", choices=["text", "json"], default="text")
     args = parser.parse_args()
@@ -290,8 +308,14 @@ def main():
 
     config = load_config(args.config)
 
+    try:
+        provider = resolve_provider()
+    except ForgeError as exc:
+        print(f"ERROR: forge provider not configured: {exc}", file=sys.stderr)
+        sys.exit(2)
+
     if args.verify:
-        findings = verify_all(config)
+        findings = verify_all(config, provider)
         print_findings(findings, args.format)
         blocking = sum(1 for f in findings if f.get("blocking"))
         sys.exit(1 if blocking > 0 else 0)
@@ -308,8 +332,8 @@ def main():
             if "*" in branch:
                 print(f"SKIP: wildcard branch {branch} (apply manually or via rulesets)")
                 continue
-            ok = apply_branch(owner, repo, rule)
-            print(f"{'OK  ' if ok else 'FAIL'}: {branch}")
+            ok, detail = apply_branch(owner, repo, rule, provider)
+            print(f"{'OK  ' if ok else 'FAIL'}: {branch}" + (f" ({detail})" if detail else ""))
 
 
 if __name__ == "__main__":

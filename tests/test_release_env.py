@@ -1,16 +1,39 @@
-"""Tests for regulated_release_env.py config and verification logic."""
+"""Tests for regulated_release_env.py config and verification logic.
+
+The live side is a `FakeProvider` from scripts/forge_provider.py: no `gh`
+binary, no network. Doctrine §2.8: a missing provider configuration must
+make the CLI fail with the variable's name, never verify nothing and pass.
+"""
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+sys.path.insert(0, str(SCRIPTS))
 
+import forge_provider as fp  # noqa: E402
 import regulated_release_env as re_env  # noqa: E402
+
+REPO = "O/R"
+
+
+def fake_with(live: dict | None, name: str = "regulated-release") -> fp.FakeProvider:
+    fake = fp.FakeProvider()
+    if live is not None:
+        fake.seed_environment(REPO, name, live)
+    return fake
+
+
+def _clean_env(**extra: str) -> dict[str, str]:
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("NOMOS_FORGE_", "GITHUB_", "GH_"))}
+    env["PATH"] = "/nonexistent"
+    env.update(extra)
+    return env
 
 
 SAMPLE_CONFIG = {
@@ -62,9 +85,8 @@ class TestVerifyEnvironment(unittest.TestCase):
     def _env(self):
         return SAMPLE_CONFIG["environments"][0]
 
-    @patch("regulated_release_env.gh_api")
-    def test_fully_compliant(self, mock_api):
-        mock_api.return_value = {
+    def test_fully_compliant(self):
+        live = {
             "protection_rules": [
                 {"type": "required_reviewers", "reviewers": [
                     {"reviewer": {"login": "alice"}}
@@ -74,50 +96,44 @@ class TestVerifyEnvironment(unittest.TestCase):
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": True},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         blocking = [f for f in findings if f["blocking"]]
         self.assertEqual(len(blocking), 0, f"unexpected blocking: {blocking}")
 
-    @patch("regulated_release_env.gh_api")
-    def test_env_not_found(self, mock_api):
-        mock_api.return_value = None
-        findings = re_env.verify_environment("O", "R", self._env())
+    def test_env_not_found(self):
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(None))
         self.assertTrue(any(f["control"] == "ENV-EXISTS" for f in findings))
         self.assertTrue(any(f["blocking"] for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_self_review_not_prevented(self, mock_api):
-        mock_api.return_value = {
+    def test_self_review_not_prevented(self):
+        live = {
             "protection_rules": [{"type": "wait_timer", "wait_timer": 10}],
             "prevent_self_review": False,
             "deployment_branch_policy": {"protected_branches": True},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         self.assertTrue(any(f["control"] == "ENV-SELF-REVIEW" for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_wait_timer_too_low(self, mock_api):
-        mock_api.return_value = {
+    def test_wait_timer_too_low(self):
+        live = {
             "protection_rules": [{"type": "wait_timer", "wait_timer": 0}],
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": True},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         self.assertTrue(any(f["control"] == "ENV-WAIT-TIMER" for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_no_reviewers_configured(self, mock_api):
-        mock_api.return_value = {
+    def test_no_reviewers_configured(self):
+        live = {
             "protection_rules": [{"type": "wait_timer", "wait_timer": 10}],
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": True},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         self.assertTrue(any(f["control"] == "ENV-REVIEWERS" for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_missing_reviewer(self, mock_api):
-        mock_api.return_value = {
+    def test_missing_reviewer(self):
+        live = {
             "protection_rules": [
                 {"type": "required_reviewers", "reviewers": [
                     {"reviewer": {"login": "bob"}}
@@ -127,12 +143,11 @@ class TestVerifyEnvironment(unittest.TestCase):
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": True},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         self.assertTrue(any(f["control"] == "ENV-REVIEWER-MISSING" for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_branch_policy_not_protected(self, mock_api):
-        mock_api.return_value = {
+    def test_branch_policy_not_protected(self):
+        live = {
             "protection_rules": [
                 {"type": "required_reviewers", "reviewers": [
                     {"reviewer": {"login": "alice"}}
@@ -142,12 +157,11 @@ class TestVerifyEnvironment(unittest.TestCase):
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": False},
         }
-        findings = re_env.verify_environment("O", "R", self._env())
+        findings = re_env.verify_environment("O", "R", self._env(), fake_with(live))
         self.assertTrue(any(f["control"] == "ENV-BRANCH-POLICY" for f in findings))
 
-    @patch("regulated_release_env.gh_api")
-    def test_empty_reviewers_advisory(self, mock_api):
-        mock_api.return_value = {
+    def test_empty_reviewers_advisory(self):
+        live = {
             "protection_rules": [],
             "prevent_self_review": True,
             "deployment_branch_policy": {"protected_branches": True},
@@ -161,9 +175,68 @@ class TestVerifyEnvironment(unittest.TestCase):
             },
             "deployment_branch_policy": {"protected_branches_only": False},
         }
-        findings = re_env.verify_environment("O", "R", env)
+        findings = re_env.verify_environment("O", "R", env, fake_with(live, "staging"))
         self.assertTrue(any(f["control"] == "ENV-REVIEWERS-EMPTY" for f in findings))
         self.assertFalse(any(f["blocking"] for f in findings))
+
+
+class TestVerifyEnvironmentProvider(unittest.TestCase):
+    def test_refusal_by_the_forge_is_a_blocking_finding(self):
+        fake = fake_with(None)
+        fake.fail("get_environment", fp.NotSupported("forgejo: deployment environments (a GitHub concept) is not supported"))
+        findings = re_env.verify_environment("O", "R", SAMPLE_CONFIG["environments"][0], fake)
+        self.assertEqual(findings[0]["control"], "ENV-EXISTS")
+        self.assertTrue(findings[0]["blocking"])
+        self.assertIn("not supported", findings[0]["message"])
+        self.assertEqual(fake.calls, [("get_environment", {"repo": REPO, "name": "regulated-release"})])
+
+
+class TestApplyEnvironment(unittest.TestCase):
+    def test_apply_puts_the_payload_through_the_provider(self):
+        fake = fp.FakeProvider()
+        ok, detail = re_env.apply_environment("O", "R", SAMPLE_CONFIG["environments"][0], fake)
+        self.assertEqual((ok, detail), (True, ""))
+        op, kwargs = fake.calls[0]
+        self.assertEqual((op, kwargs["repo"], kwargs["name"]), ("put_environment", REPO, "regulated-release"))
+        self.assertTrue(kwargs["payload"]["prevent_self_review"])
+        self.assertEqual(kwargs["payload"]["wait_timer"], 10)
+        self.assertEqual(kwargs["payload"]["deployment_branch_policy"], {"protected_branches": True, "custom_branch_policies": False})
+
+    def test_refusal_is_reported_not_masked(self):
+        fake = fp.FakeProvider()
+        fake.fail("put_environment", fp.NotSupported("gitlab: deployment environments are not supported"))
+        ok, detail = re_env.apply_environment("O", "R", SAMPLE_CONFIG["environments"][0], fake)
+        self.assertFalse(ok)
+        self.assertIn("not supported", detail)
+
+
+class TestCLIProviderConfiguration(unittest.TestCase):
+    """Adversarial: without a forge configuration the CLI must not verify nothing and pass."""
+
+    def _run(self, env: dict[str, str], *args: str) -> subprocess.CompletedProcess:
+        yaml = __import__("yaml")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(SAMPLE_CONFIG, f)
+            config = f.name
+        try:
+            return subprocess.run(
+                [sys.executable, str(SCRIPTS / "regulated_release_env.py"), "--config", config, *args],
+                capture_output=True, text=True, check=False, env=env,
+            )
+        finally:
+            os.unlink(config)
+
+    def test_missing_configuration_names_the_variable_and_fails(self):
+        result = self._run(_clean_env(), "--verify")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("NOMOS_FORGE_PROVIDER", result.stderr)
+        self.assertNotIn("ALL CHECKS PASSED", result.stdout)
+
+    def test_fake_provider_with_no_environment_is_a_blocking_failure(self):
+        result = self._run(_clean_env(NOMOS_FORGE_PROVIDER="fake"), "--verify", "--format", "json")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["findings"][0]["control"], "ENV-EXISTS")
 
 
 class TestResolveField(unittest.TestCase):
@@ -215,10 +288,8 @@ class TestGovernanceControls(unittest.TestCase):
 
 
 class TestFindingStructure(unittest.TestCase):
-    @patch("regulated_release_env.gh_api")
-    def test_fields(self, mock_api):
-        mock_api.return_value = None
-        findings = re_env.verify_environment("O", "R", SAMPLE_CONFIG["environments"][0])
+    def test_fields(self):
+        findings = re_env.verify_environment("O", "R", SAMPLE_CONFIG["environments"][0], fake_with(None))
         for f in findings:
             for key in ("control", "environment", "severity", "blocking", "message", "remediation"):
                 self.assertIn(key, f, f"missing {key}")

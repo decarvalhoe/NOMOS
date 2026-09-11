@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-Verify and optionally apply GitHub environment protection rules.
+Verify and optionally apply deployment environment protection rules.
 
 Reads the declarative config from
   docs/regulated/github-operating-model/release-environment-config.yaml
-and compares against live GitHub settings via `gh api`.
+and compares against the live settings read through the forge provider
+(`scripts/forge_provider.py`, selected by `NOMOS_FORGE_PROVIDER` /
+`NOMOS_FORGE_URL` / `NOMOS_FORGE_TOKEN_FILE`). Deployment environments
+are a GitHub concept: on another forge the provider refuses explicitly
+(`NotSupported`) and the refusal is reported as a blocking finding, never
+as a pass. A missing provider configuration is an error (docs/43 §2.8).
 
 Usage:
   python3 scripts/regulated_release_env.py --verify
@@ -14,7 +19,6 @@ Usage:
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -22,6 +26,14 @@ try:
     import yaml
 except ImportError:
     yaml = None
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 CONFIG_PATH = "docs/regulated/github-operating-model/release-environment-config.yaml"
 
@@ -38,36 +50,38 @@ def load_config(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def gh_api(endpoint: str, method: str = "GET", data: dict | None = None) -> dict | None:
-    cmd = ["gh", "api", endpoint, "--method", method]
-    if data is not None:
-        cmd.extend(["--input", "-"])
+def resolve_provider(provider: Provider | None = None) -> Provider:
+    """Le fournisseur injecté prime ; sinon il est résolu depuis l'environnement.
+
+    Une configuration absente lève `ForgeConfigError` (doctrine §2.8) : la
+    vérification n'est jamais « sautée » en silence.
+    """
+    return provider if provider is not None else provider_from_env()
+
+
+def read_live_environment(
+    owner: str, repo: str, env_name: str, provider: Provider | None = None
+) -> tuple[dict | None, str]:
+    """Live environment payload, or (None, reason) when it cannot be read."""
     try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True,
-            input=json.dumps(data) if data else None, timeout=30,
-        )
-        if result.returncode != 0:
-            return None
-        return json.loads(result.stdout) if result.stdout.strip() else {}
-    except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
-        return None
+        return resolve_provider(provider).get_environment(f"{owner}/{repo}", env_name), ""
+    except ForgeError as exc:
+        return None, str(exc)
 
 
-def verify_environment(owner: str, repo: str, env_config: dict) -> list[dict]:
-    """Verify a single environment against live GitHub settings."""
+def verify_environment(owner: str, repo: str, env_config: dict, provider: Provider | None = None) -> list[dict]:
+    """Verify a single environment against the live forge settings."""
     env_name = env_config["name"]
     protection = env_config.get("protection", {})
     branch_policy = env_config.get("deployment_branch_policy", {})
     findings = []
 
-    endpoint = f"/repos/{owner}/{repo}/environments/{env_name}"
-    live = gh_api(endpoint)
+    live, reason = read_live_environment(owner, repo, env_name, provider)
 
     if live is None:
         findings.append(finding(
             "ENV-EXISTS", env_name, "critical", True,
-            f"Environment '{env_name}' does not exist or cannot be read.",
+            f"Environment '{env_name}' does not exist or cannot be read ({reason}).",
             f"Create environment '{env_name}' in repository settings.",
         ))
         return findings
@@ -211,8 +225,8 @@ def resolve_field(obj: dict, path: str):
     return current
 
 
-def apply_environment(owner: str, repo: str, env_config: dict) -> bool:
-    """Create or update a GitHub environment."""
+def apply_environment(owner: str, repo: str, env_config: dict, provider: Provider | None = None) -> tuple[bool, str]:
+    """Create or update a deployment environment. Returns (success, detail)."""
     env_name = env_config["name"]
     protection = env_config.get("protection", {})
 
@@ -240,17 +254,22 @@ def apply_environment(owner: str, repo: str, env_config: dict) -> bool:
     elif branch_policy.get("custom_branch_policies"):
         payload["deployment_branch_policy"] = {"protected_branches": False, "custom_branch_policies": True}
 
-    endpoint = f"/repos/{owner}/{repo}/environments/{env_name}"
-    result = gh_api(endpoint, method="PUT", data=payload)
-    return result is not None
+    try:
+        resolve_provider(provider).put_environment(f"{owner}/{repo}", env_name, payload)
+    except ForgeError as exc:
+        # Un refus (forge sans environnements, droits insuffisants) est
+        # rapporté tel quel, jamais maquillé en succès.
+        return False, str(exc)
+    return True, ""
 
 
-def verify_all(config: dict) -> list[dict]:
+def verify_all(config: dict, provider: Provider | None = None) -> list[dict]:
     repo = config.get("repository", {})
     owner, name = repo.get("owner", ""), repo.get("name", "")
     all_findings = []
+    forge = resolve_provider(provider)
     for env in config.get("environments", []):
-        all_findings.extend(verify_environment(owner, name, env))
+        all_findings.extend(verify_environment(owner, name, env, forge))
     all_findings.extend(verify_governance_controls(config))
     return all_findings
 
@@ -285,7 +304,7 @@ def print_findings(findings: list[dict], fmt: str = "text") -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Verify/apply GitHub environment protection")
+    parser = argparse.ArgumentParser(description="Verify/apply deployment environment protection through the forge provider")
     parser.add_argument("--config", default=CONFIG_PATH)
     parser.add_argument("--verify", action="store_true")
     parser.add_argument("--apply", action="store_true")
@@ -299,8 +318,14 @@ def main():
 
     config = load_config(args.config)
 
+    try:
+        provider = resolve_provider()
+    except ForgeError as exc:
+        print(f"ERROR: forge provider not configured: {exc}", file=sys.stderr)
+        sys.exit(2)
+
     if args.verify:
-        findings = verify_all(config)
+        findings = verify_all(config, provider)
         print_findings(findings, args.format)
         sys.exit(1 if any(f["blocking"] for f in findings) else 0)
 
@@ -311,8 +336,8 @@ def main():
         repo = config.get("repository", {})
         owner, name = repo.get("owner", ""), repo.get("name", "")
         for env in config.get("environments", []):
-            ok = apply_environment(owner, name, env)
-            print(f"{'OK  ' if ok else 'FAIL'}: {env['name']}")
+            ok, detail = apply_environment(owner, name, env, provider)
+            print(f"{'OK  ' if ok else 'FAIL'}: {env['name']}" + (f" ({detail})" if detail else ""))
 
 
 if __name__ == "__main__":
