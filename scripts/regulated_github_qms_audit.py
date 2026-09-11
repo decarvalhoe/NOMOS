@@ -1,19 +1,35 @@
 #!/usr/bin/env python3
 """Audit GitHub-hosted QMS controls for regulated-by-design work.
 
-The audit separates repository-file evidence from live GitHub configuration
+The audit separates repository-file evidence from live forge configuration
 evidence. Missing live evidence remains a gap; it is not inferred.
+
+Live reads go through the forge provider (`scripts/forge_provider.py`,
+selected by `NOMOS_FORGE_PROVIDER` / `NOMOS_FORGE_URL` /
+`NOMOS_FORGE_TOKEN_FILE`; on GitHub Actions the runner's token reaches it
+through `GH_TOKEN`). The endpoints audited (rulesets, branch protection,
+environments, security features) are GitHub-shaped: on another forge the
+provider's refusal or 404 is recorded in `api_detail`, never turned into a
+pass. Without `--offline`, a missing provider configuration is an error
+(docs/43 §2.8).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 
 LIVE_CONTROL_NAMES = [
@@ -113,27 +129,19 @@ def local_checks(root: Path) -> dict[str, dict[str, object]]:
     return checks
 
 
-def gh_api(repo: str, endpoint: str) -> tuple[bool, Any]:
-    if shutil.which("gh") is None:
-        return False, {"error": "gh CLI not found"}
-    result = subprocess.run(
-        ["gh", "api", f"/repos/{repo}{endpoint}"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return False, {"error": result.stderr.strip() or result.stdout.strip()}
+def forge_api(repo: str, endpoint: str, provider: Provider) -> tuple[bool, Any]:
+    """GET `/repos/{repo}{endpoint}` through the provider; a refusal is data, not a pass."""
     try:
-        return True, json.loads(result.stdout or "{}")
-    except json.JSONDecodeError as exc:
-        return False, {"error": f"Invalid JSON from gh api: {exc}"}
+        payload = provider.get_json(f"/repos/{repo}{endpoint}")
+    except ForgeError as exc:
+        return False, {"error": str(exc), "status": exc.status, "provider": provider.name}
+    return True, payload if payload is not None else {}
 
 
-def live_checks(repo: str) -> dict[str, dict[str, object]]:
+def live_checks(repo: str, provider: Provider) -> dict[str, dict[str, object]]:
     checks: dict[str, dict[str, object]] = {}
 
-    ok, rulesets = gh_api(repo, "/rulesets")
+    ok, rulesets = forge_api(repo, "/rulesets", provider)
     if ok and isinstance(rulesets, list) and rulesets:
         checks["rulesets"] = {"status": "verified", "count": len(rulesets)}
     else:
@@ -143,7 +151,7 @@ def live_checks(repo: str) -> dict[str, dict[str, object]]:
     branch_results = {}
     protected = 0
     for branch in ("main", "develop"):
-        ok, protection = gh_api(repo, f"/branches/{branch}/protection")
+        ok, protection = forge_api(repo, f"/branches/{branch}/protection", provider)
         branch_results[branch] = protection
         if ok:
             protected += 1
@@ -167,7 +175,7 @@ def live_checks(repo: str) -> dict[str, dict[str, object]]:
         checks["required_status_checks"] = requires_live("Required status checks depend on branch protection evidence.")
         checks["required_reviews"] = requires_live("Required reviews depend on branch protection evidence.")
 
-    ok, environments = gh_api(repo, "/environments")
+    ok, environments = forge_api(repo, "/environments", provider)
     if ok and isinstance(environments, dict) and environments.get("total_count", 0):
         checks["protected_environments"] = {
             "status": "requires_human_review",
@@ -178,8 +186,8 @@ def live_checks(repo: str) -> dict[str, dict[str, object]]:
         checks["protected_environments"] = requires_live("No live protected environment evidence was collected.")
         checks["protected_environments"]["api_detail"] = environments
 
-    ok, repo_detail = gh_api(repo, "")
-    if ok:
+    ok, repo_detail = forge_api(repo, "", provider)
+    if ok and isinstance(repo_detail, dict):
         security = repo_detail.get("security_and_analysis", {})
         disabled = [
             feature
@@ -228,9 +236,16 @@ def overall_status(checks: dict[str, dict[str, object]]) -> str:
     return "verified"
 
 
-def build_report(root: Path, repo: str, offline: bool) -> dict[str, object]:
+def build_report(
+    root: Path, repo: str, offline: bool, provider: Provider | None = None
+) -> dict[str, object]:
+    """Assemble the report; live mode needs a provider (injected or resolved from the environment)."""
     checks = local_checks(root)
-    checks.update(offline_live_checks() if offline else live_checks(repo))
+    if offline:
+        checks.update(offline_live_checks())
+    else:
+        forge = provider if provider is not None else provider_from_env()
+        checks.update(live_checks(repo, forge))
     return {
         "schema_version": "0.1.0",
         "status": overall_status(checks),
@@ -247,7 +262,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Audit GitHub regulated operating controls.")
     parser.add_argument("--root", default=".", help="Repository root.")
     parser.add_argument("--repo", required=True, help="GitHub repository, e.g. RBOKproject/NOMOS.")
-    parser.add_argument("--offline", action="store_true", help="Do not call GitHub APIs.")
+    parser.add_argument("--offline", action="store_true", help="Do not call the forge API.")
     parser.add_argument("--strict", action="store_true", help="Return non-zero unless all checks are verified.")
     parser.add_argument(
         "--output",
@@ -262,7 +277,13 @@ def main() -> int:
         output = root / output
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    report = build_report(root, args.repo, args.offline)
+    try:
+        report = build_report(root, args.repo, args.offline)
+    except ForgeError as exc:
+        # Sans --offline, l'absence de configuration est une erreur nommée :
+        # l'audit ne rend pas un rapport « sans preuve vivante » en silence.
+        print(f"ERROR: forge provider not configured: {exc}", file=sys.stderr)
+        return 2
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": report["status"]}, indent=2, sort_keys=True))
     if args.strict and report["status"] != "verified":

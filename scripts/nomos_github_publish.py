@@ -8,8 +8,9 @@ outputs according to ``publish.mode``:
 * ``artifact_only`` — copy outputs + trace manifest into a deterministic
   location for upload as a GitHub Actions artifact. Never opens a PR or
   pushes a commit.
-* ``pull_request`` — plan (and optionally execute via ``gh``) a PR against
-  the output repository. v0.1 exercises the dry-run path only.
+* ``pull_request`` — plan (and optionally open, through the forge
+  provider) a PR against the output repository. v0.1 exercises the
+  dry-run path only.
 * ``direct_push`` — plan (and optionally execute via ``git``) a direct
   commit on ``target_branch``/``target_path``. Allowed only when the
   workflow config explicitly requested this mode; the path guard runs
@@ -33,7 +34,16 @@ import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 from typing import Any, Iterable
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 ANTI_LOOP_HEADER = "[nomos-generated]"
 
@@ -267,7 +277,7 @@ def publish_artifact_only(
 ) -> dict[str, Any]:
     """Copy outputs + trace + diff plan to ``dest_dir`` for artifact upload.
 
-    Never calls git or gh; never reads or writes any remote. Returns a result
+    Never calls git or the forge; never reads or writes any remote. Returns a result
     dict listing the files prepared for upload. The dry-run path leaves the
     filesystem untouched and just records the plan.
     """
@@ -325,13 +335,15 @@ def publish_pull_request(
     trace_manifest: str,
     commit_subject: str = "",
     dry_run: bool = True,
-    run_command=None,
+    provider: Provider | None = None,
 ) -> dict[str, Any]:
     """Plan (and optionally execute) a PR against the output repository.
 
-    v0.1 only exercises the dry-run path in tests. The real-run path shells
-    out to ``gh pr create``/``gh pr edit`` via ``run_command``; tests
-    monkeypatch ``run_command`` so no network call is made.
+    v0.1 only exercises the dry-run path in tests. The real-run path opens
+    the PR through the forge provider (``provider`` injected, else resolved
+    from ``NOMOS_FORGE_*``); tests inject a ``FakeProvider`` so no network
+    call is made. A missing provider configuration raises
+    ``ForgeConfigError`` (docs/43 §2.8) — the PR is never skipped silently.
     """
     branch = compute_branch_name(
         branch_strategy,
@@ -356,27 +368,23 @@ def publish_pull_request(
     if dry_run:
         return plan
 
-    runner = run_command or _run_subprocess
-    # Real run: shell out to gh. The actual commit/push of the generated
-    # tree is left to NGW-007 (#392) and NGW-010 (#395), which close the
-    # end-to-end loop. Here we only plan/refresh the PR shell.
-    plan["gh_pr_create"] = runner(
-        [
-            "gh",
-            "pr",
-            "create",
-            "--repo",
-            target_repo,
-            "--base",
-            target_branch,
-            "--head",
-            branch,
-            "--title",
-            commit_subject or f"nomos: refresh {workflow_id}",
-            "--body",
-            commit_message,
-        ]
+    # Real run: open the PR through the forge provider. The actual
+    # commit/push of the generated tree is left to NGW-007 (#392) and
+    # NGW-010 (#395), which close the end-to-end loop. Here we only
+    # plan/open the PR shell.
+    forge = provider if provider is not None else provider_from_env()
+    created = forge.create_pull_request(
+        target_repo,
+        head=branch,
+        base=target_branch,
+        title=commit_subject or f"nomos: refresh {workflow_id}",
+        body=commit_message,
     )
+    plan["pull_request"] = {
+        "provider": forge.name,
+        "number": created["number"],
+        "url": created["url"],
+    }
     return plan
 
 
@@ -457,8 +465,8 @@ def _run_subprocess(cmd: list[str]) -> dict[str, Any]:
     """Wrapper around ``subprocess.run`` that returns a serialisable result.
 
     Tests monkeypatch this function (or the ``run_command`` parameter on
-    the publisher entry points) so the unit tests never invoke ``git`` or
-    ``gh`` for real.
+    the publisher entry points) so the unit tests never invoke ``git``
+    for real.
     """
     completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
     return {
@@ -554,20 +562,25 @@ def main(argv: list[str] | None = None) -> int:
             dry_run=args.dry_run,
         )
     elif args.mode == "pull_request":
-        result = publish_pull_request(
-            workflow_id=args.workflow_id,
-            branch_strategy=args.branch_strategy,
-            source_sha=args.source_sha,
-            source_pr_number=_resolve_pr_number(args.source_pr_number),
-            source_ref=args.source_ref,
-            target_repo=args.target_repo,
-            target_branch=args.target_branch,
-            target_path=args.target_path,
-            outputs_dir=args.outputs_dir,
-            trace_manifest=args.trace_manifest,
-            commit_subject=args.commit_subject,
-            dry_run=args.dry_run,
-        )
+        try:
+            result = publish_pull_request(
+                workflow_id=args.workflow_id,
+                branch_strategy=args.branch_strategy,
+                source_sha=args.source_sha,
+                source_pr_number=_resolve_pr_number(args.source_pr_number),
+                source_ref=args.source_ref,
+                target_repo=args.target_repo,
+                target_branch=args.target_branch,
+                target_path=args.target_path,
+                outputs_dir=args.outputs_dir,
+                trace_manifest=args.trace_manifest,
+                commit_subject=args.commit_subject,
+                dry_run=args.dry_run,
+            )
+        except ForgeError as exc:
+            # Configuration absente ou refus de la forge : dit, jamais tu.
+            print(f"error: pull request not opened: {exc}", file=sys.stderr)
+            return 2
     else:  # direct_push
         try:
             result = publish_direct_push(
