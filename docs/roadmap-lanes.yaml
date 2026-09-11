@@ -734,7 +734,6 @@ items:
     state: open
     lane: devops
     dispatch: autonomous
-    tracker: github
     delivery_state: partial
     evidence_state: none
     claim_state: bounded
@@ -744,7 +743,6 @@ items:
     state: open
     lane: devops
     dispatch: autonomous
-    tracker: github
     delivery_state: partial
     evidence_state: none
     claim_state: bounded
