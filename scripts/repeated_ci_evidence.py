@@ -36,7 +36,7 @@ and the weaker one alone would flatter the result:
 Modes:
 
     python3 scripts/repeated_ci_evidence.py --root .            # verify (offline, what CI runs)
-    python3 scripts/repeated_ci_evidence.py --root . --collect  # re-measure live (needs `gh`)
+    python3 scripts/repeated_ci_evidence.py --root . --collect  # re-measure live (forge provider: token or `gh`)
     python3 scripts/repeated_ci_evidence.py --root . --collect --publish
 
 Verify is offline and deterministic: it recomputes the measurement from the
@@ -53,14 +53,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import shutil
-import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import ForgeError, Provider, provider_from_env  # noqa: E402
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR = Path("docs/regulated/evidence-index/repeated-ci-evidence")
@@ -74,7 +80,6 @@ TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 DEFAULT_REPO = "decarvalhoe/NOMOS"
 API_PAGE_SIZE = 100
 API_MAX_PAGES = 5
-GH_TIMEOUT_SECONDS = 60.0
 
 CLAIM_BOUNDARY = (
     "Measurement of the scheduled-run history of one workflow over one private "
@@ -303,27 +308,45 @@ def measure(runs: list[dict[str, Any]], policy: dict[str, Any], now: datetime) -
 # ---------------------------------------------------------------------------
 
 
-def gh_api(endpoint: str) -> Any:
-    if shutil.which("gh") is None:
-        raise MeasurementError("gh CLI not found; live collection needs it")
-    result = subprocess.run(
-        ["gh", "api", endpoint],
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=GH_TIMEOUT_SECONDS,
-    )
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
-        raise MeasurementError(f"gh api {endpoint} failed: {detail}")
+def _live_provider(provider: Provider | None) -> Provider:
+    """Fournisseur injecté, sinon résolu depuis l'environnement.
+
+    Une configuration absente (ni jeton, ni `gh`, ni URL de forge) devient
+    une MeasurementError : rien ne peut être mesuré, et on le dit.
+    """
+    if provider is not None:
+        return provider
     try:
-        return json.loads(result.stdout or "{}")
-    except json.JSONDecodeError as exc:
-        raise MeasurementError(f"gh api {endpoint} returned invalid JSON: {exc}") from exc
+        return provider_from_env()
+    except ForgeError as exc:
+        raise MeasurementError(f"live collection needs a forge provider: {exc}") from exc
 
 
-def artifact_records(repo: str, run_id: int) -> list[dict[str, Any]]:
-    payload = gh_api(f"/repos/{repo}/actions/runs/{run_id}/artifacts?per_page={API_PAGE_SIZE}")
+def gh_api(endpoint: str, provider: Provider | None = None) -> Any:
+    """GET en lecture seule via le fournisseur de forge (nom historique conservé).
+
+    Le chemin est relatif à la base de l'API, au format GitHub
+    (`/repos/{owner}/{name}/actions/...`) ; le fournisseur le remappe ou
+    refuse (GitLab lève `NotSupported`). Toute erreur devient une
+    MeasurementError : mesurer un échec n'est pas ne rien mesurer.
+    """
+    forge = _live_provider(provider)
+    try:
+        payload = forge.get_json(endpoint)
+    except ForgeError as exc:
+        raise MeasurementError(f"{forge.name} api {endpoint} failed: {exc}") from exc
+    if payload is None:
+        return {}
+    return payload
+
+
+def artifact_records(
+    repo: str, run_id: int, provider: Provider | None = None
+) -> list[dict[str, Any]]:
+    payload = gh_api(
+        f"/repos/{repo}/actions/runs/{run_id}/artifacts?per_page={API_PAGE_SIZE}",
+        provider=provider,
+    )
     records = []
     for artifact in payload.get("artifacts", []) or []:
         records.append(
@@ -355,7 +378,10 @@ def corpus_commit_from_artifacts(artifacts: list[dict[str, Any]]) -> str | None:
     return None
 
 
-def collect_runs(repo: str, policy: dict[str, Any]) -> list[dict[str, Any]]:
+def collect_runs(
+    repo: str, policy: dict[str, Any], provider: Provider | None = None
+) -> list[dict[str, Any]]:
+    forge = _live_provider(provider)
     workflow = policy["workflow"]
     workflow_id = workflow["workflow_id"]
     event = workflow["event"]
@@ -367,13 +393,13 @@ def collect_runs(repo: str, policy: dict[str, Any]) -> list[dict[str, Any]]:
             f"/repos/{repo}/actions/workflows/{workflow_id}/runs"
             f"?event={event}&branch={branch}&per_page={API_PAGE_SIZE}&page={page}"
         )
-        payload = gh_api(endpoint)
+        payload = gh_api(endpoint, provider=forge)
         batch = payload.get("workflow_runs", []) or []
         if not batch:
             break
         for run in batch:
             run_id = run.get("id")
-            artifacts = artifact_records(repo, run_id) if run_id else []
+            artifacts = artifact_records(repo, run_id, provider=forge) if run_id else []
             collected.append(
                 {
                     "run_id": run_id,
@@ -698,7 +724,10 @@ def main() -> int:
     parser.add_argument(
         "--collect",
         action="store_true",
-        help="Re-measure live from the GitHub Actions API (needs `gh`).",
+        help=(
+            "Re-measure live from the forge's Actions API through the provider "
+            "selected by NOMOS_FORGE_PROVIDER (GitHub: token or `gh`)."
+        ),
     )
     parser.add_argument(
         "--publish",
@@ -726,7 +755,7 @@ def main() -> int:
     if args.collect:
         try:
             runs = collect_runs(args.repo, policy)
-        except (MeasurementError, subprocess.TimeoutExpired) as exc:
+        except MeasurementError as exc:
             print(f"repeated-ci-evidence: NOT MEASURED — {exc}", file=sys.stderr)
             return 2
 

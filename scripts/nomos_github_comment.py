@@ -29,9 +29,13 @@ Public CLI:
         --output-location https://example/output \
         [--dry-run]
 
-The script never imports requests or the GitHub SDK; it shells out to
-`gh api` so the runner's GITHUB_TOKEN is the sole credential boundary.
-Tests mock subprocess so no real HTTP traffic happens during CI.
+The script never imports requests or a forge SDK. Every API call goes
+through `scripts/forge_provider.py` (GitHub, Forgejo, GitLab, or an
+in-memory fake), selected by `NOMOS_FORGE_PROVIDER` / `NOMOS_FORGE_URL` /
+`NOMOS_FORGE_TOKEN_FILE`. On GitHub Actions, with no explicit token, the
+provider shells out to `gh api` so the runner's GITHUB_TOKEN stays the
+sole credential boundary. Tests inject a `FakeProvider` so no binary is
+run and no HTTP traffic happens during CI.
 """
 
 from __future__ import annotations
@@ -39,11 +43,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
+from pathlib import Path
 from typing import Any
 
 import yaml
+
+# Le module frère vit dans scripts/ ; le script peut être chargé depuis
+# ailleurs (tests, importlib), d'où l'ajout explicite au chemin.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from forge_provider import Provider, provider_from_env  # noqa: E402
 
 
 # Allowed enums (mirror NGW-01 #NotifySpec / spec narrative).
@@ -237,49 +249,27 @@ def format_comment(
 
 
 # ---------------------------------------------------------------------------
-# Side-effecting helpers — shell out to `gh api`.
+# Side-effecting helpers — go through the forge provider.
 # ---------------------------------------------------------------------------
 
 
-def _gh_api(args: list[str]) -> str:
-    """Run `gh api` with the supplied arguments and return stdout text."""
-    cmd = ["gh", "api", *args]
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    return proc.stdout
+def _resolve_provider(provider: Provider | None) -> Provider:
+    """Le fournisseur injecté prime ; sinon il est résolu depuis l'environnement.
+
+    Une configuration absente lève `ForgeConfigError` (doctrine §2.8) :
+    le commentaire n'est jamais « sauté » en silence.
+    """
+    return provider if provider is not None else provider_from_env()
 
 
-def fetch_pr_comments(repo: str, pr_number: int) -> list[dict]:
-    """Fetch the PR's issue-comments list via `gh api`."""
-    out = _gh_api(
-        [
-            f"repos/{repo}/issues/{pr_number}/comments",
-            "--paginate",
-        ]
-    )
-    out = out.strip()
-    if not out:
-        return []
-    parsed = json.loads(out)
-    if isinstance(parsed, list):
-        return parsed
-    # gh --paginate concatenates JSON arrays; if the server returned
-    # multiple chunks, fall back to a per-line parse.
-    comments: list[dict] = []
-    skipped_lines = 0
-    for line in out.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            chunk = json.loads(line)
-        except json.JSONDecodeError:
-            skipped_lines += 1
-            continue
-        if isinstance(chunk, list):
-            comments.extend(chunk)
-    if skipped_lines and not comments:
-        raise ValueError(f"gh --paginate output could not be parsed as JSON ({skipped_lines} line(s) skipped); refusing to report zero comments silently")
-    return comments
+def fetch_pr_comments(
+    repo: str, pr_number: int, provider: Provider | None = None
+) -> list[dict]:
+    """Fetch the PR's comments, normalised to `{"id", "body", "raw"}`.
+
+    Pagination is handled inside the provider.
+    """
+    return _resolve_provider(provider).list_issue_comments(repo, int(pr_number))
 
 
 def post_or_update_comment(
@@ -289,13 +279,14 @@ def post_or_update_comment(
     scope_id: str,
     *,
     dry_run: bool = False,
+    provider: Provider | None = None,
 ) -> dict:
     """Create or update the sticky comment for `scope_id` on the source PR.
 
-    On dry-run: does NOT call `gh api`; returns a planned-payload dict
-    describing the action it would have taken. Real run: lists the PR's
-    comments, looks for the per-scope sticky marker, then PATCHes the
-    matched comment or POSTs a new one. Returns a small status dict.
+    On dry-run: does NOT touch the provider; returns a planned-payload
+    dict describing the action it would have taken. Real run: lists the
+    PR's comments, looks for the per-scope sticky marker, then updates
+    the matched comment or creates a new one. Returns a small status dict.
     """
     plan: dict[str, Any] = {
         "action": "create",  # or "update"
@@ -308,32 +299,18 @@ def post_or_update_comment(
     if dry_run:
         return plan
 
-    existing = fetch_pr_comments(repo, pr_number)
+    forge = _resolve_provider(provider)
+    existing = fetch_pr_comments(repo, pr_number, provider=forge)
     match = find_existing_comment(existing, scope_id)
     if match and isinstance(match.get("id"), int):
         comment_id = int(match["id"])
         plan["action"] = "update"
         plan["comment_id"] = comment_id
-        _gh_api(
-            [
-                "-X",
-                "PATCH",
-                f"repos/{repo}/issues/comments/{comment_id}",
-                "-f",
-                f"body={body}",
-            ]
-        )
+        # `number` est requis par GitLab (note de MR) ; ignoré ailleurs.
+        forge.update_issue_comment(repo, comment_id, body, number=int(pr_number))
     else:
         plan["action"] = "create"
-        _gh_api(
-            [
-                "-X",
-                "POST",
-                f"repos/{repo}/issues/{pr_number}/comments",
-                "-f",
-                f"body={body}",
-            ]
-        )
+        forge.create_issue_comment(repo, int(pr_number), body)
     return plan
 
 
@@ -417,7 +394,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Print the planned body and skip all gh api calls.",
+        help="Print the planned body and skip all forge API calls.",
     )
     return parser.parse_args(argv)
 

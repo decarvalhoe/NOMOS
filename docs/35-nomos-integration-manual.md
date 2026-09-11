@@ -221,6 +221,38 @@ jobs:
 
 Le token output ne doit pas donner de droit d'ecriture au repo source.
 
+## Fournisseur De Forge (GitHub, Forgejo, GitLab)
+
+Les scripts sidecar qui parlent a l'API d'une forge a l'execution passent par
+`scripts/forge_provider.py`, choisi par trois variables d'environnement :
+`NOMOS_FORGE_PROVIDER` (`github`, `forgejo`, `gitlab` ou `fake` ; a defaut,
+`github` si `GITHUB_TOKEN`, `GH_TOKEN` ou `GITHUB_REPOSITORY` est present,
+sinon erreur), `NOMOS_FORGE_URL` (base de l'API ; `https://api.github.com` par
+defaut pour GitHub, obligatoire pour Forgejo et GitLab, URL d'instance ou
+d'API acceptee) et `NOMOS_FORGE_TOKEN_FILE` (fichier contenant le jeton ;
+repli `NOMOS_FORGE_TOKEN`, et pour GitHub seulement `GITHUB_TOKEN` puis
+`GH_TOKEN`). Sur GitHub Actions, sans jeton explicite, le fournisseur `github`
+delegue a `gh api` : le `GITHUB_TOKEN` du runner reste la seule frontiere
+d'identification. `fake` est un fournisseur en memoire reserve aux tests. Une
+configuration incomplete leve une erreur nommee ; aucun script ne se
+desactive en silence (docs/43 §2.8).
+
+Aujourd'hui, seuls deux usages passent par cet adaptateur : le commentaire
+sticky sur la PR/MR source (`scripts/nomos_github_comment.py`, mode
+`notify.source_pr_comment`) et la collecte d'evidence CI repetee
+(`scripts/repeated_ci_evidence.py --collect`, lecture seule ; non supportee
+sur GitLab, l'adaptateur le refuse explicitement). Sur GitLab, le commentaire
+est une note de merge request et l'`iid` de la MR tient lieu de numero.
+
+Les scripts suivants appellent encore `gh` directement et restent a migrer :
+`scripts/regulated_branch_protection.py`, `scripts/regulated_release_env.py`,
+`scripts/regulated_github_qms_audit.py`, `scripts/nomos_github_publish.py`,
+`scripts/roadmap_lane_guard.py --verify-github`,
+`.github/workflows/bundle-release.yml`, ainsi que l'outillage d'issues et de
+taxonomie (`scripts/create_github_issue_list.py`,
+`scripts/sync_github_taxonomy.py`). Aucune neutralite de forge n'est
+revendiquee au-dela des deux usages ci-dessus.
+
 ## Contrat D'output Pour Application
 
 Une application downstream doit importer un bundle, pas un fichier

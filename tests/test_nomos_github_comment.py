@@ -1,9 +1,10 @@
 """Tests for scripts/nomos_github_comment.py.
 
-NGW-06 (#391): the source PR commenter. Every test mocks
-subprocess.run so no real `gh api` call is made; the only outbound
-contracts under test are the format/marker invariants and the
-disable/short-circuit semantics of the CLI.
+NGW-06 (#391): the source PR commenter. Every side-effecting test
+injects a `FakeProvider` (scripts/forge_provider.py) so no binary is run
+and no HTTP call is made; the outbound contracts under test are the
+format/marker invariants, the create-vs-update decision as recorded by
+the fake, and the disable/short-circuit semantics of the CLI.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 import nomos_github_comment as ngc  # noqa: E402
+from forge_provider import FakeProvider, ForgeConfigError  # noqa: E402
 
 
 class TestCommentDisabled(unittest.TestCase):
@@ -220,53 +222,80 @@ class TestFindExistingComment(unittest.TestCase):
 
 
 class TestPostOrUpdateDryRun(unittest.TestCase):
-    def test_post_or_update_dry_run_no_subprocess(self):
-        with mock.patch("nomos_github_comment.subprocess.run") as run:
-            plan = ngc.post_or_update_comment(
-                repo="o/r",
-                pr_number=12,
-                body="hello",
-                scope_id="s",
-                dry_run=True,
-            )
-        run.assert_not_called()
+    def test_post_or_update_dry_run_no_provider_call(self):
+        fake = FakeProvider()
+        plan = ngc.post_or_update_comment(
+            repo="o/r",
+            pr_number=12,
+            body="hello",
+            scope_id="s",
+            dry_run=True,
+            provider=fake,
+        )
+        self.assertEqual(fake.calls, [])
         self.assertEqual(plan["action"], "create")
         self.assertTrue(plan["dry_run"])
         self.assertEqual(plan["scope_id"], "s")
 
-    def test_post_or_update_real_creates_when_no_match(self):
-        # subprocess.run is called twice: list comments + create.
-        list_proc = mock.Mock(stdout="[]", returncode=0)
-        post_proc = mock.Mock(stdout="{}", returncode=0)
-        with mock.patch(
-            "nomos_github_comment.subprocess.run",
-            side_effect=[list_proc, post_proc],
-        ) as run:
+    def test_post_or_update_dry_run_does_not_resolve_env(self):
+        # Dry-run must not even try to resolve a provider: with no forge
+        # configuration at all, it still returns the plan.
+        with mock.patch.dict(os.environ, {}, clear=True):
             plan = ngc.post_or_update_comment(
-                repo="o/r", pr_number=12, body="hello", scope_id="s"
+                repo="o/r", pr_number=12, body="hello", scope_id="s", dry_run=True
             )
+        self.assertTrue(plan["dry_run"])
+
+    def test_post_or_update_real_creates_when_no_match(self):
+        # The provider is called twice: list comments + create.
+        fake = FakeProvider()
+        plan = ngc.post_or_update_comment(
+            repo="o/r", pr_number=12, body="hello", scope_id="s", provider=fake
+        )
         self.assertEqual(plan["action"], "create")
-        self.assertEqual(run.call_count, 2)
-        post_args = run.call_args_list[1].args[0]
-        self.assertIn("POST", post_args)
+        self.assertEqual([op for op, _ in fake.calls], ["list_issue_comments", "create_issue_comment"])
+        self.assertEqual(
+            fake.calls[1][1], {"repo": "o/r", "number": 12, "body": "hello"}
+        )
 
     def test_post_or_update_real_updates_when_match(self):
         marker = ngc.sticky_marker("s")
-        existing = json.dumps([{"id": 99, "body": f"{marker}\n\nold"}])
-        list_proc = mock.Mock(stdout=existing, returncode=0)
-        patch_proc = mock.Mock(stdout="{}", returncode=0)
-        with mock.patch(
-            "nomos_github_comment.subprocess.run",
-            side_effect=[list_proc, patch_proc],
-        ) as run:
-            plan = ngc.post_or_update_comment(
-                repo="o/r", pr_number=12, body="new", scope_id="s"
-            )
+        fake = FakeProvider()
+        fake.seed_comments(
+            "o/r", 12, [{"id": 1, "body": "unrelated"}, {"id": 99, "body": f"{marker}\n\nold"}]
+        )
+        plan = ngc.post_or_update_comment(
+            repo="o/r", pr_number=12, body="new", scope_id="s", provider=fake
+        )
         self.assertEqual(plan["action"], "update")
         self.assertEqual(plan["comment_id"], 99)
-        patch_args = run.call_args_list[1].args[0]
-        self.assertIn("PATCH", patch_args)
-        self.assertIn("repos/o/r/issues/comments/99", patch_args)
+        self.assertEqual([op for op, _ in fake.calls], ["list_issue_comments", "update_issue_comment"])
+        # The PR number travels with the update: GitLab needs it to address a note.
+        self.assertEqual(
+            fake.calls[1][1],
+            {"repo": "o/r", "comment_id": 99, "body": "new", "number": 12},
+        )
+        self.assertEqual(fake.list_issue_comments("o/r", 12)[1]["body"], "new")
+
+    def test_post_or_update_without_forge_config_raises_named_error(self):
+        # Doctrine §2.8: no configuration is an error, never a silent skip.
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(ForgeConfigError) as ctx:
+                ngc.post_or_update_comment(
+                    repo="o/r", pr_number=12, body="hello", scope_id="s"
+                )
+        self.assertIn("NOMOS_FORGE_PROVIDER", str(ctx.exception))
+
+
+class TestFetchPrComments(unittest.TestCase):
+    def test_fetch_returns_normalised_shape(self):
+        fake = FakeProvider()
+        fake.seed_comments("o/r", 7, [{"id": "5", "body": "x", "user": {"login": "bot"}}])
+        comments = ngc.fetch_pr_comments("o/r", 7, provider=fake)
+        self.assertEqual(comments[0]["id"], 5)
+        self.assertEqual(comments[0]["body"], "x")
+        self.assertEqual(comments[0]["raw"]["user"]["login"], "bot")
+        self.assertEqual(fake.calls, [("list_issue_comments", {"repo": "o/r", "number": 7})])
 
 
 class TestCLI(unittest.TestCase):
