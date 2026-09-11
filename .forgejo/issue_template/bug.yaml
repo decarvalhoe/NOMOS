@@ -1,0 +1,91 @@
+name: Anomalie
+about: Signaler un comportement observé différent du comportement attendu.
+title: "[bug] "
+labels:
+  - type:bug
+  - status:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Un rapport d'anomalie non reproductible n'est pas exploitable par un agent :
+        il produira une correction plausible et invérifiable. Privilégiez une commande
+        exacte à une description narrative.
+
+  - type: textarea
+    id: contrat
+    attributes:
+      label: Contrat de correction
+      value: |
+        ## Critères d'acceptation
+        <!-- Décrire le comportement observable attendu après correction. -->
+
+        ## Vérification
+        <!-- Donner la commande ou le test qui échoue avant et passe après. -->
+
+        ## Parent de suivi
+        <!-- Écrire #N pour un enfant, sinon : Aucun — ticket autonome. -->
+
+        ## Hors périmètre
+        <!-- Lister ce qui ne sera pas modifié, notamment production, secrets et UAT. -->
+
+        ## Gate de vérification
+        <!-- Nommer le contrôle CI qui prouve la correction (test de non-régression,
+             smoke, conformité). S'il n'existe pas, l'écrire : le poser fait partie du ticket. -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Commande ou séquence exacte, depuis un état de départ connu.
+      placeholder: |
+        ```
+        git clone <dépôt> && cd <dépôt>
+        ./script.sh --option
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: attendu-observe
+    attributes:
+      label: Attendu / observé
+      description: Les deux, séparément. Coller la sortie réelle, pas un résumé.
+      value: |
+        Attendu :
+
+        Observé :
+
+        ```
+        (sortie brute)
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version ou révision
+      description: Empreinte de commit, version d'image, ou date d'observation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environnement
+    attributes:
+      label: Environnement
+      description: Machine, OS, versions d'outils pertinentes. Préciser si c'est la production.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: constance
+    attributes:
+      label: Constance
+      options:
+        - label: Reproductible systématiquement
+          required: false
+        - label: Intermittent — préciser la fréquence observée ci-dessus
+          required: false

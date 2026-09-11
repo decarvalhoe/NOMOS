@@ -1,0 +1,139 @@
+name: Convention — contrat d'autonomie
+
+# Ce workflow vérifie un CONTRAT, jamais une IDENTITÉ ni une AUTORISATION.
+#
+# Il a d'abord remplacé `controle-etiquette.yml`, qui vérifiait QUI avait posé
+# `agent:cli-ready` et révoquait l'étiquette si c'était un compte agent. Il
+# gardait cependant l'étiquette comme déclencheur : un ticket sans elle sortait
+# sans être vérifié, et il fallait toujours que quelqu'un la pose.
+#
+# Mesuré sur la forge le 12.08.2026, cette étiquette bloquait plus qu'elle ne
+# protégeait : sur `websites`, 28 issues ouvertes sur 38 — dont 22 d'une même
+# marque et 2 P0 — étaient hors de portée de tout agent faute d'un geste jamais
+# posé ; 21 dépôts de l'organisation portaient l'étiquette, et ~17 tickets
+# spécifiés et non contestés attendaient une autorisation ailleurs.
+#
+# Le déclencheur est donc devenu `status:ready`, et l'axe `agent:` a disparu :
+# un ticket spécifié est prenable. Voir l'ADR 0005 de `RBOKproject/websites`.
+#
+# Partage du travail avec `controle-actionnabilite.yml`, pour qu'un même défaut
+# ne soit pas signalé deux fois :
+#   - actionnabilité = STRUCTURE (axes d'étiquettes, critères, vérification,
+#     cause/responsable/condition d'un ticket bloqué) ;
+#   - autonomie = RISQUE (périmètre déclaré, effets non réversibles).
+#
+# Aucune action tierce (`uses:`) : l'instance résout `uses:` sur elle-même.
+# Aucun appel réseau non plus — le corps et les étiquettes sont dans l'évènement.
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contrat:
+    runs-on: docker
+    steps:
+      - name: Vérifier le contrat d'autonomie
+        env:
+          # Toute donnée rédigée par un humain ou un agent passe par
+          # l'environnement, jamais par interpolation dans le shell.
+          CORPS: ${{ toJSON(github.event.issue.body) }}
+          ETIQUETTES: ${{ toJSON(github.event.issue.labels) }}
+          NUMERO: ${{ github.event.issue.number }}
+        shell: sh
+        run: |
+          set -u
+          echecs=0
+          probleme() { echo "ECHEC  $*"; echecs=$((echecs + 1)); }
+          ok()       { echo "ok     $*"; }
+
+          compact=$(printf '%s' "$ETIQUETTES" | tr -d ' \n\r\t')
+
+          porte() {
+            printf '%s' "$compact" | grep -q "\"name\":\"$1\""
+          }
+
+          if ! porte 'status:ready'; then
+            echo "Ticket non déclaré exécutable : le contrat d'autonomie ne s'applique pas."
+            exit 0
+          fi
+
+          echo "Ticket #$NUMERO est status:ready — vérification du contrat."
+          echo
+
+          # Le corps arrive encodé en JSON. Le décoder à la main au sed laissait
+          # les guillemets englobants : la toute première ligne du corps devenait
+          # « "## Critères d'acceptation » et aucune section placée en tête
+          # n'était reconnue — un ticket correctement rédigé pouvait être refusé.
+          # Un décodage JSON réel évite aussi les pièges des échappements \" et
+          # \uXXXX. Fail-closed : sans python3, on ne devine pas le contenu.
+          if ! command -v python3 >/dev/null 2>&1; then
+            echo "Python 3 absent : décodage du corps impossible, contrôle non concluant."
+            exit 1
+          fi
+          if ! corps_lisible=$(printf '%s' "$CORPS" | python3 -c 'import json, sys; value = json.load(sys.stdin); print(value if isinstance(value, str) else "")'); then
+            echo "Corps d'issue illisible : contrôle non concluant."
+            exit 1
+          fi
+
+          # Les modèles d'issue emploient l'apostrophe typographique U+2019 ;
+          # la normaliser évite de déclarer absente une section bien présente.
+          corps_normalise=$(printf '%s\n' "$corps_lisible" | sed "s/\xe2\x80\x99/'/g")
+
+          # section TITRE -> contenu de la section, commentaires HTML retirés
+          section() {
+            printf '%s\n' "$corps_normalise" | awk -v titre="## $1" '
+              index($0, titre) == 1 { dans = 1; next }
+              dans && index($0, "## ") == 1 { dans = 0 }
+              dans { print }
+            ' | sed 's/<!--.*-->//' | tr -d " \t\r\n"
+          }
+
+          # --- clause unique et bloquante : le périmètre -------------------
+          # « Hors périmètre » est le titre courant ; les deux formes plus
+          # anciennes restent acceptées pour ne pas invalider les tickets déjà
+          # rédigés — un contrôle qui casse le stock existant ne protège rien.
+          if [ -n "$(section "Hors périmètre")" ] ||
+             [ -n "$(section "Hors périmètre bloqué")" ] ||
+             [ -n "$(section "Périmètre autorisé")" ]; then
+            ok "périmètre déclaré"
+          else
+            probleme "aucun périmètre déclaré — l'agent élargira pour bien faire"
+          fi
+
+          # --- signal non bloquant : effets non réversibles ----------------
+          # Ces types portent des effets qu'un revert ne rattrape pas. Ce n'est
+          # pas une raison d'en interdire la PRISE : la supervision se joue à la
+          # fusion — tronc protégé et revue croisée — pas à l'entrée du ticket.
+          # Refuser ici rendrait non actionnables des tickets ops ou migration
+          # parfaitement spécifiés, et recréerait la file d'attente que l'axe
+          # agent: avait déjà produite.
+          risque=""
+          for type_sensible in type:decision type:security type:ops type:migration; do
+            if porte "$type_sensible"; then
+              risque="$risque $type_sensible"
+            fi
+          done
+          if [ -n "$risque" ]; then
+            echo "note   effets non réversibles :$risque"
+            echo "       Le ticket reste prenable. Sa pull request demande une revue"
+            echo "       humaine avant fusion, et le déploiement reste une étape"
+            echo "       distincte — une CI verte prouve le job, pas la production."
+          fi
+
+          echo
+          if [ "$echecs" -gt 0 ]; then
+            echo "$echecs clause(s) du contrat d'autonomie non remplie(s)."
+            echo
+            echo "Un ticket sans périmètre déclaré n'est exécutable en autonomie par"
+            echo "personne, agent ou humain : rien n'y dit où s'arrêter."
+            echo
+            echo "Compléter le ticket, ou le renvoyer à l'arbitrage :"
+            echo "  arbitrage voir <depot>#$NUMERO"
+            exit 1
+          fi
+          echo "Contrat d'autonomie rempli — le ticket est exécutable sans supervision."

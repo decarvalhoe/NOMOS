@@ -1,0 +1,79 @@
+name: Tâche exécutable par un agent
+about: Décrire un travail suffisamment cadré pour qu'un agent puisse le prendre sans revenir poser de questions.
+title: "[tâche] "
+labels:
+  - type:task
+  - status:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        La demande doit dire comment reconnaître le succès et comment le vérifier
+        sans revenir demander un avis. Le contrat Markdown ci-dessous couvre ces
+        garanties.
+
+        Tant que ses sections ne sont pas réellement remplies, ne posez pas
+        `status:ready`. Ce label dit que le ticket est spécifié — et un ticket
+        spécifié est prenable par un agent, sans autorisation supplémentaire.
+
+  - type: textarea
+    id: contrat
+    attributes:
+      label: Contrat Markdown prêt à exécuter
+      description: >
+        Remplir chaque section sans renommer les titres. Les commentaires d’aide ne
+        comptent pas comme contenu : ils doivent être remplacés par des informations
+        concrètes avant d’ajouter `status:ready`.
+      value: |
+        ## Critères d’acceptation
+        <!-- Décrire l’état final observable, pas la méthode. -->
+
+        ## Vérification
+        <!-- Donner les commandes, sorties attendues ou la procédure reproductible. -->
+
+        ## Parent de suivi
+        <!-- Écrire #N pour un enfant atomisé, ou : Aucun — ticket autonome. -->
+
+        ## Hors périmètre
+        <!-- Nommer ce que ce ticket ne couvre pas : production, déploiement, UAT, autres marques. -->
+
+        ## Gate de vérification
+        <!-- Nommer le contrôle CI qui prouve le résultat (workflow, script, test). Si aucun
+             n'existe encore, le dire : l'outiller fait partie du ticket. -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte utile
+      description: Historique, tickets liés, fichiers de référence, décisions déjà prises à ne pas rejouer.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acces
+    attributes:
+      label: Accès nécessaires
+      description: >
+        Jetons, comptes, réseaux ou droits requis. Si un accès manque réellement, l'agent
+        pose `status:blocked` avec cause, responsable et condition de reprise, plutôt que
+        de tenter un contournement — mais il traite d'abord tout ce qui avance sans cet accès.
+      placeholder: "Aucun au-delà du jeton de dépôt standard."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: supervision
+    attributes:
+      label: Niveau de supervision proposé
+      description: >
+        La supervision se joue à la fusion, pas à la prise : un agent peut toujours
+        prendre le ticket et proposer une PR. « Humain uniquement » se marque avec
+        `status:blocked` et une cause nommée.
+      options:
+        - Autonome — PR fusionnable dès que les gates CI sont vertes
+        - Supervisé — relecture humaine obligatoire avant fusion
+        - Humain uniquement — ne pas confier à un agent
+    validations:
+      required: true
