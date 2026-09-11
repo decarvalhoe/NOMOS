@@ -1,0 +1,12 @@
+record_id: CAPA-2026-001
+record_type: deviation_capa
+status: closed
+severity: major
+opened: 2026-06-11
+closed: 2026-06-11
+retro_documented: true
+deviation:
+  summary: Closed CAPA whose effectiveness evidence names a file that is gone.
+effectiveness_verification:
+  verified: true
+  evidence: "scripts/vrc_wiring_matrix_registry.json and docs/gone/evidence.md"

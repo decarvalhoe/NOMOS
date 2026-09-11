@@ -1,13 +1,42 @@
 # Security Policy
 
-Nomos is currently in alpha. Security reports are handled as high-priority project issues and should not be disclosed publicly until triaged.
+Nomos is in beta (`v1.0.0-BETA.1`). Security reports are handled as high-priority project issues and should not be disclosed publicly until triaged.
 
 ## Supported Versions
 
-| Version | Security support |
-|---|---|
-| `v0.1.0-ALPHA` | Best-effort alpha triage |
-| `< v0.1.0-ALPHA` | Not supported |
+<!-- supported-versions:begin -->
+<!-- GENERATED from docs/support-model.yaml by scripts/security_process_gate.py --write; do not edit by hand, CI fails on drift -->
+
+| Version | Released | State | Security support |
+|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 |
+| `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA |
+
+<!-- supported-versions:end -->
+
+## Support
+
+<!-- support-model:begin -->
+<!-- GENERATED from docs/support-model.yaml by scripts/support_model_guard.py --write; do not edit by hand, CI fails on drift -->
+
+| Version | Released | State | Security support | End of support |
+|---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) | until the next tagged release |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 | 2026-09-07 |
+| `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
+
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what pre-release support covers and what requires project-specific work).
+- Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
+- Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
+- Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: A pre-release (alpha or beta) is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+- Supported contracts (15 stable, per specs/contract-registry.yaml): `canon-promotion`, `canonical-knowledge-bundle`, `canonical-matrix`, `corpus-body-ledger`, `corpus-integrity-report`, `domain-pack`, `external-snapshot`, `facets`, `knowledge-lens`, `nomos-praxis-evidence-schema`, `nomos-project`, `nomos-report.schema`, `point-in-time`, `source-manifest`, `verdicts`. Contracts registered as experimental in specs/contract-registry.yaml may change without a MAJOR notice (docs/16); they are listed as such where a guide relies on them and are not part of the supported surface.
+- Covered commands: `nomos version`, `nomos contracts status`, `nomos init`, `nomos validate`, `nomos diagnose`, `nomos strict`, `nomos corpus scan`, `nomos corpus feed`, `nomos corpus body-ledger`, `nomos corpus attest`, `nomos corpus snapshot`, `nomos github plan`, `nomos portfolio status`, `nomos portfolio release-readiness`, `nomos bundle`, `nomos rag export`, `nomos rag manifest`, `nomos rag delta`, `nomos rag verify`, `nomos answer gate`, `nomos answer eval`.
+- Guides replayed in CI: docs/48-customer-integration-guide.md, docs/50-cross-consumption-proof-kit.md.
+<!-- support-model:end -->
 
 ## Reporting A Vulnerability
 
@@ -20,6 +49,8 @@ Include:
 - expected impact;
 - whether source corpus integrity, generated evidence, credentials, CI, or release artifacts are affected;
 - any relevant logs with secrets removed.
+
+The security process is executable (NRT-025, #678): `docs/security/security-process.yaml` declares intake, triage targets (declared, not measured), disclosure and scanners; `scripts/security_process_gate.py` runs `govulncheck` on `cli/` and `tools/sigstore-verifier/` and `pip-audit` on the pinned sidecar requirements in CI, and any accepted finding lives in `docs/security/vulnerability-allowlist.yaml` with an owner and an expiry. Dependabot covers Go modules, GitHub Actions, Python and the node adapter fixture. The gate also enumerates every dependency manifest tracked by git (#696) and requires each one to be scanned, watched by Dependabot, or excluded by name with a reason: a forgotten manifest is red, not invisible. This proves that dependencies are scanned, that every manifest is accounted for, and that exceptions expire; it is not a security certification. See `docs/security/README.md`.
 
 ## Security Scope
 
@@ -36,4 +67,4 @@ Security-sensitive areas include:
 
 ## Current Alpha Boundary
 
-Nomos v0.1.0-ALPHA is not a hosted security boundary and does not claim production security certification. Customer deployments must perform their own threat modeling, access-control design, secret management, logging, backup, vulnerability management, and validation.
+Nomos v0.2.0-ALPHA is not a hosted security boundary and does not claim production security certification. Customer deployments must perform their own threat modeling, access-control design, secret management, logging, backup, vulnerability management, and validation.

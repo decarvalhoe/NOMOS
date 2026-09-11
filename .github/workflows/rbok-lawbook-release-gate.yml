@@ -27,16 +27,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: '1.22'
+          # cli/go.mod is the single source of the Go version (support model);
+          # the former '1.22' pin only worked through toolchain auto-upgrade,
+          # which setup-go v6+ disables by exporting GOTOOLCHAIN=local.
+          go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
 
       - name: Download E2E artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: rbok-lawbook-artifacts-*
           path: /tmp/rbok-artifacts
@@ -65,7 +68,7 @@ jobs:
 
       - name: Gate failed — block issue closure
         if: failure() && github.event_name == 'issues'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issue = context.payload.issue;

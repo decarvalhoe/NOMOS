@@ -114,7 +114,7 @@ func ValidateBytes(path string, data []byte) FileResult {
 			File:    path,
 			Path:    "",
 			Code:    "unknown_manifest",
-			Message: "manifest must contain project/scope/surfaces, sources, units, or adapter/compatibility/stack_support/capabilities/test_contract",
+			Message: "manifest must contain project/scope/surfaces (or project/scope/mode for a canonical corpus), sources, units, or adapter/compatibility/stack_support/capabilities/test_contract",
 		})
 	}
 
@@ -253,7 +253,7 @@ func detectManifestType(root *yaml.Node) string {
 	if mapping == nil {
 		return ""
 	}
-	if hasKeys(mapping, "project", "scope", "surfaces") {
+	if hasKeys(mapping, "project", "scope", "surfaces") || hasKeys(mapping, "project", "scope", "mode") {
 		return "nomos-project"
 	}
 	if hasKeys(mapping, "sources") {

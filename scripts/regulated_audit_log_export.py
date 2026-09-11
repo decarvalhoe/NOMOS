@@ -160,8 +160,14 @@ def load_manifest(path: Path) -> dict[str, Any]:
     if path.exists():
         try:
             return json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            # An audit export manifest that exists but cannot be read is never
+            # reinitialised silently: that would erase the export chain
+            # (docs/43 principle 8, the audit-chain lesson of docs/49).
+            raise ValueError(
+                f"audit export manifest {path} exists but cannot be read ({exc}); "
+                "refusing to reinitialise the export chain silently — repair or move the manifest"
+            ) from exc
     return {
         "schema_version": "0.1.0",
         "policy_ref": "RCP-004",

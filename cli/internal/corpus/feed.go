@@ -109,6 +109,10 @@ type FeedSource struct {
 	SourceRole        string `json:"source_role,omitempty"`
 	FormatSupport     string `json:"format_support,omitempty"`
 	DerivativeOf      string `json:"derivative_of,omitempty"`
+
+	// #610 web-source provenance, carried through from the manifest so a feed
+	// unit can be traced to the capture it came from.
+	WebSource *WebSource `json:"web_source,omitempty"`
 }
 
 // Admission returns a SourceAdmission projection of the feed source.
@@ -125,7 +129,15 @@ func (s FeedSource) Admission() SourceAdmission {
 
 // Validate enforces the FSQ-02 admission rules on the feed source.
 func (s FeedSource) Validate() error {
-	return s.Admission().Validate()
+	if err := s.Admission().Validate(); err != nil {
+		return err
+	}
+	if s.WebSource != nil {
+		if err := s.WebSource.Validate(s.AdmissionStatus == AdmissionAdmitted); err != nil {
+			return fmt.Errorf("web_source: %w", err)
+		}
+	}
+	return nil
 }
 
 // FeedSnapshotSummary links a feed to the immutable corpus snapshot it was built from.
@@ -347,6 +359,10 @@ func GenerateFeed(input FeedInput) (Feed, error) {
 			SourceRole:        s.SourceRole,
 			FormatSupport:     s.FormatSupport,
 			DerivativeOf:      s.DerivativeOf,
+			WebSource:         s.WebSource,
+		}
+		if fs.WebSource != nil {
+			fs.WebSource.Normalize()
 		}
 		if err := fs.Validate(); err != nil {
 			return Feed{}, fmt.Errorf("feed source %q: %w", fs.ID, err)

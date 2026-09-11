@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0--ALPHA-orange">
   <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
   <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
   <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
@@ -32,11 +32,13 @@ Nomos ersetzt keine Fachexperten, Rechtsverantwortlichen, Qualitaetsverantwortli
 | Dimension | Aktueller Stand |
 |---|---|
 | Produkt | Authority-to-product Engine fuer gesteuerte Software, KI und RAG. |
-| Release | `v0.1.0-ALPHA`. |
+| Release | `v1.0.0-BETA.1` (2026-09-07, Beta-Pre-Release; Entscheidung dokumentiert in `docs/regulated/lifecycle/release-records/`). `v0.2.0-ALPHA` (2026-09-06) ist abgelöst. |
 | Aktueller Nachweis | Alpha-POC auf einem echten privaten Corpus, read-only verarbeitet. |
-| Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation. |
-| Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. |
-| Naechste Haertung | Wiederholte CI-Evidenz, zusaetzliche Dokumentformate, Kunden-Validation-Packs. |
+| Nachgewiesene Staerke | Quelle -> Struktur -> kanonische Knoten -> TOC -> source-backed Feed/RAG -> Body Ledger -> Strict Gate -> Attestation; danach, in der Go-Engine: Cite-or-abstain Gate (Faithfulness aus den Spans neu berechnet, nie deklariert), RAG-Evaluationsharness in CI, interoperabler RAG-Export mit nachweisbarer Staleness, reproduzierbarer oeffentlicher Bench des Gates. |
+| Faehigkeitsregister | 40 Faehigkeiten in `scripts/vrc_wiring_matrix_registry.json` deklariert; ihr Status wird bei jedem CI-Lauf aus dem Baum BERECHNET (32 real, 7 sidecar, 1 absent, 0 Abweichung) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Roadmaps | Produkt, DevOps und regulierte Assurance laufen unabhaengig (ADR-VRC-0004). Nur `dispatch:autonomous` Issues gehen in den Dispatcher; Kalendernachweis, Signaturen, Beschaffung und oeffentliche Writes blockieren ihren Claim, nie die Entwicklung — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
+| Bekannte Grenze | Die Alpha beweist einen begrenzten Source-to-Feed POC; sie beansprucht noch keine universelle Fidelity oder regulatorische Kundenvalidierung. Der oeffentliche Bench misst das Gate auf neun Items, kein Produkt. |
+| Naechste Haertung | Unabhaengige autonome Produkt- und DevOps-Queues, geordnet durch `docs/roadmap-lanes.yaml` (Tabelle generiert in `docs/47`, Drift in CI geprueft). Die einzige `absent` Faehigkeit ist keyless Sigstore-Issuance: Offline-Verify #637, Non-Production-Issuance #645, Production/Rekor-Aktivierung #638 separat. |
 | Claim Boundary | Kein zertifiziertes eQMS, kein validiertes GxP-System, keine regulatorische Zertifizierung. |
 
 ## Warum Nomos Existiert
@@ -96,7 +98,9 @@ Nomos ist fuer Teams gedacht, die source-backed Softwareverhalten, source-backed
 - read-only Corpus-Assessments vor Kundenimporten durchfuehren;
 - nicht unterstuetzte Abdeckung dokumentieren, statt Fidelity stillschweigend zu ueberverkaufen.
 
-## Was v0.1.0-ALPHA Liefert
+## Was v0.2.0-ALPHA Liefert
+
+Die v0.1.0-ALPHA-Baseline (2026-05-03) bleibt unverändert; v0.2.0-ALPHA (2026-09-06) ergänzt die in `CHANGELOG.md` aufgeführten Fähigkeiten — externe Quellen, Release-Kandidaten-Bundle, Offline-Sigstore-Verifikation und Nicht-Produktions-Ausstellung, Nomos/Praxis-Vertrag und Gate, Portfolio-Governance. Die französische README enthält die Detailliste.
 
 Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer canonical-first Projekte:
 
@@ -114,6 +118,17 @@ Die aktuelle Release liefert eine funktionierende CLI und Evidence-Pipeline fuer
 - Attestation-Ausgabe im in-toto Stil;
 - regulated-by-design Dokumentationsskelett, Evidence Templates und Control Records;
 - CI-Workflows fuer Go, CUE, Corpus, RBOK lawbook E2E, Runtime E2E, Fidelity Proof Reports, regulierte Dokumentation und Evidence Pack.
+
+Seit der Alpha hat die Engine die folgenden Faehigkeiten gewonnen. Jede ist ein Eintrag des Faehigkeitsregisters, dessen Status in CI aus Ankern im Baum berechnet wird (Engine, Production-Caller, adversarialer Test, CI-Gate); eine absichtlich ausserhalb des Core liegende Faehigkeit zaehlt als `sidecar`, nie als `real` — das ist Topologie, nicht ihr Liefer- oder regulierter Validierungsstatus:
+
+- **Cite-or-abstain Gate in der Engine** (`nomos answer gate`, VRC-10): Faithfulness aus dem Text der gefundenen Spans neu berechnet, nie aus einem deklarierten Score; eine gefaelschte Zitation, ein Span ohne Text oder eine Antwort ohne Quelle erzwingt Enthaltung; `trust_tier` pro Antwort; steckbarer zweiter NLI-Richter (`--scorer-cmd`, der strengste gewinnt, fail-closed, kein Modell in der Engine); der Python-Evidence-Sidecar konsumiert dieses Urteil statt eines zu erzeugen;
+- **RAG-Evaluationsharness** (`nomos answer eval`, VRC-13): Golden Corpus, versionierte Schwellen, `context_recall`, ranggewichtete `context_precision` und `noise_sensitivity`; eine Regression unter die Untergrenze blockiert den PR;
+- **oeffentlicher Cite-or-abstain Bench** (`nomos answer bench`, VRC-46): gelabelter Corpus ueber die oeffentlichen Dokumente des Repositorys, datierte Ergebnisse, Reproduktions-Gate in CI (Quellen woertlich und unveraendert, Referenzen verifiziert und datiert, Determinismus, Grenzen, Messung identisch mit der veroeffentlichten);
+- **interoperabler RAG-Export** (`nomos rag export|manifest|delta|verify`): indexierbare, zitierbare Chunks fuer jeden RAG-Stack, Index-Fingerprint pro Quelle, exakter Reindexierungsplan, Staleness-Gate, Knowledge-Lens-begrenzter Export mit berechnetem Retrieval-Vertrag;
+- **CKM-Atomisierung**: abgeleitete Facetten, Knowledge Lens in Engine und CLI, Canon Promotion (nie `certified`, Vertraulichkeitssilo), Point-in-time-Resolver, Canonical Knowledge Bundle, Facetten-Ontologie-Alignment vom Pack-Gate gerendert;
+- **Nachweis und Attestation**: ECDSA P-256 DSSE Signatur, Merkle-Beweise des Body Ledgers emittiert und verifiziert, `claim_coverage` in der Attestation berechnet, in-toto Supply-Chain-Praedikat, Evidence Packs als CycloneDX/SPDX BOMs gegen den Ledger abgeglichen;
+- **Domain Packs und Adapter**: `nomos pack validate` gegen einen deklarativen Vertrag, Capability Kits pro Adapter, born-digital PDF- und DOCX-Adapter (explizite Claim-Leiter), Live-Schweizer-Konnektor (echter Fetch, echter Hash);
+- **Wahrheits-Guards**: berechnete Wiring-Matrix (VRC-00), Claim-Boundary-Guard auf die Woerter "signed / Sigstore / certified", Core/Pack-Kopplungs-Guard, HHEM-Sidecar und Referenz-Kits fuer Retrieval/Konformitaet (als `sidecar` gezaehlt).
 
 ## Alpha-POC-Evidenz
 
@@ -183,7 +198,18 @@ Aktueller strukturierter Source-to-Feed POC:
 | Strict Gate | `pass`, exit code 0 |
 | Source Mutation Check | keine Source-Mutation erkannt |
 
-Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt (Attestation `claim_coverage` ist jetzt verdrahtet — `corpus attest --corpus-body-ledger` verifiziert die Merkle-Beweise des Ledgers und berechnet die Coverage; der aufgezeichnete POC-Run behaelt sein historisches WARN). Die naechste Haertung zielt auf CI-Wiederholbarkeit, zusaetzliche Dokumentformate, Kundenvalidierung und breitere Universal-Fidelity-Evidenz.
+Diese Unterscheidung ist entscheidend. Die aktuelle Alpha beweist verteidigbare Source-to-Artifact-Traceability und einen source-backed Feed/RAG POC, behaelt aber eine strikte Claim Boundary: verbleibende Warnings sind reviewbar, und die Evidenz ist auf den aufgezeichneten Corpus, Commit und Build begrenzt (Attestation `claim_coverage` ist jetzt verdrahtet — `corpus attest --corpus-body-ledger` verifiziert die Merkle-Beweise des Ledgers und berechnet die Coverage; der aufgezeichnete POC-Run behaelt sein historisches WARN). Die **Produkt**-Haertung zielt auf weitere Formate und portable Fidelity. Parallel misst die regulierte Roadmap CI-Wiederholbarkeit und Kundenvalidierung, ohne sie zu Produktabhaengigkeiten zu machen: VRC-14 #560 misst am 2026-09-04 4 aufeinanderfolgende gruene Runs von 8, daher bleibt nur dieser Claim gesperrt, waehrend die anderen Lanes fortfahren.
+
+## Kontinuierlich Berechnete Nachweise
+
+Ueber den aufgezeichneten POC hinaus werden zwei Nachweise bei jedem CI-Lauf neu berechnet und schlagen bei jeder Abweichung fehl:
+
+| Nachweis | Aktuelles Ergebnis | Wie er gehalten wird |
+|---|---|---|
+| Wiring-Matrix (VRC-00) | 40 Faehigkeiten, 0 Abweichung zwischen Register und Baum, 0 Phantom-Befehl | `scripts/vrc_wiring_matrix.py`; die generierte Datei wird mit dem Commit verglichen |
+| Oeffentlicher Cite-or-abstain Bench (VRC-46, Ergebnis vom 2026-09-05, lexikalischer Proxy) | 9 Items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — das einzige falsche "cite" ist die Negation, der dokumentierte blinde Fleck des Proxys | `scripts/cite_or_abstain_bench.py`: Quellen woertlich und unveraendert, Referenzen verifiziert und datiert, zwei byte-identische Laeufe, versionierte Grenzen, Messung identisch mit dem veroeffentlichten Ergebnis |
+
+Methodik, Corpus, Grenzen und datierte Ergebnisse: [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
 
 ## Regulated-Ready Posture
 
@@ -242,6 +268,28 @@ Hilfe anzeigen:
 ./nomos corpus help
 ```
 
+Cite-or-abstain Gate ausfuehren, Harness und oeffentlichen Bench wiederholen:
+
+```bash
+./nomos answer gate --fixtures docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml
+./nomos answer eval \
+  --corpus docs/regulated/ai-rag-governance/rag-eval-corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
+./nomos answer bench \
+  --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root . --nomos-bin ./nomos   # wiederholt das veroeffentlichte Ergebnis, rot bei jeder Abweichung
+```
+
+In einen RAG-Stack exportieren, den Index fingerprinten und seine Frische beweisen:
+
+```bash
+./nomos rag export --feed /path/to/out/feed.json --format jsonl --strict --output chunks.jsonl
+./nomos rag manifest --feed /path/to/out/feed.json --output index-manifest.json
+./nomos rag delta --old index-manifest.json --new index-manifest.next.json      # exakter Plan: embed / update_metadata / delete
+./nomos rag verify --feed /path/to/out/feed.json --manifest index-manifest.json --strict   # exit 1, wenn der Index veraltet ist
+```
+
 Projekt diagnostizieren:
 
 ```bash
@@ -286,9 +334,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Domaenenbeispiele fuer die canonical-first Methode. |
 | `adapters/` | Adapter-Vertraege und Referenzprofile fuer Node/TypeScript, Python und JVM: Specs und Fixtures, ohne ausfuehrbare Implementierung in diesem Stadium. |
 | `ci/` | Wiederverwendbare CI-Integrationsdokumentation. |
-| `control-plane/` | Archivierte explorative Go-Packages (Dashboard, Registry, Storage): null Production-Caller, eingefroren per ADR-0006, Wiederaufnahme am v0.9.x-Portfolio-Meilenstein. |
 | `policies/` | Platzhalterverzeichnis fuer ein kuenftiges Policy-Framework; in diesem Stadium nicht operativ. |
-| `scripts/` | E2E-, Evidence-, regulierte Dokumentations- und Automationshelfer. |
+| `scripts/` | E2E-, Evidence-, regulierte Dokumentations- und Automationshelfer; Faehigkeitsregister (`vrc_wiring_matrix_registry.json`), Guards (Wiring-Matrix, Claim Boundary, Core/Pack-Kopplung), RAG- und Bench-Gates, Sidecars (RAG-Evidence, HHEM-Scorer, Referenz-Kits). |
+| `.vrc-wiring-matrix/` | GENERIERTE Wiring-Matrix (JSON + Markdown): der Status jeder Faehigkeit aus dem Baum berechnet; jede Handaenderung oder Abweichung ist in CI rot. |
+| `attestations/` | CUE-Vertraege der in-toto Attestations und das signierte Claim-Boundary-Praedikat. |
+| `tests/` | Python-Tests der Workflows, Sidecars, Guards und Gates (adversarial: der erwartete Fehlschlag ist der Beweis). |
 | `reports/` | Generierte lokale Evidence-Artefakte. |
 | `references/` | Methodologischer und externer Referenzregister-Inhalt. |
 
@@ -297,12 +347,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 Der Release-Prozess nutzt aktuell:
 
 ```bash
-go test ./...                 # aus cli/
+go vet ./... && go test -race ./...            # aus cli/
+python -m unittest discover -s tests -v        # Python-Tests (pyyaml noetig; baut die Go-Engine fuer die Gates, die sie konsumieren)
+python scripts/claim_boundary_guard.py --root .          # kein "signed / Sigstore / certified" ohne Beweis
+python scripts/roadmap_lane_guard.py --root .             # kein menschliches/externes Warten in der autonomen Queue
+python scripts/vrc_wiring_matrix.py --root .             # Wiring-Matrix: Register und Baum im Gleichschritt
+python scripts/cite_or_abstain_bench.py --root .         # oeffentlicher Bench: das veroeffentlichte Ergebnis wiederholt sich
+python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit   # Sicherheitsprozess: echte Scans, Allowlist mit Ablauf
+python scripts/support_model_guard.py --root . --check     # Support-Modell: CI-Matrix, go.mod, Tags, generierte Abschnitte
+bash scripts/ckm-non-regression.sh             # CKM-00 Harness: CLI, CUE, Python, e2e, RBOK, Cite-or-abstain Gate
 powershell -File scripts/e2e.ps1
-python -m unittest discover -s tests -v
 ```
 
-GitHub Actions fuehren zusaetzlich CI, Corpus-Tests auf Linux/macOS/Windows, RBOK lawbook E2E, RBOK runtime E2E, Fidelity Proof Reports, Regulated Documentation Gate und Regulated Evidence Pack Jobs aus.
+GitHub Actions fuehren aus: CI (Go vet & test, Domain-Pack-Gate, RAG-Eval-Harness, RAG-Export-Gate, Replay des oeffentlichen Benchs, Corpus-Tests auf Linux/macOS/Windows, CUE vet, YAML lint, Python-Tests mit Claim-Boundary-Guard und abweichungsfreier Wiring-Matrix), den CKM-Nichtregressions-Harness, RBOK lawbook E2E, RBOK runtime E2E, Fidelity Proof Reports, das Regulated Documentation Gate und das Regulated Evidence Pack (dessen RAG-Evidence das Urteil der frisch gebauten Engine konsumiert).
 
 ## Was Nomos Nicht Beansprucht
 
@@ -312,7 +369,11 @@ Nomos macht ein LLM nicht autoritaer. In der Zielarchitektur bleiben determinist
 
 Nomos ersetzt keine Validierung. In regulierten Umgebungen brauchen Kunden weiterhin Intended-Use-Definition, Risk Assessment, Validation Planning, Testevidenz, Change Control, Supplier Assessment, Security Review und Approval Records.
 
-Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Feed-Quality-Roadmap adressiert explizit nicht unterstuetzte Dokumentformate, verbleibende semantische Warnings, Kunden-Validation-Packs und CI-Wiederholbarkeit auf privaten Corpora.
+Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische Rekonstruktion jedes unterstuetzten Corpus ist. Die Produkt-Feed-Quality-Roadmap behandelt nicht unterstuetzte Formate und semantische Warnings; die unabhaengige regulierte Roadmap behandelt Kunden-Validation-Packs und private CI-Wiederholbarkeit (4/8), ohne die erste zu blockieren.
+
+Das Cite-or-abstain Gate und sein oeffentlicher Bench messen das Gate, kein LLM: der Faithfulness-Proxy ist lexikalisch und negationsblind (in jedem Urteil gesagt, im Bench als falsches "cite" veroeffentlicht); der zweite NLI-Richter ist ein verifiziertes Protokoll, kein ausgeliefertes Modell, und kein CI-Lauf bewertet mit einem neuronalen Modell. Der Bench sagt nichts ueber die Qualitaet eines Retrievals, eines Embeddings oder eines LLM, noch ueber die fachliche Richtigkeit einer Antwort.
+
+Keyless Sigstore (Fulcio/Rekor) bleibt ein dokumentiertes Follow-up und ist nicht implementiert: Attestations werden lokal signiert (ECDSA P-256 DSSE), und der Claim-Boundary-Guard weist jede Prosa zurueck, die mehr behaupten wuerde.
 
 ## Release Roadmap
 
@@ -322,6 +383,31 @@ Nomos beansprucht aktuell nicht, dass der Alpha-Feed eine perfekte semantische R
 | `v0.2.x` | Portable Atomisierung ueber RBOK Markdown hinaus haerten, strukturierte YAML/JSON- und Dokumentadapter-Abdeckung verbessern, Validation Packs erweitern. |
 | `v0.3.x` | Adaptervertraege, Evidence Export, Kundenvalidierungsworkflow und RAG-Governance-Interfaces stabilisieren. |
 | `v1.0` | Production-grade Release Candidate mit Support Model, Compatibility Policy, Validation Evidence und auditierter Claim Boundary. |
+
+## Support
+
+Der Support ist in `docs/support-model.yaml` deklariert und wird in CI durch `scripts/support_model_guard.py` geprueft (Plattformen = CI-Matrix, Go = `cli/go.mod`, Versionen = Tags oder aktueller Kandidat, Daten = CHANGELOG); der Abschnitt unten wird aus diesem Modell generiert.
+
+<!-- support-model:begin -->
+<!-- GENERATED from docs/support-model.yaml by scripts/support_model_guard.py --write; do not edit by hand, CI fails on drift -->
+
+| Version | Released | State | Security support | End of support |
+|---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) | until the next tagged release |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 | 2026-09-07 |
+| `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
+
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what pre-release support covers and what requires project-specific work).
+- Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
+- Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
+- Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: A pre-release (alpha or beta) is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+- Supported contracts (15 stable, per specs/contract-registry.yaml): `canon-promotion`, `canonical-knowledge-bundle`, `canonical-matrix`, `corpus-body-ledger`, `corpus-integrity-report`, `domain-pack`, `external-snapshot`, `facets`, `knowledge-lens`, `nomos-praxis-evidence-schema`, `nomos-project`, `nomos-report.schema`, `point-in-time`, `source-manifest`, `verdicts`. Contracts registered as experimental in specs/contract-registry.yaml may change without a MAJOR notice (docs/16); they are listed as such where a guide relies on them and are not part of the supported surface.
+- Covered commands: `nomos version`, `nomos contracts status`, `nomos init`, `nomos validate`, `nomos diagnose`, `nomos strict`, `nomos corpus scan`, `nomos corpus feed`, `nomos corpus body-ledger`, `nomos corpus attest`, `nomos corpus snapshot`, `nomos github plan`, `nomos portfolio status`, `nomos portfolio release-readiness`, `nomos bundle`, `nomos rag export`, `nomos rag manifest`, `nomos rag delta`, `nomos rag verify`, `nomos answer gate`, `nomos answer eval`.
+- Guides replayed in CI: docs/48-customer-integration-guide.md, docs/50-cross-consumption-proof-kit.md.
+<!-- support-model:end -->
 
 ## Governance
 

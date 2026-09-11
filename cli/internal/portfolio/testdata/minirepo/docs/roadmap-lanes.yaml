@@ -1,0 +1,11 @@
+schema_version: "1.0.0"
+selection_policy:
+  dispatch_queues:
+    product: [11]
+    devops: []
+    regulated: []
+items:
+  - {issue: 10, state: closed, lane: product, dispatch: autonomous, delivery_state: implemented, claim_state: bounded}
+  - {issue: 11, state: open, lane: product, dispatch: autonomous, delivery_state: planned, claim_state: bounded}
+  - {issue: 20, state: open, lane: regulated, dispatch: human, delivery_state: planned, claim_state: locked}
+  - {issue: 21, state: open, lane: regulated, dispatch: external, delivery_state: blocked, claim_state: prohibited}

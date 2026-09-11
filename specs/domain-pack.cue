@@ -25,7 +25,9 @@ package nomos
 
 // The open-term facet axes a pack may provide vocabulary for. The AXES are
 // core mechanics (facets.cue); the pack owns only the TERMS.
-#OpenTermAxis: "activity" | "discipline_role"
+// risk_tier joined the open axes with VRC-22 (#565): the EU AI Act vertical
+// classifies by risk, and no closed axis carries that meaning.
+#OpenTermAxis: "activity" | "discipline_role" | "risk_tier"
 
 #DomainPack: {
 	schema_version: "nomos-domain-pack-v1"
@@ -99,6 +101,7 @@ package nomos
 	domain_profile: =~"^[a-z0-9][a-z0-9-]*$"
 	activity?: [#VocabularyTerm, ...#VocabularyTerm]
 	discipline_role?: [#VocabularyTerm, ...#VocabularyTerm]
+	risk_tier?: [#VocabularyTerm, ...#VocabularyTerm]
 	references?: {...}
 }
 

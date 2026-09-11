@@ -29,6 +29,16 @@ Precision (avoid false positives). The guard deliberately does NOT flag:
 * future / aspirational phrasing ("intended", "planned", "follow-up",
   "expansion", "roadmap", "will", "future") on the same line.
 
+It also fails when a claim is **restated** in the same file in different words.
+A claim has exactly one normative wording; three paraphrases of one claim leave a
+reader unable to tell which one binds. #582 landed the cite-or-abstain bench
+paragraph three times in ``docs/public-claim-boundary.md`` and its whole section
+three times in ``docs/05-knowledge-base-and-rag.md``: every individual line was
+clean, so the line-based checks above stayed green. Prose paragraphs at or above
+``MIN_CLAIM_TOKENS`` whose normalised token sets overlap at or above
+``DUPLICATE_CLAIM_RATIO`` are reported. Headings, tables, list blocks and fenced
+code are excluded — enumerations and command blocks legitimately repeat wording.
+
 Run standalone (exit 0 = clean, 1 = a bare claim was found):
 
     python3 scripts/claim_boundary_guard.py --root .
@@ -50,6 +60,33 @@ from pathlib import Path
 # actually implements signing primitives.
 SIGNING_MARKER = Path("cli/internal/attestation/signing.go")
 SIGNING_MARKER_TOKENS = ("ecdsa", "dsse", "SignASN1", "VerifyASN1")
+
+# #637: offline VERIFICATION of a supplied Sigstore bundle is a real, bounded
+# capability — the engine side of the process boundary plus the external
+# verifier module. A sentence that says NOMOS *verifies supplied bundles* is
+# backed iff both markers are present; any sentence that says NOMOS signs,
+# issues or publishes with Sigstore keeps failing regardless.
+# #645: keyless ISSUANCE is real only against injected, non-production
+# endpoints. A sentence that says so is backed iff both issuance markers are
+# present AND the sentence names the injected/non-production bound; a sentence
+# that claims production, public-good or a Sigstore public instance keeps failing.
+SIGSTORE_ISSUE_MARKERS = (
+    (Path("cli/internal/attestation/sigstore_issue.go"), ("IssueSigstoreBundle", "SIGSTORE_PRODUCTION_FORBIDDEN", "CheckEndpointPolicy")),
+    (Path("tools/sigstore-verifier/issue.go"), ("sign.Bundle(", "PRODUCTION_FORBIDDEN", "nomos.sigstore-issue.response.v1")),
+)
+_SIGSTORE_ISSUE_BOUNDED = re.compile(
+    r"\b(injected|non[- ]production|fixture|localhost|controlled|staging|injecté\w*|hors[- ]production)\b",
+    re.IGNORECASE,
+)
+_SIGSTORE_PRODUCTION_WORDS = re.compile(
+    r"\b(production|public[- ]good|sigstore\.dev|sigstage\.dev|public\s+instance|instance\s+publique)\b",
+    re.IGNORECASE,
+)
+
+SIGSTORE_VERIFY_MARKERS = (
+    (Path("cli/internal/attestation/sigstore_external.go"), ("VerifySigstoreBundle", "SIGSTORE_DIGEST_DISAGREEMENT", "no verdict")),
+    (Path("tools/sigstore-verifier/main.go"), ("verify.NewVerifier", "WithCertificateIdentity", "nomos.sigstore-verify.response.v1")),
+)
 
 # Files in scope: documentation/prose surfaces only. Code and CUE schemas carry
 # the field vocabulary ("signed", "sigstore-keyless") legitimately and are out of
@@ -91,8 +128,8 @@ _SIGSTORE_ADJ_CLAIM = re.compile(
 )
 # A looser Sigstore-as-live-signing phrasing (prose, not table landscape).
 _SIGSTORE_PROSE_CLAIM = re.compile(
-    r"\b(sigstore|fulcio|rekor)\b[^.|]{0,40}?\b(sign|signed|signing|keyless|transparency)\b"
-    r"|\b(sign|signed|signing|keyless)\b[^.|]{0,40}?\b(sigstore|fulcio|rekor)\b",
+    r"\b(sigstore|fulcio|rekor)\b[^.|]{0,40}?\b(sign|signed|signing|keyless|transparency|issue[sd]?|issuing|publish\w*|emit\w*)\b"
+    r"|\b(sign|signed|signing|keyless|issue[sd]?|issuing|publish\w*|emit\w*)\b[^.|]{0,40}?\b(sigstore|fulcio|rekor)\b",
     re.IGNORECASE,
 )
 _CERTIFIED_CLAIM = re.compile(
@@ -146,6 +183,62 @@ _SAFE_CONTEXT = re.compile(
 _QUOTED_SPAN = re.compile(r"`[^`]*`|\"[^\"]*\"|'[^']*'|«[^»]*»")
 
 
+def sigstore_verification_present(root: Path) -> bool:
+    """True iff the offline Sigstore VERIFICATION capability (#637) is in the tree."""
+    for marker, tokens in SIGSTORE_VERIFY_MARKERS:
+        path = root / marker
+        if not path.is_file():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return False
+        if not all(token in text for token in tokens):
+            return False
+    return True
+
+
+# Bounded verification phrasing: "verif… supplied/provided … bundle(s)". It is
+# honest only when nothing in the same sentence claims issuance.
+_SIGSTORE_VERIFY_BOUNDED = re.compile(
+    r"\bverif\w*\b[^.|]{0,80}?\b(supplied|provided|given|fourni\w*)\b[^.|]{0,60}?\bbundles?\b"
+    r"|\bbundles?\b[^.|]{0,40}?\b(supplied|provided|given|fourni\w*)\b[^.|]{0,60}?\bverif\w*\b",
+    re.IGNORECASE,
+)
+_SIGSTORE_ISSUANCE_WORDS = re.compile(
+    r"\b(signs?|signed|signing|signe\w*|issue[sd]?|issuing|émet\w*|emit\w*|publish\w*|publie\w*|keyless|writes?\s+to\s+rekor)\b",
+    re.IGNORECASE,
+)
+
+
+def sigstore_issuance_present(root: Path) -> bool:
+    """True iff the injected-environment keyless issuance (#645) is in the tree."""
+    for marker, tokens in SIGSTORE_ISSUE_MARKERS:
+        path = root / marker
+        if not path.is_file():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return False
+        if not all(token in text for token in tokens):
+            return False
+    return True
+
+
+_NEGATED_PRODUCTION = re.compile(
+    r"\b(no|never|not|non|without|refus\w*|forbid\w*|interdit\w*|jamais|aucune?|pas\s+(?:de|en|d'))\W{0,3}(?:\w+\W{0,3}){0,3}?"
+    r"(production|public[- ]good|sigstore\.dev|sigstage\.dev|public\s+instance|instance\s+publique)\b",
+    re.IGNORECASE,
+)
+
+
+def _strip_negated_production(text: str) -> str:
+    """Remove 'no production' / 'production is refused' spans so a negation is not read as a claim."""
+    text = _NEGATED_PRODUCTION.sub(" ", text)
+    return re.sub(r"\b(production|public[- ]good|sigstore\.dev|sigstage\.dev)\b[^.|]{0,40}?\b(refused|forbidden|never|not|interdit\w*|refusé\w*)\b", " ", text, flags=re.IGNORECASE)
+
+
 def signing_capability_present(root: Path) -> bool:
     """True iff the real key-based signing implementation is present in the tree."""
     marker = root / SIGNING_MARKER
@@ -185,7 +278,13 @@ def _strip_quoted(line: str) -> str:
     return _QUOTED_SPAN.sub(" ", line)
 
 
-def classify_line(line: str, signing_present: bool, section_deferred: bool = False) -> str | None:
+def classify_line(
+    line: str,
+    signing_present: bool,
+    section_deferred: bool = False,
+    verify_present: bool = False,
+    issue_present: bool = False,
+) -> str | None:
     """Return a violation reason for a line, or None if the line is clean.
 
     A line violates when it makes an affirmative present-tense capability claim
@@ -205,6 +304,24 @@ def classify_line(line: str, signing_present: bool, section_deferred: bool = Fal
         return None
 
     is_table_row = bare.lstrip().startswith("|")
+
+    # #637 bounded marker: "verifies supplied bundles" is backed by the real
+    # verification capability — but only when the same sentence claims no
+    # issuance. "verifies supplied bundles and signs them keyless" still fails.
+    if verify_present and _SIGSTORE_VERIFY_BOUNDED.search(bare) and not _SIGSTORE_ISSUANCE_WORDS.search(bare):
+        return None
+
+    # #645 bounded marker: issuance wording is honest only when the sentence
+    # itself names the injected/non-production bound and says nothing about
+    # production or a public instance. "signs keyless with Sigstore" alone,
+    # or "...in production", keeps failing.
+    if (
+        issue_present
+        and _SIGSTORE_ISSUANCE_WORDS.search(bare)
+        and _SIGSTORE_ISSUE_BOUNDED.search(bare)
+        and not _SIGSTORE_PRODUCTION_WORDS.search(_strip_negated_production(bare))
+    ):
+        return None
 
     # Affirmative "<subject> are Sigstore-signed" adjective claim — the precise
     # adversarial target. Fires anywhere (incl. a forged table row), because it
@@ -243,19 +360,126 @@ def classify_line(line: str, signing_present: bool, section_deferred: bool = Fal
     return None
 
 
-def scan(root: Path) -> list[tuple[Path, int, str, str]]:
-    signing_present = signing_capability_present(root)
+# A claim stated twice in slightly different words has no normative form: a
+# reader cannot tell which wording binds. Paragraphs at or above this many
+# tokens whose normalised token sets overlap at or above the ratio below are
+# reported as the same claim restated. #582 landed the bench paragraph three
+# times (three paraphrases of one claim) and the line-based checks above could
+# not see it, because every individual line was clean.
+MIN_CLAIM_TOKENS = 40
+DUPLICATE_CLAIM_RATIO = 0.90
+_CLAIM_TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def _claim_tokens(paragraph: str) -> list[str]:
+    """Normalise a paragraph to comparable claim tokens.
+
+    Backticks, punctuation and dash style are dropped, so two paraphrases that
+    differ only in typography normalise to the same tokens.
+    """
+    return _CLAIM_TOKEN.findall(paragraph.lower())
+
+
+def _claim_paragraphs(lines: list[str]) -> list[tuple[int, str]]:
+    """Yield ``(first_lineno, text)`` for prose paragraphs, skipping code fences.
+
+    Headings, tables and list blocks are excluded: enumerations legitimately
+    repeat wording, and only free prose carries a claim.
+    """
+    paragraphs: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    start = 0
+    in_fence = False
+
+    def flush() -> None:
+        if not buffer:
+            return
+        text = " ".join(buffer)
+        stripped = buffer[0].lstrip()
+        structural = stripped.startswith(("#", "|", "-", "*", ">", "+")) or (
+            stripped[:2].isdigit() and stripped[1:2] == "."
+        )
+        if not structural:
+            paragraphs.append((start, text))
+
+    for lineno, line in enumerate(lines, start=1):
+        if line.lstrip().startswith("```"):
+            flush()
+            buffer = []
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.strip():
+            if not buffer:
+                start = lineno
+            buffer.append(line.strip())
+            continue
+        flush()
+        buffer = []
+    flush()
+    return paragraphs
+
+
+def find_duplicate_claims(root: Path) -> list[tuple[Path, int, str, str]]:
+    """Report paragraphs that restate a claim already made in the same file."""
     violations: list[tuple[Path, int, str, str]] = []
     for path in iter_scoped_files(root):
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
-        except OSError:
+        except OSError as exc:
+            # An in-scope file the guard cannot read is a finding, not a skip
+            # (docs/43 principle 8): an unscanned file would be a false green.
+            violations.append((path, 0, f"file could not be read and was not scanned ({exc})", ""))
+            continue
+        seen: list[tuple[int, set[str]]] = []
+        for lineno, text in _claim_paragraphs(lines):
+            tokens = _claim_tokens(text)
+            if len(tokens) < MIN_CLAIM_TOKENS:
+                continue
+            current = set(tokens)
+            for earlier_lineno, earlier in seen:
+                union = current | earlier
+                if not union:
+                    continue
+                overlap = len(current & earlier) / len(union)
+                if overlap >= DUPLICATE_CLAIM_RATIO:
+                    violations.append(
+                        (
+                            path,
+                            lineno,
+                            text[:160],
+                            (
+                                f"restates the claim already made at line {earlier_lineno} "
+                                f"({overlap:.0%} token overlap); a claim has exactly one "
+                                "normative wording"
+                            ),
+                        )
+                    )
+                    break
+            else:
+                seen.append((lineno, current))
+    return violations
+
+
+def scan(root: Path) -> list[tuple[Path, int, str, str]]:
+    signing_present = signing_capability_present(root)
+    verify_present = sigstore_verification_present(root)
+    issue_present = sigstore_issuance_present(root)
+    violations: list[tuple[Path, int, str, str]] = []
+    for path in iter_scoped_files(root):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError as exc:
+            # An in-scope file the guard cannot read is a finding, not a skip
+            # (docs/43 principle 8): an unscanned file would be a false green.
+            violations.append((path, 0, f"file could not be read and was not scanned ({exc})", ""))
             continue
         section_deferred = False
         for lineno, line in enumerate(lines, start=1):
             if line.lstrip().startswith("#"):
                 section_deferred = bool(_DEFERRED_HEADING.search(line))
-            reason = classify_line(line, signing_present, section_deferred)
+            reason = classify_line(line, signing_present, section_deferred, verify_present, issue_present)
             if reason is not None:
                 violations.append((path, lineno, line.strip(), reason))
     return violations
@@ -274,6 +498,9 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).resolve()
     signing_present = signing_capability_present(root)
     violations = scan(root)
+    duplicates = find_duplicate_claims(root)
+    violations.extend(duplicates)
+    violations.sort(key=lambda item: (item[0].as_posix(), item[1]))
 
     if violations:
         if not args.quiet:
@@ -282,15 +509,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{rel}:{lineno}: claim-boundary violation: {reason}", file=sys.stderr)
                 print(f"    > {snippet}", file=sys.stderr)
         print(
-            f"claim-boundary guard: FAIL — {len(violations)} unbacked attestation claim(s) "
+            f"claim-boundary guard: FAIL — {len(violations) - len(duplicates)} unbacked "
+            f"attestation claim(s), {len(duplicates)} restated claim(s) "
             f"(signing capability present={signing_present})",
             file=sys.stderr,
         )
         return 1
 
     print(
-        f"claim-boundary guard: OK — no unbacked attestation-capability claims "
-        f"(signing capability present={signing_present})"
+        f"claim-boundary guard: OK — no unbacked attestation-capability claims, "
+        f"no restated claims (signing capability present={signing_present})"
     )
     return 0
 

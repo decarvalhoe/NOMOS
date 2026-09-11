@@ -106,7 +106,11 @@ var (
 
 type projectManifest struct {
 	SchemaVersion string `yaml:"schema_version"`
-	Project       struct {
+	// Mode is "product" (default) or "canonical_corpus" (specs/nomos-project.cue
+	// #CorpusProject): a corpus has no code surfaces and no toolchain; it is
+	// verified through its source inventory and a read-only policy.
+	Mode    string `yaml:"mode"`
+	Project struct {
 		ID          string  `yaml:"id"`
 		Name        string  `yaml:"name"`
 		Description string  `yaml:"description"`
@@ -125,11 +129,33 @@ type projectManifest struct {
 		BoundedContexts []string  `yaml:"bounded_contexts"`
 		Blockers        []blocker `yaml:"blockers"`
 	} `yaml:"scope"`
-	Surfaces   []surfaceDecl `yaml:"surfaces"`
-	Toolchain  toolchain     `yaml:"toolchain"`
-	Compliance compliance    `yaml:"compliance"`
-	Evidence   evidence      `yaml:"evidence"`
-	Notes      string        `yaml:"notes"`
+	Surfaces        []surfaceDecl       `yaml:"surfaces"`
+	CorpusSurfaces  []corpusSurfaceDecl `yaml:"corpus_surfaces"`
+	SourceInventory *sourceInventory    `yaml:"source_inventory"`
+	CorpusPolicy    *corpusPolicy       `yaml:"corpus_policy"`
+	Toolchain       toolchain           `yaml:"toolchain"`
+	Compliance      compliance          `yaml:"compliance"`
+	Evidence        evidence            `yaml:"evidence"`
+	Notes           string              `yaml:"notes"`
+}
+
+type corpusSurfaceDecl struct {
+	Name string `yaml:"name"`
+	Type string `yaml:"type"`
+	Path string `yaml:"path"`
+}
+
+type sourceInventory struct {
+	ManifestPath            string `yaml:"manifest_path"`
+	HashRequired            *bool  `yaml:"hash_required"`
+	OwnerRequired           *bool  `yaml:"owner_required"`
+	ConfidentialityRequired *bool  `yaml:"confidentiality_required"`
+}
+
+type corpusPolicy struct {
+	Execution        string   `yaml:"execution"`
+	AllowedConsumers []string `yaml:"allowed_consumers"`
+	Retention        string   `yaml:"retention"`
 }
 
 type owner struct {
@@ -448,7 +474,34 @@ func validateProject(file string, manifest projectManifest) []ValidationError {
 		addRequired(&errors, file, fmt.Sprintf("scope.blockers[%d].description", i), blocker.Description)
 	}
 
-	addRequiredSlice(&errors, file, "surfaces", manifest.Surfaces)
+	switch manifest.Mode {
+	case "", "product":
+		addRequiredSlice(&errors, file, "surfaces", manifest.Surfaces)
+		if len(manifest.CorpusSurfaces) > 0 || manifest.SourceInventory != nil || manifest.CorpusPolicy != nil {
+			errors = append(errors, ValidationError{File: file, Path: "mode", Code: "invalid_value", Message: "corpus_surfaces, source_inventory and corpus_policy belong to mode canonical_corpus"})
+		}
+	case "canonical_corpus":
+		if len(manifest.Surfaces) > 0 {
+			errors = append(errors, ValidationError{File: file, Path: "surfaces", Code: "invalid_value", Message: "a canonical corpus has no code surfaces; use corpus_surfaces"})
+		}
+		if manifest.SourceInventory == nil {
+			errors = append(errors, ValidationError{File: file, Path: "source_inventory", Code: "required", Message: "source_inventory is required in mode canonical_corpus"})
+		} else {
+			addRequired(&errors, file, "source_inventory.manifest_path", manifest.SourceInventory.ManifestPath)
+		}
+		if manifest.CorpusPolicy == nil {
+			errors = append(errors, ValidationError{File: file, Path: "corpus_policy", Code: "required", Message: "corpus_policy is required in mode canonical_corpus"})
+		} else if manifest.CorpusPolicy.Execution != "" && manifest.CorpusPolicy.Execution != "read_only" {
+			errors = append(errors, ValidationError{File: file, Path: "corpus_policy.execution", Code: "invalid_value", Message: "a canonical corpus is read_only"})
+		}
+		for i, cs := range manifest.CorpusSurfaces {
+			addRequired(&errors, file, fmt.Sprintf("corpus_surfaces[%d].name", i), cs.Name)
+			addRequired(&errors, file, fmt.Sprintf("corpus_surfaces[%d].type", i), cs.Type)
+			addRequired(&errors, file, fmt.Sprintf("corpus_surfaces[%d].path", i), cs.Path)
+		}
+	default:
+		errors = append(errors, ValidationError{File: file, Path: "mode", Code: "invalid_value", Message: fmt.Sprintf("mode %q is not product|canonical_corpus", manifest.Mode)})
+	}
 	for i, surface := range manifest.Surfaces {
 		addRequired(&errors, file, fmt.Sprintf("surfaces[%d].name", i), surface.Name)
 		addRequired(&errors, file, fmt.Sprintf("surfaces[%d].type", i), surface.Type)

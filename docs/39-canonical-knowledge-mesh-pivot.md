@@ -44,9 +44,9 @@ Symétrique pour les deux repos :
 | **Aedifica** | OFS-direct (W17/W18) reste le **défaut** ; surfaces produit inchangées | …derrière **feature flag** : import du bundle NOMOS, retriever doctrine, facettes — tout opt-in. La voie OFS-direct reste verte en CI. |
 
 **Mécanique du découplage : le *bundle contract* versionné.** Aedifica dépend d'un
-artefact (bundle NOMOS), jamais du code NOMOS. NOMOS produit ce bundle « dans l'état »
-(atomes à `domain` plat aujourd'hui ; facettes en enrichissement progressif). Les deux
-avancent à leur rythme sans se bloquer.
+artefact (bundle NOMOS), jamais du code NOMOS. Les bundles émis portent désormais
+les facettes dérivées ; le champ `domain` plat reste une compatibilité du spine,
+pas l'état courant du contrat facetté. Les deux avancent à leur rythme sans se bloquer.
 
 ---
 

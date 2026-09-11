@@ -1,0 +1,23 @@
+# INVALID: a phantom domain that owns sub-corpora is not a phantom — and a
+# domain that owns nothing must say where its content lives.
+schema_version: nomos-domain-cartography-v1
+cartography_id: example-phantom
+as_of: "2026-09-06"
+claim_boundary: "Synthetic invalid example: a phantom domain owns no collection of its own."
+domains:
+  - id: consommation-fr
+    title: Droit de la consommation (FR)
+    jurisdiction: FR
+    kind: phantom
+    hosted_in: [affaires-fr]
+    subcorpora:
+      - id: code-conso
+        title: Code de la consommation
+        source_authority: DILA bulk
+        unit_kind: texts
+        unit_count: 1
+        layers:
+          source: {layer: source, verified_by: not_verified}
+          index: {layer: index, verified_by: not_verified}
+          enrichment: {layer: enrichment, verified_by: not_verified}
+          graph: {layer: graph, verified_by: not_verified}

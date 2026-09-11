@@ -10,7 +10,10 @@ d'origine affirmait une intégration multi-environnements non soutenue par un re
 
 > Analyse fondatrice v2 — élevée au niveau méta (réglementaire **+ métier**, scopée
 > par rôle/activité/pertinence, capitalisable par l'utilisateur).
-> Statut : analyse / design (aucun code engagé). Date : 2026-06-08.
+> Statut : analyse / design historique (baseline du 2026-06-08). Les sections
+> « manque » décrivent le point de départ ; l'état courant fait foi dans la
+> [matrice générée](../.vrc-wiring-matrix/wiring-matrix.md). Facets, Lens,
+> bundle, promotion canon et point-in-time sont désormais câblés.
 > Repos : `RBOKproject/NOMOS` (moteur, réel et intégré), `decarvalhoe/aedifica`
 > (1ʳᵉ preuve verticale).
 > Remplace `nomos-built-environment-and-living-sources.md` (v1, trop ancrée archi).
@@ -262,7 +265,7 @@ Tout le reste — faceting, lens, promotion, trust tiers, contrat RAG, gates —
 
 ---
 
-## 8. NOMOS aujourd'hui — réel, pas alpha ; substrat vs manque
+## 8. État courant réconcilié — substrat livré vs suite
 
 **Recadrage maturité (borné claim-boundary) :** le moteur NOMOS est exercé sur un vrai
 corpus privé (POC RBOK enregistré) et son intégration RBOK est testée en CI ;
@@ -270,13 +273,13 @@ l'étiquette `v0.1.0-ALPHA` reflète surtout un **retard de doc/release manageme
 L'evidence reste POC-scoped (cf. `public-claim-boundary.md`) — on conçoit néanmoins
 pour la **prod, la perf et la scalabilité**, pas pour un POC jetable.
 
-| Brique méta | Substrat NOMOS existant | Manque à combler (core) |
+| Brique méta | État livré borné | Suite distincte |
 |---|---|---|
-| Faceting | `#Atom.domain` (plat), `tags`, `metadata`, `kind` | bloc `facets` contrôlé multi-axes + filtrage |
-| Lens | `applicability` (au niveau *profil* seulement) | Lens per-(user×projet) au niveau *atome/retrieval* |
-| Promotion | `review_state`, `customer_source`, `#Certificate` ; (Aedifica `validation_level`) | workflow assemblé droits+validation+provenance |
-| Nature métier | `kind` (réglementaire-centré) | `nature ∈ {regulatory, metier, project, reference}` |
-| Anti-parasite | `#Reference.contradicts` | exclusion explicite dans la Lens + scoping base |
+| Faceting | `#Facets` multi-axes dérivé, validé et émis dans le bundle | authoring/distribution SKOS statique #643 |
+| Lens | Lens appliquée dans moteur/CLI et export RAG, exclusions tracées | preuve consommateur réelle supplémentaire |
+| Promotion | `canon` valide promotion/révocation/confidentialité, jamais `certified` auto-dérivé | UX/autorisation client par intended use |
+| Nature métier | axe `nature` + axes ouverts du pack | nouveaux termes restent déclaratifs au pack |
+| Anti-parasite | exclusion Lens explicite ; harnais retrieval de référence hors core | mesure sur consommateurs supplémentaires |
 
 ---
 

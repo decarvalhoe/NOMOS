@@ -1,0 +1,11 @@
+schema_version: "0.1.0"
+generated_at: "2026-05-02"
+blocking_gaps:
+  - id: GAP-A
+    severity: major
+    status: open
+    blocks_claims: [x]
+  - id: GAP-B
+    severity: minor
+    status: closed
+    blocks_claims: []

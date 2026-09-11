@@ -99,14 +99,14 @@ jobs:
       # `nomos_ref` input to lift this; for v0.1 we accept the drift.
       # ----------------------------------------------------------------------
       - name: Checkout NOMOS (workflow source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.mod
           cache-dependency-path: ${{ env.NOMOS_CHECKOUT_PATH }}/cli/go.sum
@@ -132,7 +132,7 @@ jobs:
       # change) from accidentally writing to the source corpus.
       # ----------------------------------------------------------------------
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -154,7 +154,7 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Download changed-paths artifact (optional)
         if: inputs.changed_paths_artifact != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.changed_paths_artifact }}
           path: ${{ runner.temp }}/changed-paths-artifact
@@ -358,7 +358,7 @@ jobs:
 
       - name: Upload no-impact trace artifact
         if: steps.inspect.outputs.impacted == 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-trace
           path: |
@@ -373,7 +373,7 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Upload nomos-diff artifact
         if: steps.inspect.outputs.impacted == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-diff
           path: ${{ steps.plan.outputs.plan_path }}
@@ -417,7 +417,7 @@ jobs:
 
       - name: Upload diagnostics artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-diagnostics
           path: ${{ runner.temp }}/nomos-diagnostics
@@ -451,14 +451,14 @@ jobs:
       trace_artifact_name: nomos-trace
     steps:
       - name: Checkout NOMOS (generator script source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -473,7 +473,7 @@ jobs:
           git -C "$CORPUS_CHECKOUT_PATH" remote set-url --push origin DISABLED
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -484,7 +484,7 @@ jobs:
           python -m pip install pyyaml
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/diff
@@ -570,7 +570,7 @@ jobs:
           python3 "$NOMOS_CHECKOUT_PATH/scripts/nomos_trace_manifest.py" "${args[@]}"
 
       - name: Upload trace manifest artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-trace
           path: |
@@ -600,19 +600,19 @@ jobs:
       NOMOS_CHECKOUT_PATH: nomos
     steps:
       - name: Checkout NOMOS (publisher script source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/nomos-diff
@@ -620,7 +620,7 @@ jobs:
       # NGW-07 (#392): consume the real trace manifest produced by the
       # trace-manifest job instead of synthesising a placeholder inline.
       - name: Download trace manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.trace-manifest.outputs.trace_artifact_name }}
           path: ${{ runner.temp }}/nomos-trace
@@ -706,7 +706,7 @@ jobs:
             > "$RUNNER_TEMP/nomos-publish-plan.json"
 
       - name: Upload publish plan artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nomos-publish-plan
           path: |
@@ -748,14 +748,14 @@ jobs:
       # planner's; the corpus checkout stays read-only by the same two
       # rules (persist-credentials false + push remote DISABLED).
       - name: Checkout NOMOS (workflow source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: RBOKproject/Nomos
           ref: main
           path: ${{ env.NOMOS_CHECKOUT_PATH }}
 
       - name: Checkout source corpus (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.corpus_repository }}
           ref: ${{ inputs.corpus_ref }}
@@ -795,7 +795,7 @@ jobs:
           echo "path=$path" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -806,14 +806,14 @@ jobs:
           python -m pip install pyyaml
 
       - name: Download diff plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.plan.outputs.diff_artifact_name }}
           path: ${{ runner.temp }}/diff
         continue-on-error: true
 
       - name: Download trace manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: nomos-trace
           path: ${{ runner.temp }}/trace

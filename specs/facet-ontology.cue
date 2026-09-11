@@ -28,7 +28,7 @@ import "strings"
 }
 
 #FacetOntologyAxis: {
-	id:        "nature" | "discipline_role" | "activity" | "scope_level" | "trust_tier" | "provenance" | "confidentiality" | "applicability"
+	id:        "nature" | "discipline_role" | "activity" | "risk_tier" | "scope_level" | "trust_tier" | "provenance" | "confidentiality" | "applicability"
 	label:     string & strings.MinRunes(1)
 	root:      #OntologyIRI
 	iof_class: #OntologyIRI

@@ -124,7 +124,6 @@ evidence_placeholders:
     reason: >-
       Customer clinical-evaluation rationale and review evidence are not
       present.
-    related_issue: "#196"
     blocks_claim_levels:
       - evidence_ready
       - validated_by_customer

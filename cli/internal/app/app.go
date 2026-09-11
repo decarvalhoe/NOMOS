@@ -12,7 +12,7 @@ import (
 	"github.com/RBOKproject/Nomos/cli/internal/validate"
 )
 
-const Version = "0.1.0-ALPHA"
+const Version = "1.0.0-BETA.1"
 
 type commandFunc func(args []string, stdout io.Writer, stderr io.Writer) int
 
@@ -29,6 +29,8 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"bundle":        bundleCommand,
 		"pack":          packCommand,
 		"answer":        answerCommand,
+		"rag":           ragCommand,
+		"rule":          ruleCommand,
 		"canon":         canonCommand,
 		"pointintime":   pointInTimeCommand,
 		"strict":        StrictGateCommand,
@@ -39,6 +41,9 @@ func Run(args []string, stdout io.Writer, stderr io.Writer) int {
 		"github":        githubCommand,
 		"evidence":      evidenceCommand,
 		"attest":        attestCommand,
+		"release":       releaseCommand,
+		"portfolio":     portfolioCommand,
+		"contracts":     contractsCommand,
 	}
 
 	if len(args) == 0 {
@@ -74,7 +79,9 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  atomize    Atomize Markdown into atoms/chunks (facets, knowledge-lens scoping)")
 	fmt.Fprintln(stdout, "  bundle     Emit a Canonical Knowledge Bundle from a real corpus run")
 	fmt.Fprintln(stdout, "  pack       Validate a domain pack against its declarative contract (golden corpus included)")
-	fmt.Fprintln(stdout, "  answer     Cite-or-abstain gate: recompute faithfulness from spans, cite or abstain")
+	fmt.Fprintln(stdout, "  answer     Cite-or-abstain gate: recompute faithfulness from spans, cite or abstain (gate | eval | bench)")
+	fmt.Fprintln(stdout, "  rag        Export indexable chunks to any RAG stack, fingerprint the index, verify it is not stale")
+	fmt.Fprintln(stdout, "  rule       Execute ```formula atoms through an EXTERNAL substrate (NOMOS computes nothing itself)")
 	fmt.Fprintln(stdout, "  canon      Validate a canon-promotion bundle (user-promoted into the silo, never certified)")
 	fmt.Fprintln(stdout, "  pointintime  Resolve the atom expression in force at a project date (or refuse)")
 	fmt.Fprintln(stdout, "  strict     Run the strict release/integrity gate")
@@ -85,13 +92,11 @@ func helpCommand(_ []string, stdout io.Writer, _ io.Writer) int {
 	fmt.Fprintln(stdout, "  github     GitHub workflow integration (plan scoped diffs)")
 	fmt.Fprintln(stdout, "  evidence   Hash, prepare/sign, and verify evidence bundles")
 	fmt.Fprintln(stdout, "  attest     Sign and verify attestation predicates (ECDSA P-256 DSSE)")
+	fmt.Fprintln(stdout, "  release    Assemble and verify a release CANDIDATE bundle (never approves, tags or publishes)")
+	fmt.Fprintln(stdout, "  portfolio  Compute the portfolio status from committed machine sources (a view: lifts no claim)")
+	fmt.Fprintln(stdout, "  contracts  Verify the contract stability registry against the tree (changed stable contract without bump → red)")
 	fmt.Fprintln(stdout, "  version    Print CLI version")
 	fmt.Fprintln(stdout, "  help       Print this help")
-	return 0
-}
-
-func versionCommand(_ []string, stdout io.Writer, _ io.Writer) int {
-	fmt.Fprintln(stdout, Version)
 	return 0
 }
 

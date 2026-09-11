@@ -1,0 +1,8 @@
+record_id: CAPA-2026-003
+record_type: deviation_capa
+status: closed
+severity: minor
+opened: 2026-07-01
+closed: 2026-07-02
+deviation:
+  summary: Closed without any recorded effectiveness verification.

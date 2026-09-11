@@ -71,6 +71,8 @@ class HPFReadinessTests(unittest.TestCase):
     def test_readiness_matrix_has_required_governance_boundary(self) -> None:
         matrix = self.load_matrix()
 
+        self.assertEqual(matrix["schema_version"], "0.2.0")
+        self.assertEqual(matrix["decision_date"], "2026-09-05")
         self.assertEqual(matrix["matrix_id"], "HPF-001")
         self.assertEqual(matrix["record_type"], "high_potential_pilot_readiness_matrix")
         boundary = str(matrix["claim_boundary"]).lower()
@@ -84,6 +86,9 @@ class HPFReadinessTests(unittest.TestCase):
             self.assertIn(blocked_claim, boundary)
 
         self.assertEqual(matrix["first_two_pilot_lanes"], ["ai_rag_governance", "gxp_csv"])
+        wait_semantics = matrix["status_semantics"]["wait"].lower()
+        self.assertIn("licensed references gate only their clause-level use/claim", wait_semantics)
+        self.assertNotIn("licensed references must land", wait_semantics)
 
     def test_each_lane_has_status_gate_evidence_and_existing_artifacts(self) -> None:
         matrix = self.load_matrix()
@@ -129,14 +134,15 @@ class HPFReadinessTests(unittest.TestCase):
 
         self.assertLess(by_id["ai_rag_governance"]["rank"], by_id["gxp_csv"]["rank"])
 
-    def test_wait_and_blocked_lanes_name_their_external_dependencies(self) -> None:
+    def test_claim_dependencies_do_not_block_bounded_planning(self) -> None:
         matrix = self.load_matrix()
         by_id = {lane["id"]: lane for lane in matrix["lanes"]}
 
         medical = by_id["medical_samd"]
-        self.assertEqual(medical["status"], "wait")
-        self.assertIn("#192", medical["external_dependencies"])
-        self.assertIn("#193", medical["external_dependencies"])
+        self.assertEqual(medical["status"], "go")
+        self.assertIn("#192", medical["claim_dependencies"])
+        self.assertIn("#193", medical["claim_dependencies"])
+        self.assertNotIn("external_dependencies", medical)
 
         legal = by_id["legal_ediscovery"]
         self.assertEqual(legal["status"], "blocked")

@@ -5,10 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/RBOKproject/Nomos/cli/internal/pointintime"
 )
@@ -31,10 +28,6 @@ func pointInTimeCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	}
 }
 
-type pitDoc struct {
-	Atoms []pointintime.Atom `json:"atoms"`
-}
-
 func pointInTimeResolveCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("pointintime resolve", flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -48,24 +41,9 @@ func pointInTimeResolveCommand(args []string, stdout io.Writer, stderr io.Writer
 		fmt.Fprintln(stderr, "pointintime resolve: --atoms, --work-id and --as-of are required")
 		return 2
 	}
-	raw, err := os.ReadFile(*atomsPath)
+	doc, err := pointintime.LoadAtomSet(*atomsPath)
 	if err != nil {
-		fmt.Fprintf(stderr, "pointintime resolve: read atoms: %v\n", err)
-		return 1
-	}
-	var generic any
-	if err := yaml.Unmarshal(raw, &generic); err != nil {
-		fmt.Fprintf(stderr, "pointintime resolve: parse atoms: %v\n", err)
-		return 1
-	}
-	bridged, err := json.Marshal(normalizeYAML(generic))
-	if err != nil {
-		fmt.Fprintf(stderr, "pointintime resolve: normalize atoms: %v\n", err)
-		return 1
-	}
-	var doc pitDoc
-	if err := json.Unmarshal(bridged, &doc); err != nil {
-		fmt.Fprintf(stderr, "pointintime resolve: decode atoms: %v\n", err)
+		fmt.Fprintf(stderr, "pointintime resolve: %v\n", err)
 		return 1
 	}
 

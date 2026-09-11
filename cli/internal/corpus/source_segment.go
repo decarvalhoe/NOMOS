@@ -36,24 +36,24 @@ const (
 // attestation is produced. Every segment carries exact byte and line/column
 // spans plus deterministic content hashes.
 type SourceSegment struct {
-	SegmentID          string
-	SourceID           string
-	SourcePath         string
-	Kind               string
-	Disposition        Disposition
-	StartByte          int
-	EndByte            int
-	StartLine          int
-	StartColumn        int
-	EndLine            int
-	EndColumn          int
-	RawTextHash        string
-	NormalizedTextHash string
-	ParentSegmentID    string
-	CanonicalUnitID    string
-	IncludeInFeed      bool
-	IncludeInRAG       bool
-	UnsupportedReason  string
+	SegmentID          string      `json:"segment_id"`
+	SourceID           string      `json:"source_id"`
+	SourcePath         string      `json:"source_path"`
+	Kind               string      `json:"kind"`
+	Disposition        Disposition `json:"disposition"`
+	StartByte          int         `json:"start_byte"`
+	EndByte            int         `json:"end_byte"`
+	StartLine          int         `json:"start_line"`
+	StartColumn        int         `json:"start_column"`
+	EndLine            int         `json:"end_line"`
+	EndColumn          int         `json:"end_column"`
+	RawTextHash        string      `json:"raw_text_hash"`
+	NormalizedTextHash string      `json:"normalized_text_hash"`
+	ParentSegmentID    string      `json:"parent_segment_id"`
+	CanonicalUnitID    string      `json:"canonical_unit_id"`
+	IncludeInFeed      bool        `json:"include_in_feed"`
+	IncludeInRAG       bool        `json:"include_in_rag"`
+	UnsupportedReason  string      `json:"unsupported_reason"`
 
 	// FSQ-03 (#366): optional table-context fields. Set on table_row data
 	// segments (and partially on table containers / table_header) to let

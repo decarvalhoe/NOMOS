@@ -1,0 +1,56 @@
+# #641 — no-full-text policy, versioned.
+#
+# The previous control checked POLICY FIELDS in the intake sidecars — "does this
+# YAML authorise redistribution?" — and never looked at whether protected text
+# was actually present in the repository. This file drives the check that does.
+#
+# Two detections, both exact and both blind to the protected text itself:
+#
+#   1. FULL COPY. Any file under a public tree whose sha256 equals a registered
+#      licensed artifact's `source_integrity.sha256` is the artifact itself,
+#      committed. The hashes are already in the intake sidecars; nothing new is
+#      stored here.
+#   2. SENTINEL SENTENCES. A human holding the licensed copy computes the
+#      sha256 of a handful of distinctive sentences, NORMALISED (lower-case,
+#      punctuation stripped, whitespace collapsed), and records only the
+#      digests. The scanner normalises every sentence of every public file the
+#      same way and checks membership. Partial copying of a distinctive passage
+#      is caught; the passage itself never enters the repository.
+#
+# What this cannot do, said plainly: it cannot detect a paraphrase, a passage
+# that was never registered as a sentinel, or text in a file type the scanner
+# does not read. It narrows the gap; it does not close it. An empty sentinel
+# list is an HONEST state — it means nobody with the licensed copy has done the
+# registration yet — and the gate reports it as such rather than as coverage.
+schema_version: nomos-no-full-text-policy-v1
+policy_id: no-full-text-public-trees
+issue: "#641"
+
+# Trees where licensed text must never be present. Everything committed under
+# these paths is scanned; staged files anywhere are scanned with --staged.
+public_trees:
+  - docs/
+  - README.md
+  - README.en.md
+  - README.de.md
+  - specs/
+  - templates/
+  - cli/internal/corpus/testdata/
+
+# File suffixes the sentence scanner reads. Binaries are hash-compared only.
+text_suffixes: [".md", ".txt", ".yaml", ".yml", ".json", ".cue", ".html", ".htm", ".csv"]
+
+# A sentence shorter than this is too generic to be a sentinel.
+min_sentence_chars: 60
+
+# Registered licensed references and their sentinel digests.
+#   sentinels: []            -> honest, uncovered: nobody has registered any
+#   sentinels: [sha256:...]  -> checked
+# Never put the sentence here. Only its normalised digest.
+references:
+  - reference_id: ISPE-GAMP5-2E-2022
+    sentinel_status: requires_licensed_copy
+    sentinels: []
+  - reference_id: ISO-IEC-25010-2023
+    sentinel_status: requires_licensed_copy
+    sentinels: []

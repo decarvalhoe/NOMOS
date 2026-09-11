@@ -1,4 +1,6 @@
-schema_version: "0.1.0"
+# v0.2.0 separates technical delivery from regulated reliance/claim gates
+# (ADR-VRC-0004). v0.1.0 profiles used one generic dependency state.
+schema_version: "0.2.0"
 product:
   id: replace_with_product_id
   name: replace_with_product_name
@@ -14,6 +16,8 @@ regulated_design:
   regulated_claim_allowed: false
   rationale:
     - replace_with_rationale
+  regulated_reliance_blocked_by:
+    - replace_with_claim_gate_or_remove
 owned_evidence:
   - id: replace_with_evidence_id
     status: planned
@@ -21,6 +25,14 @@ owned_evidence:
 critical_path:
   issues:
     - replace_with_issue_reference
+open_claim_gates:
+  - id: replace_with_issue_or_evidence_gap
+    status: open
+    blocks: replace_with_named_regulated_claim_only
+technical_delivery_boundary: >-
+  Product and DevOps implementation may proceed with synthetic or
+  not_qualified inputs. Human approval, validation and external acquisition
+  block only the regulated use or claim named above.
 relationships:
   upstream:
     - product: replace_with_upstream_product_or_not_applicable

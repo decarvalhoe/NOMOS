@@ -1,0 +1,390 @@
+{
+  "schema_version": "nomos-skos-static-mappings-v1",
+  "note": "IRI → file for a static host. Serve the Turtle file as text/turtle and the JSON-LD file as application/ld+json; no server logic is required or claimed.",
+  "content_types": {
+    "turtle": "text/turtle",
+    "jsonld": "application/ld+json"
+  },
+  "iris": {
+    "https://nomos.dev/ns/facets/core/applicability": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/applicability/applicable": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/applicability/blocked": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/applicability/not_applicable": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/applicability/partially_applicable": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/applicability/unknown": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/customer_confidential": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/internal": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/public": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/restricted": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/confidentiality/secret": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/calculation": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/condition": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/context": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/definition": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/evidence": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/exception": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/governance": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/metier": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/obligation": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/permission": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/prohibition": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/nature/rule": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance/derived": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance/external_attested": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance/inferred": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance/source_backed": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/provenance/user_promoted": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scheme": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/atom": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/chunk": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/domain": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/product": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/release": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/source": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/scope_level/structure": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/trust_tier": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/trust_tier/certified": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/trust_tier/indicative": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/facets/core/trust_tier/unverified": {
+      "turtle": "core-facets.skos.ttl",
+      "jsonld": "core-facets.skos.jsonld",
+      "graph": "core-facets"
+    },
+    "https://nomos.dev/ns/pack/built-environment/axis/activity": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/axis/discipline_role": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.appel_offres": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.conception": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.direction_travaux": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.exploitation": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.permis": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.architecte": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.entreprise": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.geometre": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.ingenieur_civil": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.specialiste_energie": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/built-environment/scheme": {
+      "turtle": "built-environment.skos.ttl",
+      "jsonld": "built-environment.skos.jsonld",
+      "graph": "built-environment"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/axis/activity": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.documentation_technique": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.enregistrement": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.evaluation_conformite": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.gestion_risque": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.surveillance_post_marche": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.autorite_notifiante": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.deployeur": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.distributeur": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.fournisseur": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.importateur": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.haut_risque": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_inacceptable": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_limite": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_minimal": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    },
+    "https://nomos.dev/ns/pack/eu-ai-act/scheme": {
+      "turtle": "eu-ai-act.skos.ttl",
+      "jsonld": "eu-ai-act.skos.jsonld",
+      "graph": "eu-ai-act"
+    }
+  }
+}

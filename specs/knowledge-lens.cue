@@ -14,6 +14,7 @@ import "strings"
 	nature?:            #FacetNature
 	discipline_role?:   [#FacetTermRef, ...#FacetTermRef]
 	activity?:          [#FacetTermRef, ...#FacetTermRef]
+	risk_tier?:         [#FacetTermRef, ...#FacetTermRef]
 	scope_level?:       #FacetScopeLevel
 	trust_tier?:        #FacetTrustTier
 	provenance?:        #FacetProvenance

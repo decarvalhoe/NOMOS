@@ -1,0 +1,428 @@
+@prefix nomos: <https://nomos.dev/ns/facets#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://nomos.dev/ns/facets/core/applicability>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/applicability/applicable> ;
+  skos:member <https://nomos.dev/ns/facets/core/applicability/blocked> ;
+  skos:member <https://nomos.dev/ns/facets/core/applicability/not_applicable> ;
+  skos:member <https://nomos.dev/ns/facets/core/applicability/partially_applicable> ;
+  skos:member <https://nomos.dev/ns/facets/core/applicability/unknown> ;
+  skos:prefLabel "Applicability"@en ;
+  nomos:axisId "applicability"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/applicability/applicable>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "applicable"^^xsd:string ;
+  skos:prefLabel "applicable"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/applicability> ;
+  nomos:termId "applicable"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/applicability/blocked>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "blocked"^^xsd:string ;
+  skos:prefLabel "blocked"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/applicability> ;
+  nomos:termId "blocked"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/applicability/not_applicable>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "not_applicable"^^xsd:string ;
+  skos:prefLabel "not applicable"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/applicability> ;
+  nomos:termId "not_applicable"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/applicability/partially_applicable>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "partially_applicable"^^xsd:string ;
+  skos:prefLabel "partially applicable"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/applicability> ;
+  nomos:termId "partially_applicable"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/applicability/unknown>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "unknown"^^xsd:string ;
+  skos:prefLabel "unknown"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/applicability> ;
+  nomos:termId "unknown"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/customer_confidential> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/internal> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/public> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/restricted> ;
+  skos:member <https://nomos.dev/ns/facets/core/confidentiality/secret> ;
+  skos:prefLabel "Confidentiality"@en ;
+  nomos:axisId "confidentiality"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/customer_confidential>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "customer_confidential"^^xsd:string ;
+  skos:prefLabel "customer confidential"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "customer_confidential"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/internal>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "internal"^^xsd:string ;
+  skos:prefLabel "internal"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "internal"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "licensed_restricted"^^xsd:string ;
+  skos:prefLabel "licensed restricted"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "licensed_restricted"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/public>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "public"^^xsd:string ;
+  skos:prefLabel "public"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "public"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/restricted>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "restricted"^^xsd:string ;
+  skos:prefLabel "restricted"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "restricted"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/confidentiality/secret>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "secret"^^xsd:string ;
+  skos:prefLabel "secret"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/confidentiality> ;
+  nomos:termId "secret"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/calculation> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/condition> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/context> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/definition> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/evidence> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/exception> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/governance> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/metier> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/obligation> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/permission> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/prohibition> ;
+  skos:member <https://nomos.dev/ns/facets/core/nature/rule> ;
+  skos:prefLabel "Nature"@en ;
+  nomos:axisId "nature"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/calculation>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "calculation"^^xsd:string ;
+  skos:prefLabel "calculation"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "calculation"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/condition>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "condition"^^xsd:string ;
+  skos:prefLabel "condition"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "condition"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/context>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "context"^^xsd:string ;
+  skos:prefLabel "context"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "context"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/definition>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "definition"^^xsd:string ;
+  skos:prefLabel "definition"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "definition"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/evidence>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "evidence"^^xsd:string ;
+  skos:prefLabel "evidence"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "evidence"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/exception>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "exception"^^xsd:string ;
+  skos:prefLabel "exception"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "exception"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/governance>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "governance"^^xsd:string ;
+  skos:prefLabel "governance"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "governance"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/metier>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "metier"^^xsd:string ;
+  skos:prefLabel "metier"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "metier"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/obligation>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "obligation"^^xsd:string ;
+  skos:prefLabel "obligation"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "obligation"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/permission>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "permission"^^xsd:string ;
+  skos:prefLabel "permission"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "permission"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/prohibition>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "prohibition"^^xsd:string ;
+  skos:prefLabel "prohibition"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "prohibition"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/nature/rule>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "rule"^^xsd:string ;
+  skos:prefLabel "rule"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/nature> ;
+  nomos:termId "rule"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/provenance/derived> ;
+  skos:member <https://nomos.dev/ns/facets/core/provenance/external_attested> ;
+  skos:member <https://nomos.dev/ns/facets/core/provenance/inferred> ;
+  skos:member <https://nomos.dev/ns/facets/core/provenance/source_backed> ;
+  skos:member <https://nomos.dev/ns/facets/core/provenance/user_promoted> ;
+  skos:prefLabel "Provenance"@en ;
+  nomos:axisId "provenance"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance/derived>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "derived"^^xsd:string ;
+  skos:prefLabel "derived"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/provenance> ;
+  nomos:termId "derived"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance/external_attested>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "external_attested"^^xsd:string ;
+  skos:prefLabel "external attested"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/provenance> ;
+  nomos:termId "external_attested"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance/inferred>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "inferred"^^xsd:string ;
+  skos:prefLabel "inferred"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/provenance> ;
+  nomos:termId "inferred"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance/source_backed>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "source_backed"^^xsd:string ;
+  skos:prefLabel "source backed"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/provenance> ;
+  nomos:termId "source_backed"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/provenance/user_promoted>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "user_promoted"^^xsd:string ;
+  skos:prefLabel "user promoted"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/provenance> ;
+  nomos:termId "user_promoted"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scheme>
+  a skos:ConceptScheme ;
+  skos:definition "Controlled values of the closed facet axes of the NOMOS canonical knowledge model, one skos:Collection per axis."@en ;
+  skos:prefLabel "NOMOS core facet vocabulary"@en .
+
+<https://nomos.dev/ns/facets/core/scope_level>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/atom> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/chunk> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/domain> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/product> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/release> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/source> ;
+  skos:member <https://nomos.dev/ns/facets/core/scope_level/structure> ;
+  skos:prefLabel "Scope level"@en ;
+  nomos:axisId "scope_level"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/atom>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "atom"^^xsd:string ;
+  skos:prefLabel "atom"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "atom"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/chunk>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "chunk"^^xsd:string ;
+  skos:prefLabel "chunk"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "chunk"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/domain>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "domain"^^xsd:string ;
+  skos:prefLabel "domain"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "domain"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/product>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "product"^^xsd:string ;
+  skos:prefLabel "product"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "product"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/release>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "release"^^xsd:string ;
+  skos:prefLabel "release"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "release"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/source>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "source"^^xsd:string ;
+  skos:prefLabel "source"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "source"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/scope_level/structure>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "structure"^^xsd:string ;
+  skos:prefLabel "structure"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/scope_level> ;
+  nomos:termId "structure"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/trust_tier>
+  a skos:Collection ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:member <https://nomos.dev/ns/facets/core/trust_tier/certified> ;
+  skos:member <https://nomos.dev/ns/facets/core/trust_tier/indicative> ;
+  skos:member <https://nomos.dev/ns/facets/core/trust_tier/unverified> ;
+  skos:prefLabel "Trust tier"@en ;
+  nomos:axisId "trust_tier"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/trust_tier/certified>
+  a skos:Concept ;
+  skos:definition "Evidence satisfies the configured deterministic gate for the declared scope."@en ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "certified"^^xsd:string ;
+  skos:prefLabel "certified"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/trust_tier> ;
+  nomos:termId "certified"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/trust_tier/indicative>
+  a skos:Concept ;
+  skos:definition "Evidence is usable for orientation but insufficient for a certified claim."@en ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "indicative"^^xsd:string ;
+  skos:prefLabel "indicative"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/trust_tier> ;
+  nomos:termId "indicative"^^xsd:string .
+
+<https://nomos.dev/ns/facets/core/trust_tier/unverified>
+  a skos:Concept ;
+  skos:definition "Evidence is absent, incomplete, or blocked by a finding."@en ;
+  skos:inScheme <https://nomos.dev/ns/facets/core/scheme> ;
+  skos:notation "unverified"^^xsd:string ;
+  skos:prefLabel "unverified"@en ;
+  skos:topConceptOf <https://nomos.dev/ns/facets/core/scheme> ;
+  nomos:onAxis <https://nomos.dev/ns/facets/core/trust_tier> ;
+  nomos:termId "unverified"^^xsd:string .

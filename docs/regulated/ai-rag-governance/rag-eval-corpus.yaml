@@ -6,6 +6,7 @@
 answers:
   - answer_id: EVAL-GABARIT
     prompt_id: Q-GABARIT
+    expected_chunk_ids: [chunk-gabarit]
     answer: "Le gabarit retient une hauteur de neuf metres au faite pour le volume principal."
     citation_status: source_backed
     policy_outcome: acceptable
@@ -22,6 +23,7 @@ answers:
 
   - answer_id: EVAL-RECUL
     prompt_id: Q-RECUL
+    expected_chunk_ids: [chunk-recul]
     answer: "L'implantation respecte un recul de six metres sur la limite nord de la parcelle."
     citation_status: source_backed
     policy_outcome: acceptable
@@ -38,6 +40,7 @@ answers:
 
   - answer_id: EVAL-ENQUETE
     prompt_id: Q-ENQUETE
+    expected_chunk_ids: [chunk-enquete]
     answer: "La mise a l'enquete publique dure trente jours."
     citation_status: source_backed
     policy_outcome: acceptable

@@ -19,9 +19,11 @@ Model:
                     test(s) all present (and declared CI-gate anchors, when any);
     - ``partial`` — engine present but a production caller / adversarial test /
                     declared CI gate is missing (the #540 class);
-    - ``sidecar`` — no Go engine; the capability lives in Python sidecars / CUE specs
-                    only (doctrine: "un schéma CUE + script Python sidecar = PARTIAL,
-                    pas done");
+    - ``sidecar`` — no Go engine; the capability intentionally lives in Python
+                    sidecars / CUE specs. This is implementation topology, not
+                    delivery or regulated-validation status (ADR-VRC-0004). When a
+                    capability is expected in Go, its registry entry declares
+                    engine/caller anchors instead and missing wiring is partial;
     - ``stub``    — an explicit honest placeholder (e.g. ``PlaceholderAdapter``);
     - ``absent``  — nothing found, or declared anchors rotted (loud on purpose).
 * ``must_be_absent`` probes guard the OTHER direction: when engine markers appear in
@@ -178,7 +180,7 @@ def compute_capability(root: Path, cap: dict) -> dict:
             computed = "sidecar"
             reasons.append(
                 "implementation lives in sidecar scripts/specs only "
-                "(doctrine: sidecar = PARTIAL, not done)"
+                "(topology only; delivery and regulated validation are tracked separately)"
             )
         else:
             computed = "absent"

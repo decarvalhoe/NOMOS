@@ -1,0 +1,55 @@
+# SYNTHETIC EXAMPLE — NOT A RECORD. #640.
+#
+# This file exists so a human can see a conforming attestation, and so the gate
+# has something real to be tested against. It is deliberately OUTSIDE
+# ./attestations/, which the gate scans: nothing here is ever read as evidence,
+# and the people named do not exist.
+#
+# Copying this file into attestations/ and changing the names would forge a
+# quality record. Fill in the template instead, from a real assessment.
+schema_version: nomos-competence-assessment-v1
+record_id: EXAMPLE-SYNTHETIC-0001
+
+assessee:
+  name: "Example Assessee (synthetic@example.invalid)"
+  role_id: quality_owner
+  employee_id: "EXAMPLE-1"
+assessor:
+  name: "Example Assessor (synthetic-assessor@example.invalid)"
+  role_id: quality_unit
+  employee_id: "EXAMPLE-2"
+
+competence:
+  id: comp-qo-001
+  name: Quality management system operation
+  required_level: proficient
+
+assessment:
+  date: "2026-09-05"
+  method: written_assessment
+  description: "Synthetic example, no assessment took place."
+  pass_criteria: "Illustrative only."
+  result: pass
+  score: null
+  evidence_artifact: "examples/EXAMPLE-synthetic-attestation.yaml"
+  notes: "Synthetic. Never valid evidence of anyone's competence."
+
+decision:
+  competent: true
+  conditions: ""
+  reassessment_date: ""
+  signed_by_assessor: true
+  signed_by_assessee: true
+  signed_at: "2026-09-05T10:00:00Z"
+  signature_evidence: "synthetic — no signature exists for this example"
+
+approval:
+  approved_by: "Example Approver (synthetic-approver@example.invalid)"
+  approved_at: "2026-09-05T11:00:00Z"
+  approval_role: quality_unit
+  approval_hash: ""
+
+validity:
+  effective_from: "2026-09-05"
+  expires_at: null
+  retraining_trigger: "synthetic"

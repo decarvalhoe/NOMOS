@@ -1,0 +1,35 @@
+# INVALID: a layer declared not_verified carries a count — the number would be
+# inferred, not verified. The contract refuses it.
+schema_version: nomos-domain-cartography-v1
+cartography_id: example-inferred
+as_of: "2026-09-06"
+claim_boundary: "Synthetic invalid example: an unverified layer must carry no number."
+domains:
+  - id: affaires-fr
+    title: Droit des affaires (FR)
+    jurisdiction: FR
+    kind: own_corpus
+    subcorpora:
+      - id: code-commerce
+        title: Code de commerce
+        source_authority: DILA bulk
+        unit_kind: texts
+        unit_count: 1
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-09-06"
+            count: 1
+          index:
+            layer: index
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 4000
+          enrichment:
+            layer: enrichment
+            verified_by: not_verified
+            count: 4000
+          graph:
+            layer: graph
+            verified_by: not_verified

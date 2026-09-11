@@ -25,15 +25,55 @@
 | `pdf_adapter` | ingestion | real | real | ✅ | — | — |
 | `domain_pack_gate` | D2 | real | real | ✅ | — | — |
 | `rag_eval_harness` | B2 | real | real | ✅ | — | — |
-| `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
-| `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (doctrine: sidecar = PARTIAL, not done) |
+| `rag_eval_context_metrics` | B2 | real | real | ✅ | — | — |
+| `faithfulness_scorer_interface` | A1 | real | real | ✅ | — | — |
+| `hhem_nli_scorer_sidecar` | A1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `rag_evidence_sidecar_consumes_go_verdict` | A1 | real | real | ✅ | — | — |
+| `rag_interop_export` | interop | real | real | ✅ | — | — |
+| `rag_index_staleness_verify` | interop | real | real | ✅ | — | — |
+| `rag_lens_scoped_export` | interop | real | real | ✅ | — | — |
+| `reference_retrieval_kit` | B1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `pack_core_coupling_guard` | D6 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `consumer_conformance_kit` | E-1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 | `evidence_pack_bom` | A5 | real | real | ✅ | — | — |
 | `docx_adapter` | ingestion | real | real | ✅ | — | — |
-| `sigstore_keyless` | P7 | absent | absent | ✅ | VRC-40 | — |
+| `sigstore_keyless` | P7 | absent | absent | ✅ | #645 | — |
 | `strict_fidelity_gate` | P1 | real | real | ✅ | — | — |
 | `manifest_check_family` | P1 | real | real | ✅ | — | — |
 | `report_and_bom_export` | P7 | real | real | ✅ | — | — |
+| `eu_ai_act_pack` | D3 | real | real | ✅ | — | — |
+| `rule_execution_substrate` | B3 | real | real | ✅ | — | — |
+| `cross_reference_graph` | B5 | real | real | ✅ | — | — |
+| `vocabulary_skos_shacl` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `public_cite_or_abstain_bench` | A-exit | real | real | ✅ | — | — |
+| `repeated_ci_evidence_private_corpus` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `training_competence_status` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `web_source_contract` | P2 | real | real | ✅ | — | — |
+| `licensed_reference_review_gate` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `external_snapshot_input` | P2 | real | real | ✅ | — | — |
+| `public_reference_processing` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `recursio_offline_e2e` | P1 | real | real | ✅ | — | — |
+| `release_candidate_bundle` | P1 | real | real | ✅ | — | — |
+| `sigstore_offline_verification` | P1 | real | real | ✅ | — | — |
+| `skos_static_distribution` | B4 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `sigstore_keyless_injected_issuance` | P1 | real | real | ✅ | — | — |
+| `praxis_evidence_contract` | P1 | real | real | ✅ | — | — |
+| `praxis_atom_mapping_fixture` | P1 | real | real | ✅ | — | — |
+| `praxis_activation_gate` | P1 | real | real | ✅ | — | — |
+| `portfolio_status_engine` | P1 | real | real | ✅ | — | — |
+| `review_record_index` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `portfolio_multi_project_view` | P1 | real | real | ✅ | — | — |
+| `control_plane_archive` | P1 | absent | absent | ✅ | — | — |
+| `portfolio_findings_index` | P1 | real | real | ✅ | — | — |
+| `security_process_gates` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `support_model` | devops | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `contract_stability_registry` | P1 | real | real | ✅ | — | — |
+| `compatibility_matrix` | P1 | real | real | ✅ | — | — |
+| `customer_integration_guide` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `release_readiness_verdict` | P1 | real | real | ✅ | — | — |
+| `domain_cartography_contract` | customer-integration | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `cross_consumption_proof_kit` | customer-integration | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
+| `evidence_ledger_index` | P1 | sidecar | sidecar | ✅ | — | implementation lives in sidecar scripts/specs only (topology only; delivery and regulated validation are tracked separately) |
 
 ## Generic checks
 
@@ -41,7 +81,7 @@
 
 ## Summary
 
-- capabilities: 26 (real=22, partial=0, sidecar=3, stub=0, absent=1)
+- capabilities: 66 (real=47, partial=0, sidecar=17, stub=0, absent=2)
 - mismatches: 0
 - generic check failures: 0
 - known unwired commands (tracked, not hidden): 0

@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--ALPHA-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0--ALPHA-orange">
   <img alt="Scope" src="https://img.shields.io/badge/scope-authority--to--product-blue">
   <img alt="Read only" src="https://img.shields.io/badge/corpus-read--only-success">
   <img alt="Regulated by design" src="https://img.shields.io/badge/posture-regulated--by--design-purple">
@@ -32,11 +32,13 @@ Nomos does not replace domain experts, legal owners, quality owners, or the offi
 | Dimension | Current position |
 |---|---|
 | Product | Authority-to-product engine for governed software, AI, and RAG. |
-| Release | `v0.1.0-ALPHA`. |
+| Release | `v1.0.0-BETA.1` (2026-09-07, beta pre-release; decision recorded in `docs/regulated/lifecycle/release-records/`). `v0.2.0-ALPHA` (2026-09-06) is superseded. |
 | Current proof | Alpha POC on a real private corpus processed read-only. |
-| Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation. |
-| Known limit | The alpha proves a bounded source-to-feed POC; it does not yet claim universal fidelity or customer regulatory validation. |
-| Next hardening | Repeated CI evidence, additional document formats, customer validation packs. |
+| Proven strength | Source -> structure -> canonical nodes -> TOC -> source-backed feed/RAG -> body ledger -> strict gate -> attestation; then, in the Go engine: cite-or-abstain gate (faithfulness recomputed from spans, never declared), RAG evaluation harness in CI, interoperable RAG export with provable staleness, reproducible public bench of the gate. |
+| Capability registry | 40 capabilities declared in `scripts/vrc_wiring_matrix_registry.json`; their status is COMPUTED from the tree on every CI run (32 real, 7 sidecar, 1 absent, 0 mismatch) — [`.vrc-wiring-matrix/wiring-matrix.md`](./.vrc-wiring-matrix/wiring-matrix.md). |
+| Roadmaps | Product, DevOps and regulated assurance advance independently (ADR-VRC-0004). Only `dispatch:autonomous` issues enter the dispatcher; calendar evidence, signatures, procurement and public writes block their claim, never development — [`docs/47`](./docs/47-roadmap-lanes-and-risk-based-validation.md). |
+| Known limit | The alpha proves a bounded source-to-feed POC; it does not yet claim universal fidelity or customer regulatory validation. The public bench measures the gate on nine items, not a product. |
+| Next hardening | Independent product and DevOps autonomous queues, ordered by `docs/roadmap-lanes.yaml` (table generated into `docs/47`, drift-checked in CI). The only `absent` capability is keyless Sigstore issuance: offline verify #637, non-production issuance #645, production/Rekor activation #638 separate. |
 | Claim boundary | Not a certified eQMS, not a validated GxP system, not a regulatory certification. |
 
 ## Why Nomos Exists
@@ -96,7 +98,9 @@ Nomos is designed for teams that need source-backed software behavior, source-ba
 - running read-only corpus assessments before importing customer references;
 - documenting unsupported coverage instead of silently overclaiming fidelity.
 
-## What v0.1.0-ALPHA Delivers
+## What v0.2.0-ALPHA Delivers
+
+The v0.1.0-ALPHA baseline (2026-05-03) is unchanged; v0.2.0-ALPHA (2026-09-06) adds the capabilities listed in `CHANGELOG.md` — external sources, release candidate bundle, offline Sigstore verification and non-production issuance, the Nomos/Praxis contract and gate, portfolio governance. The French README carries the detailed list.
 
 The current release provides a working CLI and evidence pipeline for canonical-first projects:
 
@@ -114,6 +118,17 @@ The current release provides a working CLI and evidence pipeline for canonical-f
 - in-toto style attestation output;
 - regulated-by-design documentation skeleton, evidence templates, and control records;
 - CI workflows for Go, CUE, corpus, RBOK lawbook E2E, runtime E2E, fidelity proof reports, regulated documentation, and evidence pack generation.
+
+Since the alpha, the engine has gained the capabilities below. Each is an entry of the capability registry whose status is computed in CI from tree anchors (engine, production caller, adversarial test, CI gate); an intentionally out-of-core capability counts as `sidecar`, never `real` — that is topology, not its delivery or regulated-validation state:
+
+- **cite-or-abstain gate in the engine** (`nomos answer gate`, VRC-10): faithfulness recomputed from the retrieved span text, never taken from a declared score; a forged citation, a span without text or an answer without a source forces abstention; `trust_tier` per answer; pluggable NLI second judge (`--scorer-cmd`, strictest-wins, fail-closed, no model in the engine); the Python evidence sidecar consumes this verdict instead of producing one;
+- **RAG evaluation harness** (`nomos answer eval`, VRC-13): golden corpus, versioned thresholds, `context_recall`, rank-weighted `context_precision` and `noise_sensitivity`; a regression below the floor blocks the PR;
+- **public cite-or-abstain bench** (`nomos answer bench`, VRC-46): labelled corpus over the repository's public documents, dated results, reproduction gate in CI (sources verbatim and unmoved, references verified and dated, determinism, bounds, measurement identical to the published one);
+- **interoperable RAG export** (`nomos rag export|manifest|delta|verify`): indexable, citable chunks for any RAG stack, per-source index fingerprint, exact reindexing plan, staleness gate, Knowledge-Lens-scoped export with a computed retrieval contract;
+- **CKM atomization**: derived facets, Knowledge Lens in the engine and the CLI, canon promotion (never `certified`, confidentiality silo), point-in-time resolver, Canonical Knowledge Bundle, facet-ontology alignment rendered by the pack gate;
+- **proof and attestation**: ECDSA P-256 DSSE signing, body-ledger Merkle proofs emitted and verified, `claim_coverage` computed in the attestation, in-toto supply-chain predicate, evidence packs as CycloneDX/SPDX BOMs cross-checked with the ledger;
+- **domain packs and adapters**: `nomos pack validate` against a declarative contract, capability kits per adapter, born-digital PDF and DOCX adapters (explicit claim ladder), live Swiss connector (real fetch, real hash);
+- **truth guards**: computed wiring matrix (VRC-00), claim-boundary guard on the words "signed / Sigstore / certified", core/pack coupling guard, HHEM sidecar and reference retrieval/conformance kits (counted `sidecar`).
 
 ## Alpha POC Evidence
 
@@ -183,7 +198,18 @@ Current structured source-to-feed POC:
 | Strict gate | `pass`, exit code 0 |
 | Source mutation check | no source mutation detected |
 
-This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, and the proof is bounded to the recorded corpus, commit, and build (attestation `claim_coverage` is now wired — `corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs and computes coverage; the recorded POC run keeps its historical WARN). The next hardening work targets CI repeatability, additional document formats, customer validation, and broader universal-fidelity evidence.
+This distinction matters. The current alpha proves defensible source-to-artifact traceability and a source-backed feed/RAG POC, while keeping a strict claim boundary: remaining warnings are reviewable, and the proof is bounded to the recorded corpus, commit, and build (attestation `claim_coverage` is now wired — `corpus attest --corpus-body-ledger` verifies the ledger's Merkle proofs and computes coverage; the recorded POC run keeps its historical WARN). **Product** hardening targets additional formats and portable fidelity. In parallel, the regulated roadmap measures CI repeatability and customer validation without turning them into product dependencies: VRC-14 #560 measures 4 consecutive green runs of 8 on 2026-09-04, so its claim stays locked while the other lanes continue.
+
+## Continuously Computed Proofs
+
+Beyond the recorded POC, two proofs are recomputed on every CI run and fail on any drift:
+
+| Proof | Current result | How it is held |
+|---|---|---|
+| Wiring matrix (VRC-00) | 40 capabilities, 0 mismatch between registry and tree, 0 phantom command | `scripts/vrc_wiring_matrix.py`; the generated file is compared with the commit |
+| Public cite-or-abstain bench (VRC-46, result of 2026-09-05, lexical proxy) | 9 items: `must_cite_recall` 1.0 (3/3), `must_abstain_recall` 0.8333 (5/6), `false_cite_rate` 0.1667 — the single false cite is the negation, the documented blind spot of the proxy | `scripts/cite_or_abstain_bench.py`: sources verbatim and unmoved, references verified and dated, two byte-identical runs, versioned bounds, measurement identical to the published result |
+
+Methodology, corpus, bounds and dated results: [`docs/regulated/ai-rag-governance/cite-or-abstain-bench/`](./docs/regulated/ai-rag-governance/cite-or-abstain-bench/README.md).
 
 ## Regulated-Ready Posture
 
@@ -242,6 +268,28 @@ Print help:
 ./nomos corpus help
 ```
 
+Run the cite-or-abstain gate, replay the harness and the public bench:
+
+```bash
+./nomos answer gate --fixtures docs/regulated/ai-rag-governance/rag-answer-fixtures.yaml
+./nomos answer eval \
+  --corpus docs/regulated/ai-rag-governance/rag-eval-corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
+./nomos answer bench \
+  --corpus docs/regulated/ai-rag-governance/cite-or-abstain-bench/corpus.yaml \
+  --thresholds docs/regulated/ai-rag-governance/cite-or-abstain-bench/bench-thresholds.yaml
+python3 scripts/cite_or_abstain_bench.py --root . --nomos-bin ./nomos   # replays the published result, red on any drift
+```
+
+Export to a RAG stack, fingerprint the index and prove it is fresh:
+
+```bash
+./nomos rag export --feed /path/to/out/feed.json --format jsonl --strict --output chunks.jsonl
+./nomos rag manifest --feed /path/to/out/feed.json --output index-manifest.json
+./nomos rag delta --old index-manifest.json --new index-manifest.next.json      # exact plan: embed / update_metadata / delete
+./nomos rag verify --feed /path/to/out/feed.json --manifest index-manifest.json --strict   # exit 1 when the index is stale
+```
+
 Diagnose a project:
 
 ```bash
@@ -286,9 +334,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `examples/` | Domain examples for applying the canonical-first method. |
 | `adapters/` | Adapter contracts and reference profiles for Node/TypeScript, Python, and JVM: specs and fixtures, with no executable implementation at this stage. |
 | `ci/` | Reusable CI integration documentation. |
-| `control-plane/` | Archived exploratory Go packages (dashboard, registry, storage): zero production callers, frozen by ADR-0006, revisited at the v0.9.x portfolio milestone. |
 | `policies/` | Placeholder directory for a future policy framework; not operational at this stage. |
-| `scripts/` | E2E, evidence, regulated documentation, and automation helpers. |
+| `scripts/` | E2E, evidence, regulated documentation, and automation helpers; capability registry (`vrc_wiring_matrix_registry.json`), guards (wiring matrix, claim boundary, core/pack coupling), RAG and bench gates, sidecars (RAG evidence, HHEM scorer, reference kits). |
+| `.vrc-wiring-matrix/` | GENERATED wiring matrix (JSON + Markdown): the status of every capability computed from the tree; any hand edit or drift is red in CI. |
+| `attestations/` | CUE contracts of the in-toto attestations and the signed claim-boundary predicate. |
+| `tests/` | Python tests of the workflows, sidecars, guards and gates (adversarial: the expected failure is the proof). |
 | `reports/` | Generated local evidence artifacts. |
 | `references/` | Methodological and external reference register material. |
 
@@ -297,12 +347,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 The release process currently uses:
 
 ```bash
-go test ./...                 # from cli/
+go vet ./... && go test -race ./...            # from cli/
+python -m unittest discover -s tests -v        # Python tests (pyyaml required; builds the Go engine for the gates that consume it)
+python scripts/claim_boundary_guard.py --root .          # no "signed / Sigstore / certified" without proof
+python scripts/roadmap_lane_guard.py --root .             # no human/external wait in the autonomous queue
+python scripts/vrc_wiring_matrix.py --root .             # wiring matrix: registry and tree in lockstep
+python scripts/cite_or_abstain_bench.py --root .         # public bench: the published result replays
+python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit   # security process: real scans, expiring allowlist
+python scripts/support_model_guard.py --root . --check     # support model: CI matrix, go.mod, tags, generated sections
+bash scripts/ckm-non-regression.sh             # CKM-00 harness: CLI, CUE, Python, e2e, RBOK, cite-or-abstain gate
 powershell -File scripts/e2e.ps1
-python -m unittest discover -s tests -v
 ```
 
-GitHub Actions additionally run CI, corpus tests on Linux/macOS/Windows, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, regulated documentation gate, and regulated evidence pack jobs.
+GitHub Actions run: CI (Go vet & test, domain pack gate, RAG eval harness, RAG export gate, public bench replay, corpus tests on Linux/macOS/Windows, CUE vet, YAML lint, Python tests with the claim-boundary guard and a drift-free wiring matrix), the CKM non-regression harness, RBOK lawbook E2E, RBOK runtime E2E, fidelity proof reports, the regulated documentation gate and the regulated evidence pack (whose RAG evidence consumes the verdict of the freshly built engine).
 
 ## What Nomos Does Not Claim
 
@@ -312,7 +369,11 @@ Nomos does not make an LLM authoritative. In the intended architecture, determin
 
 Nomos does not remove the need for validation. In regulated environments, customers still need intended-use definition, risk assessment, validation planning, test evidence, change control, supplier assessment, security review, and approval records.
 
-Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The feed-quality roadmap explicitly addresses unsupported document formats, residual semantic warnings, customer validation packs, and CI repeatability on private corpora.
+Nomos does not currently claim that its alpha feed output is a perfect semantic reconstruction of every supported corpus. The product feed-quality roadmap covers unsupported formats and residual semantic warnings; the independent regulated roadmap covers customer validation packs and private-corpus repeatability (4/8), without blocking the first.
+
+The cite-or-abstain gate and its public bench measure the gate, not an LLM: the faithfulness proxy is lexical and negation-blind (stated in every verdict, published as a false cite in the bench); the NLI second judge is a verified protocol, not a shipped model, and no CI run scores with a neural model. The bench says nothing about the quality of a retrieval, an embedding or an LLM, nor about the business correctness of an answer.
+
+Nomos does not ship keyless Sigstore signing: attestations are signed locally (ECDSA P-256 DSSE) and the claim-boundary guard refuses any prose that would claim more.
 
 ## Release Roadmap
 
@@ -322,6 +383,31 @@ Nomos does not currently claim that its alpha feed output is a perfect semantic 
 | `v0.2.x` | Harden portable atomization beyond RBOK Markdown, improve structured YAML/JSON and document adapter coverage, expand validation packs. |
 | `v0.3.x` | Stabilize adapter contracts, evidence export, customer validation workflow, and RAG governance interfaces. |
 | `v1.0` | Production-grade release candidate with documented support model, compatibility policy, validation evidence, and audited claim boundary. |
+
+## Support
+
+Support is declared in `docs/support-model.yaml` and checked in CI by `scripts/support_model_guard.py` (platforms = CI matrix, Go = `cli/go.mod`, versions = tags or the current candidate, dates = CHANGELOG); the section below is generated from that model.
+
+<!-- support-model:begin -->
+<!-- GENERATED from docs/support-model.yaml by scripts/support_model_guard.py --write; do not edit by hand, CI fails on drift -->
+
+| Version | Released | State | Security support | End of support |
+|---|---|---|---|---|
+| `v1.0.0-BETA.1` | 2026-09-07 | supported | best-effort beta triage (current release) | until the next tagged release |
+| `v0.2.0-ALPHA` | 2026-09-06 | superseded | none — superseded by v1.0.0-BETA.1 | 2026-09-07 |
+| `v0.1.0-ALPHA` | 2026-05-03 | superseded | none — superseded by v0.2.0-ALPHA | 2026-09-06 |
+
+- Current candidate: `v1.0.0-BETA.1` (the CLI `Version` constant).
+- Channels: github_issues — https://github.com/decarvalhoe/NOMOS/issues (bugs, questions, integration); github_private_advisory — https://github.com/decarvalhoe/NOMOS/security/advisories/new (vulnerabilities (docs/security/security-process.yaml)); support_guide — SUPPORT.md (what pre-release support covers and what requires project-specific work).
+- Response targets (declared, not, measured): github_issues — first response within 10 days; github_private_advisory — per docs/security/security-process.yaml.
+- Tested platforms (CI matrix): ubuntu-latest, macos-latest, windows-latest.
+- Toolchain: Go 1.24.1 (language) / go1.26.6 (toolchain) from cli/go.mod; CUE v0.16.1; Python 3.12.
+- Not supported: hosted service (Nomos is a CLI and an evidence toolchain; no hosted endpoint exists or is operated.); control plane (archived by ADR-0006 and decided by ADR-0007 — `nomos portfolio projects` is a view over committed files, not a production control plane.); GitHub App (readiness boundary only (docs/32-github-app-readiness-boundary.md); no app is published or operated.); production deployment (customer-owned (docs/regulated/customer-integration); a pre-release proves the method, not a deployment.); regulated validation package approval (regulated lane, human and external acts (docs/28-regulated-compliance-closure-plan.md).).
+- End of support: A pre-release (alpha or beta) is supported until the next tagged release; only the newest tag receives security triage. No version outside this list is supported, and no version becomes supported by being listed here without a tag.
+- Supported contracts (15 stable, per specs/contract-registry.yaml): `canon-promotion`, `canonical-knowledge-bundle`, `canonical-matrix`, `corpus-body-ledger`, `corpus-integrity-report`, `domain-pack`, `external-snapshot`, `facets`, `knowledge-lens`, `nomos-praxis-evidence-schema`, `nomos-project`, `nomos-report.schema`, `point-in-time`, `source-manifest`, `verdicts`. Contracts registered as experimental in specs/contract-registry.yaml may change without a MAJOR notice (docs/16); they are listed as such where a guide relies on them and are not part of the supported surface.
+- Covered commands: `nomos version`, `nomos contracts status`, `nomos init`, `nomos validate`, `nomos diagnose`, `nomos strict`, `nomos corpus scan`, `nomos corpus feed`, `nomos corpus body-ledger`, `nomos corpus attest`, `nomos corpus snapshot`, `nomos github plan`, `nomos portfolio status`, `nomos portfolio release-readiness`, `nomos bundle`, `nomos rag export`, `nomos rag manifest`, `nomos rag delta`, `nomos rag verify`, `nomos answer gate`, `nomos answer eval`.
+- Guides replayed in CI: docs/48-customer-integration-guide.md, docs/50-cross-consumption-proof-kit.md.
+<!-- support-model:end -->
 
 ## Governance
 

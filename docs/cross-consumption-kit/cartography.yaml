@@ -1,0 +1,84 @@
+# NRT-029 (#702) — domain cartography of the perimeter the cross-consumption
+# proof kit (docs/50) exercises, at the contract of docs/49 §2.1
+# (specs/domain-cartography.cue, vetted in CI).
+#
+# Every count below is READ from an artefact the kit produces or commits, and
+# docs/50 recounts the pack-golden-corpus layers against out/manifest.json on
+# every replay: a number the manifest does not confirm is red. A layer nobody
+# verified says so and carries no number — the federal texts are hash-only
+# receipts, NOMOS redistributes no text and infers nothing about the index a
+# consumer builds from them on its side.
+schema_version: nomos-domain-cartography-v1
+cartography_id: cross-consumption-kit-built-environment-ch
+as_of: "2026-09-06"
+claim_boundary: >-
+  Verified inventory of what the cross-consumption kit hands out, layer by
+  layer, counted on the artefacts the kit produces in CI (bundle, export,
+  manifest) and on the committed connector receipt. No retrieval-quality,
+  answer-quality or support claim; no statement about a consumer's index.
+domains:
+  - id: built-environment-ch
+    title: Droit et pratique de la construction (CH) — périmètre du kit
+    jurisdiction: CH
+    kind: own_corpus
+    subcorpora:
+      - id: pack-golden-corpus
+        title: Corpus doré license-safe du pack built-environment (vd-lausanne, synthétique)
+        source_authority: NOMOS domain pack built-environment (docs/regulated/domain-packs/built-environment/pack.yaml, golden_corpus)
+        unit_kind: documents
+        unit_count: 4
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-09-06"
+            count: 4
+            coverage_ratio: 1.0
+            source_ref: "out/manifest.json → sources[] (one source_id and one source_hash per document; recounted by docs/50)"
+          index:
+            layer: index
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 22
+            coverage_ratio: 1.0
+            source_ref: "out/manifest.json → chunk_count, rejected_count = 0 (recounted by docs/50)"
+          enrichment:
+            layer: enrichment
+            verified_by: direct_count
+            verified_at: "2026-09-06"
+            count: 22
+            coverage_ratio: 1.0
+            source_ref: "out/manifest.json → retrieval_contract.filter_fields[facets.activity].records (pack document facets attached before the lens; recounted by docs/50)"
+          graph:
+            layer: graph
+            verified_by: not_verified
+            note: the kit builds no graph; a consumer that builds one counts its own relations, never inferred here
+      - id: federal-texts-fedlex-eli
+        title: Textes fédéraux de la construction (LAT/RPG, SR 700) — reçus hash-only du connecteur ch-fedlex-eli
+        source_authority: Chancellerie fédérale, Fedlex ELI (open_law; read-only fetch, content negotiation recorded)
+        unit_kind: texts
+        unit_count: 1
+        layers:
+          source:
+            layer: source
+            verified_by: manifest
+            verified_at: "2026-06-11"
+            count: 1
+            coverage_ratio: 1.0
+            source_ref: "docs/regulated/ch-connectors/ch-fedlex-eli.evidence.json (sha256 of the RDF/XML work entry, uncovered_bytes = 0)"
+          index:
+            layer: index
+            verified_by: not_verified
+            note: NOMOS redistributes no federal text; the consumer fetches by ELI and indexes on its side, where the count is taken
+          enrichment:
+            layer: enrichment
+            verified_by: not_verified
+          graph:
+            layer: graph
+            verified_by: not_verified
+  - id: cantonal-building-law-vd
+    title: Droit cantonal et communal de la construction (VD, PGA/PAZ)
+    jurisdiction: CH-VD
+    kind: phantom
+    hosted_in: [built-environment-ch]
+    note: real domain of the pack (body-ledger and source-segment fixtures exist), no collection of its own in this kit — kept visible, never counted as present

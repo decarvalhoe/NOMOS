@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/RBOKproject/Nomos/cli/internal/atomization"
-	"gopkg.in/yaml.v3"
 )
 
 // AtomizeCommand is the entry point for `nomos atomize <subcommand>`.
@@ -20,6 +19,7 @@ func AtomizeCommand(args []string, stdout io.Writer, stderr io.Writer) int {
 		"structure":  atomizeStructure,
 		"units":      atomizeUnits,
 		"references": atomizeReferences,
+		"crossref":   atomizeCrossRef,
 		"matrix":     atomizeMatrix,
 		"chunks":     atomizeChunks,
 		"validate":   atomizeValidate,
@@ -51,6 +51,7 @@ func atomizeHelp(w io.Writer) {
 	fmt.Fprintln(w, "  structure   Show document structure (heading tree)")
 	fmt.Fprintln(w, "  units       Generate atoms from source")
 	fmt.Fprintln(w, "  references  Extract canonical references")
+	fmt.Fprintln(w, "  crossref    Build the deterministic cross-reference graph")
 	fmt.Fprintln(w, "  matrix      Build traceability matrix from atoms")
 	fmt.Fprintln(w, "  chunks      Generate RAG-ready chunks with metadata")
 	fmt.Fprintln(w, "  validate    Validate atom set completeness")
@@ -231,6 +232,42 @@ func atomizeReferences(args []string, stdout io.Writer, stderr io.Writer) int {
 		})
 	}
 	return writeAtomJSON(stdout, stderr, refs)
+}
+
+// --- crossref: deterministic cross-reference graph (VRC-43, #579) ---
+
+func atomizeCrossRef(args []string, stdout io.Writer, stderr io.Writer) int {
+	flags := flag.NewFlagSet("atomize crossref", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	docRef := flags.String("doc-ref", "", "document reference slug")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 1 {
+		fmt.Fprintln(stderr, "usage: nomos atomize crossref [--doc-ref REF] <file.md>")
+		return 2
+	}
+
+	source, err := os.ReadFile(flags.Arg(0))
+	if err != nil {
+		fmt.Fprintf(stderr, "read: %v\n", err)
+		return 1
+	}
+
+	ast := atomization.ParseMarkdown(string(source))
+	set := atomization.Atomize(ast, atomization.AtomizeOptions{
+		DocumentRef: *docRef,
+		SourceFile:  flags.Arg(0),
+	})
+	graph := atomization.BuildCrossRefGraph(set)
+
+	// The engine verifies its own output before emitting it: a graph that does
+	// not reconstruct from the source bytes is never written out.
+	if err := atomization.VerifyCrossRefGraph(set, graph); err != nil {
+		fmt.Fprintf(stderr, "crossref: refusing to emit a graph that does not verify: %v\n", err)
+		return 1
+	}
+	return writeAtomJSON(stdout, stderr, graph)
 }
 
 // --- matrix: build traceability matrix ---
@@ -429,29 +466,7 @@ func atomizeChunks(args []string, stdout io.Writer, stderr io.Writer) int {
 // the two by decoding YAML to a generic value and re-encoding it as JSON, so the
 // file may be either YAML or JSON and the engine type stays free of YAML tags.
 func loadKnowledgeLens(path string) (*atomization.KnowledgeLens, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
-	}
-	var generic any
-	if err := yaml.Unmarshal(raw, &generic); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	bridged, err := json.Marshal(generic)
-	if err != nil {
-		return nil, fmt.Errorf("normalize %s: %w", path, err)
-	}
-	var lens atomization.KnowledgeLens
-	if err := json.Unmarshal(bridged, &lens); err != nil {
-		return nil, fmt.Errorf("decode %s: %w", path, err)
-	}
-	if lens.ID == "" {
-		return nil, fmt.Errorf("%s: lens is missing an id", path)
-	}
-	if lens.Include == nil && lens.Exclude == nil {
-		return nil, fmt.Errorf("%s: lens %q has no include/exclude predicate", path, lens.ID)
-	}
-	return &lens, nil
+	return atomization.LoadKnowledgeLens(path)
 }
 
 // --- validate: check atom set completeness ---

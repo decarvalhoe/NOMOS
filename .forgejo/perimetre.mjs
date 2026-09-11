@@ -134,7 +134,10 @@ const correspond = (chemin, globs) =>
 
 function git(args, cwd) {
   try {
-    return execFileSync("git", args, { cwd, encoding: "utf8" });
+    // maxBuffer : le défaut de Node (1 Mio) fait tomber `git diff` en ENOBUFS
+    // sur une PR de synchronisation (61 000 lignes le 2026-09-11 sur nomos) ;
+    // le contrôle s'arrêtait alors sans verdict, ce qui n'est pas un refus.
+    return execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 512 * 1024 * 1024 });
   } catch (err) {
     mourir(`git ${args.join(" ")} a échoué : ${String(err.message).split("\n")[0]}`);
   }

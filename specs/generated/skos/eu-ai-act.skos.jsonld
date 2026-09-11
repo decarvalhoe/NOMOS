@@ -1,0 +1,623 @@
+[
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity",
+    "@type": [
+      "https://nomos.dev/ns/facets#FacetAxis"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "activity",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoRoot": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofClass": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role",
+    "@type": [
+      "https://nomos.dev/ns/facets#FacetAxis"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "discipline_role",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoRoot": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofClass": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier",
+    "@type": [
+      "https://nomos.dev/ns/facets#FacetAxis"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "risk_tier",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoRoot": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000019"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofClass": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Quality"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.documentation_technique",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Documentation technique",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.documentation_technique",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.enregistrement",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Enregistrement",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.enregistrement",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.evaluation_conformite",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Évaluation de la conformité",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.evaluation_conformite",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.gestion_risque",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Gestion des risques",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.gestion_risque",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.surveillance_post_marche",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Surveillance après commercialisation",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.surveillance_post_marche",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.autorite_notifiante",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Autorité notifiante",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.autorite_notifiante",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.deployeur",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Déployeur",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.deployeur",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.distributeur",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Distributeur",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.distributeur",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.fournisseur",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Fournisseur",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.fournisseur",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.importateur",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Importateur",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.importateur",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.haut_risque",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Haut risque",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000019"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Quality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.haut_risque",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_inacceptable",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Risque inacceptable",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000019"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Quality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.risque_inacceptable",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_limite",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Risque limité",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000019"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Quality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.risque_limite",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_minimal",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Risque minimal",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000019"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Quality"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "ai_act.risque_minimal",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/eu-ai-act/scheme",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "eu-ai-act",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#disjointAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/activity"
+      },
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/discipline_role"
+      },
+      {
+        "@id": "https://nomos.dev/ns/pack/eu-ai-act/axis/risk_tier"
+      }
+    ]
+  }
+]

@@ -1,0 +1,112 @@
+@prefix nomos: <https://nomos.dev/ns/facets#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://nomos.dev/ns/pack/built-environment/axis/activity>
+  a nomos:FacetAxis ;
+  skos:prefLabel "activity"@en ;
+  nomos:bfoRoot <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofClass <https://spec.industrialontologies.org/ontology/core/Core/Process> .
+
+<https://nomos.dev/ns/pack/built-environment/axis/discipline_role>
+  a nomos:FacetAxis ;
+  skos:prefLabel "discipline_role"@en ;
+  nomos:bfoRoot <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofClass <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> .
+
+<https://nomos.dev/ns/pack/built-environment/concept/activity/aec.appel_offres>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Appel d'offres / adjudication (SIA 41)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:termId "aec.appel_offres"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/activity/aec.conception>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Conception architecturale (SIA 31/32)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:termId "aec.conception"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/activity/aec.direction_travaux>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Direction des travaux / chantier (SIA 52)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:termId "aec.direction_travaux"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/activity/aec.exploitation>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Mise en service / exploitation (SIA 53/61)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:termId "aec.exploitation"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/activity/aec.permis>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Autorisation de construire / mise à l'enquête (SIA 33)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000015> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/Process> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:termId "aec.permis"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.architecte>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Architecte (mandataire principal)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> ;
+  nomos:termId "aec.architecte"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.entreprise>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Entreprise d'exécution"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> ;
+  nomos:termId "aec.entreprise"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.geometre>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Géomètre officiel"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> ;
+  nomos:termId "aec.geometre"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.ingenieur_civil>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Ingénieur civil"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> ;
+  nomos:termId "aec.ingenieur_civil"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.specialiste_energie>
+  a skos:Concept ;
+  skos:inScheme <https://nomos.dev/ns/pack/built-environment/scheme> ;
+  skos:prefLabel "Spécialiste énergie (SIA 380/1)"@fr ;
+  nomos:bfoMapping <http://purl.obolibrary.org/obo/BFO_0000023> ;
+  nomos:iofMapping <https://spec.industrialontologies.org/ontology/core/Core/AgentRole> ;
+  nomos:onAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> ;
+  nomos:termId "aec.specialiste_energie"^^xsd:string .
+
+<https://nomos.dev/ns/pack/built-environment/scheme>
+  a skos:ConceptScheme ;
+  skos:prefLabel "built-environment"@en ;
+  nomos:disjointAxis <https://nomos.dev/ns/pack/built-environment/axis/activity> ;
+  nomos:disjointAxis <https://nomos.dev/ns/pack/built-environment/axis/discipline_role> .

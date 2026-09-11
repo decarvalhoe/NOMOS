@@ -1,0 +1,22 @@
+# NEGATIVE — claims regulated reliance while an artifact is unverified and no
+# activation verdict is bound. Must fail `cue vet -d '#PraxisEvidenceExchange'`
+# and `nomos evidence praxis-verify` (PRAXIS_RELIANCE_UNSUPPORTED).
+schema_version: nomos-praxis-evidence-exchange-v1
+exchange_id: PRAXIS-EXCHANGE-FORGED-RELIANCE
+generated_at: 2026-09-05T12:00:00Z
+producer: {product: nomos, version: 0.1.0-ALPHA}
+consumer: {product: praxis, version: fixture-0.0.0}
+nomos_artifacts:
+  - artifact_id: NOMOS-CONTROL-MATRIX
+    kind: control_matrix
+    path: docs/regulated/control-matrix/nomos-control-matrix.yaml
+    sha256: sha256:5e3fee91aa600cbc84dc578ea77526d5eeb735b20ef73588b12a3953a33eb9cf
+    verification:
+      state: unverified
+praxis_scenarios: []
+runtime_findings: []
+capa: []
+reliance: regulated_evidence
+claim_boundary: >-
+  Forged: asserts regulated reliance on an unverified Nomos artifact without any
+  activation verdict. The contract must refuse this.

@@ -1,0 +1,64 @@
+# Release decision record — v0.2.0-ALPHA (2026-09-06).
+#
+# This is the RECORD of a human decision, written contemporaneously. It does
+# not create the decision: the repository owner instructed the release in the
+# assisted working session of 2026-09-06 ("mettre à jour le README et
+# réellement la release GH"), and this file records who decided, under which
+# roles, on which candidate, with which gaps and risks knowingly accepted.
+# Tooling computed the inputs (candidate bundle #639, portfolio status #667,
+# findings #668, Praxis gate #662); it did not decide.
+schema_version: "0.1.0"
+record_type: release_decision
+record_id: NOMOS-REC-REL-2026-001
+version: v0.2.0-ALPHA
+release_kind: pre-release (alpha)
+decision_date: 2026-09-06
+decision: release
+decided_by: "decarvalhoe (dev@realisons.com) — release_manager, quality_owner, product_owner per NOMOS-REC-ROLE-2026-001"
+method: >-
+  Owner instruction given in the assisted working session of 2026-09-06 and
+  recorded here contemporaneously; executed through git tag + GitHub
+  pre-release by the assistant on the owner's behalf. Independent review is
+  waived at alpha under NOMOS-REC-ROLE-2026-001 (independent_reviewer: vacant,
+  waived_at_alpha). No electronic-signature compliance is claimed for this
+  record; the GitHub commit and pull-request trail is the approval evidence.
+issue: "VRC-15 (#561) — release SOP execution; this record is the decision input"
+sop: docs/regulated/lifecycle/release-and-retirement-sop.md
+sop_status: draft_not_effective   # recorded as-is: the SOP itself is not yet effective (GAP-QMS-EFFECTIVENESS)
+candidate:
+  spec: docs/regulated/release/v0.2.0-ALPHA-candidate.yaml
+  rehearsal_workflow: .github/workflows/release-candidate-rehearsal.yml
+  manifest: "attached to the GitHub release as candidate-manifest.json (computed on the release commit)"
+  approval_status_in_candidate: pending   # the candidate tool never records an approval; this record does
+inputs_at_decision:
+  wiring_matrix: ".vrc-wiring-matrix/wiring-matrix.json — 57 capabilities, 44 real, 11 sidecar, 2 absent by design, 0 mismatch"
+  portfolio_status: "nomos portfolio status — 1 section unavailable (release candidate: run output), 1 stale (evidence ledger dated 2026-05-02)"
+  portfolio_findings: "nomos portfolio findings — 23 open: 6 ledger gaps, 11 Praxis activation requirements, 3 blocked public captures, 3 management-review actions overdue since July 2026"
+  repeated_ci_evidence: "4/8 consecutive green scheduled runs (VRC-14 #560) — recorded as a RISK, not a precondition"
+  praxis_gate: "blocked, 11/11 unmet — Praxis reliance is not activated by this release"
+  competence: "0 valid attestations, 0/6 roles established (VRC-16 #562)"
+gaps_knowingly_accepted:
+  - GAP-APPROVAL-WORKFLOW
+  - GAP-TRAINING
+  - GAP-INDEPENDENT-AUDIT
+  - GAP-GITHUB-LIVE-CONFIG
+  - GAP-REPEATED-CI-EVIDENCE
+  - GAP-LICENSED-BIBLES
+deviations: []
+waivers:
+  - docs/regulated/operations/records/2026-06-11-role-assignment-record.yaml   # independent review waived at alpha
+retained_evidence:
+  - docs/release-v0.2.0-alpha.md
+  - CHANGELOG.md
+  - "GitHub release assets: candidate-manifest.json, v0.2.0-ALPHA-candidate.zip, portfolio-status.json, portfolio-findings.json, this record"
+claim_boundary: >-
+  v0.2.0-ALPHA is an alpha pre-release: it proves that the registered
+  capabilities exist, are wired and are measured in CI, and that every pending
+  regulated decision is visible as data. It does not establish QMS
+  effectiveness, a validated intended use, regulated readiness, or any
+  certification; the release SOP under which it is recorded is itself not yet
+  effective. Every gap above stays open after this release.
+next_actions:
+  - "Execute VRC-15 (#561) acceptance items that remain human: authentic approvals beyond the single operator, SOP made effective."
+  - "Close the 3 overdue management-review actions or record their new due dates (MR-2026-001-A1..A3)."
+  - "Refresh the evidence ledger (stale since 2026-05-02)."

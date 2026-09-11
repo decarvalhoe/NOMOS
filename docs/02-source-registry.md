@@ -77,6 +77,82 @@ Le manifest doit permettre de répondre :
 - quels tests doivent être rejoués ?
 - quels chunks vectoriels sont obsolètes ?
 
+## Sources Web (#610)
+
+Une page crawlée n'est pas un fichier sur disque. Elle a été récupérée quelque
+part, à un instant, par un crawler, sous une décision robots/licence — et ce que
+NOMOS conserve ensuite est une **capture**, jamais la vérité courante du site.
+
+Le bloc optionnel `web_source` porte cette provenance (`#WebSource` dans
+`specs/source-manifest.cue`, `corpus.WebSource` côté moteur). Il est validé
+fail-closed par le manifeste, le feed et `nomos check` : une source web sans
+`canonical_url`, sans `content_hash` stable (`algo:hex`), sans `fetched_at`
+RFC 3339 ni `crawler_version` est **refusée**, avec un code d'erreur stable
+(`WEB_SOURCE_NO_CONTENT_HASH`, `WEB_SOURCE_UNSTABLE_HASH`, …).
+
+Les cinq natures demandées — contenu canonique, référence externe, binaire/média,
+non supporté, exclu par politique — ne sont pas réinventées : ce sont les champs
+FSQ-02 déjà portés par toute source (`source_role`, `atomization_status`,
+`admission_status`). Une source web les porte comme les autres.
+
+Deux règles coûtent quelque chose et sont voulues :
+
+- `robots_decision` / `licence_decision: undecided` **peut être enregistré** — un
+  crawler peut honnêtement ne pas savoir — mais **ne peut jamais être admis**
+  dans un feed. L'admission exige `allowed` des deux côtés et `scope_policy`
+  hors `out_scope`.
+- `content_hash` est le hash des **octets bruts tels que récupérés** ;
+  `normalized_content_hash` celui du texte normalisé dont dérivent l'export
+  Markdown et l'unité de feed. Deux captures qui ne diffèrent que par le
+  chrome de page partagent le second, jamais le premier.
+
+Correspondance avec la preuve de connecteur (`nomos-connector-evidence-v1`) :
+`fetched_url ← FetchResult.URL`, `http_status ← StatusCode`,
+`content_hash ← SHA256`, `etag/last_modified ← ETag/LastModified`,
+`fetched_at ← FetchedAt`. `canonical_url` est l'adresse par laquelle la source
+est *connue* (après redirections), qui diffère légitimement de l'URL demandée.
+
+Limite de revendication : « source web capturée à l'instant T par le crawler
+nommé ». Les décisions robots/licence sont **enregistrées telles que prises**,
+jamais adjugées par NOMOS ; celles d'un site réel restent hors fixture.
+
+## Snapshots Externes Immuables (#611)
+
+La base opérationnelle — PostgreSQL, la base d'un crawler — reste **externe et
+mutable**. NOMOS ne la lit jamais. Il consomme un **snapshot** : une enveloppe
+(`nomos.external-snapshot.v1`) qui nomme ce qui a été exporté, quand, par quoi,
+et une **racine de Merkle** sur chaque enregistrement ; plus les enregistrements
+eux-mêmes, un objet JSON par ligne (`sources.jsonl`).
+
+Rejouer le hash des enregistrements doit reproduire la racine. Un octet changé,
+un enregistrement ajouté ou retiré, et la racine ne correspond plus : le
+snapshot n'est pas celui que l'enveloppe décrit, et il est **refusé**
+(`SNAPSHOT_ROOT_MISMATCH`). Une enveloppe qui n'est pas `immutable: true` est une
+vue, pas un snapshot : refusée aussi (`SNAPSHOT_NOT_IMMUTABLE`). Les compteurs
+sont **vérifiés, pas crus** — trop, c'est du rembourrage ; trop peu, c'est
+incomplet (`SNAPSHOT_COUNT_MISMATCH`).
+
+```bash
+nomos corpus snapshot seal   --records sources.jsonl --snapshot-id S --producer pg-export/1.2 --out snapshot.json   # côté producteur
+nomos corpus snapshot verify --envelope snapshot.json                                                                # rejeu de la racine
+nomos corpus snapshot import --envelope snapshot.json --out source-manifest.yaml                                      # vérifie PUIS importe
+```
+
+L'import ne perd rien : `source_id`, `version_id`, locator, hash et
+`captured_at` traversent vers le manifeste ; deux versions d'une même source
+donnent deux entrées distinctes ; un enregistrement web garde sa provenance
+`web_source` (#610) intacte, et s'il n'est pas admissible il est importé
+**exclu avec sa raison**, jamais supprimé. Un snapshot qui ne se vérifie pas ne
+produit **aucun** manifeste.
+
+La machinerie de Merkle est celle du body ledger, déjà éprouvée
+(`VerifyMerkleProof`) : l'inclusion d'un enregistrement dans le snapshot se
+prouve comme celle d'un segment dans un ledger.
+
+Limite de revendication : la racine prouve que **ces** enregistrements sont ceux
+exportés — pas que l'export était complet par rapport à la base, ni que le
+contenu d'un enregistrement est correct.
+
 ## Procédure D'inventaire
 
 1. Scanner les dossiers de documentation, code legacy, exports, scraps, assets et dumps.

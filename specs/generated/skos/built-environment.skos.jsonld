@@ -1,0 +1,446 @@
+[
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity",
+    "@type": [
+      "https://nomos.dev/ns/facets#FacetAxis"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "activity",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoRoot": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofClass": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role",
+    "@type": [
+      "https://nomos.dev/ns/facets#FacetAxis"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "discipline_role",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoRoot": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofClass": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.appel_offres",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Appel d'offres / adjudication (SIA 41)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.appel_offres",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.conception",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Conception architecturale (SIA 31/32)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.conception",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.direction_travaux",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Direction des travaux / chantier (SIA 52)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.direction_travaux",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.exploitation",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Mise en service / exploitation (SIA 53/61)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.exploitation",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.permis",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Autorisation de construire / mise à l'enquête (SIA 33)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000015"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/Process"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.permis",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.architecte",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Architecte (mandataire principal)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.architecte",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.entreprise",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Entreprise d'exécution",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.entreprise",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.geometre",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Géomètre officiel",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.geometre",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.ingenieur_civil",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Ingénieur civil",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.ingenieur_civil",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.specialiste_energie",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ],
+    "http://www.w3.org/2004/02/skos/core#inScheme": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/scheme"
+      }
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "Spécialiste énergie (SIA 380/1)",
+        "@language": "fr"
+      }
+    ],
+    "https://nomos.dev/ns/facets#bfoMapping": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023"
+      }
+    ],
+    "https://nomos.dev/ns/facets#iofMapping": [
+      {
+        "@id": "https://spec.industrialontologies.org/ontology/core/Core/AgentRole"
+      }
+    ],
+    "https://nomos.dev/ns/facets#onAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ],
+    "https://nomos.dev/ns/facets#termId": [
+      {
+        "@value": "aec.specialiste_energie",
+        "@type": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    ]
+  },
+  {
+    "@id": "https://nomos.dev/ns/pack/built-environment/scheme",
+    "@type": [
+      "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+    ],
+    "http://www.w3.org/2004/02/skos/core#prefLabel": [
+      {
+        "@value": "built-environment",
+        "@language": "en"
+      }
+    ],
+    "https://nomos.dev/ns/facets#disjointAxis": [
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/activity"
+      },
+      {
+        "@id": "https://nomos.dev/ns/pack/built-environment/axis/discipline_role"
+      }
+    ]
+  }
+]

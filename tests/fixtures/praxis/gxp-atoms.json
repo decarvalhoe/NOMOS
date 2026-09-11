@@ -1,0 +1,159 @@
+{
+  "document_ref": "gxp-csv-fixture",
+  "source_file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+  "source_hash": "sha256:2ee6f9436a177d8806f66e6799f4034fe109e235700b93dd967a0592b85dff91",
+  "atom_count": 8,
+  "atoms": [
+    {
+      "id": "A-B86614779BBBDFA6",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture",
+      "type": "clause",
+      "title": "GxP CSV Fixture",
+      "text": "GxP CSV Fixture",
+      "content_hash": "sha256:9e5d1727b2b6866312a25f3afb7ac2b6fd117b13cde344bb396508319329a0e3",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 1,
+        "end_line": 1,
+        "start_col": 1,
+        "end_col": 18
+      },
+      "block_id": "B-D6690CE87BDC",
+      "depth": 1,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-8CE462ABA0086E64",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/p-3",
+      "type": "rule",
+      "text": "This synthetic fixture describes a controlled software change without quoting any\nexternal standard, regulation, or licensed guidance. The scenario is limited to\ntraceability evidence for a validation planning workflow.",
+      "content_hash": "sha256:facf33aef96b044d17fc3c52adafbf944d9d597c0fdcfa2078a0260ddde206bf",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 3,
+        "end_line": 5,
+        "start_col": 1,
+        "end_col": 58
+      },
+      "block_id": "B-36B968EACB3D",
+      "depth": 7,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-07B3F88955C97C0E",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/intake-boundary",
+      "type": "clause",
+      "title": "Intake Boundary",
+      "text": "Intake Boundary",
+      "content_hash": "sha256:ce6e8448ba762ab9fbb0ec39d1060802b8235dc30769dc4fef2c06191a50f537",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 7,
+        "end_line": 7,
+        "start_col": 1,
+        "end_col": 19
+      },
+      "parent_id": "A-B86614779BBBDFA6",
+      "block_id": "B-664D30517658",
+      "depth": 2,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-7ECC3D21BE4E87E6",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/intake-boundary/p-9",
+      "type": "rule",
+      "text": "The intake record identifies intended use, affected workflow, source owner, and\nreview status before any downstream evidence artifact is generated.",
+      "content_hash": "sha256:a24c399790e22f654ee9516313789b33620ebadd1c04a640d2df6f80ae03e984",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 9,
+        "end_line": 10,
+        "start_col": 1,
+        "end_col": 68
+      },
+      "block_id": "B-A507F2465B6E",
+      "depth": 7,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-269A3F0E2579FE17",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/evidence-flow",
+      "type": "clause",
+      "title": "Evidence Flow",
+      "text": "Evidence Flow",
+      "content_hash": "sha256:cac7d12dc703b3503805b7fa0addcc6a4ccefbd03950dfd0903a3a4fc6c286fc",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 12,
+        "end_line": 12,
+        "start_col": 1,
+        "end_col": 17
+      },
+      "parent_id": "A-B86614779BBBDFA6",
+      "block_id": "B-B7CD6406677F",
+      "depth": 2,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-F12C3901ED7595F7",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/evidence-flow/p-14",
+      "type": "rule",
+      "text": "The workflow keeps requirements, test steps, deviations, and approval notes as\nseparate evidence objects so that a reviewer can inspect each link.",
+      "content_hash": "sha256:a727f0f2952a1c18ea98e8a0c70414d72a93780faef5245e1070cc2e33e115a7",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 14,
+        "end_line": 15,
+        "start_col": 1,
+        "end_col": 68
+      },
+      "block_id": "B-CED0F975A307",
+      "depth": 7,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-C516DEF015EA7B05",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/non-claim-boundary",
+      "type": "clause",
+      "title": "Non-Claim Boundary",
+      "text": "Non-Claim Boundary",
+      "content_hash": "sha256:434216a09946b14dcc6ac9d37e781387f5d93c7ad7ff662b1956b5d85c6dd331",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 17,
+        "end_line": 17,
+        "start_col": 1,
+        "end_col": 22
+      },
+      "parent_id": "A-B86614779BBBDFA6",
+      "block_id": "B-A375C32B6051",
+      "depth": 2,
+      "review_state": "approved",
+      "domain": "gxp"
+    },
+    {
+      "id": "A-E36A04F7FEAD904A",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/non-claim-boundary/p-19",
+      "type": "rule",
+      "text": "This fixture does not claim GxP compliance, validation approval, Part 11\ncompliance, or certification. It only exercises portable corpus artifact\ngeneration with license-safe text.",
+      "content_hash": "sha256:b7bef86efa7d3db59e2fe06880365e7368e56b66a1f2dc4ae741ec5f12d896c2",
+      "source_span": {
+        "file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+        "start_line": 19,
+        "end_line": 21,
+        "start_col": 1,
+        "end_col": 35
+      },
+      "block_id": "B-D47234AA7209",
+      "depth": 7,
+      "review_state": "approved",
+      "domain": "gxp"
+    }
+  ]
+}

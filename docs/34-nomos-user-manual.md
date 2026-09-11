@@ -67,6 +67,13 @@ nomos corpus validate-sidecar
 nomos corpus feed
 nomos corpus body-ledger
 nomos corpus attest
+nomos rag export
+nomos rag manifest
+nomos rag delta
+nomos rag verify
+nomos answer gate
+nomos answer eval
+nomos answer bench
 nomos strict
 nomos github plan
 ```
@@ -194,7 +201,10 @@ go test ./...
 python -m unittest discover -s tests -v
 python scripts/regulated_docs_gate.py --report .regulated-doc-gate/regulated-doc-gate-report.json
 python scripts/regulated_evidence_pack.py --output .regulated-evidence-pack/evidence-pack.json
+python scripts/repeated_ci_evidence.py --root .
 ```
+
+`repeated_ci_evidence.py` verifie l'index publie de la chaine de runs planifies sur le corpus prive (VRC-14 #560) : il rejoue la mesure depuis les runs enregistres et echoue sur tout ecart. Sortie 2 = rien n'a pu etre mesure, ce qui ne vaut jamais succes. `--collect` remesure en direct depuis l'API Actions (necessite `gh`).
 
 Sur Windows:
 

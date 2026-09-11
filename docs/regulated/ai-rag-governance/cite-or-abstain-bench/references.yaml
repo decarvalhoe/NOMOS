@@ -1,0 +1,48 @@
+# VRC-46 (#582) — references cited by the bench methodology (README.md).
+#
+# Doc 41 warning: sources gathered in a fast sweep are re-verified before any
+# external use. Every entry carries the verification record of the
+# publication (what was fetched, when, what was read back). The reproduction
+# gate (scripts/cite_or_abstain_bench.py) refuses a reference without a dated
+# record; `--verify-references` resolves them live again (network, skipped by
+# default).
+#
+# Claim boundary: these are the sources of the DEFINITIONS used and of the
+# comparisons made in the methodology. Citing them claims nothing about NOMOS
+# being evaluated on their datasets — it is not.
+schema_version: "0.1.0"
+references:
+  - reference_id: REF-ALCE-2023
+    title: "Enabling Large Language Models to Generate Text with Citations"
+    authors: "Tianyu Gao, Howard Yen, Jiatong Yu, Danqi Chen"
+    venue: "EMNLP 2023 (arXiv:2305.14627, v2 of 31 Oct 2023)"
+    official_url: "https://arxiv.org/abs/2305.14627"
+    doi: "10.48550/arXiv.2305.14627"
+    role: "Definitions of citation recall and citation precision (ALCE), the two citation metrics every gate verdict reports. NOMOS is not evaluated on the ALCE datasets."
+    verification:
+      verified_at_utc: "2026-09-04T16:28:49Z"
+      method: "HTTPS GET of the arXiv abstract page; title, authors and version read back"
+      read_back: "arXiv:2305.14627v2 [cs.CL], submitted 24 May 2023, revised 31 Oct 2023"
+  - reference_id: REF-LEGALBENCH-RAG-2024
+    title: "LegalBench-RAG: A Benchmark for Retrieval-Augmented Generation in the Legal Domain"
+    authors: "Nicholas Pipitone, Ghita Houir Alami"
+    venue: "arXiv:2408.10343 (v1 of 19 Aug 2024)"
+    official_url: "https://arxiv.org/abs/2408.10343"
+    doi: "10.48550/arXiv.2408.10343"
+    role: "The retrieval-side legal RAG benchmark the closure plan names as a stepping stone. It measures the RETRIEVAL step; this bench measures the GATE over already-retrieved spans. The methodology states the difference instead of implying comparability."
+    verification:
+      verified_at_utc: "2026-09-04T16:28:49Z"
+      method: "HTTPS GET of the arXiv abstract page; title, authors and version read back"
+      read_back: "arXiv:2408.10343v1 [cs.AI], submitted 19 Aug 2024"
+  - reference_id: REF-HHEM-2.1-OPEN
+    title: "HHEM-2.1-Open (Hughes Hallucination Evaluation Model)"
+    authors: "Miaoran Li, Rogger Luo, Ofer Mendelevitch (Vectara)"
+    venue: "Hugging Face model card, 2024"
+    official_url: "https://huggingface.co/vectara/hallucination_evaluation_model"
+    doi: "10.57967/hf/3240"
+    license: "apache-2.0"
+    role: "The open NLI model behind the reference second-judge adapter (scripts/nomos_hhem_scorer.py). Never run in CI; the published bench result is lexical only."
+    verification:
+      verified_at_utc: "2026-09-04T16:28:49Z"
+      method: "HTTPS GET of the model card; model name, authors, DOI and license read back"
+      read_back: "vectara/hallucination_evaluation_model, doi:10.57967/hf/3240, License: apache-2.0"

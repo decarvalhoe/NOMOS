@@ -10,7 +10,7 @@ adapter:
       role: "adapter-owner"
   license: "Apache-2.0"
   package:
-    type: pip
+    type: pypi
     name: "nomos-adapter-python"
     version: "0.1.0"
 
@@ -144,7 +144,7 @@ capabilities:
         - symbol
         - ast_node
       confidence: medium
-    - id: serializer_detection
+    - id: data_model_detection
       category: detection
       status: experimental
       surfaces:
@@ -281,7 +281,7 @@ test_contract:
         - dependency_detection
         - route_detection
         - service_detection
-        - serializer_detection
+        - data_model_detection
         - mock_detection
         - fixture_detection
         - hardcoded_catalog_detection
@@ -293,7 +293,7 @@ test_contract:
         - dependency_detection
         - route_detection
         - service_detection
-        - serializer_detection
+        - data_model_detection
         - fixture_detection
     - id: python-flask-api
       path: "adapters/python/fixtures/flask-api"

@@ -1,0 +1,660 @@
+schema_version: "1.0.0"
+decision_ref: docs/adr/0004-independent-roadmaps-risk-based-validation.md
+policy_ref: docs/47-roadmap-lanes-and-risk-based-validation.md
+claim_boundary: >-
+  Roadmap routing only. Delivery of product or tooling does not establish QMS
+  effectiveness, approve a licence, authenticate a human record, validate a
+  regulated intended use, or unlock a public regulated claim.
+
+selection_policy:
+  eligible_dispatch: autonomous
+  rule: >-
+    In each lane independently, select the first open autonomous item whose
+    same-lane autonomous dependencies are complete. Never wait on passive,
+    human, external, or another lane's work.
+  hard_dependencies:
+    same_lane_only: true
+    autonomous_only: true
+  cross_lane_relationship: inputs_are_nonblocking
+  dispatch_queues:
+    product: []
+    devops: []
+    regulated: []
+
+# Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
+# lane and no dispatch state, and the dispatcher never selects them. Declaring
+# them here keeps them from being the one open issue the registry cannot see.
+umbrella_issues:
+  - issue: 545
+    role: epic
+    note: >-
+      VRC epic. Tracks the whole closure; closes when its children close, is
+      never worked on directly.
+
+lanes:
+  product:
+    owns: runtime, CLI, contracts, adapters and integrations
+    independent_from: regulated assurance and DevOps activation
+  devops:
+    owns: CI/CD, evidence collectors, release tooling and supporting controls
+    independent_from: the regulated decision or record a tool assists
+  regulated:
+    owns: intended use, risk, QMS records, training, approvals, acquisition, validation and claims
+    independent_from: product and DevOps implementation sequencing
+
+items:
+  - issue: 560
+    title: Repeated CI evidence on private corpus
+    state: open
+    lane: regulated
+    dispatch: passive
+    delivery_state: implemented
+    evidence_state: accumulating
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [repeated_ci_evidence_private_corpus]
+  - issue: 561
+    title: Execute v0.2.0-ALPHA release through SOP
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: planned
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [560, 639]
+    blocks_claims: [release_management_operated]
+  - issue: 562
+    title: Human training and competence records
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: partial
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [640]
+    blocks_claims: [training_records_effective]
+  - issue: 576
+    title: Sigstore keyless umbrella
+    state: open
+    lane: product
+    dispatch: external
+    delivery_state: split
+    evidence_state: requires_external
+    claim_state: prohibited
+    depends_on: []
+    inputs: [637, 645, 638]
+    blocks_claims: [sigstore_keyless_issuance]
+  - issue: 637
+    title: Offline Sigstore bundle verification
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 576
+    regulated_tool:
+      intended_use: verify a supplied Sigstore bundle without issuing identity or writing a public log
+      impact: decision
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 638
+    title: Production keyless issuance and Rekor publication
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: planned
+    evidence_state: requires_external
+    claim_state: prohibited
+    depends_on: []
+    parent: 576
+    inputs: [645]
+    blocks_claims: [sigstore_keyless_issuance]
+  - issue: 645
+    title: Keyless issuance against injected non-production services
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 576
+    inputs: [637]
+    regulated_tool:
+      intended_use: issue a keyless bundle against injected or controlled non-production Fulcio/Rekor endpoints
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 639
+    title: Prepare and verify a v0.2.0-ALPHA candidate bundle
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 561
+    inputs: [560]
+    regulated_tool:
+      intended_use: prepare and verify a release-candidate evidence bundle without approving or publishing a release
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 640
+    title: Align competence template and gate
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 562
+    delivered_by: "PR #648, main de77f38"
+    regulated_tool:
+      intended_use: validate the structure and declared status of competence records without asserting human competence
+      impact: decision
+      # Technically verified only. Moving to validated_for_intended_use is a
+      # regulated act owned by #562, not something delivery can grant itself.
+      validation_state: technically_verified
+      reliance: manual_verification_required
+  - issue: 641
+    title: Restore licence-review and no-full-text gates
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parents: [194, 196]
+    regulated_tool:
+      intended_use: refuse licensed-reference processing when review or permitted-use evidence is absent
+      impact: decision
+      validation_state: technically_verified
+      reliance: manual_verification_required
+    delivered_by: "fix/641-licence-review-no-full-text"
+    note: >-
+      Hash verified is not use approved: GAP-LICENSE-REVIEW/USE/SAFETY until an
+      assigned reviewer approves. no-full-text-policy.yaml scans public trees
+      and staged files for real licensed text (full copy by hash, partial by
+      sentinel digest); zero sentinels reads as uncovered. The licence decision
+      itself stays #194.
+  - issue: 644
+    title: Process real public references and retain evidence
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 196
+    regulated_tool:
+      intended_use: capture and process public reference sources with retained provenance evidence
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+    delivered_by: "fix/644-real-public-references"
+    note: >-
+      Register-driven; processed = matching local capture + six stages green;
+      artifacts retained content-addressed outside the repo, receipts committed;
+      measured 2026-09-05: 23 classified, 20 hash-only captures, 3 blocked named,
+      0 processed end to end. Licensed artifacts stay #196.
+  - issue: 642
+    title: Bind rule-execution request and persisted result integrity
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 578
+    delivered_by: "PR #647, main be9d784"
+    note: >-
+      request_digest and results_digest are recomputed by VerifyRecord;
+      response_digest binds the substrate's raw output and is evidence for a
+      reader who retained it, not a self-check. None of the three is a
+      signature, and the record says so in its own claim boundary.
+    regulated_tool:
+      intended_use: bind a rule-execution request to its persisted result by hash so a result cannot be replayed or altered apart from the request that produced it; the rule itself is computed by an external substrate, never by NOMOS
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 610
+    title: Define the Recursio web-source contract
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    delivered_by: "feat/610-web-source-contract"
+    note: >-
+      Optional web_source block on #Source (CUE) and ManifestSource/FeedSource
+      (Go), validated fail-closed by manifest, feed and `nomos check`; undecided
+      is recordable, never admitted. Robots/licence decisions of a real site
+      remain outside the contract.
+    regulated_tool:
+      intended_use: "define the machine contract a web crawler (Recursio) must satisfy to hand NOMOS a captured page: URL, capture time, content and normalised hashes, robots and licence decisions; a definition of shape, not a judgement on any site"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 611
+    title: Verify immutable external corpus snapshots
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [610]
+    delivered_by: "feat/611-immutable-snapshot"
+    note: >-
+      Envelope + JSONL, Merkle root recomputed on verify (body-ledger machinery);
+      immutable or refused; counts checked; import loses nothing and writes no
+      manifest from a refused snapshot; strict gate section external-snapshot.
+    regulated_tool:
+      intended_use: "verify that an external corpus snapshot is immutable and complete before import: record count, per-record hashes and a recomputed root; NOMOS never reads a mutable view"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 612
+    title: Recursio to Nomos offline E2E fixture
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [610, 611]
+    regulated_tool:
+      intended_use: replay offline the Recursio-to-NOMOS chain on a synthetic fixture site so that a changed byte is detected end to end; a fixture harness, not a capture of any real site
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 643
+    title: Static SKOS authoring and distribution
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    parent: 580
+    regulated_tool:
+      intended_use: author and distribute deterministic SKOS vocabularies for validation and consumption
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 660
+    title: Nomos/Praxis evidence contract (NRT-016)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: define and verify the shared Nomos-to-Praxis evidence exchange contract without activating Praxis reliance
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 661
+    title: Praxis atom mapping fixture verified against the feed (NRT-017)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [660]
+    regulated_tool:
+      intended_use: demonstrate and verify the atom-to-Praxis-check mapping on repository fixtures, Nomos remaining the canonical authority
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 662
+    title: Praxis activation gate blocked until Nomos proof is verified (NRT-018)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [660, 661]
+    regulated_tool:
+      intended_use: compute whether Praxis regulated reliance may be activated from verified Nomos artifacts and human review records, never activating it
+      impact: decision
+      validation_state: technically_verified
+      reliance: manual_verification_required
+  - issue: 667
+    title: Portfolio status contract and engine (NRT-019)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: compute the portfolio status from committed machine sources as an input to management review, never as evidence of validation
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 668
+    title: Findings and periodic-review index, queryable (NRT-020)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [667]
+    regulated_tool:
+      intended_use: index and query open findings and periodic review records from committed sources without closing, waiving or prioritising any of them
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 670
+    title: Control-plane decision under ADR-0006, wire or remove (NRT-022)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [667]
+    regulated_tool:
+      intended_use: either expose the archived multi-project view behind a real CLI caller with restored CI gating, or remove the archived code; leave no untested archived code
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 669
+    title: Periodic review record index and guard (NRT-021)
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: index committed review, audit, role and CAPA records and verify their cited artifacts exist; the records themselves stay human acts
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 676
+    title: Contract stability registry and compatibility guard (NRT-023)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: register every machine contract with its version and stability and refuse evidence-affecting changes made without a version bump
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 677
+    title: Compatibility matrix, version announcement, deprecation enforcement (NRT-024)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [676]
+    regulated_tool:
+      intended_use: announce what the core reads and writes, check adapter compatibility ranges and enforce deprecation dates from the contract registry
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 680
+    title: Customer integration guide with commands replayed against fixtures (NRT-027)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [676]
+    regulated_tool:
+      intended_use: give integrators one guide whose commands are executed against fixtures in CI and whose named contracts carry their registered stability
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 681
+    title: v1.0 readiness verdict, computed (NRT-028)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [676, 677, 680]
+    regulated_tool:
+      intended_use: compute whether the docs/14 v1.0 criteria are met from the tree and name every unmet one; never decide, tag or publish a release
+      impact: decision
+      validation_state: technically_verified
+      reliance: manual_verification_required
+  - issue: 678
+    title: Security process, executable (NRT-025)
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: scan dependencies in CI with an expiring allowlist and a declared, validated security process file; never a security certification
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 679
+    title: Support model, declared and checked (NRT-026)
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: declare the support model as data and keep it consistent with the CI matrix, toolchain and tags; never a contractual guarantee
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 192
+    title: Acquire ISO 13485
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [iso_13485_clause_level_use]
+  - issue: 193
+    title: Acquire ISO IEC IEEE 12207
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    blocks_claims: [iso_12207_clause_level_use]
+  - issue: 194
+    title: Approve GAMP 5 and ISO 25010 licence use
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: blocked
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [641]
+    blocks_claims: [gamp5_clause_level_use, iso_25010_clause_level_use]
+  - issue: 196
+    title: Process licensed reference bibles
+    state: open
+    lane: regulated
+    dispatch: external
+    delivery_state: split
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    inputs: [641, 644]
+    blocks_claims: [licensed_bible_processing]
+  - issue: 696
+    title: Dependency manifest coverage in the security gate
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [678]
+    regulated_tool:
+      intended_use: prove that every dependency manifest tracked by git is scanned, watched by Dependabot or excluded by name with a reason; never a security certification
+      impact: evidence
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 702
+    title: Cross-consumption proof kit, NOMOS side (NRT-029)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: verified
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [680]
+    regulated_tool:
+      intended_use: replay, on the NOMOS side and against the pack golden corpus, the mechanics a cross-consumption proof needs — bundle, export, manifest, import proof, cite-or-abstain, golden set, inventory, cartography; never a statement about a partner's ingestion, retrieval or answers
+      impact: evidence
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 701
+    title: Cross-consumption proof with the neighbouring sovereign legal RAG (NRT-030)
+    state: open
+    lane: product
+    dispatch: external
+    delivery_state: blocked
+    evidence_state: requires_external
+    claim_state: locked
+    depends_on: []
+    inputs: [702]
+    blocks_claims: [external_cross_consumption_proof]
+  # Beta line — docs/51 / docs/29 "v1.0.0-BETA.1". Queue order is the plan's
+  # wave order; same-lane dependencies are the only hard ones.
+  - issue: 715
+    title: Regulated-tool blocks for every closed item (NRT-032)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: locked
+    depends_on: []
+    regulated_tool:
+      intended_use: "declare, for every closed roadmap item, what the delivered tool is for, its impact class, its validation state and the bounded reliance it allows; a declaration read by the readiness verdict, not a validation"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 714
+    title: Compatibility fixtures for every stable contract (NRT-031)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    inputs: [715]
+    regulated_tool:
+      intended_use: "read every stable contract's compatibility fixture through the engine's real loader and refuse a version the registry does not declare; a compatibility check on named fixtures, not a backward-compatibility promise"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 717
+    title: Readiness verdict as a required candidate gate (NRT-034)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [714, 715]
+    inputs: [716]
+    regulated_tool:
+      intended_use: "require the computed v1.0 readiness verdict as a gate of the beta release candidate so that no beta candidate is assembled on a not_ready tree; a gate on a candidate, never a release or an approval"
+      impact: decision
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 719
+    title: Beta candidate v1.0.0-BETA.1 prepared, mergeable only on ready (NRT-036)
+    state: closed
+    lane: product
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: [714, 715, 717]
+    inputs: [716, 718]
+    regulated_tool:
+      intended_use: "prepare the v1.0.0-BETA.1 release candidate (version constant, changelog, notes, support-model entry, draft decision record) on a ready readiness verdict; the tag, publication and approval remain a human act under the SOP (#720)"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 716
+    title: Evidence ledger computed and effective (NRT-033)
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: "compute the evidence-ledger index from the tree (observed statuses per category), keep it in force and fresh in CI, and refuse declarations the files contradict; an index, never a QMS effectiveness statement"
+      impact: evidence
+      validation_state: technically_verified
+      reliance: supporting_use_until_validated
+  - issue: 718
+    title: Beta support surface declared and checked (NRT-035)
+    state: closed
+    lane: devops
+    dispatch: autonomous
+    delivery_state: implemented
+    evidence_state: present
+    claim_state: bounded
+    depends_on: []
+    regulated_tool:
+      intended_use: "declare the beta support surface (stable contracts, covered commands, replayed guides) and refuse a surface that contradicts the contract registry or a guide that relies on an undeclared contract; a declaration checked in CI, never an SLA"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
+  - issue: 720
+    title: Release v1.0.0-BETA.1 executed through the SOP
+    state: open
+    lane: regulated
+    dispatch: human
+    delivery_state: planned
+    evidence_state: requires_human
+    claim_state: locked
+    depends_on: []
+    inputs: [719]
+    blocks_claims: [beta_release_executed]

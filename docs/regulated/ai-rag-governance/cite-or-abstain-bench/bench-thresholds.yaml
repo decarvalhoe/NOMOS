@@ -1,0 +1,12 @@
+# VRC-46 (#582) — the VERSIONED bounds of the public cite-or-abstain bench.
+#
+# They are the values MEASURED at publication (results-<date>.json), kept as
+# non-regression bounds: an engine change that lets one more must-abstain item
+# through, or blocks one legitimate answer, turns the reproduction gate red.
+# Bump them deliberately and re-publish a dated result in the same change —
+# never to hide a regression. The residual (one false cite in six) is the
+# negation item: the documented blind spot of the lexical proxy, published as
+# a miss, not averaged away.
+max_false_cite_rate: 0.1667      # 1 of 6 must-abstain items slips through (negation)
+min_must_abstain_recall: 0.8333  # 5 of 6 must-abstain items are blocked
+min_must_cite_recall: 1.0        # 3 of 3 grounded answers are cited (no over-abstention)

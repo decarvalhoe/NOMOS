@@ -2,9 +2,9 @@ schema_version: "0.1.0"
 document_id: RCP-014-TRAINING-MATRIX
 title: Training and Competence Matrix
 status: draft
-owner: not_assigned
+owner: "decarvalhoe (dev@realisons.com) — quality_owner, per role assignment record NOMOS-REC-ROLE-2026-001"
 created_at: "2026-05-03"
-updated_at: "2026-05-03"
+updated_at: "2026-09-04"
 claim_boundary: >
   This matrix registers required competences per role. No training
   completion is claimed until individual records are signed and dated.
@@ -155,7 +155,9 @@ roles:
     description: >
       Coordinates release activities, ensures all gates pass, manages
       deployment to regulated environments.
-    status: not_assigned
+    # Assigned to a named human since 2026-06-11 (VRC-05 #551); the entry said
+    # not_assigned, which was stale rather than merely unfilled.
+    status: requires_evidence
     required_competences:
       - id: comp-rm-001
         name: Release process and deployment controls
@@ -187,6 +189,144 @@ roles:
         level: proficient
         training_status: not_assigned
         evidence_type: scenario_assessment
+
+  # --- Owner roles (VRC-16 #562) ---------------------------------------------
+  # Added because the role assignment record (VRC-05 #551) hands these roles to a
+  # named human while the matrix carried no entry for them. Each required
+  # competence is derived from the required-training column of
+  # docs/regulated/quality-system/training-and-competence-sop.md — the SOP is the
+  # source, this matrix is the operational form of it.
+  - role_id: quality_owner
+    title: Quality Owner
+    description: >
+      Owns the quality system: controlled documents, CAPA, management review,
+      and audit readiness. Assigned 2026-06-11.
+    status: requires_evidence
+    derived_from: "NOMOS-QMS-SOP-002 — Quality owner"
+    required_competences:
+      - id: comp-qo-001
+        name: Quality management system operation
+        category: regulatory
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: written_assessment
+      - id: comp-qo-002
+        name: Controlled document management
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+      - id: comp-qo-003
+        name: CAPA lifecycle and effectiveness verification
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: scenario_assessment
+      - id: comp-qo-004
+        name: Management review conduct and records
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+
+  - role_id: validation_owner
+    title: Validation Owner
+    description: >
+      Owns CSA/validation: traceability, protocols, deviations, and the
+      validation summary report. Assigned 2026-06-11.
+    status: requires_evidence
+    derived_from: "NOMOS-QMS-SOP-002 — Validation owner"
+    required_competences:
+      - id: comp-vo-001
+        name: Computer software assurance and risk-based validation
+        category: regulatory
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: written_assessment
+      - id: comp-vo-002
+        name: Requirements-to-evidence traceability
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+      - id: comp-vo-003
+        name: Validation protocol authoring and execution
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+      - id: comp-vo-004
+        name: Deviation handling and validation summary reporting
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: scenario_assessment
+
+  - role_id: security_owner
+    title: Security Owner
+    description: >
+      Owns SSDF practices, access control, audit, vulnerability and incident
+      handling, and supply-chain controls. Assigned 2026-06-11.
+    status: requires_evidence
+    derived_from: "NOMOS-QMS-SOP-002 — Security owner"
+    required_competences:
+      - id: comp-so-001
+        name: Secure development framework practices (SSDF)
+        category: security
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: written_assessment
+      - id: comp-so-002
+        name: Access control and audit logging
+        category: security
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+      - id: comp-so-003
+        name: Vulnerability and incident response
+        category: security
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: scenario_assessment
+      - id: comp-so-004
+        name: Supply-chain controls, SBOM and provenance
+        category: security
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+
+  - role_id: data_integrity_owner
+    title: Data Integrity Owner
+    description: >
+      Owns ALCOA+ principles, audit trail, records, retention, and true-copy
+      exports. Assigned 2026-06-11.
+    status: requires_evidence
+    derived_from: "NOMOS-QMS-SOP-002 — Data integrity owner"
+    required_competences:
+      - id: comp-dio-001
+        name: ALCOA+ data integrity principles
+        category: regulatory
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: written_assessment
+      - id: comp-dio-002
+        name: Audit trail design and review
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
+      - id: comp-dio-003
+        name: Record retention and archival
+        category: quality
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: written_assessment
+      - id: comp-dio-004
+        name: True-copy export and verification
+        category: tooling
+        level: proficient
+        training_status: requires_evidence
+        evidence_type: practical_assessment
 
 competence_levels:
   - id: awareness

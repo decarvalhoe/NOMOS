@@ -1,0 +1,143 @@
+{
+  "schema_version": "nomos-skos-distribution-index-v1",
+  "generated_by": "scripts/skos_distribution.py",
+  "authoring_sources": [
+    "specs/facet-vocabularies/core-facets.authoring.yaml",
+    "docs/regulated/domain-packs/<pack>/pack.yaml (ontology + vocabularies files)"
+  ],
+  "shapes": "specs/shacl/facet-ontology.shapes.ttl",
+  "graphs": [
+    {
+      "name": "built-environment",
+      "kind": "domain-pack",
+      "scheme": "https://nomos.dev/ns/pack/built-environment/scheme",
+      "files": {
+        "turtle": {
+          "path": "built-environment.skos.ttl",
+          "media_type": "text/turtle",
+          "sha256": "sha256:c1ec9b3bb29d5ea53da847cd4c1ef9cf4f4ccfd59d16c21c0c0846764f230423"
+        },
+        "jsonld": {
+          "path": "built-environment.skos.jsonld",
+          "media_type": "application/ld+json",
+          "sha256": "sha256:627580306ac876fc3b50217f5002033889992ce4f91e50d0529a5bb414e65205"
+        }
+      },
+      "triples": 82,
+      "concepts": 10,
+      "collections": 0,
+      "axes": 2,
+      "concept_iris": [
+        "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.appel_offres",
+        "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.conception",
+        "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.direction_travaux",
+        "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.exploitation",
+        "https://nomos.dev/ns/pack/built-environment/concept/activity/aec.permis",
+        "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.architecte",
+        "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.entreprise",
+        "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.geometre",
+        "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.ingenieur_civil",
+        "https://nomos.dev/ns/pack/built-environment/concept/discipline_role/aec.specialiste_energie"
+      ]
+    },
+    {
+      "name": "core-facets",
+      "kind": "core",
+      "scheme": "https://nomos.dev/ns/facets/core/scheme",
+      "files": {
+        "turtle": {
+          "path": "core-facets.skos.ttl",
+          "media_type": "text/turtle",
+          "sha256": "sha256:73c15b782d80558945eb1a043bb714e18e3643961efc9f555706594efa9be5e6"
+        },
+        "jsonld": {
+          "path": "core-facets.skos.jsonld",
+          "media_type": "application/ld+json",
+          "sha256": "sha256:59fc3e9e9ec680fa0876c3ea697790a335f7e0f19915bc373cc93b8ccfb5da81"
+        }
+      },
+      "triples": 334,
+      "concepts": 38,
+      "collections": 6,
+      "axes": 0,
+      "concept_iris": [
+        "https://nomos.dev/ns/facets/core/applicability/applicable",
+        "https://nomos.dev/ns/facets/core/applicability/blocked",
+        "https://nomos.dev/ns/facets/core/applicability/not_applicable",
+        "https://nomos.dev/ns/facets/core/applicability/partially_applicable",
+        "https://nomos.dev/ns/facets/core/applicability/unknown",
+        "https://nomos.dev/ns/facets/core/confidentiality/customer_confidential",
+        "https://nomos.dev/ns/facets/core/confidentiality/internal",
+        "https://nomos.dev/ns/facets/core/confidentiality/licensed_restricted",
+        "https://nomos.dev/ns/facets/core/confidentiality/public",
+        "https://nomos.dev/ns/facets/core/confidentiality/restricted",
+        "https://nomos.dev/ns/facets/core/confidentiality/secret",
+        "https://nomos.dev/ns/facets/core/nature/calculation",
+        "https://nomos.dev/ns/facets/core/nature/condition",
+        "https://nomos.dev/ns/facets/core/nature/context",
+        "https://nomos.dev/ns/facets/core/nature/definition",
+        "https://nomos.dev/ns/facets/core/nature/evidence",
+        "https://nomos.dev/ns/facets/core/nature/exception",
+        "https://nomos.dev/ns/facets/core/nature/governance",
+        "https://nomos.dev/ns/facets/core/nature/metier",
+        "https://nomos.dev/ns/facets/core/nature/obligation",
+        "https://nomos.dev/ns/facets/core/nature/permission",
+        "https://nomos.dev/ns/facets/core/nature/prohibition",
+        "https://nomos.dev/ns/facets/core/nature/rule",
+        "https://nomos.dev/ns/facets/core/provenance/derived",
+        "https://nomos.dev/ns/facets/core/provenance/external_attested",
+        "https://nomos.dev/ns/facets/core/provenance/inferred",
+        "https://nomos.dev/ns/facets/core/provenance/source_backed",
+        "https://nomos.dev/ns/facets/core/provenance/user_promoted",
+        "https://nomos.dev/ns/facets/core/scope_level/atom",
+        "https://nomos.dev/ns/facets/core/scope_level/chunk",
+        "https://nomos.dev/ns/facets/core/scope_level/domain",
+        "https://nomos.dev/ns/facets/core/scope_level/product",
+        "https://nomos.dev/ns/facets/core/scope_level/release",
+        "https://nomos.dev/ns/facets/core/scope_level/source",
+        "https://nomos.dev/ns/facets/core/scope_level/structure",
+        "https://nomos.dev/ns/facets/core/trust_tier/certified",
+        "https://nomos.dev/ns/facets/core/trust_tier/indicative",
+        "https://nomos.dev/ns/facets/core/trust_tier/unverified"
+      ]
+    },
+    {
+      "name": "eu-ai-act",
+      "kind": "domain-pack",
+      "scheme": "https://nomos.dev/ns/pack/eu-ai-act/scheme",
+      "files": {
+        "turtle": {
+          "path": "eu-ai-act.skos.ttl",
+          "media_type": "text/turtle",
+          "sha256": "sha256:e070f775d4ffe8cd790603e78898af28ffd653fc1bba3f84b07902a712a8ff26"
+        },
+        "jsonld": {
+          "path": "eu-ai-act.skos.jsonld",
+          "media_type": "application/ld+json",
+          "sha256": "sha256:8dfa899a53d51dd37695829505e06b9423e88cdee7279f91096c401986a4b7c1"
+        }
+      },
+      "triples": 115,
+      "concepts": 14,
+      "collections": 0,
+      "axes": 3,
+      "concept_iris": [
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.documentation_technique",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.enregistrement",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.evaluation_conformite",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.gestion_risque",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/activity/ai_act.surveillance_post_marche",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.autorite_notifiante",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.deployeur",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.distributeur",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.fournisseur",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/discipline_role/ai_act.importateur",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.haut_risque",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_inacceptable",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_limite",
+        "https://nomos.dev/ns/pack/eu-ai-act/concept/risk_tier/ai_act.risque_minimal"
+      ]
+    }
+  ],
+  "claim_boundary": "Deterministic distribution of the validated facet vocabularies as static files. Says nothing about any live SKOS service, ISO 25964 conformance, or the ontological correctness of the BFO/IOF anchors."
+}

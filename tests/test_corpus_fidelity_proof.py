@@ -139,5 +139,36 @@ alpha: true
             self.assertFalse(report["full_fidelity_claim_allowed"])
 
 
+class UnreadableFeedTests(unittest.TestCase):
+    """docs/43 principle 8 — a feed file the proof cannot read is a blocking
+    finding, never a silent skip (the proof used to `continue` past it)."""
+
+    def test_unreadable_feed_file_is_a_blocking_finding_not_a_silent_skip(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpus = root / "corpus"
+            artifacts = root / "artifacts"
+            write(corpus / "01_rules" / "sample.md", "# Sample\n\nA rule.\n")
+            write_minimal_lawbook_feed(artifacts)
+            write(artifacts / "broken-feed.json", "{ this is not json")
+            report = root / "report.json"
+            result = run_script(
+                "corpus_fidelity_proof.py",
+                "--corpus", str(corpus),
+                "--artifacts-dir", str(artifacts),
+                "--report", str(report),
+                "--strict",
+                cwd=root,
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            data = json.loads(report.read_text(encoding="utf-8"))
+            finding = next((f for f in data["findings"] if f["code"] == "FEED_FILE_UNREADABLE"), None)
+            self.assertIsNotNone(finding, data["findings"])
+            self.assertTrue(finding["blocking"])
+            self.assertEqual(finding["detail"]["file"], "broken-feed.json")
+            self.assertEqual(data["status"], "partial")
+            self.assertEqual(data["artifact_scan"]["unreadable_feed_files"][0]["file"], "broken-feed.json")
+
+
 if __name__ == "__main__":
     unittest.main()

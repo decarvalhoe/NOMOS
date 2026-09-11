@@ -7,6 +7,10 @@
 > plus, quand applicable, la ligne *Registre* (mise à jour attendue de
 > `scripts/vrc_wiring_matrix_registry.json`, la matrice G3 faisant foi).
 > Écarts E1-E7 : voir la matrice de traçabilité du doc 45 §1.
+> Routage depuis ADR-VRC-0004 : cette liste conserve les identifiants historiques,
+> mais produit, DevOps et assurance régulée sont des roadmaps indépendantes.
+> La prochaine tâche vient de `docs/roadmap-lanes.yaml`, jamais d'une attente
+> calendaire, humaine, d'acquisition ou d'écriture publique.
 
 ## Vue d'ensemble epic
 
@@ -26,9 +30,9 @@
 | VRC-11 | Canon promotion dans le moteur Go (A2) | pivot-core | 1 | oui | VRC-00 |
 | VRC-12 | Point-in-time dans le moteur Go (A3) | pivot-core | 1 | oui | VRC-00 |
 | VRC-13 | Harnais d'évaluation RAG en CI (B2) | mise à niveau | 1 | oui | — |
-| VRC-14 | Répétabilité CI d'evidence sur corpus privé (F4) | QMS/evidence | 1 | oui | — |
-| VRC-15 | Release `v0.2.0-ALPHA` exécutée via SOP (F5) | QMS/release | 1 | non | VRC-05, VRC-14 |
-| VRC-16 | Records formation/compétence (F6) | QMS | 1 | oui | VRC-05 |
+| VRC-14 | Répétabilité CI d'evidence sur corpus privé (F4) | régulé/passif | R | oui | aucun blocage technique |
+| VRC-15 | Release `v0.2.0-ALPHA` exécutée via SOP (F5) | régulé/humain | R | non | VRC-05 ; VRC-14 input non bloquant |
+| VRC-16 | Records formation/compétence (F6) | régulé/humain | R | oui | VRC-05 ; tooling #640 indépendant |
 | VRC-20 | Contrat de pack domaine (CUE) (D1) | pivot-core | 2 | non | VRC-00 |
 | VRC-21 | `nomos pack validate` (gate Go) (D2) | pivot-core | 2 | non | VRC-20 |
 | VRC-22 | Pack « EU AI Act evidence » pilot-grade (D3) | pack mince | 2 | non | VRC-21 |
@@ -42,17 +46,20 @@
 | VRC-36 | Kit de conformité consommateur (E-1) | couture | 3 | oui | VRC-20 |
 | VRC-37 | Preuve de consommation Aedifica W19 (E-2, cross-repo) | couture | 3 | non | VRC-36 |
 | VRC-38 | Métrique de reproductibilité « 0 changement core par pack » (D6) | garde-fou | 3 | oui | VRC-20 |
-| VRC-40 | Backend Sigstore keyless (A4) | amplify | 4 | oui | VRC-00 |
+| VRC-40 | Sigstore : verify #637 / émission non-prod #645 / activation prod #638 (A4) | split autonome/externe | 4/R | oui | VRC-00 |
 | VRC-41 | Adapter DOCX (C3) | ingestion | 4 | oui | VRC-33 |
-| VRC-42 | Substrat d'exécution de règles L4/OpenFisca/Catala (B3) | mise à niveau | 4 | oui | — |
+| VRC-42 | Frontière d'exécution de règles externe (B3) | mise à niveau — livrée | 4 | oui | durcissement #642 |
 | VRC-43 | Graphe de renvois déterministe (B5) | mise à niveau | 4 | oui | — |
-| VRC-44 | Outillage vocabulaires SKOS/SHACL/VocBench (B4) | mise à niveau | 4 | oui | VRC-20 |
+| VRC-44 | Validation SKOS/SHACL (livrée) ; authoring statique #643 (B4) | split | 4 | oui | VRC-20 |
 | VRC-45 | Ontologie facettes portée dans `pack validate` (D4) | pivot-core | 4 | oui | VRC-21 |
 | VRC-46 | Bench public cite-or-abstain (sortie chantier A) | amplify | 4 | non | VRC-10, VRC-13 |
 
 Séquencement : garde-fous d'abord (VRC-00 → 03), puis par effet de levier (doc 45 §9).
 Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat =
 `schema_version` bump + migration.
+
+La phase `R` appartient au plan régulé 28. Elle n'est pas dans le chemin
+critique des phases produit 0-4.
 
 ---
 
@@ -147,7 +154,7 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 
 ### VRC-10 — Cite-or-abstain dans le moteur Go (A1)
 - Type : pivot-core · Parallèle : oui · Dépend : VRC-00
-- Ancre vision : doc 41 §0/§2 P2 (le wedge — « Harvey admet le gate strict non résolu ») ; doc 45 §2 A1 ; doctrine §2.3 (« sidecar = PARTIAL »).
+- Ancre vision : doc 41 §0/§2 P2 (le wedge — « Harvey admet le gate strict non résolu ») ; doc 45 §2 A1 ; doctrine §2.3 (« sidecar = PARTIAL quand la mécanique attendue est au core »).
 - Écart : E2 — la faithfulness recalculée vit dans `scripts/regulated_rag_answer_evidence.py` + `tests/test_ckm_faithfulness_recompute.py` ; **rien dans cli/internal**.
 - Tremplin : ALCE (citation recall/precision NLI) ; Trust-Align (Trust-Score, refus appris) ; Self-RAG `[IsSUP]` ; FActScore (decompose→verify) ; DeepEval (gate CI) ; HHEM (modèle ouvert) — OSS permissif/ouvert.
 - Preuve exigée : package `cli/internal/answer` : faithfulness **recalculée depuis les spans retrouvés**, verdict cite/abstain, seuils configurables ; `nomos answer gate` enregistré + intégré au strict gate ; `trust_tier` exposé par réponse ; adversarial : citation falsifiée (span déplacé/hash altéré) → rouge ; réponse sans span → abstention forcée ; équivalent Go du bypass « no-text » (#542) ; le sidecar devient consommateur du verdict Go.
@@ -181,28 +188,38 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 - Claim débloqué : « éval RAG non-régressive, orientée régulé ».
 
 ### VRC-14 — Répétabilité CI d'evidence sur corpus privé (F4)
-- Type : QMS/evidence · Parallèle : oui · Dépend : —
+- Type : régulé/evidence · Dispatch : passif · Dépend : aucun blocage technique
 - Ancre vision : README (« le durcissement suivant vise la répétabilité CI ») ; claim boundary §remaining proof chain.
 - Écart : E3/E6 — un seul run enregistré ; « single recorded run » ≠ « repeated CI evidence ».
 - Tremplin : workflows E2E existants (`rbok-lawbook-e2e.yml`) + scheduled runs.
 - Preuve exigée : runs planifiés (hebdo) sur corpus privé ; packs archivés et indexés dans l'evidence ledger ; cible ≥ 8 runs consécutifs verts.
 - Claim débloqué : « repeated CI evidence on private corpora » (chaîne de preuve release-scoped du claim boundary).
+- Statut : outillage/schedule/replay livrés par PR #628 ; mesure publiée 4/8.
+  L'issue reste ouverte uniquement pour l'accumulation temporelle et bloque ce
+  claim, jamais #561 ni la prochaine tâche autonome.
 
 ### VRC-15 — Release `v0.2.0-ALPHA` exécutée via SOP (F5)
-- Type : QMS/release · Parallèle : non · Dépend : VRC-05, VRC-14
+- Type : régulé/release · Dispatch : humain · Dépend : VRC-05 ; VRC-14 est un
+  input de risque non bloquant
 - Ancre vision : release-and-retirement SOP ; doc 41 §6 (risque « ALPHA-en-apparence ») ; doc 16 (versioning).
 - Écart : E3 — un seul tag, aucune release exécutée via la SOP.
 - Tremplin : templates release bundle existants.
 - Preuve exigée : release bundle conforme au template, approbations enregistrées, tag + notes publiés, evidence pack de release archivé ; le record de release est le premier record SOP exécuté de bout en bout.
 - Claim débloqué : « release management opéré » — la maturité réelle devient lisible.
+- Split : #639 prépare/vérifie/rejoue autonomement un bundle candidat avec
+  risques et approbations pending. Cette issue conserve uniquement la décision,
+  les approbations, le tag et la publication authentiques.
 
 ### VRC-16 — Records formation/compétence (F6)
-- Type : QMS · Parallèle : oui · Dépend : VRC-05
+- Type : régulé/records · Dispatch : humain · Dépend : VRC-05
 - Ancre vision : training & competence SOP ; doc 45 §7 F6.
 - Écart : E3 — matrice 5 rôles × 4-5 compétences, zéro attestation signée.
 - Tremplin : templates existants (`training-matrix.yaml`, `competence-assessment-template.yaml`).
 - Preuve exigée : matrice remplie pour les humains nommés, 1-2 attestations par rôle, datées/signées ; statut `requires_evidence` → `established` calculé.
 - Claim débloqué : levée de la condition d'effectivité « training records » du quality manual.
+- Statut : calcul/crosswalk livrés par PR #629 ; aucun record humain n'est
+  inventé. #640 corrige autonomement le contrat template↔gate. Les évaluations,
+  attestations et waivers restent ici et ne bloquent aucun développement.
 
 ## Phase 2 — Fenêtre EU AI Act (livraison ≤ août 2026)
 
@@ -313,17 +330,30 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 - Tremplin : check CI sur les chemins touchés par une PR de pack.
 - Preuve exigée : CI calcule « changements core requis par nouveau pack » ; une PR étiquetée pack touchant `cli/internal/**` → revue bloquante avec justification ADR ; test du check.
 - Claim débloqué : « n'importe quel domaine » devient vérifiable.
+- Durcissement #632 livré par PR #636 : workflow dédié toujours visible,
+  événements `labeled`/`unlabeled`, chemin pack sans label → rouge ; hors pack
+  → not-applicable explicite au lieu de `skipping`.
 
 ## Phase 4 — Consolidation
 
 ### VRC-40 — Backend Sigstore keyless (A4)
-- Type : amplify · Parallèle : oui · Dépend : VRC-00
+- Type : split produit/régulé · Parallèle : oui · Dépend : VRC-00
 - Ancre vision : doc 42 §A (in-toto + Sigstore/Rekor) ; doc 45 §2 A4 ; guard #542 (Sigstore = non-présent tant que non livré).
 - Écart : signature locale ECDSA seulement ; claims Sigstore interdits par le guard.
 - Tremplin : sigstore-go, Fulcio, Rekor — Apache.
-- Preuve exigée : backend optionnel à côté de l'ECDSA ; entrée Rekor vérifiée en test d'intégration en ligne (skippable offline, pattern `connector_live_test.go`) ; tamper-fail ; le guard claim-boundary met à jour son marqueur de preuve.
-- Claim débloqué : « attestation keyless + transparency log ».
-- Registre : flip `sigstore_keyless` `absent` → `real` + ancres (les probes d'absence forcent le flip).
+- Portée autonome #637 : vérifier hors ligne un bundle fourni via une frontière
+  externe, sans OIDC, émission Fulcio ou write Rekor ; tamper artefact/identité/
+  inclusion → rouge. Claim borné : « vérifie des bundles fournis ».
+- Portée autonome #645 : émission contre Fulcio/Rekor injectés ou locaux,
+  production interdite par défaut ; E2E émission→bundle→vérification avec une
+  fixture de verifier indépendante, compatible avec #637 mais sans dépendance
+  dure cross-lane. Sa livraison doit faire accepter au claim guard uniquement
+  la formulation non-production, jamais la production.
+- Portée externe #638 : autorisation OIDC et entrée Rekor production. Seul ce
+  lot peut débloquer « attestation keyless production + transparency log ».
+- Registre : capacités de vérification et d'émission distinctes ; l'émission
+  keyless reste `absent` jusqu'à #645 ; l'activation/claim production reste
+  séparée dans #638.
 
 ### VRC-41 — Adapter DOCX (C3)
 - Type : ingestion · Parallèle : oui · Dépend : VRC-33
@@ -337,9 +367,14 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 - Type : mise à niveau · Parallèle : oui · Dépend : —
 - Ancre vision : doc 42 §A ; doc 45 §3 B3 ; anti-objectif n°3 (pas de moteur maison).
 - Écart : le calculable n'a pas de substrat d'exécution.
-- Tremplin : L4 (MCP/REST, vérif formelle) ; OpenFisca (AGPL → frontière API process, registre licences) ; Catala.
+- Tremplin : L4 (MCP/REST, vérif formelle) ; OpenFisca (AGPL → frontière API process, registre licences) ; Catala — adapters futurs, pas critères de clôture de la frontière.
 - Preuve exigée : démo bornée — un atome `formula` exécuté via le substrat avec trace source ; isolement AGPL documenté au registre.
-- Claim débloqué : « le déterministe certifié sans moteur de règles maison ».
+- Claim débloqué : « frontière d'exécution externe tracée et fail-closed, sans
+  moteur maison ». Aucune compatibilité avec un moteur nommé ni correction
+  métier n'est revendiquée.
+- Statut : critère livré par PR #635, issue #578 fermée. #642 durcit
+  `request_digest` et l'intégrité des valeurs persistées ; un adapter moteur
+  nommé sera une issue séparée après revue licence.
 
 ### VRC-43 — Graphe de renvois déterministe (B5)
 - Type : mise à niveau · Parallèle : oui · Dépend : —
@@ -352,10 +387,13 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 ### VRC-44 — Outillage vocabulaires SKOS/SHACL (B4)
 - Type : mise à niveau · Parallèle : oui · Dépend : VRC-20
 - Ancre vision : doc 42 §A ; doc 45 §3 B4.
-- Écart : vocabulaires en CUE + SKOS statique, sans authoring/validation outillés.
+- Écart : validation portable absente à l'origine ; authoring/distribution séparés.
 - Tremplin : SKOS, SHACL, OWL `disjointUnionOf`, VocBench, Skosmos, ISO 25964.
 - Preuve exigée : validation SHACL des facettes en CI (complément du `cue vet`) ; vocabulaire non orthogonal → rouge (test).
-- Claim débloqué : « facettes authored, servies, validées proprement ».
+- Claim débloqué : « graphe SKOS/RDF conforme aux shapes avec pySHACL ».
+- Statut : critère SHACL livré par PR #634, issue #580 fermée. #643 porte
+  l'authoring versionné et un bundle statique distribuable ; VocBench/Skosmos
+  restent optionnels, ISO 25964 reste hors claim avant accès/licence.
 
 ### VRC-45 — Ontologie facettes dans `pack validate` (D4)
 - Type : pivot-core · Parallèle : oui · Dépend : VRC-21
@@ -378,10 +416,19 @@ Zéro régression : CKM-00 reste vert à chaque PR ; tout changement de contrat 
 
 ## Couture avec la matrice de câblage (VRC-00)
 
-Chaque issue qui promeut une capacité **doit** flipper l'entrée correspondante de
-`scripts/vrc_wiring_matrix_registry.json` dans la même PR (expected `sidecar|stub|absent|partial`
-→ `real`) avec les nouvelles ancres. La matrice échoue si la réalité et le registre
-divergent — dans les deux sens. C'est le verrou anti-« déclaré fait ».
+Chaque issue qui change une topologie de capacité **doit** mettre à jour l'entrée
+correspondante de `scripts/vrc_wiring_matrix_registry.json` dans la même PR
+(`expected` courant → topologie cible) avec ses ancres. La cible est `real` pour
+une mécanique attendue dans le moteur et peut rester `sidecar` pour un outil
+volontairement hors core. La matrice échoue si la réalité et le registre divergent
+— dans les deux sens. C'est le verrou anti-« déclaré fait ».
+
+Depuis ADR-VRC-0004, `real` et `sidecar` décrivent la **topologie de câblage**, pas
+l'effectivité QMS ni la complétude d'une issue. Un outil volontairement hors
+core peut être livré avec `expected: sidecar`; sa validation pour intended use
+reste un état distinct dans `docs/roadmap-lanes.yaml`. Une mécanique attendue
+dans le moteur conserve en revanche ses ancres engine/caller et calcule
+`partial` si elles manquent.
 
 ## Liens issues (matérialisés)
 

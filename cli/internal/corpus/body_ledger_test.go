@@ -3,8 +3,12 @@ package corpus
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 // FSQ-05 (#368): the corpus body ledger covers every byte of every
@@ -475,5 +479,56 @@ func TestCKM06MerkleProofsVerifyAtEveryLeafCount(t *testing.T) {
 				t.Fatalf("n=%d: leaf %d tampered hash unexpectedly verified against root", n, i)
 			}
 		}
+	}
+}
+
+// specExampleBodyLedger builds, with the engine, the ledger that
+// specs/examples/corpus-body-ledger.valid.yaml must carry: two admitted
+// markdown sources, fully covered. Before NRT-031 the committed example was
+// hand-written and its Merkle proofs did not verify; the example is now an
+// engine artifact (regenerate with NOMOS_REGEN_SPEC_EXAMPLES=1 go test ./internal/corpus/ -run SpecExampleBodyLedger).
+func specExampleBodyLedger(t *testing.T) CorpusBodyLedger {
+	t.Helper()
+	intro, _ := fsq05ScanFixture(t, "DOC-INTRO-001", "docs/intro.md",
+		"# Introduction\n\nThis corpus example is emitted by the engine so that its Merkle proofs verify.\n\n# Scope\n\nTwo markdown sources, both admitted, fully covered by semantic segments.\n")
+	rules, _ := fsq05ScanFixture(t, "DOC-RULES-001", "docs/rules.md",
+		"# Rule A\n\nA source row that is altered after proof generation is refused by the verifier.\n\n# Rule B\n\nA leaf hash is the hash of the row; the root is recomputed from the leaves.\n")
+	ledger, err := BuildCorpusBodyLedger(BodyLedgerInput{CorpusRoot: "/corpus/example", GeneratedAt: fsq05BodyLedgerNow, Sources: []BodyLedgerSourceInput{intro, rules}})
+	if err != nil {
+		t.Fatalf("BuildCorpusBodyLedger: %v", err)
+	}
+	return ledger
+}
+
+func TestSpecExampleBodyLedgerIsAnEngineArtifactWhoseProofsVerify(t *testing.T) {
+	path := filepath.Join("..", "..", "..", "specs", "examples", "corpus-body-ledger.valid.yaml")
+	if os.Getenv("NOMOS_REGEN_SPEC_EXAMPLES") == "1" {
+		raw, err := MarshalCorpusBodyLedger(specExampleBodyLedger(t))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var generic any
+		if err := json.Unmarshal(raw, &generic); err != nil {
+			t.Fatal(err)
+		}
+		out, err := yaml.Marshal(generic)
+		if err != nil {
+			t.Fatal(err)
+		}
+		header := "# Emitted by the engine (cli/internal/corpus BuildCorpusBodyLedger) — regenerate with\n# NOMOS_REGEN_SPEC_EXAMPLES=1 go test ./internal/corpus/ -run SpecExampleBodyLedger. Hand edits break the proofs.\n"
+		if err := os.WriteFile(path, append([]byte(header), out...), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ledger, err := LoadCorpusBodyLedger(path)
+	if err != nil {
+		t.Fatalf("the spec example must load through the engine: %v", err)
+	}
+	if err := VerifyCorpusBodyLedgerProofs(ledger); err != nil {
+		t.Fatalf("the spec example's proofs must verify: %v", err)
+	}
+	want := specExampleBodyLedger(t)
+	if ledger.Merkle.Root != want.Merkle.Root {
+		t.Fatalf("the committed example is not the engine's output (root %s vs %s) — regenerate", ledger.Merkle.Root, want.Merkle.Root)
 	}
 }

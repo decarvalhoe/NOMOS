@@ -29,6 +29,7 @@ branch_rules:
           - "CUE vet"
           - "Validate regulated documentation controls"
           - "Build regulated evidence pack"
+          - "Pack core-coupling guard (VRC-38)"
       enforce_admins: true
       restrictions: null  # no push restrictions beyond PR requirement
       lock_branch: false
@@ -64,6 +65,7 @@ branch_rules:
         strict: false
         contexts:
           - "Go vet & test (cli)"
+          - "Pack core-coupling guard (VRC-38)"
       enforce_admins: false
       lock_branch: false
 

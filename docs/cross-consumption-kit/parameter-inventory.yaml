@@ -1,0 +1,159 @@
+# NRT-029 (#702) — parameter inventory of the path the cross-consumption proof
+# kit (docs/50) exercises, at the template of docs/49 §2.2
+# (templates/regulated/parameter-inventory.yaml), checked in CI by
+# scripts/parameter_inventory_check.py: a `validated` status without dated
+# evidence is red, a placeholder is red, a silent failure without detection
+# and without a finding is red.
+#
+# Said without detour (docs/49 §2.2): every threshold of the cite-or-abstain
+# gate and of the eval harness is a DEFAULT — documented, versioned,
+# published, never calibrated on this corpus. A default is not a choice.
+schema_version: nomos-parameter-inventory-template-v1
+record_type: parameter_inventory
+system_id: nomos-cross-consumption-kit
+as_of: "2026-09-06"
+claim_boundary: >-
+  Inventory of the real parameter values of the kit path (bundle, export,
+  cite-or-abstain gate, eval harness) and of how each value was obtained; no
+  optimality, performance or compliance claim.
+status_semantics:
+  validated: measured or adjusted after an experiment or an incident on THIS corpus; evidence required
+  default: library or literature default, never challenged on this corpus; a candidate for calibration
+  config: deployment-specific setting (URI, port, path); not a tuning parameter
+  obsolete: still read by the code but no longer describing the machine, the model or the corpus; to remove or update
+components:
+  - component_id: bundle
+    role: atomizes the pack golden corpus into the canonical bundle the consumer trusts through the consumer kit
+    module: cli/internal/bundle (nomos bundle)
+    parameters:
+      - name: source_extensions
+        value: ".md (nomos bundle --ext default; docs/50 block 1)"
+        status: config
+        evidence:
+          kind: none
+        impact_if_changed: another extension adds sources to the bundle and moves every downstream digest; nothing in the kit corpus carries it
+        owner: kit maintainer
+      - name: domain_tag
+        value: "built-environment (--domain; recorded on every emitted atom)"
+        status: config
+        evidence:
+          kind: none
+        impact_if_changed: the `domain` filter field of the retrieval contract changes; consumers filtering on it lose every hit
+        owner: kit maintainer
+    gotchas:
+      - the trace needs an owner/name repo and a commit; outside a git checkout `nomos bundle` refuses instead of inventing a trace (docs/50 passes them explicitly)
+  - component_id: rag-export
+    role: projects bundle nodes into neutral chunk records, applies pack document facets then the lens, fingerprints the export
+    module: cli/internal/ragexport (nomos rag export / manifest / verify / delta)
+    parameters:
+      - name: context_prefix_version
+        value: "structural-context-v1 (cli/internal/ragexport/export.go, ContextPrefixVersion)"
+        status: validated
+        evidence:
+          kind: decision
+          ref: "cli/internal/ragexport/export.go package comment — the grammar is versioned so a consumer keys its re-embedding decision on it; contract nomos-rag-chunk-v1"
+          date: "2026-09-06"
+        impact_if_changed: every embedding_hash of the manifest moves and `nomos rag verify` orders a full re-embed; the bump is the signal, silence would be the defect
+        owner: engine maintainer
+      - name: export_format
+        value: "jsonl (--format; langchain and llamaindex are projections of the same record)"
+        status: config
+        evidence:
+          kind: none
+        impact_if_changed: the projection changes field names, never identities; the import proof accepts all three shapes
+        owner: kit maintainer
+      - name: lens
+        value: "none on the kit export handed to the consumer; LENS-AEC-PERMIS on the scoped example (docs/50 block 4)"
+        status: config
+        evidence:
+          kind: none
+        impact_if_changed: a lens is enforced on the corpus handed out, fail-closed — a chunk without facets is excluded, and `--strict` refuses an export the lens emptied
+        owner: kit maintainer
+    gotchas:
+      - a lens on chunks that carry no facets excludes everything; the export says so (`lens_no_facets`) and `--strict` turns it red
+  - component_id: answer-gate
+    role: cite-or-abstain verdict on a consumer's answer records, groundedness recomputed lexically from the cited spans
+    module: cli/internal/answer (nomos answer gate)
+    parameters:
+      - name: alce_gate
+        value: "0.95 (nomos answer gate → gates.alce_gate; cli/internal/answer/answer.go)"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: lower cites answers whose citations cover less of what they assert; higher forces more abstentions on the same records
+        owner: engine maintainer
+      - name: faithfulness_gate
+        value: "0.95 (gates.faithfulness_gate)"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: lower lets sentences with weaker span support through as `cite`; the lexical proxy is negation-blind, so lowering it widens that blind spot
+        owner: engine maintainer
+      - name: sentence_threshold
+        value: "0.6 (gates.sentence_threshold — share of content tokens of a sentence that must appear in the spans)"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: the per-sentence support decision moves; it was inherited from the historical sidecar and never measured on a corpus
+        owner: engine maintainer
+      - name: trust_score_certified
+        value: "0.95 (gates.trust_score_certified); indicative tier at 0.8"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: moves answers between the certified and indicative tiers without changing the cite/abstain decision
+        owner: engine maintainer
+      - name: scorer_threshold
+        value: "0.5 (--scorer-threshold flag default; no external scorer configured in the kit, lexical proxy only)"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: only acts when an external scorer runs; combined strictest-wins with the lexical proxy
+        owner: engine maintainer
+    gotchas:
+      - lexical_entailment_v1 is negation-blind — it cannot tell a claim from its negation; the verdict carries this limitation on every answer
+      - the verdict field gates.scorer_configured is false on every run without the NLI sidecar — reported, never hidden
+  - component_id: answer-eval
+    role: replays the golden question set and compares the aggregate metrics to the versioned floors
+    module: cli/internal/answer (nomos answer eval) with docs/cross-consumption-kit/thresholds.yaml
+    parameters:
+      - name: min_mean_citation_recall_precision_faithfulness
+        value: "0.95 / 0.95 / 0.95 (docs/cross-consumption-kit/thresholds.yaml)"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: inherited floors of the regulated harness (VRC-13); raising them on four golden answers proves nothing more, lowering them hides a regression
+        owner: kit maintainer
+      - name: context_floors
+        value: "min_mean_context_recall 1.0, min_mean_context_precision 1.0, max_mean_noise_sensitivity 0.0"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: the retriever bounds; a distractor ranked above the expected chunk is red at these values
+        owner: kit maintainer
+      - name: max_failed_answers
+        value: "0"
+        status: default
+        evidence:
+          kind: none
+        impact_if_changed: any value above zero tolerates a golden answer the gate refuses
+        owner: kit maintainer
+    gotchas:
+      - four golden answers are a smoke test of the mechanics, not a measurement of a retriever; the partner's set (#701) is what would measure one
+silent_failure_review:
+  - component_id: bundle
+    disabled_silently_when: the attestation digest no longer matches the feeds payload (a byte altered after emission)
+    detection: gate
+    finding_ref: "scripts/nomos_consumer_kit.py — KIT_ATTESTATION_DIGEST_MISMATCH, exit 1 (docs/50 block 2)"
+  - component_id: rag-export
+    disabled_silently_when: the source moved after the index was built, or a lens excluded every chunk
+    detection: gate
+    finding_ref: "nomos rag verify exits 1 on a stale index (docs/50 block 6); rag export --strict exits 1 on an emptied export"
+  - component_id: answer-gate
+    disabled_silently_when: no external scorer is configured, so only the lexical proxy judges support
+    detection: log
+    finding_ref: "verdict field gates.scorer_configured = false on every run without the NLI sidecar"
+  - component_id: answer-eval
+    disabled_silently_when: a golden answer cites a chunk the bundle no longer contains (corpus drift)
+    detection: gate
+    finding_ref: "scripts/cross_consumption_import_check.py --citations cross-checks every cited chunk_id and source_hash against out/manifest.json (docs/50 block 9)"

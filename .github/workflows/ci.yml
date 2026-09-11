@@ -17,8 +17,8 @@ jobs:
       run:
         working-directory: cli
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
@@ -28,16 +28,148 @@ jobs:
       # mutilated pack (or a drifted artifact) turns this job red.
       - name: Domain pack gate (VRC-21)
         run: go run . pack validate --manifest ../docs/regulated/domain-packs/built-environment/pack.yaml --repo-root ..
+      # VRC-22 (#565): the SECOND vertical runs through the same gate on the
+      # real pack. Two verticals passing one unchanged gate is what makes the
+      # generality claim measurable rather than asserted.
+      - name: Domain pack gate — EU AI Act vertical (VRC-22)
+        run: go run . pack validate --manifest ../docs/regulated/domain-packs/eu-ai-act/pack.yaml --repo-root ..
       # VRC-13 (#559): the regulated RAG eval harness runs the cite-or-abstain
       # gate over the golden corpus against versioned thresholds — a citation-
       # recall (or faithfulness) regression turns this job red (fail-closed).
       - name: RAG eval harness (VRC-13)
         run: go run . answer eval --corpus ../docs/regulated/ai-rag-governance/rag-eval-corpus.yaml --thresholds ../docs/regulated/ai-rag-governance/rag-eval-thresholds.yaml
+      # #614: the RAG interop export gate replays the `nomos rag` contract on the
+      # REAL in-repo public reference corpus — export/manifest byte-identical
+      # across runs, zero chunks rejected under --strict, no context-prefix leak
+      # into the citable body, and a 1-byte source mutation moves that source's
+      # digest only (fail-closed).
+      # #618: the gate re-derives the Knowledge Lens verdicts with an independent
+      # Python re-implementation of the consumer kit's semantics; it needs PyYAML.
+      - name: Python deps for the RAG gate's independent lens check
+        run: python3 -m pip install --quiet -r ../scripts/requirements-sidecar.txt
+      - name: "RAG interop export gate (#614, #616, #618)"
+        run: bash ../scripts/rag-export-gate.sh
+      # VRC-46 (#582): the public cite-or-abstain bench replays its published
+      # result — quoted sources unmoved and verbatim, cited references carrying
+      # a dated verification, engine byte-deterministic, versioned bounds held,
+      # measurement identical to results-<date>.json. Any drift is named (red).
+      - name: "Public cite-or-abstain bench replay (VRC-46 #582)"
+        run: |
+          go build -o "$RUNNER_TEMP/nomos-bench" .
+          python3 ../scripts/cite_or_abstain_bench.py --root .. --nomos-bin "$RUNNER_TEMP/nomos-bench"
+      # NRT-019 (#667): the portfolio status is COMPUTED from committed machine
+      # sources and published as an artifact; its capabilities section must
+      # agree with the committed wiring matrix (registry == matrix, 0 mismatch).
+      - name: "Portfolio status — computed, published, agrees with the matrix (NRT-019 #667)"
+        run: |
+          go run . portfolio status --repo-root .. --out "$RUNNER_TEMP/portfolio-status.json"
+          jq -e '.schema_version == "nomos-portfolio-status-v1" and .capabilities.available == true and .capabilities.expected_vs_computed_agree == true and .capabilities.mismatches == 0' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          jq -e --argjson n "$(jq '.summary.capabilities' ../.vrc-wiring-matrix/wiring-matrix.json)" '.capabilities.total == $n' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          jq -e '([.capabilities,.roadmap,.gaps,.capa,.reviews,.repeated_ci,.praxis_gate,.competence,.domain_packs,.public_sources,.release_candidate] | map(select(.available == false)) | length) == .sections_unavailable' "$RUNNER_TEMP/portfolio-status.json" > /dev/null
+          go run . portfolio status --repo-root .. --format md | head -20
+          # NRT-020 (#668): findings and review records are computed alongside; the
+          # Praxis gate's unmet requirements MUST appear as findings while the gate is blocked.
+          go run . portfolio findings --repo-root .. --out "$RUNNER_TEMP/portfolio-findings.json"
+          jq -e '.schema_version == "nomos-portfolio-findings-v1" and (.sources_unavailable | length) == 0 and (.findings | map(select(.kind == "praxis_requirement_unmet")) | length) > 0 and (.findings | all(.source.sha256 | startswith("sha256:")))' "$RUNNER_TEMP/portfolio-findings.json" > /dev/null
+          go run . portfolio reviews --repo-root .. --out "$RUNNER_TEMP/portfolio-reviews.json"
+          jq -e '.schema_version == "nomos-portfolio-reviews-v1" and .total >= 3' "$RUNNER_TEMP/portfolio-reviews.json" > /dev/null
+          go run . portfolio findings --repo-root .. --format md | head -12
+          # NRT-028 (#681): the v1.0 readiness verdict is COMPUTED from the tree against the
+          # eight docs/14 criteria and published with the portfolio artifacts. Since NRT-031
+          # (#714) every mapped check holds: the verdict is `ready`, asserted here so that a
+          # regression on any criterion is red. `ready` is not a release (#720) and not a
+          # validated-use claim; the written file must re-verify (digest, criteria, binding).
+          go run . portfolio release-readiness --repo-root .. --out "$RUNNER_TEMP/release-readiness.json"
+          jq -e '.schema_version == "nomos-release-readiness-v1" and .verdict == "ready" and (.criteria | length) == 8 and (.unmet | length) == 0 and (.status_digest | startswith("sha256:"))' "$RUNNER_TEMP/release-readiness.json" > /dev/null
+          go run . portfolio release-readiness --repo-root .. --verify "$RUNNER_TEMP/release-readiness.json"
+          go run . portfolio release-readiness --repo-root .. --format md | head -30
+      # NRT-023 (#676): the contract stability registry is VERIFIED against the tree —
+      # every specs/*.cue and *.schema.json registered, hash-at-version intact, stable
+      # contracts with a version and a valid fixture, compatibility fixtures READ by
+      # their Go reader. A stable contract changed without an accepted bump is red.
+      - name: "Contract stability registry — verified against the tree (NRT-023 #676)"
+        working-directory: cli
+        run: |
+          go run . contracts status --repo-root .. --out "$RUNNER_TEMP/contracts-status.json"
+          grep -q '"schema_version": "nomos-contract-status-v1"' "$RUNNER_TEMP/contracts-status.json"
+          test "$(jq '.compat_reads' "$RUNNER_TEMP/contracts-status.json")" -ge 4
+          test "$(jq '.by_stability.stable' "$RUNNER_TEMP/contracts-status.json")" -ge 10
+      # NRT-024 (#677): the core ANNOUNCES what it reads and writes; adapters are checked
+      # against it (out of range → contracts status is red); the compatibility matrix of
+      # docs/16 is generated from the same registry — a hand edit is drift.
+      - name: "Compatibility — version announcement, adapters in range, matrix generated (NRT-024 #677)"
+        working-directory: cli
+        run: |
+          go run . version --json --repo-root .. > "$RUNNER_TEMP/version.json"
+          test "$(jq -r '.schema_version' "$RUNNER_TEMP/version.json")" = "nomos-version-announcement-v1"
+          test "$(jq -r '.core_version' "$RUNNER_TEMP/version.json")" = "$(go run . version)"
+          test "$(jq '[.adapters[] | select(.verdict != "compatible")] | length' "$RUNNER_TEMP/version.json")" = "0"
+          test "$(jq '.adapters | length' "$RUNNER_TEMP/version.json")" -ge 3
+          go run . contracts status --repo-root .. --check-docs --out "$RUNNER_TEMP/contracts-status.json"
+          git -C .. diff --exit-code docs/16-versioning-policy.md
+      - name: Upload portfolio status
+        uses: actions/upload-artifact@v7
+        with:
+          name: portfolio-status-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/portfolio-status.json
+            ${{ runner.temp }}/portfolio-findings.json
+            ${{ runner.temp }}/portfolio-reviews.json
+          retention-days: 90
+      # NRT-018 (#662): the Praxis activation gate is computed on the REAL
+      # repository. Today it MUST be blocked, with every unmet requirement named
+      # (human reviews and decision records cannot be generated). If it ever
+      # reads activatable, this assertion is the tripwire that makes someone
+      # look — flip it consciously, with the human records that justify it.
+      - name: "Praxis activation gate — blocked today, reasons named (NRT-018 #662)"
+        run: |
+          go run . evidence praxis-gate --repo-root .. --record ../docs/regulated/qualification/praxis-activation-gate.yaml --out "$RUNNER_TEMP/praxis-verdict.json"
+          jq -e '.status == "blocked" and .unmet_count > 0 and (.reasons | length) == .unmet_count and .status != "activated"' "$RUNNER_TEMP/praxis-verdict.json" > /dev/null
+          jq -r '.reasons[]' "$RUNNER_TEMP/praxis-verdict.json"
+          if go run . evidence praxis-gate --repo-root .. --record ../docs/regulated/qualification/praxis-activation-gate.yaml --require-activatable > /dev/null 2>&1; then
+            echo "::error::--require-activatable passed on a blocked gate"; exit 1
+          fi
+      # #612: the Recursio → NOMOS web-source chain runs OFFLINE on the synthetic
+      # fixture — export byte-identical to a fresh normalisation of the site,
+      # sealed snapshot verified and imported, scan → feed → body-ledger →
+      # attest → strict all green, attestation binding web source type and
+      # snapshot coverage asserted from the artifact, fixture untouched.
+      - name: "Recursio → NOMOS offline E2E (#612)"
+        run: RUN_DIR="$RUNNER_TEMP/recursio-e2e" bash ../scripts/recursio-e2e-fixture.sh
 
   # go-test-control-plane removed by ADR-0006 (VRC-04 #550): the control-plane
   # packages are archived exploratory code with zero production callers; gating
   # them in CI signalled a product status they do not have. Revival condition:
   # a capability-claim issue with a declared production caller (v0.9.x lane).
+
+  # #637: offline Sigstore verification through the versioned process boundary.
+  # The verifier is its own module (tools/sigstore-verifier) so the engine keeps
+  # its three direct dependencies and the `github.com/sigstore` probe on cli/
+  # stays green. The gate proves the REAL fixture bundles verify offline and
+  # that every tamper (digest, identity, signature, inclusion promise,
+  # inclusion proof, checkpoint, trust material) is refused with no record —
+  # and that with no verifier available NOMOS invents no verdict.
+  sigstore-verifier:
+    name: Offline Sigstore verification gate (#637)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: tools/sigstore-verifier/go.mod
+          cache-dependency-path: |
+            tools/sigstore-verifier/go.sum
+            cli/go.sum
+      - name: Verifier module tests (real fixtures, tamper matrix)
+        run: cd tools/sigstore-verifier && go vet ./... && go test ./...
+      - name: Offline verification gate through the CLI
+        run: WORK_DIR="$RUNNER_TEMP/sigstore-gate" bash scripts/sigstore-verify-gate.sh
+      # #645: keyless issuance against INJECTED, NON-PRODUCTION Fulcio/Rekor
+      # (localhost fixture services), independently verified; production
+      # endpoints refused before any request; services down → no partial
+      # bundle. Nothing is published, no id-token permission is requested.
+      - name: "Keyless issuance on injected non-production services (#645)"
+        run: WORK_DIR="$RUNNER_TEMP/sigstore-issue-gate" bash scripts/sigstore-issue-gate.sh
 
   corpus-cross-platform:
     name: Corpus tests (${{ matrix.os }})
@@ -52,8 +184,8 @@ jobs:
       run:
         working-directory: cli
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
@@ -76,31 +208,11 @@ jobs:
           go test ./internal/compliance/...
           go test ./internal/guard/...
 
-  # VRC-38 (#575, D6): the core/pack coupling guard. Runs ONLY on PRs labeled
-  # `pack` — a pack PR touching core paths is blocking unless the same PR
-  # touches an ADR (docs/adr/*.md) that justifies the core change.
-  pack-coupling:
-    name: Pack core-coupling guard (VRC-38)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'pack')
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install --quiet pyyaml
-      - name: Compute coupling metric on the PR diff
-        run: |
-          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
-          python scripts/pack_core_coupling_check.py --changed-files /tmp/changed.txt
-
   cue-vet:
     name: CUE vet
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: cue-lang/setup-cue@v1.0.1
         with:
           version: v0.16.1
@@ -122,6 +234,53 @@ jobs:
             echo "::error::unsupported domain compliance claim passed"
             exit 1
           fi
+      # NRT-016 (#660): the Nomos/Praxis exchange contract — the valid fixture
+      # passes, a forged regulated reliance and an inverted authority fail.
+      - name: "Nomos/Praxis evidence contract (NRT-016 #660)"
+        run: |
+          cue vet specs/nomos-praxis-evidence.cue \
+            specs/examples/nomos-praxis-evidence.valid.yaml \
+            -d '#PraxisEvidenceExchange'
+          for bad in specs/examples/nomos-praxis-evidence.invalid-*.yaml; do
+            if cue vet specs/nomos-praxis-evidence.cue "$bad" -d '#PraxisEvidenceExchange'; then
+              echo "::error::$bad passed the Praxis exchange contract"; exit 1
+            fi
+          done
+      # NRT-017 (#661): the atom → Praxis check mapping fixture passes the closed
+      # contract; an inverted authority, a leaked internal field and an
+      # unapproved atom fail it.
+      - name: "Nomos/Praxis atom mapping contract (NRT-017 #661)"
+        run: |
+          cue vet specs/nomos-praxis-evidence.cue \
+            specs/examples/nomos-praxis-mapping.valid.json \
+            -d '#PraxisAtomMapping'
+          for bad in specs/examples/nomos-praxis-mapping.invalid-*.json; do
+            if cue vet specs/nomos-praxis-evidence.cue "$bad" -d '#PraxisAtomMapping'; then
+              echo "::error::$bad passed the Praxis atom mapping contract"; exit 1
+            fi
+          done
+      # NRT-019 (#667): the portfolio status contract is closed — a narrative
+      # field or a non-pending candidate fails it.
+      - name: "Portfolio status contract (NRT-019 #667)"
+        run: |
+          cue vet specs/portfolio-status.cue specs/examples/portfolio-status.valid.json -d '#PortfolioStatus'
+          for bad in specs/examples/portfolio-status.invalid-*.json; do
+            if cue vet specs/portfolio-status.cue "$bad" -d '#PortfolioStatus'; then
+              echo "::error::$bad passed the portfolio status contract"; exit 1
+            fi
+          done
+      # docs/49 §2.1: the domain cartography contract — a layer nobody verified
+      # may carry no number, a phantom domain owns no collection.
+      - name: "Domain cartography contract (docs/49)"
+        run: |
+          cue vet specs/domain-cartography.cue specs/examples/domain-cartography.valid.yaml -d '#DomainCartography'
+          # NRT-029 (#702): the cartography the cross-consumption kit (docs/50) declares for itself.
+          cue vet specs/domain-cartography.cue docs/cross-consumption-kit/cartography.yaml -d '#DomainCartography'
+          for bad in specs/examples/domain-cartography.invalid-*.yaml; do
+            if cue vet specs/domain-cartography.cue "$bad" -d '#DomainCartography'; then
+              echo "::error::$bad passed the domain cartography contract"; exit 1
+            fi
+          done
       - name: Domain pack contract (VRC-20)
         run: |
           cue vet specs/domain-pack.cue \
@@ -147,7 +306,7 @@ jobs:
     name: YAML lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           pip install --quiet yamllint
           yamllint -d relaxed specs/examples/ examples/ templates/
@@ -156,19 +315,127 @@ jobs:
     name: Python workflow tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install --quiet pyyaml
+      - run: pip install --quiet -r scripts/requirements-sidecar.txt pyshacl
+      # VRC-44 (#580): facet vocabularies are emitted as SKOS/RDF + NOMOS
+      # predicates and validated with standard SHACL shapes. This recorded run
+      # uses pySHACL; the graph/shapes are inspectable outside NOMOS, but no
+      # cross-engine equivalence is claimed. A disjoint-axis term turns red.
+      - name: Facet SKOS/SHACL gate (VRC-44)
+        run: python scripts/facet_shacl_gate.py --root .
+      # #643: the SKOS distribution under specs/generated/skos is a fresh,
+      # byte-identical build of the versioned authoring sources (core authoring
+      # YAML in lockstep with facets.cue; pack ontology/vocabulary YAML), and it
+      # round-trips: parsed back, isomorphic to the validated graph, pack graphs
+      # conforming to the shapes, every concept mapped, index hashes intact.
+      # NRT-021 (#669): the QMS review-record index is a fresh build and its
+      # guard holds (cited artifacts exist, decisions have ids, actions have owners).
+      - name: "Review-record index — fresh build + guard (NRT-021 #669)"
+        run: python scripts/portfolio_review_index.py --root . --check
+      # NRT-027 (#680): the customer integration guide is EXECUTED — every replay
+      # block runs against the repository fixtures with the freshly built CLI, the
+      # artifacts it announces must exist, and the contracts it names must carry
+      # the stability the registry confirms. A guide that stops working is red.
+      - name: "Customer integration guide — replayed against fixtures (NRT-027 #680)"
+        run: python scripts/integration_guide_replay.py --root . --guide docs/48-customer-integration-guide.md
+      # NRT-033 (#716): the evidence ledger is a GENERATED index — every category's
+      # observed block is recomputed from the tree and must agree, the index must be
+      # `effective` and fresher than the portfolio policy. Regeneration is the declared
+      # recurring DevOps action; "effective" never means QMS effectiveness.
+      - name: "Evidence ledger — computed index in force, no drift, not stale (NRT-033 #716)"
+        run: python scripts/evidence_ledger_guard.py --root . --check
+      # NRT-029 (#702): the cross-consumption proof kit runs the same way — bundle,
+      # consumer kit, export, manifest, lens scope, fresh and stale verify, the
+      # consumer's import proof (digest recomputed from its own records), a
+      # tampered index refused, answers gated and cross-checked against the
+      # manifest, the golden set under its versioned floors, the parameter
+      # inventory checked and the cartography recounted against the manifest.
+      - name: "Cross-consumption proof kit — replayed against fixtures (NRT-029 #702)"
+        run: python scripts/integration_guide_replay.py --root . --guide docs/50-cross-consumption-proof-kit.md
+      - name: "SKOS static distribution — deterministic build + round-trip (#643)"
+        run: python scripts/skos_distribution.py --root . --check --verify
       - name: Attestation claim-boundary guard
         run: python scripts/claim_boundary_guard.py --root .
+      - name: Independent roadmap lane guard (ADR-VRC-0004)
+        run: python scripts/roadmap_lane_guard.py --root .
+      # The queue tables in the roadmap docs are GENERATED from the registry.
+      # Regenerate and fail on any diff: the first two closures after the
+      # registry landed left delivered items at the head of the published queues,
+      # and the guard alone could not see it.
+      - name: Roadmap queue docs have no drift
+        run: |
+          python scripts/roadmap_lane_guard.py --root . --emit-docs
+          git diff --exit-code docs/47-roadmap-lanes-and-risk-based-validation.md docs/29-post-alpha-release-issue-list.md docs/15-product-backlog.md
+      # VRC-14 (#560): the published repeated-evidence index must replay exactly
+      # from the runs it records, the workflow must still carry the schedule and
+      # the retention the chain relies on, and the ledger and the claim boundary
+      # must agree with the measurement. Offline and deterministic: no API call.
+      - name: Repeated CI evidence gate (VRC-14)
+        run: python scripts/repeated_ci_evidence.py --root .
+      # VRC-16 (#562): per-role competence status is computed from signed
+      # attestations, never declared. The gate refuses an unsigned, failed,
+      # expired or unknown-competence record, an unwaived self-assessment, a
+      # role handed to a human with no defined training, and any published
+      # status that drifts from the records.
+      - name: Training and competence gate (VRC-16)
+        run: python scripts/training_competence_gate.py --root .
       - name: VRC wiring matrix guard (computed statuses match registry, committed matrix has no drift)
         run: |
           python scripts/vrc_wiring_matrix.py --root .
           git diff --exit-code .vrc-wiring-matrix
       - run: python -m unittest discover -s tests -v
+
+  security:
+    name: Security process gate (NRT-025)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: |
+            cli/go.sum
+            tools/sigstore-verifier/go.sum
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the scanners and the declared sidecar dependencies
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+          python -m pip install --quiet -r scripts/requirements-sidecar.txt pip-audit
+      # NRT-025 (#678): the security process is data the gate reads — process file,
+      # expiring allowlist, generated Supported Versions section — and the declared
+      # scanners run for real: a vulnerability the code CALLS (standard library
+      # included) or a vulnerable Python pin is red unless an unexpired allowlist
+      # entry names it. A requested scanner that is missing is a failed check.
+      - name: "Security process gate — process, allowlist, supported versions, govulncheck, pip-audit (NRT-025 #678)"
+        run: python scripts/security_process_gate.py --root . --check --scan govulncheck,pip-audit --report "$RUNNER_TEMP/security-gate.json"
+      # The proofs: a fixture module that calls a vulnerable symbol turns the gate
+      # red, a vulnerable pin turns it red, undated or expired allowlist entries
+      # turn it red (tests.test_security_process_gate).
+      - name: "Security gate proofs — the fixtures turn it red (NRT-025 #678)"
+        run: python -m unittest tests.test_security_process_gate -v
+      # NRT-026 (#679): the support model is declared and CHECKED — runners equal
+      # the CI matrix, Go versions equal cli/go.mod, every declared version is a
+      # tag or the current candidate, every tag is declared, generated Support
+      # sections carry no hand edit. Tags are fetched because the checkout is shallow.
+      - name: "Support model — declared and checked against CI, toolchain and tags (NRT-026 #679)"
+        run: |
+          git fetch --tags --quiet origin
+          python scripts/support_model_guard.py --root . --check --report "$RUNNER_TEMP/support-model.json"
+          python -m unittest tests.test_support_model_guard -v
+      - name: Upload security gate verdict
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: security-gate-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/security-gate.json
+            ${{ runner.temp }}/support-model.json

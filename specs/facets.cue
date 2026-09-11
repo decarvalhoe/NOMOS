@@ -61,7 +61,7 @@ import "strings"
 	"unknown"
 
 #FacetAxisVocabulary: {
-	axis: "nature" | "discipline_role" | "activity" | "scope_level" | "trust_tier" | "provenance" | "confidentiality" | "applicability"
+	axis: "nature" | "discipline_role" | "activity" | "risk_tier" | "scope_level" | "trust_tier" | "provenance" | "confidentiality" | "applicability"
 	terms: [#FacetVocabularyTerm, ...#FacetVocabularyTerm]
 }
 
@@ -77,6 +77,16 @@ import "strings"
 	nature?: #FacetNature
 	discipline_role?: [#FacetTermRef, ...#FacetTermRef]
 	activity?: [#FacetTermRef, ...#FacetTermRef]
+
+	// risk_tier (VRC-22, #565) — the third OPEN-term axis. Added for the EU AI
+	// Act vertical, whose central concept is a risk classification that none of
+	// the closed axes carries: trust_tier grades how far an artifact may be
+	// trusted, applicability grades whether a rule applies. Neither says how
+	// dangerous the regulated thing itself is. Packs own the terms; the core
+	// owns the axis, exactly as for discipline_role and activity. This is the
+	// one core change VRC-22 records in its D6 measurement.
+	risk_tier?: [#FacetTermRef, ...#FacetTermRef]
+
 	scope_level?: #FacetScopeLevel
 	trust_tier?: #FacetTrustTier
 	provenance?: #FacetProvenance

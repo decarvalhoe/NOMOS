@@ -1,13 +1,13 @@
 {
   "dependencies": {
     "express": "4.22.0",
-    "next": "15.5.18",
+    "next": "15.5.25",
     "react": "18.2.0"
   },
   "devDependencies": {
-    "@testing-library/react": "15.0.0",
-    "@types/node": "20.11.0",
-    "msw": "2.2.0",
+    "@testing-library/react": "15.0.7",
+    "@types/node": "20.19.43",
+    "msw": "2.15.0",
     "typescript": "5.4.0",
     "vitest": "3.2.6"
   }

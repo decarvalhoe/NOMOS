@@ -1,0 +1,94 @@
+schema_version: "0.1.0"
+domain_profile: eu-ai-act
+name: "EU AI Act evidence mapping"
+summary: >-
+  Thin EU AI Act pack: authority registration for Regulation (EU) 2024/1689,
+  vocabularies for the obligation-bearing roles, the compliance activities and
+  the risk classification, and a synthetic golden corpus exercising the chain.
+intended_use:
+  statement: >-
+    Register the AI Act as an authority source and provide risk, role and
+    activity vocabularies for downstream evidence workflows, without assessing
+    any obligation or claiming conformity for any system.
+  allowed_uses:
+    - "Register Regulation (EU) 2024/1689 as an authority anchor with dated verification."
+    - "Provide risk_tier, discipline_role and activity vocabulary seeds for AI Act evidence packs."
+    - "Scope a corpus by risk tier or obligation-bearing role through the shipped lens presets."
+  not_authorized:
+    - "Claim that any AI system is compliant with Regulation (EU) 2024/1689."
+    - "Classify a real system into a risk tier, or assert that a practice is prohibited."
+    - "Substitute for a conformity assessment, a notified body, or legal advice."
+references:
+  - id: EU-AI-ACT
+    title: >-
+      Regulation (EU) 2024/1689 laying down harmonised rules on artificial
+      intelligence (Artificial Intelligence Act)
+    authority_type: public_guidance
+    access_policy: repository_public
+    status: required
+    purpose: "Union-level authority anchor for AI Act evidence registration."
+applicability:
+  status: applicable
+  applies_when:
+    - "The corpus registers Regulation (EU) 2024/1689 as a dated, verified authority source."
+    - "Evidence is scoped by risk tier or obligation-bearing role through the shipped lens presets."
+  does_not_apply_when:
+    - "A real AI system must be classified into a risk tier or assessed for conformity."
+risk_class:
+  level: high
+  rationale: >-
+    Vocabulary seeds and lens presets can be mistaken for a risk classification
+    or a conformity statement; the pack registers and scopes, it never assesses.
+claim_ladder:
+  current_level: registered
+  authorized_claims:
+    - id: EUAIA-PLAN-001
+      level: registered
+      kind: planning
+      statement: "Nomos registers the AI Act as an authority source and ships risk, role and activity vocabularies for evidence packs."
+      evidence:
+        - "docs/regulated/domain-packs/eu-ai-act/pack.yaml"
+        - "docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml"
+  blocked_claims:
+    - id: EUAIA-BLOCK-001
+      kind: certification
+      statement: "Nomos certifies an AI system against Regulation (EU) 2024/1689."
+      reason: "Conformity assessment belongs to the provider, a notified body where required, and legal review."
+    - id: EUAIA-BLOCK-002
+      kind: legal_compliance
+      statement: "Nomos classifies a real system into a risk tier or declares a practice prohibited."
+      reason: "Classification is a legal determination on a real system; the pack ships vocabularies, not determinations."
+required_artifacts:
+  - id: ai-act-pack
+    type: other
+    path: docs/regulated/domain-packs/eu-ai-act/pack.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: ai-act-vocabulary
+    type: other
+    path: docs/regulated/domain-packs/eu-ai-act/ai-act-vocabulary.yaml
+    required: true
+    minimum_claim_level: registered
+  - id: eurlex-source-connectors
+    type: source_manifest
+    path: docs/regulated/domain-packs/eu-ai-act/eurlex-source-connectors.yaml
+    required: true
+    minimum_claim_level: mapped
+validation_gates:
+  - id: eu-ai-act-domain-profile-vet
+    command: >-
+      cue vet specs/nomos-domain-profile.cue
+      specs/examples/nomos-domain-profile.eu-ai-act.valid.yaml
+      -d '#DomainProfile'
+    required: true
+    blocks_claim_levels:
+      - mapped
+      - evidence_ready
+  - id: eu-ai-act-domain-pack-vet
+    command: >-
+      cue vet specs/domain-pack.cue
+      docs/regulated/domain-packs/eu-ai-act/pack.yaml
+      -d '#DomainPack'
+    required: true
+    blocks_claim_levels:
+      - mapped

@@ -1,0 +1,115 @@
+# #643 — explicit, versioned SKOS authoring source for the CORE facet vocabulary.
+#
+# The value sets are owned by specs/facets.cue (via specs/generated/facets-vocab.json);
+# this file adds what SKOS needs and CUE does not carry: stable concept IRIs,
+# preferred labels and, where a value has an agreed meaning, a definition. The
+# builder (scripts/skos_distribution.py) refuses to emit if a value exists in
+# CUE and not here, or here and not in CUE — the two sources cannot drift.
+#
+# Open axes (discipline_role, activity, risk_tier) are #FacetTermRef lists and
+# are NOT enumerated here; their terms live in the domain packs.
+schema_version: nomos-skos-authoring-v1
+scheme:
+  iri: https://nomos.dev/ns/facets/core/scheme
+  base: https://nomos.dev/ns/facets/core/
+  pref_label_en: NOMOS core facet vocabulary
+  definition_en: Controlled values of the closed facet axes of the NOMOS canonical knowledge model, one skos:Collection per axis.
+  source_of_truth: specs/generated/facets-vocab.json
+axes:
+  - id: applicability
+    pref_label_en: Applicability
+    concepts:
+      - id: applicable
+        pref_label_en: applicable
+      - id: partially_applicable
+        pref_label_en: partially applicable
+      - id: not_applicable
+        pref_label_en: not applicable
+      - id: blocked
+        pref_label_en: blocked
+      - id: unknown
+        pref_label_en: unknown
+  - id: confidentiality
+    pref_label_en: Confidentiality
+    concepts:
+      - id: public
+        pref_label_en: public
+      - id: internal
+        pref_label_en: internal
+      - id: restricted
+        pref_label_en: restricted
+      - id: secret
+        pref_label_en: secret
+      - id: licensed_restricted
+        pref_label_en: licensed restricted
+      - id: customer_confidential
+        pref_label_en: customer confidential
+  - id: nature
+    pref_label_en: Nature
+    concepts:
+      - id: rule
+        pref_label_en: rule
+      - id: definition
+        pref_label_en: definition
+      - id: obligation
+        pref_label_en: obligation
+      - id: permission
+        pref_label_en: permission
+      - id: prohibition
+        pref_label_en: prohibition
+      - id: condition
+        pref_label_en: condition
+      - id: exception
+        pref_label_en: exception
+      - id: calculation
+        pref_label_en: calculation
+      - id: evidence
+        pref_label_en: evidence
+      - id: governance
+        pref_label_en: governance
+      - id: metier
+        pref_label_en: metier
+      - id: context
+        pref_label_en: context
+  - id: provenance
+    pref_label_en: Provenance
+    concepts:
+      - id: source_backed
+        pref_label_en: source backed
+      - id: derived
+        pref_label_en: derived
+      - id: inferred
+        pref_label_en: inferred
+      - id: external_attested
+        pref_label_en: external attested
+      - id: user_promoted
+        pref_label_en: user promoted
+  - id: scope_level
+    pref_label_en: Scope level
+    concepts:
+      - id: source
+        pref_label_en: source
+      - id: structure
+        pref_label_en: structure
+      - id: atom
+        pref_label_en: atom
+      - id: chunk
+        pref_label_en: chunk
+      - id: domain
+        pref_label_en: domain
+      - id: product
+        pref_label_en: product
+      - id: release
+        pref_label_en: release
+  - id: trust_tier
+    pref_label_en: Trust tier
+    concepts:
+      - id: certified
+        pref_label_en: certified
+        definition_en: Evidence satisfies the configured deterministic gate for the declared scope.
+      - id: indicative
+        pref_label_en: indicative
+        definition_en: Evidence is usable for orientation but insufficient for a certified claim.
+      - id: unverified
+        pref_label_en: unverified
+        definition_en: Evidence is absent, incomplete, or blocked by a finding.

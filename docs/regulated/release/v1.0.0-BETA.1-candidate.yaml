@@ -1,0 +1,68 @@
+# NRT-034 (#717) — the v1.0.0-BETA.1 release CANDIDATE, declared.
+#
+# Beta rule (docs/51): the `release-readiness` gate is REQUIRED — `nomos release
+# candidate` refuses this spec (CANDIDATE_GATE_FAILED, named) whenever the v1.0
+# readiness verdict is not `ready`. The alpha candidate next to this file keeps
+# assembling without it.
+#
+# This file is read by `nomos release candidate`, which refuses it unless every
+# rule holds: approval pending and no approval entry (an approval is a human
+# act under the release SOP, #561), release_executed false, every required
+# artifact present AND readable, every open blocking gap of the evidence ledger
+# acknowledged here (and nothing acknowledged that the ledger has closed),
+# every required gate measured green on the same commit, risks readable from
+# their measured source, waivers complete, deviations with a record.
+#
+# Nothing here publishes anything. The tag, the GitHub Release, the notes and
+# the approvals stay in #720 (regulated lane, human act under the release SOP).
+schema_version: nomos-release-candidate-spec-v1
+product: nomos
+version: v1.0.0-BETA.1
+# NQ-1 is what the candidate can COMPLETE today with committed artifacts
+# (nomos-report.json and coverage-report.md, required from NQ-3, are run
+# outputs, not repository files). The product profile's current level is
+# "NQ-2 alpha"; the target level here is a completeness threshold for the
+# bundle, not a quality claim.
+target_level: NQ-1
+approval_status: pending
+approvals: []
+release_executed: false
+evidence_ledger: docs/regulated/evidence-index/evidence-ledger.yaml
+# Must equal the set of OPEN blocking gaps in the ledger — the tool checks both
+# directions. Closing a gap here without closing it in the ledger is refused.
+gaps_acknowledged:
+  - GAP-APPROVAL-WORKFLOW
+  - GAP-TRAINING
+  - GAP-INDEPENDENT-AUDIT
+  - GAP-GITHUB-LIVE-CONFIG
+  - GAP-REPEATED-CI-EVIDENCE
+  - GAP-LICENSED-BIBLES
+# Risks are READ from their measured source and recorded as-is; none is a gate.
+risks:
+  - id: RISK-VRC-14-REPEATED-CI
+    kind: repeated_ci_evidence
+    source: docs/regulated/evidence-index/repeated-ci-evidence/index-2026-09-04.json
+    note: >-
+      VRC-14 (#560) is a nonblocking evidence input to the release decision.
+      The candidate records the measured consecutive-green count against its
+      target; it does not wait for it and does not treat it as a precondition.
+# Gate evidence is produced by scripts/release_candidate_gates.py on the same
+# commit; each id below must be present with status pass and exit 0.
+gates:
+  required:
+    - claim-boundary-guard
+    - vrc-wiring-matrix
+    - roadmap-lane-guard
+    - repeated-ci-evidence
+    - training-competence-gate
+    - go-vet
+    - go-test
+    - release-readiness
+waivers:
+  - docs/regulated/operations/training-records/independence-waiver.yaml
+deviations: []
+claim_boundary: >-
+  A candidate is not a release. This declaration binds one commit to its
+  artifacts, gates, open gaps, risks, waivers and deviations so that a human
+  release decision can be taken on measured facts; it proves nothing about
+  the decision itself.

@@ -5,3 +5,10 @@ min_mean_citation_recall: 0.95
 min_mean_citation_precision: 0.95
 min_mean_faithfulness: 0.95
 max_failed_answers: 0
+# #620 — retrieval-side bounds over the answers that declare expected_chunk_ids
+# (context_recall, rank-weighted context_precision, noise_sensitivity = share of
+# answer sentences supported by distractor chunks only). A floor set while no
+# answer declares expectations fails closed.
+min_mean_context_recall: 1.0
+min_mean_context_precision: 1.0
+max_mean_noise_sensitivity: 0.0

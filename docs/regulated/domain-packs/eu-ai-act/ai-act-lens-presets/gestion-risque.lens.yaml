@@ -1,0 +1,11 @@
+id: LENS-AIACT-GESTION-RISQUE
+description: >-
+  Les documents relevant du processus de gestion des risques, tous niveaux de
+  risque confondus.
+include:
+  all_of:
+    - activity:
+        - ai_act.gestion_risque
+exclude:
+  any_of:
+    - applicability: blocked

@@ -1,0 +1,202 @@
+{
+  "schema_version": "nomos-repeated-ci-evidence-index-v1",
+  "issue": "VRC-14 (#560)",
+  "published_on": "2026-09-04",
+  "measured_at_utc": "2026-09-04T17:34:57Z",
+  "repository": "decarvalhoe/NOMOS",
+  "policy": "docs/regulated/evidence-index/repeated-ci-evidence/policy.yaml",
+  "policy_digest": "sha256:b6606414c7a220490f9115614b348282dce05294e2966d773b1935890cda6185",
+  "claim_boundary": "Measurement of the scheduled-run history of one workflow over one private corpus. It is evidence that the pipeline kept running green on that corpus, not a statement about coverage of other corpora, other formats, or the business correctness of any artifact.",
+  "measurement": {
+    "scheduled_runs_recorded": 7,
+    "countable_runs": 7,
+    "green_runs_total": 7,
+    "consecutive_green_runs": 4,
+    "consecutive_green_runs_ignoring_cadence": 7,
+    "streak_break_reason": "41-day gap before run #104 exceeds the 10-day cadence tolerance",
+    "streak_is_current": true,
+    "newest_run_age_days": 4,
+    "missed_scheduled_occurrences": 5,
+    "missed_windows": [
+      {
+        "after_run_number": 103,
+        "after": "2026-06-29T06:37:32Z",
+        "before_run_number": 104,
+        "before": "2026-08-10T06:14:34Z",
+        "gap_days": 41,
+        "missed_occurrences": 5
+      }
+    ],
+    "distinct_corpus_commits": 2,
+    "corpus_commits": [
+      "064bb3e8904ea0c4da1f0334f3cbc3f6db9944a8",
+      "d3485001762df83414969a16707fe7e59b1597a7"
+    ],
+    "target_consecutive_green_runs": 8,
+    "runs_remaining_to_target": 4,
+    "claim_unlocked": false
+  },
+  "runs": [
+    {
+      "run_id": 33387235794,
+      "run_number": 107,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "a6671ca67769cf70425829181a050a98a6c5ce18",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-08-31T11:29:59Z",
+      "updated_at": "2026-08-31T11:30:58Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/33387235794",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 9756061306,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998564,
+          "expired": false,
+          "expires_at": "2026-11-29T11:29:59Z"
+        }
+      ]
+    },
+    {
+      "run_id": 32694516159,
+      "run_number": 106,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "a6671ca67769cf70425829181a050a98a6c5ce18",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-08-24T05:43:04Z",
+      "updated_at": "2026-08-24T05:43:56Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/32694516159",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 9508376419,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998565,
+          "expired": false,
+          "expires_at": "2026-11-22T05:43:04Z"
+        }
+      ]
+    },
+    {
+      "run_id": 31998688495,
+      "run_number": 105,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "a6671ca67769cf70425829181a050a98a6c5ce18",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-08-17T05:39:51Z",
+      "updated_at": "2026-08-17T05:40:23Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/31998688495",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 9277671643,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998567,
+          "expired": false,
+          "expires_at": "2026-11-15T05:39:51Z"
+        }
+      ]
+    },
+    {
+      "run_id": 31361231828,
+      "run_number": 104,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "a6671ca67769cf70425829181a050a98a6c5ce18",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-08-10T06:14:34Z",
+      "updated_at": "2026-08-10T06:15:27Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/31361231828",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 9052438427,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998568,
+          "expired": false,
+          "expires_at": "2026-11-08T06:14:34Z"
+        }
+      ]
+    },
+    {
+      "run_id": 28353437511,
+      "run_number": 103,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "12906aea4da061eadb7522b537d590cb69f8f04a",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-06-29T06:37:32Z",
+      "updated_at": "2026-06-29T06:38:13Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/28353437511",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 7944290871,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998570,
+          "expired": false,
+          "expires_at": "2026-09-27T06:37:32Z"
+        }
+      ]
+    },
+    {
+      "run_id": 27934978451,
+      "run_number": 102,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "12906aea4da061eadb7522b537d590cb69f8f04a",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-06-22T06:52:31Z",
+      "updated_at": "2026-06-22T06:53:10Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/27934978451",
+      "corpus_commit": "d3485001762df83414969a16707fe7e59b1597a7",
+      "artifacts": [
+        {
+          "artifact_id": 7785113700,
+          "name": "rbok-lawbook-artifacts-d3485001762df83414969a16707fe7e59b1597a7",
+          "size_in_bytes": 3998567,
+          "expired": false,
+          "expires_at": "2026-09-20T06:52:31Z"
+        }
+      ]
+    },
+    {
+      "run_id": 27529205616,
+      "run_number": 101,
+      "run_attempt": 1,
+      "event": "schedule",
+      "branch": "main",
+      "head_sha": "12906aea4da061eadb7522b537d590cb69f8f04a",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-06-15T06:51:57Z",
+      "updated_at": "2026-06-15T06:52:31Z",
+      "html_url": "https://github.com/decarvalhoe/NOMOS/actions/runs/27529205616",
+      "corpus_commit": "064bb3e8904ea0c4da1f0334f3cbc3f6db9944a8",
+      "artifacts": [
+        {
+          "artifact_id": 7630916788,
+          "name": "rbok-lawbook-artifacts-064bb3e8904ea0c4da1f0334f3cbc3f6db9944a8",
+          "size_in_bytes": 3938441,
+          "expired": false,
+          "expires_at": "2026-09-13T06:51:57Z"
+        }
+      ]
+    }
+  ]
+}

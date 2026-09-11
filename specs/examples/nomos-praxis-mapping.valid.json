@@ -1,0 +1,77 @@
+{
+  "schema_version": "nomos-praxis-atom-mapping-v1",
+  "mapping_id": "PRAXIS-MAPPING-GXP-FIXTURE-2026-09-05",
+  "generated_at": "2026-09-05T13:00:00Z",
+  "feed_ref": {
+    "path": "tests/fixtures/praxis/gxp-atoms.json",
+    "sha256": "sha256:59d24e606cb452a7228bf46a8625f8241cd4be8e65218d0c1917e8a6ba3b2ff3"
+  },
+  "authority": "nomos",
+  "atoms": [
+    {
+      "nomos_atom_id": "A-7ECC3D21BE4E87E6",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/intake-boundary/p-9",
+      "atom_type": "rule",
+      "content_hash": "sha256:a24c399790e22f654ee9516313789b33620ebadd1c04a640d2df6f80ae03e984",
+      "certification_state": "approved",
+      "domain": "gxp",
+      "source_file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+      "source_line": 9,
+      "praxis_checks": [
+        {
+          "scenario_id": "PRX-SCN-INTAKE-001",
+          "test_id": "praxis.intake-record-present",
+          "runtime_evidence_ids": [
+            "PRX-EV-INTAKE-001"
+          ]
+        }
+      ]
+    },
+    {
+      "nomos_atom_id": "A-F12C3901ED7595F7",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/evidence-flow/p-14",
+      "atom_type": "rule",
+      "content_hash": "sha256:a727f0f2952a1c18ea98e8a0c70414d72a93780faef5245e1070cc2e33e115a7",
+      "certification_state": "approved",
+      "domain": "gxp",
+      "source_file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+      "source_line": 14,
+      "praxis_checks": [
+        {
+          "scenario_id": "PRX-SCN-EVIDENCE-001",
+          "test_id": "praxis.evidence-objects-separated",
+          "runtime_evidence_ids": [
+            "PRX-EV-EVIDENCE-001"
+          ]
+        },
+        {
+          "scenario_id": "PRX-SCN-EVIDENCE-002",
+          "test_id": "praxis.link-inspection",
+          "runtime_evidence_ids": [
+            "PRX-EV-EVIDENCE-002"
+          ]
+        }
+      ]
+    },
+    {
+      "nomos_atom_id": "A-E36A04F7FEAD904A",
+      "canonical_ref": "gxp-csv-fixture/gxp-csv-fixture/non-claim-boundary/p-19",
+      "atom_type": "rule",
+      "content_hash": "sha256:b7bef86efa7d3db59e2fe06880365e7368e56b66a1f2dc4ae741ec5f12d896c2",
+      "certification_state": "approved",
+      "domain": "gxp",
+      "source_file": "cli/internal/corpus/testdata/portable-golden-corpus/gxp/source.md",
+      "source_line": 19,
+      "praxis_checks": [
+        {
+          "scenario_id": "PRX-SCN-NONCLAIM-001",
+          "test_id": "praxis.no-compliance-claim-emitted",
+          "runtime_evidence_ids": [
+            "PRX-EV-NONCLAIM-001"
+          ]
+        }
+      ]
+    }
+  ],
+  "claim_boundary": "Fixture mapping over a synthetic GxP-style corpus: shows how approved Nomos atoms bind to Praxis checks and runtime evidence ids. Nomos remains the canonical authority; nothing here is runtime assurance or a compliance claim."
+}

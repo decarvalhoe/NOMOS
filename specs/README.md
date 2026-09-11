@@ -28,6 +28,10 @@
 - validation inventory;
 - evidence contract.
 
+## Stability Registry
+
+`contract-registry.yaml` declares every contract file here with its stability (`stable`, `experimental`, `deprecated`), its version, its sha256, its fixtures, its Go readers and its compatibility fixtures. `nomos contracts status --repo-root .` verifies it in CI: a stable contract whose bytes change without an accepted bump is red (`nomos contracts status --accept <id> --new-version <v>` records a deliberate bump once the file declares the new version). Stability is declared and verified, not inferred; it says nothing about semantic correctness.
+
 ## Release Rule
 
 Schema changes are evidence-affecting changes. They require tests, documentation updates, and a migration note when the change can affect generated artifacts or customer validation records.
@@ -48,6 +52,12 @@ for deterministic pre-generation filtering over facet applicability metadata.
 
 `canon-promotion.cue` defines the optional CKM-03 guardrail contract for
 customer-confidential user-promoted canon and its certificate evidence.
+
+`domain-cartography.cue` defines the optional consumer-facing domain cartography
+contract (docs/49 §2.1): what a domain actually holds, sub-corpus by sub-corpus,
+on four layers verified independently; a layer nobody verified says so and may
+carry no number, a phantom domain owns no collection, a transversal base is
+shared and never duplicated. It measures no retrieval or answer quality.
 
 The business-operations example profile demonstrates the same CKM mechanics for
 non-AEC business bibles through `business_bible` sources and `nature: metier`

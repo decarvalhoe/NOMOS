@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"github.com/RBOKproject/Nomos/cli/internal/corpus"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -44,6 +45,11 @@ type source struct {
 	AllowedUses     []string `yaml:"allowed_uses"`
 	RedactionPolicy string   `yaml:"redaction_policy"`
 	Notes           string   `yaml:"notes"`
+
+	// #610 — optional web provenance; the same contract the corpus engine
+	// enforces, so `nomos check` and the feed gate cannot disagree.
+	AdmissionStatus string            `yaml:"admission_status"`
+	WebSource       *corpus.WebSource `yaml:"web_source"`
 }
 
 type CheckResult struct {
@@ -105,9 +111,23 @@ func checkSource(src source, baseDir string) SourceCheck {
 	checkPriority(&sc, src)
 	checkConfidentiality(&sc, src)
 	checkAllowedUses(&sc, src)
+	checkWebSource(&sc, src)
 
 	sc.Valid = len(sc.Errors) == 0
 	return sc
+}
+
+// checkWebSource applies the #610 contract when a source declares provenance.
+// Admission is read from the entry so the stricter admitted-only rules apply
+// exactly where the feed gate would apply them.
+func checkWebSource(sc *SourceCheck, src source) {
+	if src.WebSource == nil {
+		return
+	}
+	admitted := src.AdmissionStatus == corpus.AdmissionAdmitted
+	if err := src.WebSource.Validate(admitted); err != nil {
+		addCheckError(sc, src.ID, "web_source", err.Error())
+	}
 }
 
 func checkID(sc *SourceCheck, src source) {

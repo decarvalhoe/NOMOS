@@ -1,0 +1,11 @@
+id: LENS-AIACT-PRATIQUES-INTERDITES
+description: >-
+  Le périmètre du risque inacceptable. Cadre les documents qui en traitent ;
+  n'établit pas qu'un système donné y tombe.
+include:
+  all_of:
+    - risk_tier:
+        - ai_act.risque_inacceptable
+exclude:
+  any_of:
+    - applicability: blocked

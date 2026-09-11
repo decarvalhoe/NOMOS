@@ -17,24 +17,32 @@
 //     retrieved chunks → citation recall/precision drop → blocked.
 //
 // Limitation (documented, same as the sidecar): the lexical proxy is
-// negation-blind; neural NLI is the pluggable upgrade, not implemented here.
+// negation-blind. A second judge (NLI) is pluggable through Config.Scorer /
+// `--scorer-cmd` (#622, scorer.go): strictest-wins per sentence, fail-closed
+// on any scorer failure, no model in the engine.
 package answer
 
 import (
 	"math"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
 // Config carries the configurable gate thresholds. Defaults() mirrors the
 // sidecar's published gates so the Go verdict and the Python evidence agree.
 type Config struct {
-	ALCEGate               float64
-	FaithfulnessGate       float64
-	TrustScoreCertified    float64
-	TrustScoreIndicative   float64
-	SentenceThreshold      float64
+	ALCEGate             float64
+	FaithfulnessGate     float64
+	TrustScoreCertified  float64
+	TrustScoreIndicative float64
+	SentenceThreshold    float64
+	// Scorer is the optional second judge (#622); nil = lexical proxy only.
+	Scorer Scorer
+	// ScorerThreshold is the scorer probability at or above which a sentence
+	// counts as supported by the scorer.
+	ScorerThreshold float64
 }
 
 // Defaults returns the canonical gate configuration.
@@ -45,21 +53,64 @@ func Defaults() Config {
 		TrustScoreCertified:  0.95,
 		TrustScoreIndicative: 0.80,
 		SentenceThreshold:    0.6,
+		ScorerThreshold:      0.5,
 	}
 }
 
+// Gates are the thresholds every verdict in a batch was judged against. They
+// are emitted with the batch (#624) so a consumer such as the evidence sidecar
+// reads them from the verdict instead of duplicating engine constants.
+type Gates struct {
+	ALCEGate             float64 `json:"alce_gate"`
+	FaithfulnessGate     float64 `json:"faithfulness_gate"`
+	TrustScoreCertified  float64 `json:"trust_score_certified"`
+	TrustScoreIndicative float64 `json:"trust_score_indicative"`
+	SentenceThreshold    float64 `json:"sentence_threshold"`
+	ScorerConfigured     bool    `json:"scorer_configured"`
+	ScorerThreshold      float64 `json:"scorer_threshold,omitempty"`
+}
+
+// Gates reports the effective thresholds of a configuration.
+func (c Config) Gates() Gates {
+	g := Gates{
+		ALCEGate:             c.ALCEGate,
+		FaithfulnessGate:     c.FaithfulnessGate,
+		TrustScoreCertified:  c.TrustScoreCertified,
+		TrustScoreIndicative: c.TrustScoreIndicative,
+		SentenceThreshold:    c.SentenceThreshold,
+	}
+	if g.SentenceThreshold <= 0 {
+		g.SentenceThreshold = Defaults().SentenceThreshold
+	}
+	if c.Scorer != nil {
+		g.ScorerConfigured = true
+		g.ScorerThreshold = c.ScorerThreshold
+	}
+	return g
+}
+
 const (
-	methodLexical = "lexical_entailment_v1"
-	methodNoText  = "no_span_text"
-	methodStruct  = "structural_citation_coverage"
+	methodLexical      = "lexical_entailment_v1"
+	methodNoText       = "no_span_text"
+	methodStruct       = "structural_citation_coverage"
+	methodScorerFailed = "scorer_failed"
+	// methodRefusal: an explicit refusal asserts nothing, so there is nothing
+	// to ground; the verdict says so instead of leaving the method blank
+	// (consumers such as the evidence sidecar record the method verbatim).
+	methodRefusal = "explicit_refusal"
 
 	groundednessLimitation = "lexical_entailment_v1 is negation-blind: it matches content-token overlap and cannot distinguish a claim from its negation. NLI is the pluggable upgrade. Spans that require grounding but carry no text score 0 (cannot be verified)."
+	scorerLimitation       = "The external scorer is a second judge combined strictest-wins per sentence (a sentence is supported only when both the lexical proxy and the scorer support it); Nomos verifies the scorer's protocol and direction, not its model."
+
+	// FindingScorerFailed is raised when a configured scorer did not judge
+	// the answer: the gate refuses to pass on a judge that did not answer.
+	FindingScorerFailed = "FAITHFULNESS_SCORER_FAILED"
 )
 
 var refusalOutcomes = map[string]bool{
-	"acceptable_refusal":         true,
-	"unsupported":                true,
-	"blocked_prompt_injection":   true,
+	"acceptable_refusal":       true,
+	"unsupported":              true,
+	"blocked_prompt_injection": true,
 }
 
 var stopwords = map[string]bool{
@@ -108,6 +159,10 @@ type Answer struct {
 	FaithfulnessScore *float64 `json:"faithfulness_score,omitempty"`
 	SourceSpans       []Span   `json:"source_spans"`
 	RetrievedChunks   []Chunk  `json:"retrieved_chunks"`
+	// ExpectedChunkIDs is golden-corpus ground truth (#620): the chunks a
+	// correct retrieval returns for this prompt. Gate answers leave it empty;
+	// it never changes the cite/abstain decision, only the context metrics.
+	ExpectedChunkIDs []string `json:"expected_chunk_ids,omitempty"`
 }
 
 // Finding is one blocking gate violation.
@@ -119,14 +174,22 @@ type Finding struct {
 
 // Groundedness records how faithfulness was derived.
 type Groundedness struct {
-	Method             string  `json:"method"`
-	Score              float64 `json:"score"`
-	SupportedSentences int     `json:"supported_sentences"`
-	TotalSentences     int     `json:"total_sentences"`
-	RecomputedFromSpans bool   `json:"recomputed_from_spans"`
-	SelfDeclared       *float64 `json:"self_declared"`
-	SelfDeclaredTrusted bool   `json:"self_declared_trusted"`
-	Limitation         string  `json:"limitation"`
+	Method              string   `json:"method"`
+	Score               float64  `json:"score"`
+	SupportedSentences  int      `json:"supported_sentences"`
+	TotalSentences      int      `json:"total_sentences"`
+	RecomputedFromSpans bool     `json:"recomputed_from_spans"`
+	SelfDeclared        *float64 `json:"self_declared"`
+	SelfDeclaredTrusted bool     `json:"self_declared_trusted"`
+	Limitation          string   `json:"limitation"`
+	// Second judge (#622): populated only when a Scorer is configured.
+	// SupportedSentences is then the strictest-wins count; the per-judge
+	// counts are kept so a reader sees which judge refused what.
+	LexicalSupportedSentences int     `json:"lexical_supported_sentences,omitempty"`
+	ScorerMethod              string  `json:"scorer_method,omitempty"`
+	ScorerThreshold           float64 `json:"scorer_threshold,omitempty"`
+	ScorerSupportedSentences  int     `json:"scorer_supported_sentences,omitempty"`
+	ScorerError               string  `json:"scorer_error,omitempty"`
 }
 
 // Verdict is the gate's decision for one answer.
@@ -140,6 +203,8 @@ type Verdict struct {
 	TrustScore        float64      `json:"trust_score"`
 	Groundedness      Groundedness `json:"groundedness"`
 	Findings          []Finding    `json:"findings"`
+	// Context is present only when the answer declares expected_chunk_ids.
+	Context *ContextMetrics `json:"context,omitempty"`
 }
 
 func round4(f float64) float64 { return math.Round(f*1e4) / 1e4 }
@@ -262,7 +327,10 @@ func (a Answer) supportCorpus() []string {
 // recomputeGroundedness mirrors the sidecar: returns (detail, applicable).
 // applicable=false means grounding is genuinely not applicable (refusal / no
 // answer text), so the caller falls back to structural coverage.
-func (a Answer) recomputeGroundedness() (Groundedness, bool) {
+//
+// With cfg.Scorer set, the scorer is a second judge over every sentence that
+// asserts something, and the strictest verdict wins per sentence (#622).
+func (a Answer) recomputeGroundedness(cfg Config) (Groundedness, bool) {
 	hasAnswerText := strings.TrimSpace(a.Answer) != ""
 	support := a.supportCorpus()
 
@@ -279,51 +347,102 @@ func (a Answer) recomputeGroundedness() (Groundedness, bool) {
 	if !hasAnswerText {
 		return Groundedness{}, false
 	}
-	supportTokens := map[string]bool{}
-	for _, text := range support {
-		for _, t := range contentTokens(text) {
-			supportTokens[t] = true
-		}
-	}
 	sents := sentences(a.Answer)
 	if len(sents) == 0 {
 		return Groundedness{}, false
 	}
-	supported := 0
-	for _, sentence := range sents {
+	threshold := cfg.SentenceThreshold
+	if threshold <= 0 {
+		threshold = Defaults().SentenceThreshold
+	}
+	supportTokens := tokenSet(support)
+	lexical := make([]bool, len(sents))
+	var scorable []int // sentences that assert something and can be judged
+	lexicalCount := 0
+	for i, sentence := range sents {
 		toks := contentTokens(sentence)
 		if len(toks) == 0 {
-			supported++
+			lexical[i] = true // asserts nothing
+			lexicalCount++
 			continue
 		}
-		covered := 0
-		for _, t := range toks {
-			if supportTokens[t] {
-				covered++
-			}
-		}
-		if float64(covered)/float64(len(toks)) >= Defaults().SentenceThreshold {
-			supported++
+		scorable = append(scorable, i)
+		if coverage(toks, supportTokens) >= threshold {
+			lexical[i] = true
+			lexicalCount++
 		}
 	}
-	return Groundedness{
+	g := Groundedness{
 		Method:              methodLexical,
-		Score:               round4(float64(supported) / float64(len(sents))),
-		SupportedSentences:  supported,
+		Score:               round4(float64(lexicalCount) / float64(len(sents))),
+		SupportedSentences:  lexicalCount,
 		TotalSentences:      len(sents),
 		RecomputedFromSpans: true,
-	}, true
+	}
+	if cfg.Scorer == nil {
+		return g, true
+	}
+
+	// Second judge. The premise is the whole support corpus: the question
+	// asked of the scorer is "is this sentence supported by what was
+	// retrieved/cited", the same question the lexical proxy answers.
+	g.LexicalSupportedSentences = lexicalCount
+	g.ScorerThreshold = cfg.ScorerThreshold
+	premise := strings.Join(support, "\n")
+	pairs := make([]Pair, 0, len(scorable))
+	for _, i := range scorable {
+		pairs = append(pairs, Pair{ID: "s" + strconv.Itoa(i), Premise: premise, Hypothesis: sents[i]})
+	}
+	res, err := cfg.Scorer.Score(pairs)
+	if err == nil {
+		err = validateScores(pairs, res)
+	}
+	if err != nil {
+		// Fail closed: a configured judge that did not judge is not a pass,
+		// and the lexical verdict must not stand in for it silently.
+		g.Method = methodScorerFailed
+		g.Score = 0
+		g.SupportedSentences = 0
+		g.ScorerError = err.Error()
+		return g, true
+	}
+	scorerOK := make([]bool, len(sents))
+	for i := range scorerOK {
+		scorerOK[i] = true // sentences that assert nothing
+	}
+	scorerCount := len(sents) - len(scorable)
+	for k, i := range scorable {
+		scorerOK[i] = res.Scores[k] >= cfg.ScorerThreshold
+		if scorerOK[i] {
+			scorerCount++
+		}
+	}
+	final := 0
+	for i := range sents {
+		if lexical[i] && scorerOK[i] {
+			final++
+		}
+	}
+	g.Method = methodLexical + "+" + res.Method
+	g.ScorerMethod = res.Method
+	g.ScorerSupportedSentences = scorerCount
+	g.SupportedSentences = final
+	g.Score = round4(float64(final) / float64(len(sents)))
+	return g, true
 }
 
 // Evaluate runs the cite-or-abstain gate on one answer.
 func Evaluate(a Answer, cfg Config) Verdict {
 	recall, precision := a.citationMetrics()
-	ground, applicable := a.recomputeGroundedness()
+	ground, applicable := a.recomputeGroundedness(cfg)
 
 	var base float64
 	switch {
 	case a.hasExplicitRefusal():
 		base = 1.0
+		if ground.Method == "" {
+			ground = Groundedness{Method: methodRefusal, Score: 1.0}
+		}
 	case applicable:
 		base = ground.Score
 	case a.requiresGrounding():
@@ -342,10 +461,19 @@ func Evaluate(a Answer, cfg Config) Verdict {
 	}
 	faithfulness := round4(base)
 	ground.Limitation = groundednessLimitation
+	if ground.ScorerMethod != "" {
+		ground.Limitation += " " + scorerLimitation
+	}
 
 	trustScore := round4((recall + precision + faithfulness + clamp01(a.Confidence)) / 4)
 
 	findings := a.validate(cfg, recall, precision, faithfulness)
+	if ground.ScorerError != "" {
+		// Raised regardless of policy_outcome: a batch whose judge failed
+		// must not pass on the answers the judge never saw.
+		findings = append(findings, Finding{Code: FindingScorerFailed, Severity: "error",
+			Message: "the configured faithfulness scorer did not judge this answer: " + ground.ScorerError})
+	}
 
 	v := Verdict{
 		AnswerID:          a.AnswerID,
@@ -356,6 +484,7 @@ func Evaluate(a Answer, cfg Config) Verdict {
 		TrustScore:        trustScore,
 		Groundedness:      ground,
 		Findings:          findings,
+		Context:           a.contextMetrics(cfg),
 	}
 	// cite-or-abstain: an explicit refusal abstains legitimately; an acceptable
 	// answer with no blocking findings cites; anything else is forced to abstain.
@@ -381,7 +510,9 @@ func clamp01(f float64) float64 {
 
 func (a Answer) validate(cfg Config, recall, precision, faithfulness float64) []Finding {
 	findings := []Finding{}
-	add := func(code, msg string) { findings = append(findings, Finding{Code: code, Severity: "error", Message: msg}) }
+	add := func(code, msg string) {
+		findings = append(findings, Finding{Code: code, Severity: "error", Message: msg})
+	}
 
 	if strings.TrimSpace(a.CitationStatus) == "source_backed" && !a.hasSourceBackedCitation() {
 		add("SOURCE_BACKED_CITATION_WITHOUT_SOURCE_SPANS",
@@ -424,17 +555,19 @@ func trustTier(cfg Config, recall, precision, faithfulness, trustScore float64, 
 
 // GateResult aggregates verdicts over a batch of answers.
 type GateResult struct {
-	Status   string    `json:"status"` // "pass" | "fail"
-	Checked  int       `json:"checked"`
-	Cited    int       `json:"cited"`
-	Abstained int      `json:"abstained"`
-	Findings int       `json:"findings"`
+	Status    string `json:"status"` // "pass" | "fail"
+	Checked   int    `json:"checked"`
+	Cited     int    `json:"cited"`
+	Abstained int    `json:"abstained"`
+	Findings  int    `json:"findings"`
+	// Gates are the thresholds the verdicts were judged against (#624).
+	Gates    Gates     `json:"gates"`
 	Verdicts []Verdict `json:"verdicts"`
 }
 
 // Gate evaluates a batch and fails closed if any answer carries findings.
 func Gate(answers []Answer, cfg Config) GateResult {
-	res := GateResult{Status: "pass"}
+	res := GateResult{Status: "pass", Gates: cfg.Gates()}
 	for _, a := range answers {
 		v := Evaluate(a, cfg)
 		res.Verdicts = append(res.Verdicts, v)

@@ -1,0 +1,286 @@
+{
+  "schema_version": "nomos-portfolio-status-v1",
+  "generated_at": "2026-09-06T00:00:00Z",
+  "repo_root": "cli/internal/portfolio/testdata/minirepo",
+  "freshness_policy": {
+    "stale_after_days": 90
+  },
+  "capabilities": {
+    "available": true,
+    "registry": {
+      "path": "scripts/vrc_wiring_matrix_registry.json",
+      "sha256": "sha256:e8327652bead22449f1acc7f38e9bcf63b8bd6ce2b2e329f159f06b8f52d57e8",
+      "freshness": "undated"
+    },
+    "matrix": {
+      "path": ".vrc-wiring-matrix/wiring-matrix.json",
+      "sha256": "sha256:893c4040334ccd3bf152a9d2a30c796b9989df2dd33abe1277cb0604c4bc5908",
+      "freshness": "undated"
+    },
+    "total": 2,
+    "computed": {
+      "real": 1,
+      "partial": 0,
+      "sidecar": 1,
+      "stub": 0,
+      "absent": 0
+    },
+    "mismatches": 0,
+    "generic_check_failures": 0,
+    "expected_vs_computed_agree": true
+  },
+  "roadmap": {
+    "available": true,
+    "source": {
+      "path": "docs/roadmap-lanes.yaml",
+      "sha256": "sha256:a63c8f1953cb976c1a7e850902e8018120b409bf5898338eecb62cd9e758646f",
+      "freshness": "undated"
+    },
+    "lanes": {
+      "product": {
+        "autonomous_open": 1,
+        "autonomous_closed": 1,
+        "passive": 0,
+        "human": 0,
+        "external": 0,
+        "queue": [
+          11
+        ]
+      },
+      "devops": {
+        "autonomous_open": 0,
+        "autonomous_closed": 0,
+        "passive": 0,
+        "human": 0,
+        "external": 0,
+        "queue": []
+      },
+      "regulated": {
+        "autonomous_open": 0,
+        "autonomous_closed": 0,
+        "passive": 0,
+        "human": 1,
+        "external": 1,
+        "queue": []
+      }
+    },
+    "regulated_items": [
+      {
+        "issue": 20,
+        "dispatch": "human",
+        "delivery_state": "planned",
+        "claim_state": "locked"
+      },
+      {
+        "issue": 21,
+        "dispatch": "external",
+        "delivery_state": "blocked",
+        "claim_state": "prohibited"
+      }
+    ]
+  },
+  "gaps": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/evidence-index/evidence-ledger.yaml",
+      "sha256": "sha256:e197b686e3c13d881c1ece1814f6913d8bcbff519ad0fcbc4d2e04f90566fb13",
+      "as_of": "2026-05-02",
+      "freshness": "stale"
+    },
+    "total": 2,
+    "open": 1,
+    "items": [
+      {
+        "id": "GAP-A",
+        "severity": "major",
+        "status": "open",
+        "blocks_claims": [
+          "x"
+        ]
+      },
+      {
+        "id": "GAP-B",
+        "severity": "minor",
+        "status": "closed",
+        "blocks_claims": []
+      }
+    ]
+  },
+  "capa": {
+    "available": true,
+    "directory": "docs/regulated/operations/records/capa",
+    "total": 3,
+    "open": 1,
+    "records": [
+      {
+        "record_id": "CAPA-2026-001",
+        "status": "closed",
+        "severity": "major",
+        "opened": "2026-06-11",
+        "closed": "2026-06-11",
+        "effectiveness_verified": true,
+        "retro_documented": true,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-001-x.yaml",
+          "sha256": "sha256:0b867de7959ed18ddec31e58018d7d2361a724e253dc1a1b33d69de45823724e",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      },
+      {
+        "record_id": "CAPA-2026-002",
+        "status": "open",
+        "severity": "minor",
+        "opened": "2026-08-01",
+        "effectiveness_verified": false,
+        "retro_documented": false,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-002-y.yaml",
+          "sha256": "sha256:beace49b37b63a021f5e10e1bbd147dcb085d3279835ba2950a2b15eeaeb03b3",
+          "as_of": "2026-08-01",
+          "freshness": "fresh"
+        }
+      },
+      {
+        "record_id": "CAPA-2026-003",
+        "status": "closed",
+        "severity": "minor",
+        "opened": "2026-07-01",
+        "closed": "2026-07-02",
+        "effectiveness_verified": false,
+        "retro_documented": false,
+        "source": {
+          "path": "docs/regulated/operations/records/capa/CAPA-2026-003-z.yaml",
+          "sha256": "sha256:1cb3ce045da5574df014e9cb3ed9aa130cb59da9b9114714bff66e76aabf89fb",
+          "as_of": "2026-07-02",
+          "freshness": "fresh"
+        }
+      }
+    ]
+  },
+  "reviews": {
+    "available": true,
+    "directory": "docs/regulated/operations/records",
+    "total": 2,
+    "records": [
+      {
+        "record_id": "AUD-1",
+        "record_type": "internal_audit",
+        "date": "2026-06-11",
+        "decisions": 0,
+        "actions": 0,
+        "findings": 3,
+        "source": {
+          "path": "docs/regulated/operations/records/2026-06-11-internal-audit-record.yaml",
+          "sha256": "sha256:b94cb51b26fa7d6e89c9a3b884a450c008391b11c3d866009afc404daed749f1",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      },
+      {
+        "record_id": "MR-1",
+        "record_type": "management_review",
+        "date": "2026-06-11",
+        "decisions": 2,
+        "actions": 3,
+        "findings": 0,
+        "source": {
+          "path": "docs/regulated/operations/records/2026-06-11-management-review-record.yaml",
+          "sha256": "sha256:89be4af8b31ac2323804e3787073f767380fd7112d06e4721998e32d082cc82e",
+          "as_of": "2026-06-11",
+          "freshness": "fresh"
+        }
+      }
+    ]
+  },
+  "repeated_ci": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/evidence-index/repeated-ci-evidence/index-2026-09-04.json",
+      "sha256": "sha256:c8f1c8a15a39f705a1d0e26da1f86dba8ceca2c3040721803e079f41926fc20a",
+      "as_of": "2026-09-04",
+      "freshness": "fresh"
+    },
+    "consecutive_green_runs": 4,
+    "target_consecutive_green_runs": 8,
+    "claim_unlocked": false
+  },
+  "praxis_gate": {
+    "available": true,
+    "record": {
+      "path": "docs/regulated/qualification/praxis-activation-gate.yaml",
+      "sha256": "sha256:125114f74cacc0751a7d129d919069711040bb06eaf7a6d58fbfed38562c9cf1",
+      "freshness": "undated"
+    },
+    "status": "blocked",
+    "unmet_count": 11,
+    "checks": 11
+  },
+  "competence": {
+    "available": true,
+    "attestation_files": 0,
+    "waiver": {
+      "path": "docs/regulated/operations/training-records/independence-waiver.yaml",
+      "sha256": "sha256:7618ed4a51955e9ec51f521133942279133c393349312cfed5b3d139dd1fcad6",
+      "freshness": "undated"
+    },
+    "waived_records": 0,
+    "role_status_computed_by": "scripts/training_competence_gate.py"
+  },
+  "domain_packs": {
+    "available": true,
+    "directory": "docs/regulated/domain-packs",
+    "total": 2,
+    "packs": [
+      {
+        "pack_id": "demo",
+        "source": {
+          "path": "docs/regulated/domain-packs/demo/pack.yaml",
+          "sha256": "sha256:1df3407114066270139e5ecd26b2276ce688ecba90c68f2621af75ad79238b0a",
+          "freshness": "undated"
+        },
+        "has_claim_boundary": true
+      },
+      {
+        "pack_id": "other",
+        "source": {
+          "path": "docs/regulated/domain-packs/other/pack.yaml",
+          "sha256": "sha256:e2ce618c2f17477fd6ea47c4dbc66afc4da68fa587b250b13ea4230c0671cf50",
+          "freshness": "undated"
+        },
+        "has_claim_boundary": false
+      }
+    ]
+  },
+  "public_sources": {
+    "available": true,
+    "source": {
+      "path": "docs/regulated/reference-basis/public-source-snapshots.yaml",
+      "sha256": "sha256:44310582b3d7c7fd58ff14ef6550d1ac4c040d86fdf329d8d6b208f2db95d82c",
+      "as_of": "2026-09-05",
+      "freshness": "fresh"
+    },
+    "total": 3,
+    "by_status": {
+      "blocked": 1,
+      "captured_hash_only": 2
+    }
+  },
+  "release_candidate": {
+    "available": true,
+    "source": {
+      "path": "candidate-manifest.json",
+      "sha256": "sha256:3c5c536f0af298193ae3f2ea5c3946f0704cc389a1531be14ffa7708229cb714",
+      "as_of": "2026-09-05T00:00:00Z",
+      "freshness": "fresh"
+    },
+    "version": "v9.9.9-TEST",
+    "approval_status": "approved",
+    "verdict": "candidate_verified",
+    "open_gaps": 1
+  },
+  "sections_unavailable": 0,
+  "sections_stale": 1,
+  "status_digest": "sha256:508865185abee986529f05d0c79d11c02d5ff5118f9b94f630531501342da0f5",
+  "claim_boundary": "A computed view of committed machine sources: registry and generated matrix, roadmap lanes, evidence-ledger gaps, CAPA and review records, repeated-CI index, Praxis gate verdict, competence files, domain packs, public-source snapshots, optional release candidate. It creates no evidence, approves nothing and lifts no claim; an unavailable or stale source is shown as such, never hidden."
+}

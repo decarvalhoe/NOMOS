@@ -18,17 +18,18 @@ The first two pilot lanes are:
 2. `gxp_csv`
 
 They are first because they already have the strongest combination of bounded
-claim language, repository evidence, and automated gates. Finance/RegTech,
-Medical/SaMD, legal/eDiscovery, and the portfolio control plane remain
-important, but they need customer-owned evidence, licensed references, legal
-review, or product packaging before external pilot commitment.
+claim language, repository evidence, and automated gates. Medical/SaMD may
+also enter a **bounded planning pilot** because its profile preserves licensed
+reference gaps explicitly. Finance/RegTech, legal/eDiscovery, and the portfolio
+control plane still need customer-owned evidence, legal review, or product
+packaging before their own external commitment.
 
 ## Status Semantics
 
 | Status | Meaning |
 | --- | --- |
 | `go` | Repository evidence, claim boundary, and at least one automated gate are present for a bounded pilot conversation. |
-| `wait` | Repository evidence exists, but customer-owned execution, licensed references, external reviewers, or product packaging must land before external pilot commitment. |
+| `wait` | Repository evidence exists, but customer-owned execution, external reviewers, or product packaging must land before that pilot commitment. A licensed reference alone is not a reason to wait when the pilot claim is planning-only and preserves it as blocked. |
 | `blocked` | A non-repository dependency is missing and cannot be resolved by a code change alone. |
 
 ## Ranked Lanes
@@ -42,7 +43,7 @@ review, or product packaging before external pilot commitment.
 | 5 | `github_app_workflow` | GitHub App and workflow productization | #477 | `go` | Workflow setup, readiness boundary, CUE contract, publish/comment scripts and tests. | Bounded workflow publication only; no QMS approval replacement or validated workflow claim. |
 | 6 | `control_plane_portfolio` | Portfolio control plane MVP | #478 | `wait` | Export-first portfolio evidence model exists; dashboard UI, tenant authz, and workers are deferred. | Portfolio supervision records only; no production dashboard or ALM/QMS replacement claim. |
 | 7 | `finance_regtech` | Finance, DORA, and RegTech profile | #475 | `wait` | Finance profile and references exist; customer ICT risk, third-party, disclosure, and legal-review evidence are missing. | Finance evidence-gap mapping only; no DORA, SEC, FINRA, MiCA, disclosure approval, or legal advice claim. |
-| 8 | `medical_samd` | Medical/SaMD readiness boundary | #474 | `wait` | Medical/SaMD profile exists; licensed ISO 13485 and ISO/IEC/IEEE 12207 intakes remain open via #192 and #193. | Medical/SaMD planning boundary only; no medical-device, clinical validation, FDA clearance, or ISO certification claim. |
+| 8 | `medical_samd` | Medical/SaMD readiness boundary | #474 | `go` | Profile + public-surrogate references; #192/#193 remain claim dependencies only and block ISO clause-level use, not the bounded planning pilot. | Medical/SaMD planning boundary only; no medical-device, clinical validation, FDA clearance, or ISO certification claim. |
 | 9 | `legal_ediscovery` | Legal/eDiscovery readiness boundary | #470 | `blocked` | Requires customer counsel, matter boundary, privilege policy, legal hold rules, retention policy, and acceptance criteria. | Planning fixture only; no legal advice, privilege determination, discovery compliance, or court acceptance claim. |
 
 ## Verification
