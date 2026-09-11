@@ -18,7 +18,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: []
-    devops: []
+    devops: [737, 738, 736, 739]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -658,3 +658,42 @@ items:
     depends_on: []
     inputs: [719]
     blocks_claims: [beta_release_executed]
+  # Forge neutrality (ADR-0006, docs/52) — the sovereign forge is the
+  # repository of reference; every sidecar that talks to a forge goes through
+  # scripts/forge_provider.py. Tooling only: no regulated claim, no release.
+  - issue: 737
+    title: Forge neutrality FN-1 — forge_provider boundary, sticky PR comment and CI evidence collector migrated
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: partial
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+  - issue: 736
+    title: Forge neutrality FN-2 — regulated scripts, publisher and lane guard migrated to the provider
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [737]
+  - issue: 738
+    title: Forge neutrality FN-3 — opposable gates under .forgejo/workflows without marketplace steps
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+  - issue: 739
+    title: Forge neutrality FN-4 — provider-qualified tracker identifiers in the roadmap registry
+    state: open
+    lane: devops
+    dispatch: autonomous
+    delivery_state: planned
+    evidence_state: none
+    claim_state: bounded
+    depends_on: [737]

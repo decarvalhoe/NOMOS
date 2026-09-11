@@ -383,6 +383,79 @@ class GateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
 
 
+class LiveCollectionTests(unittest.TestCase):
+    """The live path goes through the forge provider; a fake stands in for it."""
+
+    def setUp(self) -> None:
+        from forge_provider import FakeProvider, ForgeError  # scripts/ is on sys.path via rce
+
+        self.FakeProvider = FakeProvider
+        self.ForgeError = ForgeError
+        self.policy = _policy()
+        workflow = self.policy["workflow"]
+        self.runs_path = (
+            f"/repos/example/repo/actions/workflows/{workflow['workflow_id']}/runs"
+            f"?event={workflow['event']}&branch={workflow['branch']}"
+            f"&per_page={rce.API_PAGE_SIZE}&page=1"
+        )
+
+    def _api_run(self, run_id: int) -> dict:
+        return {
+            "id": run_id,
+            "run_number": 1,
+            "run_attempt": 1,
+            "event": "schedule",
+            "head_branch": "main",
+            "head_sha": "a" * 40,
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": BASE.strftime(rce.TIMESTAMP_FORMAT),
+            "updated_at": BASE.strftime(rce.TIMESTAMP_FORMAT),
+            "html_url": f"https://forge.example/example/repo/actions/runs/{run_id}",
+        }
+
+    def test_collect_runs_reads_runs_and_artifacts_through_the_provider(self) -> None:
+        fake = self.FakeProvider(
+            responses={
+                self.runs_path: {"workflow_runs": [self._api_run(31)]},
+                f"/repos/example/repo/actions/runs/31/artifacts?per_page={rce.API_PAGE_SIZE}": {
+                    "artifacts": [
+                        {"id": 1, "name": "rbok-lawbook-artifacts-abc", "size_in_bytes": 3,
+                         "expired": False, "expires_at": "2026-12-01T00:00:00Z"}
+                    ]
+                },
+            }
+        )
+        runs = rce.collect_runs("example/repo", self.policy, provider=fake)
+        self.assertEqual([r["run_id"] for r in runs], [31])
+        self.assertEqual(runs[0]["corpus_commit"], "abc")
+        self.assertEqual([op for op, _ in fake.calls], ["get_json", "get_json"])
+
+    def test_provider_failure_is_not_measured(self) -> None:
+        # A forge error is "nothing measured", never an empty chain.
+        fake = self.FakeProvider(responses={})
+        with self.assertRaises(rce.MeasurementError) as ctx:
+            rce.collect_runs("example/repo", self.policy, provider=fake)
+        self.assertIn("failed", str(ctx.exception))
+
+    def test_empty_history_is_not_measured(self) -> None:
+        fake = self.FakeProvider(responses={self.runs_path: {"workflow_runs": []}})
+        with self.assertRaises(rce.MeasurementError):
+            rce.collect_runs("example/repo", self.policy, provider=fake)
+
+    def test_missing_forge_configuration_is_named(self) -> None:
+        # Doctrine §2.8: no token, no gh, no URL — the gate says so instead of
+        # pretending the chain is empty.
+        from unittest import mock
+
+        with mock.patch.dict("os.environ", {}, clear=True), mock.patch(
+            "forge_provider.shutil.which", return_value=None
+        ):
+            with self.assertRaises(rce.MeasurementError) as ctx:
+                rce.gh_api("/rate_limit")
+        self.assertIn("NOMOS_FORGE_PROVIDER", str(ctx.exception))
+
+
 class ShippedTreeTests(unittest.TestCase):
     """The committed index must replay exactly against the committed tree."""
 
