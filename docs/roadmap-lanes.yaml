@@ -23,7 +23,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: []
-    devops: []
+    devops: [746, 747]
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -729,3 +729,23 @@ items:
       impact: support
       validation_state: technically_verified
       reliance: manual_review
+  - issue: 746
+    title: Forge neutrality FN-5 — cue vet and the security gate replayed on the sovereign forge
+    state: open
+    lane: devops
+    dispatch: autonomous
+    tracker: github
+    delivery_state: partial
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []
+  - issue: 747
+    title: Unshipped surfaces (sdk, policies, examples) declared in the READMEs and guarded from the tree
+    state: open
+    lane: devops
+    dispatch: autonomous
+    tracker: github
+    delivery_state: partial
+    evidence_state: none
+    claim_state: bounded
+    depends_on: []

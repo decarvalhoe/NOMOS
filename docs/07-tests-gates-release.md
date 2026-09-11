@@ -136,11 +136,11 @@ tournent à deux endroits, avec les mêmes commandes :
 | Surface | Fichier | Contenu | Particularité |
 |---|---|---|---|
 | GitHub | `.github/workflows/ci.yml` | sept jobs (Go, Sigstore, corpus multi-OS, CUE, YAML, Python, sécurité) | étapes `actions/*` du marketplace |
-| Forge souveraine | `.forgejo/workflows/portes.yml` | une tâche séquentielle : Go vet + test, module Sigstore, matrice de câblage, compteurs README, claim boundary, modèle de support, ledger d'evidence, registre de roadmap, suite unittest | aucun `uses:` ; checkout par git, Go téléchargé depuis go.dev et vérifié par SHA-256, dépendances Python épinglées |
+| Forge souveraine | `.forgejo/workflows/portes.yml` → `.forgejo/portes.sh` | une tâche séquentielle : Go vet + test, module Sigstore, contrats CUE (valides acceptés, contre-exemples refusés), porte de sécurité NRT-025 (`govulncheck`, `pip-audit`) et ses preuves, matrice de câblage, compteurs README, claim boundary, modèle de support, ledger d'evidence, registre de roadmap, suite unittest | aucun `uses:` ; checkout par git, Go et CUE téléchargés depuis leurs releases et vérifiés par SHA-256 épinglée, scanners installés dans le job, dépendances Python épinglées ; journal publié en commentaire collant de la PR |
 
-Ce que la forge ne joue pas encore : la matrice corpus macOS/Windows, `cue vet`
-(pas de binaire CUE dans l'image), la porte de sécurité `govulncheck`/`pip-audit`
-et la publication (`bundle-release.yml`). Tant qu'une porte n'existe que sur
+Ce que la forge ne joue pas encore : la matrice corpus macOS/Windows (un seul
+système sur les runners de la forge) et la publication (`bundle-release.yml`,
+qui reste sur le fournisseur hébergeant la release, ADR-0006 §4). Tant qu'une porte n'existe que sur
 GitHub, GitHub reste le lieu de fusion pour ce qu'elle protège (ADR-0006 §1).
 La porte de la forge est rouge à la première commande qui échoue ; sa preuve
 adversariale (une dérive volontaire des compteurs README refusée) est
