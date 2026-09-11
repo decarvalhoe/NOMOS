@@ -23,7 +23,7 @@ selection_policy:
   cross_lane_relationship: inputs_are_nonblocking
   dispatch_queues:
     product: []
-    devops: [746, 747]
+    devops: []
     regulated: []
 
 # Umbrella issues are visible on GitHub but are NOT roadmap items: they carry no
@@ -731,19 +731,29 @@ items:
       reliance: manual_review
   - issue: 746
     title: Forge neutrality FN-5 — cue vet and the security gate replayed on the sovereign forge
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: partial
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
+    regulated_tool:
+      intended_use: "replay cue vet and the NRT-025 security gate (govulncheck, pip-audit) on the sovereign forge from .forgejo/portes.sh, CUE pinned by checksum; a missing scanner is a red gate, never a silent pass; tooling only, no regulated claim"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review
   - issue: 747
     title: Unshipped surfaces (sdk, policies, examples) declared in the READMEs and guarded from the tree
-    state: open
+    state: closed
     lane: devops
     dispatch: autonomous
-    delivery_state: partial
-    evidence_state: none
+    delivery_state: implemented
+    evidence_state: present
     claim_state: bounded
     depends_on: []
+    regulated_tool:
+      intended_use: "compute from the tree which surfaces (sdk, policies, examples) are README-only and refuse any README sentence that claims them shipped; a claim reduction guard; tooling only, no regulated claim"
+      impact: support
+      validation_state: technically_verified
+      reliance: manual_review

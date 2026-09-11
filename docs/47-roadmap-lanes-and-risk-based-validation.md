@@ -39,8 +39,7 @@ Product (or the reverse).
 <!-- GENERATED from docs/roadmap-lanes.yaml by scripts/roadmap_lane_guard.py --emit-docs; do not edit by hand, CI fails on drift -->
 | Product queue | DevOps queue |
 |---|---|
-| — | #746 — Forge neutrality FN-5 — cue vet and the security gate replayed on the sovereign forge |
-| — | #747 — Unshipped surfaces (sdk, policies, examples) declared in the READMEs and guarded from the tree |
+| — | — |
 <!-- roadmap-queues:end -->
 
 The dispatcher selects the first eligible item **in each lane**, skips an item
