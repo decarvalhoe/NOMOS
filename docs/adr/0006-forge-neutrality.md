@@ -1,6 +1,6 @@
-# ADR-0006 — Forge neutrality: the sovereign forge is the reference, GitHub is one provider among others
+# ADR-0006 — Forge neutrality: one repository of reference, every other copy is a fork, no provider is privileged in the tooling
 
-**Status:** accepted (2026-09-11) · **Plan:** [docs/52](../52-plan-de-reprise-2026-09.md) · **Related:** ADR-VRC-0004 (independent roadmaps), docs/43 §2.8 ("what stays silent lies")
+**Status:** accepted (2026-09-11), §1 amended the same day (repository of reference) · **Plan:** [docs/52](../52-plan-de-reprise-2026-09.md) · **Related:** ADR-VRC-0004 (independent roadmaps), docs/43 §2.8 ("what stays silent lies")
 
 ## Context
 
@@ -29,11 +29,20 @@ privileged. NOMOS was measured against that direction the same day:
 
 ## Decision
 
-1. **The sovereign forge is the repository of reference.** GitHub
-   (`decarvalhoe/NOMOS`) remains a provider where the opposable CI gates run
-   until those gates exist on the forge; every merge on GitHub `main` is
-   mirrored to the forge `main` the same day. The two histories are joined by
-   an explicit merge commit, not by rewriting either side.
+1. **`github.com/decarvalhoe/NOMOS` is the repository of reference; every
+   other copy is a fork.** Decision of the repository owner on 2026-09-11,
+   amending the morning's wording (which had made the sovereign forge the
+   reference). The GitHub repository was transferred from the `RBOKproject`
+   organisation to the owner's account; `github.com/RBOKproject/NOMOS`
+   redirects there, so the Go module path and the existing references keep
+   resolving. The sovereign forge copy `RBOKproject/nomos` is a downstream
+   fork: its `main` follows GitHub `main` by fast-forward only (workflow
+   `.forgejo/workflows/synchro-amont.yml`, scheduled and on demand); pull
+   requests that change the product open on GitHub; the forge hosts the pull
+   requests that only concern the forge itself (`.forgejo/**`) and replays
+   the gates on every push and pull request (`portes.sh`). Neutrality is a
+   property of the **tooling** (§2–§5), not a statement about where the
+   reference lives.
 2. **One provider boundary for the sidecars.** Every script that talks to a
    forge API goes through `scripts/forge_provider.py`, configured by
    `NOMOS_FORGE_PROVIDER` (`github` | `forgejo` | `gitlab` | `fake`),
@@ -60,12 +69,12 @@ privileged. NOMOS was measured against that direction the same day:
 
 ## Consequences
 
-- Positive: NOMOS can be developed, gated and released from the sovereign
-  forge; GitLab consumers of the strict gate (`ci/gitlab/`) get the same
+- Positive: NOMOS can be developed and gated from either copy, and released
+  from the reference; GitLab consumers of the strict gate (`ci/gitlab/`) get the same
   adapter the maintainers use; the engine's "three direct dependencies"
   argument is untouched because the boundary lives in the sidecars.
-- Negative: a temporary double surface (GitHub gates + forge mirror) until the
-  workflow port is done; each slice must keep the wiring matrix, the support
+- Negative: two copies to keep in step (the sync workflow refuses anything but
+  a fast-forward, so a forge-only commit on `main` stops the sync loudly); each slice must keep the wiring matrix, the support
   model and the claim boundary green, which slows the migration.
 - Claim boundary: this decision changes where code is hosted and how tools
   authenticate. It creates no regulated claim, no release, no SLA.
@@ -74,7 +83,7 @@ privileged. NOMOS was measured against that direction the same day:
 
 | Slice | Content | State on 2026-09-11 |
 |---|---|---|
-| 0 | Forge mirror reconciled with GitHub `main` by merge | done (forge PR #2, GitHub PR #742, 2026-09-11) |
+| 0 | Forge copy reconciled with GitHub `main` by merge, then declared a downstream fork with an automatic fast-forward sync | done (forge PR #2, GitHub PR #742, sync workflow 2026-09-11) |
 | 1 | `forge_provider.py` + migration of the sticky PR comment and the CI evidence collector | done (GitHub PR #740, #737 closed) |
 | 2 | Migration of the regulated scripts, the publisher, the lane guard and the issue/label tooling; `push_and_pr.sh` removed | delivered (#736) |
 | 3 | Opposable gates under `.forgejo/workflows/portes.yml` without marketplace steps | forge PR #3 (#738) |

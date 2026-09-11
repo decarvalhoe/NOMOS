@@ -1,0 +1,76 @@
+name: Synchronisation amont — GitHub main → forge main
+
+# Ce dépôt est un FORK AVAL de github.com/decarvalhoe/NOMOS (ADR-0006 §1,
+# décision du 2026-09-11). Ce workflow fait suivre à `main` la `main` du
+# dépôt de référence, en avance rapide seulement : si `main` de la forge
+# porte un commit que GitHub ne connaît pas, la synchronisation s'arrête et
+# le dit — un fork qui diverge en silence n'est plus un fork.
+#
+# Le dépôt amont est public : la lecture ne demande aucun jeton. L'écriture
+# sur la forge utilise le GITHUB_TOKEN du run (contents: write), aucun secret
+# permanent. Aucun `uses:` (pas d'accès marketplace sur les runners).
+#
+# Les tags v* de l'amont sont recopiés aussi : le modèle de support les exige.
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  AMONT: https://github.com/decarvalhoe/NOMOS.git
+  BRANCHE: main
+
+jobs:
+  synchro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Suivre l'amont en avance rapide
+        env:
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -eu
+          command -v git >/dev/null 2>&1 || { echo "git absent de l'image" >&2; exit 1; }
+          askpass="$(mktemp)"
+          trap 'rm -f "$askpass"' EXIT
+          cat > "$askpass" <<'ASKPASS'
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$GIT_TOKEN" ;;
+          esac
+          ASKPASS
+          chmod 700 "$askpass"
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+
+          git config --global --add safe.directory "$PWD" || true
+          rm -rf .git
+          git init -q .
+          git remote add forge "${SERVER_URL}/${REPOSITORY}.git"
+          git remote add amont "$AMONT"
+          git fetch --quiet --no-tags forge "+refs/heads/${BRANCHE}:refs/remotes/forge/${BRANCHE}"
+          git fetch --quiet amont "+refs/heads/${BRANCHE}:refs/remotes/amont/${BRANCHE}" '+refs/tags/v*:refs/tags/v*'
+
+          forge_sha="$(git rev-parse "refs/remotes/forge/${BRANCHE}")"
+          amont_sha="$(git rev-parse "refs/remotes/amont/${BRANCHE}")"
+          echo "forge  ${BRANCHE} : ${forge_sha}"
+          echo "amont  ${BRANCHE} : ${amont_sha}"
+
+          if [ "$forge_sha" = "$amont_sha" ]; then
+            echo "Déjà à jour."
+          elif git merge-base --is-ancestor "$forge_sha" "$amont_sha"; then
+            echo "Avance rapide de $(git rev-list --count "${forge_sha}..${amont_sha}") commit(s)."
+            git push --quiet forge "${amont_sha}:refs/heads/${BRANCHE}"
+          else
+            echo "REFUS : main de la forge porte $(git rev-list --count "${amont_sha}..${forge_sha}") commit(s) que l'amont ne connaît pas." >&2
+            echo "Un fork ne diverge pas en silence : ouvrir ces commits en PR sur ${AMONT%.git}, ou les retirer de main." >&2
+            git --no-pager log --oneline "${amont_sha}..${forge_sha}" >&2
+            exit 1
+          fi
+          git push --quiet forge 'refs/tags/v*:refs/tags/v*' || echo "tags : rien à pousser"

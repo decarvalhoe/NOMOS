@@ -141,7 +141,8 @@ tournent à deux endroits, avec les mêmes commandes :
 Ce que la forge ne joue pas encore : la matrice corpus macOS/Windows (un seul
 système sur les runners de la forge) et la publication (`bundle-release.yml`,
 qui reste sur le fournisseur hébergeant la release, ADR-0006 §4). Tant qu'une porte n'existe que sur
-GitHub, GitHub reste le lieu de fusion pour ce qu'elle protège (ADR-0006 §1).
+GitHub, GitHub reste le lieu de fusion pour ce qu'elle protège ; c'est de toute
+façon le dépôt de référence, la forge étant un fork aval (ADR-0006 §1).
 La porte de la forge est rouge à la première commande qui échoue ; sa preuve
 adversariale (une dérive volontaire des compteurs README refusée) est
 consignée dans la PR FN-3 de la forge.
