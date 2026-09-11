@@ -331,16 +331,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/` | Methode, Architektur, Operating Model, regulated-readiness Dokumente, ADRs und Validierungsdossiers. |
 | `docs/regulated/` | Regulated-by-design Betriebsstruktur und kontrollierte Dokumentationsbaseline. |
 | `templates/` | Wiederverwendbare Projekt-, Regulated-, Validation-, Evidence- und Governance-Templates. |
-| `examples/` | Domaenenbeispiele fuer die canonical-first Methode. |
+| `examples/` | Ein einziges ausgeruestetes Beispiel, `insurance/` (Quellmanifest und kanonische Matrix als YAML); `clinical/` und `fiscal-tax/` sind nur Rahmennotizen (nur README). |
 | `adapters/` | Adapter-Vertraege und Referenzprofile fuer Node/TypeScript, Python und JVM: Specs und Fixtures, ohne ausfuehrbare Implementierung in diesem Stadium. |
+| `sdk/` | Kein SDK ausgeliefert (nur README); die Integrationsflaeche ist die CLI plus die generierten Artefakte (JSON/YAML unter den `specs/`-Vertraegen). |
 | `ci/` | Wiederverwendbare CI-Integrationsdokumentation. |
-| `policies/` | Platzhalterverzeichnis fuer ein kuenftiges Policy-Framework; in diesem Stadium nicht operativ. |
+| `policies/` | Keine ausfuehrbare Policy (nur README); die Gates leben in `scripts/` und `cli/`. |
 | `scripts/` | E2E-, Evidence-, regulierte Dokumentations- und Automationshelfer; Faehigkeitsregister (`vrc_wiring_matrix_registry.json`), Guards (Wiring-Matrix, Claim Boundary, Core/Pack-Kopplung), RAG- und Bench-Gates, Sidecars (RAG-Evidence, HHEM-Scorer, Referenz-Kits). |
 | `.vrc-wiring-matrix/` | GENERIERTE Wiring-Matrix (JSON + Markdown): der Status jeder Faehigkeit aus dem Baum berechnet; jede Handaenderung oder Abweichung ist in CI rot. |
 | `attestations/` | CUE-Vertraege der in-toto Attestations und das signierte Claim-Boundary-Praedikat. |
 | `tests/` | Python-Tests der Workflows, Sidecars, Guards und Gates (adversarial: der erwartete Fehlschlag ist der Beweis). |
 | `reports/` | Generierte lokale Evidence-Artefakte. |
-| `references/` | Methodologischer und externer Referenzregister-Inhalt. |
+| `references/` | Eine einzige Datei: das methodologische Referenzregister (`methodological-references.md`). |
 
 ## Quality Gates
 

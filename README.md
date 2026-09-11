@@ -361,16 +361,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/` | Méthode, architecture, operating model, regulated-readiness, ADRs et dossiers de validation. |
 | `docs/regulated/` | Structure regulated-by-design et baseline documentaire contrôlée. |
 | `templates/` | Templates projet, réglementaires, validation, evidence et gouvernance. |
-| `examples/` | Exemples de domaines appliquant la méthode canonical-first. |
+| `examples/` | Un seul exemple outillé, `insurance/` (manifeste de sources et matrice canonique en YAML) ; `clinical/` et `fiscal-tax/` ne sont que des notes de cadrage (README seuls). |
 | `adapters/` | Contrats adapter et profils de référence Node/TypeScript, Python et JVM : specs et fixtures, sans implémentation exécutable à ce stade. |
+| `sdk/` | Aucun SDK livré (README seul) ; la surface d'intégration est la CLI plus les artefacts générés (JSON/YAML sous les contrats de `specs/`). |
 | `ci/` | Documentation d'intégration CI réutilisable. |
-| `policies/` | Répertoire placeholder pour un futur cadre de policies ; non opérationnel à ce stade. |
+| `policies/` | Aucune politique exécutable (README seul) ; les portes vivent dans `scripts/` et `cli/`. |
 | `scripts/` | Helpers E2E, evidence, documentation régulée et automatisation ; registre de capacités (`vrc_wiring_matrix_registry.json`), guards (matrice de câblage, claim boundary, couplage core/pack), gates RAG et bench, sidecars (evidence RAG, scorer HHEM, kits de référence). |
 | `.vrc-wiring-matrix/` | Matrice de câblage GÉNÉRÉE (JSON + Markdown) : statut de chaque capacité calculé depuis l'arbre ; toute édition manuelle ou dérive est rouge en CI. |
 | `attestations/` | Contrats CUE des attestations in-toto et prédicat signé de claim boundary. |
 | `tests/` | Tests Python des workflows, sidecars, guards et gates (adversariaux : la preuve est l'échec attendu). |
 | `reports/` | Artefacts locaux générés. |
-| `references/` | Registre de références méthodologiques et externes. |
+| `references/` | Un seul fichier : le registre de références méthodologiques (`methodological-references.md`). |
 
 ## Gates Qualité
 
