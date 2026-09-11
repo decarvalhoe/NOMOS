@@ -331,16 +331,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\e2e.ps1
 | `docs/` | Method, architecture, operating model, regulated-readiness documents, ADRs, and validation dossiers. |
 | `docs/regulated/` | Regulated-by-design operating structure and controlled-document baseline. |
 | `templates/` | Copyable project, regulated, validation, evidence, and governance templates. |
-| `examples/` | Domain examples for applying the canonical-first method. |
+| `examples/` | One tooled example, `insurance/` (source manifest and canonical matrix in YAML); `clinical/` and `fiscal-tax/` are framing notes only (README alone). |
 | `adapters/` | Adapter contracts and reference profiles for Node/TypeScript, Python, and JVM: specs and fixtures, with no executable implementation at this stage. |
+| `sdk/` | No SDK shipped (README only); the integration surface is the CLI plus the generated artifacts (JSON/YAML under the `specs/` contracts). |
 | `ci/` | Reusable CI integration documentation. |
-| `policies/` | Placeholder directory for a future policy framework; not operational at this stage. |
+| `policies/` | No executable policy (README only); the gates live in `scripts/` and `cli/`. |
 | `scripts/` | E2E, evidence, regulated documentation, and automation helpers; capability registry (`vrc_wiring_matrix_registry.json`), guards (wiring matrix, claim boundary, core/pack coupling), RAG and bench gates, sidecars (RAG evidence, HHEM scorer, reference kits). |
 | `.vrc-wiring-matrix/` | GENERATED wiring matrix (JSON + Markdown): the status of every capability computed from the tree; any hand edit or drift is red in CI. |
 | `attestations/` | CUE contracts of the in-toto attestations and the signed claim-boundary predicate. |
 | `tests/` | Python tests of the workflows, sidecars, guards and gates (adversarial: the expected failure is the proof). |
 | `reports/` | Generated local evidence artifacts. |
-| `references/` | Methodological and external reference register material. |
+| `references/` | A single file: the methodological reference register (`methodological-references.md`). |
 
 ## Quality Gates
 

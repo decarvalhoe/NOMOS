@@ -90,6 +90,7 @@ PORTES=(
   "Vérificateur Sigstore — tests du module externe|go_sigstore"
   "Matrice de câblage — calculée, committée sans dérive|matrice"
   "Compteurs de capacités des README — recopiés depuis la matrice|python3 scripts/readme_capability_counts_guard.py --root . --check"
+  "Surfaces non livrées — déclarées dans les README, jamais revendiquées|python3 scripts/unshipped_surfaces_guard.py --root . --check"
   "Claim boundary — aucune capacité d'attestation surdéclarée|python3 scripts/claim_boundary_guard.py --root ."
   "Modèle de support — déclaré et recoupé|python3 scripts/support_model_guard.py --root . --check"
   "Ledger d'evidence — index en vigueur, sans dérive ni péremption|python3 scripts/evidence_ledger_guard.py --root . --check"
