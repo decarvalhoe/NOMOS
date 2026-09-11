@@ -390,6 +390,10 @@ jobs:
         run: |
           python scripts/vrc_wiring_matrix.py --root .
           git diff --exit-code .vrc-wiring-matrix
+      # 2026-09-11 : les compteurs de capacités que les README avancent sont
+      # recopiés depuis la matrice, jamais déclarés ; toute dérive est rouge.
+      - name: README capability counts follow the wiring matrix
+        run: python scripts/readme_capability_counts_guard.py --root . --check
       - run: python -m unittest discover -s tests -v
 
   security:
